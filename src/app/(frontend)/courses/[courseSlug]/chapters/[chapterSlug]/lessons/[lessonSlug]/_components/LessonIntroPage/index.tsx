@@ -167,61 +167,80 @@ export function LessonIntroPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-section-md sm:px-6 md:py-section-lg">
-        <section className="grid flex-1 items-center gap-content-gap-lg lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-content-gap-xs rounded-full border border-border bg-muted px-4 py-2 text-label uppercase tracking-wider text-muted-foreground">
-              <Sparkles className="h-4 w-4 text-primary" />
+      <main className="mx-auto flex w-full max-w-6xl flex-col px-4 py-5 sm:px-6 md:min-h-screen md:py-section-lg">
+        <section className="grid gap-content-gap-md md:flex-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-center">
+          <div className="space-y-4 md:space-y-6">
+            <div className="inline-flex items-center gap-content-gap-xs rounded-full border border-border bg-muted px-3 py-1.5 text-label uppercase tracking-wider text-muted-foreground md:px-4 md:py-2">
+              <Sparkles className="h-3.5 w-3.5 text-primary md:h-4 md:w-4" />
               {t('lessonIntro')}
             </div>
 
-            <div className="space-y-4">
-              <p className="text-body-md text-muted-foreground">{gradeLevel}</p>
-              <h1 className="text-display-md font-medium leading-tight text-foreground md:text-display-lg">
+            <div className="space-y-3 md:space-y-4">
+              <p className="text-body-sm text-muted-foreground md:text-body-md">{gradeLevel}</p>
+              <h1 className="text-heading-xl font-medium leading-tight text-foreground md:text-display-lg">
                 {lesson.title}
               </h1>
               {description ? (
-                <div className="max-w-2xl space-y-2">
-                  <h2 className="text-heading-md font-medium text-foreground">
+                <div className="max-w-2xl space-y-1.5 md:space-y-2">
+                  <h2 className="text-heading-sm font-medium text-foreground md:text-heading-md">
                     {t('lessonLobbySummary')}
                   </h2>
-                  <p className="text-body-md leading-relaxed text-muted-foreground">
+                  <p className="line-clamp-3 text-body-sm leading-relaxed text-muted-foreground md:text-body-md">
                     {description}
                   </p>
                 </div>
               ) : null}
             </div>
 
-            <div className="grid gap-content-gap-sm sm:grid-cols-3">
-              <div className="rounded-lg border border-border bg-card p-card-padding shadow-elevation-1">
-                <Layers className="mb-3 h-5 w-5 text-primary" />
-                <p className="text-heading-lg font-medium text-foreground">{exerciseCount}</p>
-                <p className="text-body-sm text-muted-foreground">{t('exercise')}</p>
+            <div className="grid grid-cols-3 gap-content-gap-xs md:gap-content-gap-sm">
+              <div className="rounded-lg border border-border bg-card p-card-padding-sm shadow-elevation-1 md:p-card-padding">
+                <Layers className="mb-2 h-4 w-4 text-primary md:mb-3 md:h-5 md:w-5" />
+                <p className="text-heading-md font-medium text-foreground md:text-heading-lg">
+                  {exerciseCount}
+                </p>
+                <p className="truncate text-body-xs text-muted-foreground md:text-body-sm">
+                  {t('exercise')}
+                </p>
               </div>
-              <div className="rounded-lg border border-border bg-card p-card-padding shadow-elevation-1">
-                <FileText className="mb-3 h-5 w-5 text-primary" />
-                <p className="text-heading-lg font-medium text-foreground">{pdfCount}</p>
-                <p className="text-body-sm text-muted-foreground">{t('pdfLessonPagerDocuments')}</p>
+              <div className="rounded-lg border border-border bg-card p-card-padding-sm shadow-elevation-1 md:p-card-padding">
+                <FileText className="mb-2 h-4 w-4 text-primary md:mb-3 md:h-5 md:w-5" />
+                <p className="text-heading-md font-medium text-foreground md:text-heading-lg">
+                  {pdfCount}
+                </p>
+                <p className="truncate text-body-xs text-muted-foreground md:text-body-sm">
+                  {t('pdfLessonPagerDocuments')}
+                </p>
               </div>
-              <div className="rounded-lg border border-border bg-card p-card-padding shadow-elevation-1">
-                <BookOpen className="mb-3 h-5 w-5 text-primary" />
-                <p className="text-heading-lg font-medium text-foreground">{contentPageCount}</p>
-                <p className="text-body-sm text-muted-foreground">{t('pages')}</p>
+              <div className="rounded-lg border border-border bg-card p-card-padding-sm shadow-elevation-1 md:p-card-padding">
+                <BookOpen className="mb-2 h-4 w-4 text-primary md:mb-3 md:h-5 md:w-5" />
+                <p className="text-heading-md font-medium text-foreground md:text-heading-lg">
+                  {contentPageCount}
+                </p>
+                <p className="truncate text-body-xs text-muted-foreground md:text-body-sm">
+                  {t('pages')}
+                </p>
               </div>
             </div>
           </div>
 
-          <aside className="space-y-4">
-            <div className="rounded-lg border border-border bg-card p-card-padding-lg shadow-card">
-              <div className="space-y-5">
+          <aside className="space-y-3 md:space-y-4">
+            <div className="rounded-lg border border-border bg-card p-card-padding shadow-card md:p-card-padding-lg">
+              <div className="space-y-4 md:space-y-5">
                 <div>
-                  <h2 className="text-heading-lg font-medium text-foreground">
+                  <h2 className="text-heading-md font-medium text-foreground md:text-heading-lg">
                     {t('lessonLobbyProgress')}
                   </h2>
                   <p className="mt-1 text-body-sm text-muted-foreground">
-                    {total > 0
-                      ? `${completed} / ${total} ${t('exercise')}`
-                      : t('lessonLobbyNoProgress')}
+                    {total > 0 ? (
+                      <>
+                        <span dir="ltr">
+                          {completed} / {total}
+                        </span>{' '}
+                        {t('exercise')}
+                      </>
+                    ) : (
+                      t('lessonLobbyNoProgress')
+                    )}
                   </p>
                 </div>
 
@@ -234,7 +253,7 @@ export function LessonIntroPage({
                       : t('lessonLobbyReady')}
                 </p>
 
-                <div className="flex flex-col gap-content-gap-sm">
+                <div className="flex flex-col gap-content-gap-xs md:gap-content-gap-sm">
                   <Button
                     onClick={() => handleStart(primaryExerciseIndex)}
                     size="lg"
@@ -259,7 +278,7 @@ export function LessonIntroPage({
             </div>
 
             {nextLesson?.title ? (
-              <div className="rounded-lg border border-border bg-muted p-card-padding">
+              <div className="rounded-lg border border-border bg-muted p-card-padding-sm md:p-card-padding">
                 <p className="text-label uppercase tracking-wider text-muted-foreground">
                   {t('lessonLobbyNextLesson')}
                 </p>
