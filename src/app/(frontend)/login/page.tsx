@@ -8,7 +8,7 @@ export default async function LoginPage() {
   const { user } = await getMeUser()
 
   if (user) {
-    redirect('/')
+    redirect('/home')
   }
 
   return <LoginPageContent />
