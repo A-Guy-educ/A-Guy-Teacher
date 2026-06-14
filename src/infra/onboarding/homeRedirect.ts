@@ -13,3 +13,7 @@ export function resolveHomeRedirect({
 
   return '/study'
 }
+
+export function resolveLandingRedirect(isAuthenticated: boolean): '/home' | null {
+  return isAuthenticated ? '/home' : null
+}

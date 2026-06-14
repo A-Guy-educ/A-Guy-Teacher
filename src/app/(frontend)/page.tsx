@@ -1,7 +1,17 @@
 import { DemoLandingPage } from '@/ui/web/homepage/DemoLandingPage'
+import { resolveLandingRedirect } from '@/infra/onboarding/homeRedirect'
+import { getMeUser } from '@/infra/utils/getMeUser'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 
 export default async function HomepagePage() {
+  const { user } = await getMeUser()
+  const destination = resolveLandingRedirect(Boolean(user))
+
+  if (destination) {
+    redirect(destination)
+  }
+
   return <DemoLandingPage />
 }
 

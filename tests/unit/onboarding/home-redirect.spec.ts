@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveHomeRedirect } from '@/infra/onboarding/homeRedirect'
+import { resolveHomeRedirect, resolveLandingRedirect } from '@/infra/onboarding/homeRedirect'
 
 describe('resolveHomeRedirect', () => {
   it('sends logged-out users to login', () => {
@@ -18,5 +18,15 @@ describe('resolveHomeRedirect', () => {
     expect(resolveHomeRedirect({ isAuthenticated: true, selectedCourseId: 'course-1' })).toBe(
       '/study',
     )
+  })
+})
+
+describe('resolveLandingRedirect', () => {
+  it('keeps logged-out users on the landing page', () => {
+    expect(resolveLandingRedirect(false)).toBeNull()
+  })
+
+  it('sends logged-in users to home', () => {
+    expect(resolveLandingRedirect(true)).toBe('/home')
   })
 })
