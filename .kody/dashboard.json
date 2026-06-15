@@ -40,21 +40,6 @@
       }
     },
     {
-      "id": "lesson-login-page-html-9xiv",
-      "label": "lesson login page.html",
-      "url": "https://kp-866cab-523991-st-557d4c.fly.dev",
-      "staticId": "59f3a958",
-      "expiresAt": 1781954738924,
-      "uploadContext": {
-        "name": "lesson login page.html",
-        "mimeType": "text/html",
-        "size": 15625,
-        "title": "סדר פעולות חשבון - כניסה לשיעור",
-        "outline": "header: Aguy שלום, Guy@guykoren.co.il קורסים עברית G\nbutton: קורסים\nmain: ברוכים הבאים לשיעור סדר פעולות חשבון מתמטיקה כיתה ז' • אלגברה תקציר השיעור בשיעור זה נלמד את הכללים הבסיסיים לפתרון תרגי\nh1: ברוכים הבאים לשיעור\nh2: סדר פעולות חשבון\nh3: תקציר השיעור\nh4: ידע נדרש לפני שמתחילים (מומלץ לחזור במידת הצורך):\na href=\"#\": שיעור 1: לוח הכפל למתקדמים\na href=\"#\": חיבור וחיסור מספרים מכוונים\na href=\"#\": הצצה\nh3: ההתקדמות שלך:\nbutton#main-action-btn: המשך שיעור\nbutton#restart-btn: התחל מחדש\nbutton: החלף מצב (התחל / המשך)",
-        "textPreview": "Aguy שלום, Guy@guykoren.co.il קורסים עברית G ברוכים הבאים לשיעור סדר פעולות חשבון מתמטיקה כיתה ז' • אלגברה תקציר השיעור בשיעור זה נלמד את הכללים הבסיסיים לפתרון תרגילים מורכבים. נבין מדוע פעולות כפל וחילוק קודמות לחיבור וחיסור, ואיצד סוגריים יכולים לשנות לחלוטין את התוצאה הסופית של התרגיל. ידע נדרש לפני שמתחילים (מומלץ לחזור במידת הצורך): שיעור 1: לוח הכפל למתקדמים חיבור וחיסור מספרים מכוונים השיעור הבא בקורס שיעור 3: חזקות ושורשים הצצה ההתקדמות שלך: 3 / 10 תרגילים השלמת 30% מהשיעור. עוד קצת מאמץ! המשך שיעור התחל מחדש החלף מצב (התחל / המשך) // המצב ההתחלתי let isLessonStarted = true; function updateUI() { const btnText = document.getElementById('action-btn-text'); const progressSection = document.getElementById('progress-section'); const restartBtn = document.getElementById('restart-btn'); if (isLessonStarted) { // מצב: ממשיכים שיעור btnText.textContent = 'המשך שיעור'; progressSection.style.display = 'block'; // מציג את אזור ההתקדמות restartBtn.style.display = 'flex'; // מציג את כפתור \"התחל מחדש\" } else { // מצב: מתחילים שיעור חדש btnText.textContent = 'התחל שיעור'; progressSection.style.display = 'none'; // מסתיר את אזור ההתקדמות restartBtn.style.display = 'none'; // מסתיר את כפתור \"התחל מחדש\" } } function toggleLessonState() { isLessonStarted = !isLessonStarted; updateUI(); } // קריאה לפונקציה כשהעמוד נטען document.addEventListener('DOMContentLoaded', updateUI);"
-      }
-    },
-    {
       "id": "lesson-login-page-final-html-s2g3",
       "label": "lesson login page - final.html",
       "url": "https://kp-866cab-523991-st-e82f70.fly.dev",
