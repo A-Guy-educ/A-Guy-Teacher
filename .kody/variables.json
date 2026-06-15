@@ -65,6 +65,101 @@
       "value": "main",
       "updatedAt": "2026-06-15T12:30:00.000Z",
       "updatedBy": "codex"
+    },
+    "BLOB_PUBLIC_BASE_URL": {
+      "value": "https://pd8gxkxxaj3lzovc.public.blob.vercel-storage.com",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "DEFAULT_TENANT_SLUG": {
+      "value": "AGuy",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_ANALYTICS_DEBUG": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_ANALYTICS_DRY_RUN": {
+      "value": "false",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_ANALYTICS_ENABLED": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_EXTERNAL_STORAGE_URL": {
+      "value": "https://www.aguy.co.il",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_GA4_ENABLED": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_GA4_MEASUREMENT_ID": {
+      "value": "G-49KEEFY1WE",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_MIXPANEL_ENABLED": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_MIXPANEL_TOKEN": {
+      "value": "4472fb6738b41a819dbbf76fad44108e",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NSC_TENANT_ID": {
+      "value": "tenant_fql41urtcu7sq",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NX_DAEMON": {
+      "value": "false",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "TURBO_CACHE": {
+      "value": "remote:rw",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "TURBO_DOWNLOAD_LOCAL_ENABLED": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "TURBO_REMOTE_ONLY": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "TURBO_RUN_SUMMARY": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL": {
+      "value": "1",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_ENV": {
+      "value": "production",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_TARGET_ENV": {
+      "value": "production",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
     }
   }
 }
