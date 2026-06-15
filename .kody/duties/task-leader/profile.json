@@ -2,7 +2,6 @@
   "name": "task-leader",
   "describe": "Task Leader",
   "action": "task-leader",
-  "executable": "task-leader",
   "every": "15m",
   "staff": "kody",
   "runner": "kody",

@@ -1,21 +1,39 @@
 # Task Leader
 
-## Job
+## Duty
 
-Drive the work pipeline every 15 minutes: request missing reviews (code + UI), request fixes for PR concerns, auto-merge safe PRs, dispatch the next verified backlog task, and escalate stale PRs to the operator.
+Every 15 minutes, coordinate the work pipeline:
 
-## Executable
+- request missing reviews (code + UI)
+- request fixes for PR concerns
+- auto-merge safe PRs, including release lanes
+- dispatch the next verified backlog task
+- escalate stale PRs to the operator
 
-Run the `task-leader` executable. Its skills and scripts own the implementation details.
+Read and follow `.kody/executables/task-leader/skills/task-leader-rules/SKILL.md` exactly.
+That rules file owns the 6-step method, normal small-PR gate, release version PR gate, release promotion PR gate, and final output format.
 
 ## Allowed Commands
 
-- Run the `task-leader` executable.
+- `gh issue list`
+- `gh issue view`
+- `gh issue comment`
+- `gh pr list`
+- `gh pr view`
+- `gh pr checks`
+- `gh pr comment`
+- `gh pr review`
+- `gh pr merge`
+- `gh release view`
 
 ## Restrictions
 
-- Stay within the duty's purpose and per-executable rules.
+- Stay within the duty's purpose and `task-leader-rules`.
 - Do not perform actions outside the contract defined by this duty.
 - Do not bypass the auto-merge gates defined by `task-leader-rules`: normal PRs require both reviews and small-change checks; release lanes must satisfy their dedicated release gates.
 - One tick = one pass = one rate-limit window. Do not loop.
 - Do not edit source files or push branches.
+
+## State
+
+Evergreen duty. Keep `cursor` as `"idle"`, carry forward any useful `data`, and keep `done` as `false`.

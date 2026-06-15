@@ -194,7 +194,7 @@ Get operator list from `operators` field in `kody.config.json`.
 
 ## Final output
 
-Final message must use this exact format:
+When invoked through the standalone `task-leader` executable, final message must use this exact format:
 
 ```text
 DONE PR_SUMMARY:
@@ -211,3 +211,5 @@ If a step errors fatally, output:
 ```text
 FAILED: <step name> - <error>
 ```
+
+When invoked through scheduled `duty-tick`, obey the duty-tick output contract instead: call `submit_state` exactly once with `cursor: "idle"`, carried-forward `data`, and `done: false`.
