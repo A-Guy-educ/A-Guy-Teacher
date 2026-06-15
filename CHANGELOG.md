@@ -1685,6 +1685,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore(release): v0.25.11 ([#269](https://github.com/A-Guy-educ/A-Guy-Web/pull/269)) — @kodyade[bot]
 - fix: Wire up PayPal in /api/payments/checkout ([#265](https://github.com/A-Guy-educ/A-Guy-Web/pull/265)) — @aguyshayb
 - fix: Force dynamic rendering for /products/[slug] ([#251](https://github.com/A-Guy-educ/A-Guy-Web/pull/251)) — @aguyshayb
 - fix: Clear stale auth cookie on /api/users/me 401 ([#249](https://github.com/A-Guy-educ/A-Guy-Web/pull/249)) — @aguyshayb
