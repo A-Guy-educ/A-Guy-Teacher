@@ -1,0 +1,20 @@
+{
+  "taskId": "270",
+  "taskType": "pr",
+  "target": "270",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Resolved all merge conflicts by taking HEAD's version for all files",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    ".ai-docs/indexes/pattern-index.json",
+    "src/app/(frontend)/practice/page.tsx",
+    "src/app/(frontend)/study/page.tsx",
+    "src/app/(frontend)/test/page.tsx",
+    "src/server/repos/queries/study-page.ts"
+  ],
+  "sessionLog": null,
+  "startedAt": "2026-06-15T00:00:00.000Z",
+  "finishedAt": "2026-06-15T00:00:00.000Z"
+}
