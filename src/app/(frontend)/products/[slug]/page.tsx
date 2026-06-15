@@ -12,20 +12,13 @@ import { notFound } from 'next/navigation'
 import { getDirection } from '@/i18n/config'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { pageMetadata } from '@/infra/seo/pageMetadata'
-import { queryAllProductSlugs, queryProductBySlug } from '@/server/repos/queries/products'
+import { queryProductBySlug } from '@/server/repos/queries/products'
 import { ProductDetailContent } from './ProductDetailContent'
+
+export const dynamic = 'force-dynamic'
 
 type Props = {
   params: Promise<{ slug: string }>
-}
-
-export async function generateStaticParams() {
-  try {
-    const slugs = await queryAllProductSlugs()
-    return slugs
-  } catch {
-    return []
-  }
 }
 
 export default async function ProductDetailPage({ params: paramsPromise }: Props) {
