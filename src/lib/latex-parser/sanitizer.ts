@@ -1,3 +1,9 @@
+/**
+ * @fileType utility
+ * @domain exercises
+ * @ai-summary Security gate: blocks shell-escape (\write18), file I/O (\input, \include, \openin), and macro redefinition (\def). Note: \newcommand and \renewcommand are allowed — they appear in legitimate preamble but could be used for macro-based attacks if the macro body is adversarial.
+ */
+
 export interface SanitizeViolation {
   command: string
   line: number

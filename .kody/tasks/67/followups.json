@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Add difficulty and time display to LessonIntroPage",
+    "body": "The issue mentions that LessonIntroPage should display difficulty and estimated time for lessons. Currently these fields are not shown in the intro UI. The LessonIntroPage component needs UI elements to display lesson.difficulty and a time/estimatedTime field (if those fields exist on the Lesson type).",
+    "rationale": "Issue #67 explicitly listed difficulty and estimated time as required fields on the unified intro page.",
+    "priority": "medium"
+  },
+  {
+    "title": "Remove PdfLessonPager self-intro (deprecate intro/outro inside PdfLessonPager)",
+    "body": "Now that PdfLessonPager is always rendered with initialPageState (skipping intro), the intro and outro states within PdfLessonPager are dead code. Clean up by removing the intro and outro rendering branches from PdfLessonPager/index.tsx, keeping only the PDF viewer. Alternatively, PdfLessonPager could be simplified to just PdfViewer since the intro is now handled by LessonIntroPage.",
+    "rationale": "The PdfLessonPager intro/outro states are now always bypassed (since we always pass initialPageState). This creates code that can never be exercised.",
+    "priority": "low"
+  },
+  {
+    "title": "ExercisesPager intro is now redundant",
+    "body": "ExercisesPager also has its own intro/outro pages. Since LessonIntroPage now handles the intro for all lesson types, when ExercisesPager is rendered as a child (pageState === 'exercises'), its own intro is never shown. Similar to PdfLessonPager, the intro branch in ExercisesPager/index.tsx is now dead code when rendered from LessonIntroPage.",
+    "rationale": "LessonIntroPage's intro replaces all other intros. ExercisesPager's intro code path can only be reached when ExercisesPager is used standalone (e.g., from DualModeLessonView), not when embedded in LessonIntroPage.",
+    "priority": "low"
+  }
+]

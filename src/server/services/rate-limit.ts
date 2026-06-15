@@ -1,13 +1,20 @@
 /**
- * Rate Limiting Service for Guest Sessions
+ * Rate Limiting Service
  *
- * Provides in-memory rate limiting for anonymous users based on IP and User-Agent hash.
+ * Provides in-memory rate limiting for anonymous and authenticated users.
  * Uses a sliding window algorithm with TTL-based cleanup.
+ *
+ * @fileType service
+ * @domain chat
+ * @pattern sliding-window-quota
+ * @ai-summary In-memory rate limiting with sliding window per IP/User-Agent (guest) or userId (auth)
  *
  * Security:
  * - Uses IP hash and User-Agent hash for fingerprinting
  * - Sliding window prevents burst attacks
  * - Memory cleanup via periodic TTL expiration
+ *
+ * Gotcha: In-memory state is per-instance in serverless — does not enforce across multiple instances
  */
 import { logger } from '@/infra/utils/logger'
 import { getGuestChatConfig } from '@/server/config/guest-chat-config'

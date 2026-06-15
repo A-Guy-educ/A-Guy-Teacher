@@ -17,6 +17,9 @@ interface UsePdfLessonPagerProps {
   lessonId: string
   /** Grade bucket for progress storage — must be the lesson's course label, not the user's profile grade. */
   gradeLevel: string
+  /** When provided, overrides URL-based state initialization — used when PdfLessonPager
+   *  is rendered as a child after LessonIntroPage (skip the intro page). */
+  initialPageState?: PageState
 }
 
 /** Fire-and-forget progress save (silently ignores errors / unauthenticated users) */
@@ -47,13 +50,13 @@ export function usePdfLessonPager({
   lessonSlug,
   lessonId,
   gradeLevel,
+  initialPageState,
 }: UsePdfLessonPagerProps) {
   // Pages: intro(0) → pdf(1) → outro(2)
   const totalPages = 3 // intro + pdf + outro
-  const [pageState, setPageState] = useState<PageState>({
-    type: 'intro',
-    pageNumber: 0,
-  })
+  const [pageState, setPageState] = useState<PageState>(
+    initialPageState ?? { type: 'intro', pageNumber: 0 },
+  )
 
   const basePath = `/courses/${courseSlug}/chapters/${chapterSlug}/lessons/${lessonSlug}`
   const introUrl = basePath
@@ -62,6 +65,8 @@ export function usePdfLessonPager({
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    // Skip URL-based init if initialPageState was provided (child-render mode)
+    if (initialPageState) return
 
     const pathname = window.location.pathname
 
@@ -71,7 +76,7 @@ export function usePdfLessonPager({
       setPageState({ type: 'pdf', pageNumber: 1 })
     }
     // Default stays on intro (pageNumber: 0)
-  }, [basePath, completeUrl, pdfUrl])
+  }, [basePath, completeUrl, pdfUrl, initialPageState])
 
   const syncUrl = useCallback(
     (state: PageState) => {

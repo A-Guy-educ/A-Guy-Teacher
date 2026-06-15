@@ -32,11 +32,15 @@ export function getPublicBaseUrl(req: NextRequest): string {
 
   const forwardedProto = firstForwardedValue(req.headers.get('x-forwarded-proto'))
   const forwardedHost = firstForwardedValue(req.headers.get('x-forwarded-host'))
+  const host = firstForwardedValue(req.headers.get('host'))
+  const protocol = forwardedProto || (host?.includes('localhost') ? 'http' : 'https')
 
   let baseUrl: string
 
   if (forwardedProto && forwardedHost) {
     baseUrl = `${forwardedProto}://${forwardedHost}`
+  } else if (host) {
+    baseUrl = `${protocol}://${host}`
   } else {
     baseUrl = req.nextUrl.origin
     // Log when falling back to origin (helps debug redirect_uri_mismatch)
@@ -45,6 +49,7 @@ export function getPublicBaseUrl(req: NextRequest): string {
       baseUrl,
       forwardedProto,
       forwardedHost,
+      host,
       origin: req.nextUrl.origin,
       userAgent: req.headers.get('user-agent'),
     })

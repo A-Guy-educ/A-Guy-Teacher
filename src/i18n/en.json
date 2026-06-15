@@ -1,4 +1,171 @@
 {
+  "landingPage": {
+    "hero": {
+      "eyebrow": "The next generation of learning is here",
+      "title": "Like a private tutor, only more available, affordable, and tailored to you",
+      "subtitle": "Whatever your current level is, Aguy helps you start learning math from the ground up. The platform diagnoses, teaches, encourages independent learning, and tracks progress according to the official curriculum.",
+      "plansCta": "Plans and signup",
+      "trialCta": "Free trial",
+      "loginCta": "Already subscribed?",
+      "previewBadge": "System preview",
+      "stats": {
+        "lessons": {
+          "label": "Lessons",
+          "value": "1,000+"
+        },
+        "exercises": {
+          "label": "Exercises",
+          "value": "100K+"
+        },
+        "exams": {
+          "label": "Exams and simulations",
+          "value": "500+"
+        }
+      }
+    },
+    "comparison": {
+      "title": "Everything good about a private tutor. Only better.",
+      "description": "We took personal attention, understanding of difficulties, and close guidance, then turned them into accessible smart technology.",
+      "criteria": "Criteria",
+      "aguy": "Aguy",
+      "tutor": "Regular private tutor",
+      "rows": {
+        "personal": {
+          "label": "Personalized learning",
+          "aguy": "Dynamic diagnosis, monitoring, and feedback.",
+          "tutor": "Mostly available during the private lesson."
+        },
+        "plan": {
+          "label": "Learning plan",
+          "aguy": "Structured and focused around the official curriculum.",
+          "tutor": "Manual, usually built around a weekly hour."
+        },
+        "experience": {
+          "label": "Professional experience",
+          "aguy": "Based on 20+ years of teaching experience.",
+          "tutor": "Depends heavily on the teacher you find."
+        },
+        "emotional": {
+          "label": "Emotional support",
+          "aguy": "Detects frustration and encourages in real time.",
+          "tutor": "Can be excellent, but depends on chemistry and availability."
+        },
+        "cost": {
+          "label": "Cost",
+          "aguy": "Far more affordable than a single private lesson.",
+          "tutor": "Hundreds of shekels per hour."
+        },
+        "availability": {
+          "label": "Question availability",
+          "aguy": "Available 24/7 exactly when students get stuck.",
+          "tutor": "Usually only at scheduled times."
+        }
+      }
+    },
+    "story": {
+      "title": "Human knowledge turned into technology.",
+      "description": "With deep awareness of how different students learn, we built a platform shaped by tens of thousands of private and group teaching hours.",
+      "stats": {
+        "experience": {
+          "value": "20+",
+          "label": "years of experience"
+        },
+        "hours": {
+          "value": "50K+",
+          "label": "teaching hours"
+        },
+        "exercises": {
+          "value": "100K+",
+          "label": "exercises"
+        },
+        "lessons": {
+          "value": "1,000+",
+          "label": "lesson plans"
+        },
+        "research": {
+          "value": "Thousands",
+          "label": "learning research hours"
+        }
+      }
+    },
+    "features": {
+      "title": "What does the system include?",
+      "description": "A complete learning environment that covers every step, from foundations to advanced practice.",
+      "items": {
+        "lessons": {
+          "title": "1,000+ lessons",
+          "description": "Deep learning and practice lessons that explain the material from scratch."
+        },
+        "exercises": {
+          "title": "100K+ exercises",
+          "description": "A large practice bank for every topic and difficulty level."
+        },
+        "exams": {
+          "title": "500+ exams",
+          "description": "Simulations and summary tests that prepare students for real exams."
+        },
+        "teacher": {
+          "title": "A close digital teacher",
+          "description": "Virtual guidance that explains mistakes and how to improve."
+        },
+        "plan": {
+          "title": "Personal learning plan",
+          "description": "A focused schedule based on exam dates and personal goals."
+        },
+        "emotional": {
+          "title": "Emotional learning features",
+          "description": "Smart diagnosis, dynamic feedback, real-time encouragement, and progress reports."
+        }
+      }
+    },
+    "simulation": {
+      "title": "Learning that works. Aligned with the official curriculum.",
+      "description": "A quick look at the lessons dashboard, guided chat, and smart notebook.",
+      "tabs": {
+        "dashboard": "Lessons dashboard",
+        "chat": "Chat and practice",
+        "notebook": "Smart notebook"
+      },
+      "dashboard": {
+        "url": "app.aguy.co.il/math/dashboard",
+        "title": "Grade 7",
+        "progress": "3% complete",
+        "triangles": {
+          "badge": "Continue learning",
+          "title": "Special segments in triangles",
+          "status": "50% complete"
+        },
+        "order": {
+          "badge": "New lesson 1",
+          "title": "Order of operations",
+          "status": "Not started yet"
+        },
+        "fractions": {
+          "badge": "New lesson 2",
+          "title": "Multiplying fractions",
+          "status": "Not started yet"
+        }
+      },
+      "chat": {
+        "teacher": "Aguy - digital teacher",
+        "message": "Hi! Let's solve section B together and place the missing values on the number line.",
+        "feedback": "Learning feedback: great placement! What about the last value on the right?",
+        "exerciseTitle": "Section B: complete the missing numbers on the line",
+        "next": "Next practice"
+      },
+      "notebook": {
+        "title": "Smart notebook",
+        "prompt": "Draw the function graph and determine the parabola vertex.",
+        "feedback": "Excellent! You can see the vertex and the shape of the parabola."
+      }
+    },
+    "cta": {
+      "title": "Anyone can learn math independently.",
+      "description": "Start with a system that guides, explains, and encourages at every step.",
+      "join": "Join now",
+      "trial": "Free trial"
+    }
+  },
   "landing": {
     "hero": {
       "badge": "Your digital math teacher",
@@ -360,6 +527,7 @@
     "notesPlaceholder": "Add your notes here...",
     "selectBadge": "Select",
     "of": "of",
+    "pages": "Pages",
     "exercisesPagerIntroDescriptionPart1": "This lesson contains",
     "exercisesPagerIntroDescriptionPart2": "exercises. Let's begin!",
     "exercisesPagerWelcome": "Welcome to the Lesson",
@@ -371,12 +539,32 @@
     "exercisesPagerNext": "Next",
     "exercisesPagerIntro": "Intro",
     "exercisesPagerCompleted": "Completed",
+    "lessonSummaryEndTitle": "End of lesson",
+    "lessonSummarySolvedExercises": "Exercises solved",
+    "lessonSummaryCorrectAnswers": "Correct answers",
+    "lessonSummaryScore": "Score",
+    "lessonSummaryNextLesson": "Continue to next lesson",
+    "lessonSummaryBackToCourse": "Back to course",
+    "lessonSummaryRetry": "Try again",
     "pdfLessonPagerIntroDescriptionPart1": "This lesson contains",
     "pdfLessonPagerIntroDescriptionPart2": "documents. Let's begin!",
     "pdfLessonPagerDocuments": "documents",
     "pdfLessonPagerCompletedDescription": "You've reviewed all documents for this lesson.",
     "exercisesPagerBackToLesson": "Back to Lesson",
     "startLesson": "Start Lesson",
+    "lessonIntro": "Intro",
+    "lessonIntroWelcome": "Welcome to the Lesson",
+    "lessonIntroStart": "Start",
+    "lessonLobbySummary": "Lesson summary",
+    "lessonLobbyProgress": "Your progress",
+    "lessonLobbyContinue": "Continue lesson",
+    "lessonLobbyRestart": "Start again",
+    "lessonLobbyReview": "Review lesson",
+    "lessonLobbyReady": "Ready to start.",
+    "lessonLobbyInProgress": "You have already started this lesson.",
+    "lessonLobbyComplete": "You completed this lesson.",
+    "lessonLobbyNoProgress": "No progress yet",
+    "lessonLobbyNextLesson": "Next lesson",
     "soonBadge": "Soon",
     "justAddedBadge": "New",
     "contentLocked": "This content is being prepared and will be available soon.",

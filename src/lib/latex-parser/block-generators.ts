@@ -1,3 +1,9 @@
+/**
+ * @fileType utility
+ * @domain exercises
+ * @ai-summary Factory functions for ContentBlock subtypes (rich_text, latex, question_free_response, question_table, question_axis, question_geometry, question_select/mcq). All IDs are generated via generateId — if that function is not deterministic, block identity will vary across parses of the same source.
+ */
+
 import { generateId } from '@/infra/types/exercise'
 import type {
   RichTextBlock,

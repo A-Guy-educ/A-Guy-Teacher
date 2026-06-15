@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.25.11 — 2026-06-15
+
+### Features
+
+### Fixes
+
+### Chores
+
 ## v0.25.10 — 2026-05-29
 
 ### Features
@@ -1677,18 +1685,32 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
-- fix(ci): Restore dependabot gates ([#19](https://github.com/A-Guy-educ/A-Guy-Web/pull/19)) — @aguyaharonyair
+## [v0.25.11] - 2026-06-15
+
+- chore(release): v0.25.11 ([#269](https://github.com/A-Guy-educ/A-Guy-Web/pull/269)) — @kodyade[bot]
+- fix: Wire up PayPal in /api/payments/checkout ([#265](https://github.com/A-Guy-educ/A-Guy-Web/pull/265)) — @aguyshayb
+- fix: Force dynamic rendering for /products/[slug] ([#251](https://github.com/A-Guy-educ/A-Guy-Web/pull/251)) — @aguyshayb
+- fix: Clear stale auth cookie on /api/users/me 401 ([#249](https://github.com/A-Guy-educ/A-Guy-Web/pull/249)) — @aguyshayb
+- #164: Remove /start fallback from root page ([#165](https://github.com/A-Guy-educ/A-Guy-Web/pull/165)) — @kodyade[bot] · ⚠️ QA 2026-06-11 (#176)
+- fix(lessons): Show Prev/Next nav buttons unconditionally (revert #1766) ([#163](https://github.com/A-Guy-educ/A-Guy-Web/pull/163)) — @aguyshayb · ⚠️ QA 2026-06-11 (#190)
+- fix(ask): Restore Gemini responseSchema on interactive lesson route ([#158](https://github.com/A-Guy-educ/A-Guy-Web/pull/158)) — @aguyshayb · ⚠️ QA 2026-06-11 (#205)
+- #67: [Lessons] עמוד כניסה אחיד לכל סוגי השיעורים ([#68](https://github.com/A-Guy-educ/A-Guy-Web/pull/68)) — @kodyade[bot] · ⚠️ QA 2026-06-10 (#85)
+- #30: [Lessons] Add unified entry intro page for all lessons ([#34](https://github.com/A-Guy-educ/A-Guy-Web/pull/34)) — @kodyade[bot] · ⚠️ QA 2026-06-10 (#100)
+- #35: docs: add headers to src/server/services/ (doc-coverage gap) ([#36](https://github.com/A-Guy-educ/A-Guy-Web/pull/36)) — @kodyade[bot] · ⚠️ QA 2026-06-10 (#53)
+- #44: docs-coverage: src/lib/latex-parser/ — 0/13 modules with @ai-summa… ([#45](https://github.com/A-Guy-educ/A-Guy-Web/pull/45)) — @kodyade[bot] · ⚠️ QA 2026-06-11 (#117)
+- fix: allow Kody dashboard previews ([#33](https://github.com/A-Guy-educ/A-Guy-Web/pull/33)) — @aguyaharonyair · ⚠️ QA 2026-06-10 (#37)
+- fix(ci): Restore dependabot gates ([#19](https://github.com/A-Guy-educ/A-Guy-Web/pull/19)) — @aguyaharonyair · ⚠️ QA 2026-06-10 (#46)
 - #2250: docs-drift: Exercises (#2154) ([#2341](https://github.com/A-Guy-educ/A-Guy/pull/2341)) — @kodyade[bot] · ⚠️ QA 2026-06-08 (#2527)
 - #2248: docs-drift: Block Rendering (#2116) ([#2340](https://github.com/A-Guy-educ/A-Guy/pull/2340)) — @kodyade[bot] · ⚠️ QA 2026-06-08 (#2530)
 - #2246: docs-drift: Admin Components (#2108) ([#2339](https://github.com/A-Guy-educ/A-Guy/pull/2339)) — @kodyade[bot] · ✅ QA 2026-06-08
 - fix(csp): Allow *.gravatar.com subdomains in admin img-src ([#2521](https://github.com/A-Guy-educ/A-Guy/pull/2521)) — @aguyshayb · ✅ QA 2026-06-09
 - #2247: docs-drift: Admin Components (#2115) ([#2337](https://github.com/A-Guy-educ/A-Guy/pull/2337)) — @kodyade[bot] · ✅ QA 2026-06-08
 - #2331: src/server/api/ — thin in-code documentation ([#2333](https://github.com/A-Guy-educ/A-Guy/pull/2333)) — @kodyade[bot] · ⚠️ QA 2026-06-09 (#2542)
-- #2291: [P1] Add autosave to LessonBlocksField delete operations ([#2307](https://github.com/A-Guy-educ/A-Guy/pull/2307)) — @kodyade[bot]
-- #2162: Doc gap: src/infra/utils/ — 6/27 modules carry @ai-summary ([#2164](https://github.com/A-Guy-educ/A-Guy/pull/2164)) — @kodyade[bot]
-- chore(memory): Rescue orphaned knowledge from kody-memorize branches ([#1891](https://github.com/A-Guy-educ/A-Guy/pull/1891)) — @aguyaharonyair
-- #1563: feat: show app version in admin dashboard footer ([#1566](https://github.com/A-Guy-educ/A-Guy/pull/1566)) — @aguyaharonyair
-- fix(health-badge): Read 'version' field from /api/health response ([#2519](https://github.com/A-Guy-educ/A-Guy/pull/2519)) — @aguyshayb
+- #2291: [P1] Add autosave to LessonBlocksField delete operations ([#2307](https://github.com/A-Guy-educ/A-Guy/pull/2307)) — @kodyade[bot] · ⚠️ QA 2026-06-10 (#64)
+- #2162: Doc gap: src/infra/utils/ — 6/27 modules carry @ai-summary ([#2164](https://github.com/A-Guy-educ/A-Guy/pull/2164)) — @kodyade[bot] · ⚠️ QA 2026-06-11 (#148)
+- chore(memory): Rescue orphaned knowledge from kody-memorize branches ([#1891](https://github.com/A-Guy-educ/A-Guy/pull/1891)) — @aguyaharonyair · ⚠️ QA 2026-06-11 (#137)
+- #1563: feat: show app version in admin dashboard footer ([#1566](https://github.com/A-Guy-educ/A-Guy/pull/1566)) — @aguyaharonyair · ⚠️ QA 2026-06-11 (#131)
+- fix(health-badge): Read 'version' field from /api/health response ([#2519](https://github.com/A-Guy-educ/A-Guy/pull/2519)) — @aguyshayb · ⚠️ QA 2026-06-11 (#154)
 - #1783: [P1] Recent Transactions widget shows HTTP 404 error ([#1806](https://github.com/A-Guy-educ/A-Guy/pull/1806)) — @aguyaharonyair · ⚠️ QA 2026-06-08 (#2522)
 - #1568: bug: /admin/chat shows 'Loading conversation...' spinner for ~3s… ([#1573](https://github.com/A-Guy-educ/A-Guy/pull/1573)) — @aguyaharonyair · ⚠️ QA 2026-06-08 (#2518)
 - #1570: feat: show per-message timestamp in admin chat ([#1574](https://github.com/A-Guy-educ/A-Guy/pull/1574)) — @aguyaharonyair · ✅ QA 2026-06-07

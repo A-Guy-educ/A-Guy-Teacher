@@ -1,0 +1,14 @@
+{
+  "taskId": "164",
+  "taskType": "issue",
+  "target": "164",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Removed /start fallback redirect from root page. When no homePage exists in CMS, the page now falls through to Redirects component instead of redirecting to /start.",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": ["src/app/(frontend)/page.tsx"],
+  "sessionLog": null,
+  "startedAt": "2026-06-11T10:56:00Z",
+  "finishedAt": "2026-06-11T10:56:15Z"
+}

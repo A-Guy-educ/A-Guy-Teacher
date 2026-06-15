@@ -1,3 +1,9 @@
+/**
+ * @fileType pipeline
+ * @domain exercises
+ * @ai-summary LaTeX → ContentBlock pipeline. Entry: parseLatexToBlocks (single-exercise) and parseLatexToExercises (multi-exercise). Warns on unrecognized environments but never throws; silent-skip preamble content before \begin{document}.
+ */
+
 import type {
   ParseResult,
   ParseWarning,

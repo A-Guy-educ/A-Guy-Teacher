@@ -13,7 +13,9 @@ export interface CreateCheckoutOptions {
   productId: string
   productName: string
   amount: number // in smallest currency unit (agorot/cents)
-  currency: 'ILS' | 'USD' | 'EUR'
+  // ISO 4217 three-letter uppercase code. The route validates the shape;
+  // the active provider validates real support and rejects unknown codes.
+  currency: string
   userId: string
   successUrl: string
   cancelUrl: string

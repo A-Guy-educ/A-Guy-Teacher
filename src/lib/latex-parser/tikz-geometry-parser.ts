@@ -1,4 +1,8 @@
 /**
+ * @fileType parser
+ * @domain exercises
+ * @ai-summary Parses coordinate-based TikZ (non-axis) into question_geometry blocks. Falls back to inline coordinate extraction when no explicit \coordinate definitions exist — fragile if the TikZ source uses unusual formatting. Circles with radius < 0.5 pt are silently dropped.
+ *
  * Parses TikZ coordinate-based geometry into GeometrySpecV1 blocks.
  *
  * Handles:

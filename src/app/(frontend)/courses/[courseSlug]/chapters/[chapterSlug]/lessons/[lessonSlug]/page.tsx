@@ -8,23 +8,24 @@ import { SystemParams } from '@/infra/config/system-params'
 import { queryCourseBySlug } from '@/server/repos/queries/courses'
 import { queryExercisesByLesson } from '@/server/repos/queries/exercises'
 import { resolveFormulaSheet } from '@/server/repos/queries/formula-sheets'
-import { queryLessonBySlug } from '@/server/repos/queries/lessons'
+import { queryLessonBySlug, queryLessonsByCourse } from '@/server/repos/queries/lessons'
 import { queryMediaByIds } from '@/server/repos/queries/media'
 import { relationId } from '@/server/repos/mongo'
-import { isAuthenticatedServer } from '@/server/utils/access-gate-server'
+import {
+  getAuthenticatedUserServer,
+  isAuthenticatedServer,
+} from '@/server/utils/access-gate-server'
 import { checkPaidAccess } from '@/server/utils/check-paid-access'
 import type { Chapter, Course, Exercise, Media } from '@/infra/types/content'
 import { isValidContentLocale } from '@/infra/types/content'
 import { AccessGateProvider } from '@/ui/web/auth/AccessGateProvider'
-import { ChatInterface } from '@/ui/web/chat'
 import { extractAllMediaIds } from '@/ui/web/exerciserenderer/utils/extractMediaIds'
 import { stripHtml } from '@/utils/strip-html'
+import { findUserProgress } from '@/server/web-api/progress'
 
-import { ExerciseWorkspace } from './exercises/[exerciseSlug]/_components/ExerciseWorkspace'
-import { EmptyLessonPlaceholder } from './_components/EmptyLessonPlaceholder'
-import { ExercisesPager } from './_components/ExercisesPager'
 import { LessonAnalytics } from './_components/LessonAnalytics'
-import { PdfLessonPager } from './_components/PdfLessonPager'
+import { LessonIntroPage } from './_components/LessonIntroPage'
+import { queryLessonBlocks } from '@/server/repos/queries/lesson-blocks'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,6 +81,45 @@ async function getMediaFiles(contentFiles: Array<string | Media> | null | undefi
   )
 }
 
+async function getLessonProgress({
+  lessonId,
+  exercises,
+  gradeLevel,
+}: {
+  lessonId: string
+  exercises: Exercise[]
+  gradeLevel: string
+}) {
+  const total = exercises.length
+  const fallback = { completed: 0, total, percent: 0, status: 'not_started' }
+  const { user } = await getAuthenticatedUserServer()
+
+  if (!user?.id) return fallback
+
+  const progress = await findUserProgress(user.id, gradeLevel || 'default')
+  const records = progress?.progressRecords ?? []
+  const completedExerciseIds = new Set(
+    records
+      .filter((record) => record.recordType === 'exercise' && record.status === 'completed')
+      .map((record) => record.recordId),
+  )
+  const completed = exercises.filter((exercise) => completedExerciseIds.has(exercise.id)).length
+  const lessonRecord = records.find(
+    (record) => record.recordType === 'lesson' && record.recordId === lessonId,
+  )
+  const percent =
+    total > 0
+      ? Math.round((completed / total) * 100)
+      : Math.round(lessonRecord?.completionPercentage ?? 0)
+
+  return {
+    completed,
+    total,
+    percent,
+    status: lessonRecord?.status ?? fallback.status,
+  }
+}
+
 async function getLessonData({
   courseSlug,
   chapterSlug,
@@ -110,7 +150,9 @@ async function getLessonData({
     return null
   }
 
-  return { contentLocale, course, chapter, lesson }
+  const blocks = await queryLessonBlocks({ lessonId: lesson.id })
+
+  return { contentLocale, course, chapter, lesson, blocks }
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
@@ -121,7 +163,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     notFound()
   }
 
-  const { contentLocale, course, lesson } = lessonData
+  const { contentLocale, course, lesson, blocks } = lessonData
   const accessType = resolveAccessType(lesson.accessType, course.accessType)
   const [gatedDelayMs, gatedWarningMs] = await Promise.all([
     SystemParams.getGatedDelayMs(),
@@ -173,6 +215,16 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const mediaMap = await queryMediaByIds(
     extractAllMediaIds(exercises.map((exercise) => ({ content: exercise.content ?? null }))),
   )
+  const [courseLessons, progress] = await Promise.all([
+    queryLessonsByCourse({ courseId: course.id }),
+    getLessonProgress({
+      lessonId: lesson.id,
+      exercises,
+      gradeLevel: course.courseLabel || '',
+    }),
+  ])
+  const lessonIndex = courseLessons.findIndex((courseLesson) => courseLesson.id === lesson.id)
+  const nextLesson = lessonIndex >= 0 ? courseLessons[lessonIndex + 1] : null
   const backUrl = `/courses/${courseSlug}/chapters/${chapterSlug}`
   const formulaSheet = formulaSheetResult?.sheet ?? null
   const showChat = exercises.length > 0 || Boolean(lesson.lessonContextText?.trim())
@@ -192,51 +244,23 @@ export default async function LessonPage({ params }: LessonPageProps) {
         lessonTitle={lesson.title}
         contentType={contentType}
       />
-      {hasExerciseBlocks ? (
-        <ExercisesPager
-          exercises={exercises}
-          lessonTitle={lesson.title}
-          backUrl={backUrl}
-          courseSlug={courseSlug}
-          chapterSlug={chapterSlug}
-          lessonSlug={lessonSlug}
-          lessonId={lesson.id}
-          gradeLevel={course.courseLabel || ''}
-          mediaMap={mediaMap}
-          showChat={showChat}
-          formulaSheet={formulaSheet}
-        />
-      ) : mediaFiles.length > 0 ? (
-        <PdfLessonPager
-          validFiles={mediaFiles}
-          lessonTitle={lesson.title}
-          backUrl={backUrl}
-          courseSlug={courseSlug}
-          chapterSlug={chapterSlug}
-          lessonSlug={lessonSlug}
-          lessonId={lesson.id}
-          gradeLevel={course.courseLabel || ''}
-          chatLessonId={lesson.id}
-          showChat={showChat}
-          formulaSheet={formulaSheet}
-        />
-      ) : (
-        <ExerciseWorkspace
-          exerciseTitle={lesson.title}
-          backUrl={backUrl}
-          primaryContent={<EmptyLessonPlaceholder lessonTitle={lesson.title} />}
-          chatContent={
-            showChat ? (
-              <ChatInterface
-                lessonId={lesson.id}
-                translationNamespace="courses"
-                showMathTools={true}
-                formulaSheet={formulaSheet}
-              />
-            ) : null
-          }
-        />
-      )}
+      <LessonIntroPage
+        lesson={lesson}
+        blocks={blocks}
+        backUrl={backUrl}
+        showChat={showChat}
+        formulaSheet={formulaSheet}
+        exercises={exercises}
+        mediaFiles={mediaFiles}
+        mediaMap={mediaMap}
+        courseSlug={courseSlug}
+        chapterSlug={chapterSlug}
+        lessonSlug={lessonSlug}
+        lessonId={lesson.id}
+        gradeLevel={course.courseLabel || ''}
+        progress={progress}
+        nextLesson={nextLesson}
+      />
     </AccessGateProvider>
   )
 }

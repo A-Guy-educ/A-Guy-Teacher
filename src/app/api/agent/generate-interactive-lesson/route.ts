@@ -6,7 +6,13 @@ import { z } from 'zod'
 
 import { resolveMediaFilePath } from '@/infra/config/storage'
 import { getContentDb, objectIdFromString } from '@/infra/db/content-db'
-import { InteractiveLessonResponseSchema } from '@/infra/llm/services/interactive-lesson/interactive-lesson-schema'
+import {
+  callGeminiResiliently,
+  GEMINI_CONFIG,
+  parseResponse,
+  prepareImage,
+  validateLesson,
+} from '@/infra/llm/services/interactive-lesson/interactive-lesson-generation-service'
 import type { InteractiveLesson } from '@/infra/llm/services/interactive-lesson/interactive-lesson-types'
 
 const BodySchema = z.object({
@@ -91,64 +97,33 @@ async function loadMedia(mediaId: string) {
   return null
 }
 
-function cleanJson(text: string) {
-  return text
-    .trim()
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/, '')
-    .replace(/```\s*$/, '')
-    .trim()
-}
-
 async function generateWithGemini(
   buffer: Buffer,
   mimeType: string,
   locale: 'he' | 'en',
-): Promise<InteractiveLesson | null> {
-  if (!process.env.GEMINI_API_KEY) return null
+): Promise<{ lesson: InteractiveLesson; sizeBytes: number } | null> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return null
 
   const prompt =
     locale === 'he'
       ? 'נתח את תרגיל המתמטיקה בתמונה והחזר JSON בלבד לפי הסכמה: title, geometry, graph, numberLine, steps. כל הטקסט בעברית. אם אין גרף או ציר מספרים החזר מערכים ריקים.'
       : 'Analyze the math exercise in the image and return JSON only with: title, geometry, graph, numberLine, steps. Use English. Use empty arrays for graph or numberLine when absent.'
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { inlineData: { mimeType, data: buffer.toString('base64') } },
-              { text: prompt },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: 0,
-          maxOutputTokens: 8192,
-          responseMimeType: 'application/json',
-        },
-      }),
-    },
-  )
+  // prepareImage runs sharp on non-PDF inputs; sharp preserves the input
+  // format on `.toBuffer()` so passing the original mimeType to Gemini is
+  // safe today. If the optimizer ever normalizes to WebP/JPEG, the route
+  // must read an effective mimeType back from prepareImage instead.
+  const { attachmentData, sizeBytes } = await prepareImage(buffer, mimeType)
+  const responseText = await callGeminiResiliently({
+    apiKey,
+    prompt,
+    attachmentData,
+    attachmentMimeType: mimeType,
+  })
+  if (!responseText) return null
 
-  if (!response.ok) return null
-  const json = (await response.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
-  }
-  const text =
-    json.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text)
-      .filter(Boolean)
-      .join('') ?? ''
-  if (!text) return null
-
-  const parsed = InteractiveLessonResponseSchema.safeParse(JSON.parse(cleanJson(text)))
-  if (!parsed.success) return null
-  return { ...parsed.data, locale } as unknown as InteractiveLesson
+  return { lesson: validateLesson(parseResponse(responseText), locale), sizeBytes }
 }
 
 export async function POST(request: NextRequest) {
@@ -162,17 +137,17 @@ export async function POST(request: NextRequest) {
     if (!media)
       return NextResponse.json({ success: false, error: 'Media not found' }, { status: 404 })
 
-    const lesson =
-      (await generateWithGemini(media.buffer, media.mimeType, parsed.data.locale).catch(
-        () => null,
-      )) ?? fallbackLesson(parsed.data.locale)
+    const result = await generateWithGemini(media.buffer, media.mimeType, parsed.data.locale).catch(
+      () => null,
+    )
+    const lesson = result?.lesson ?? fallbackLesson(parsed.data.locale)
 
     return NextResponse.json({
       success: true,
       data: lesson,
       metadata: {
-        model: process.env.GEMINI_API_KEY ? 'gemini-2.5-flash' : 'fallback',
-        imageSizeBytes: media.buffer.length,
+        model: process.env.GEMINI_API_KEY ? GEMINI_CONFIG.modelName : 'fallback',
+        imageSizeBytes: result?.sizeBytes ?? media.buffer.length,
         processingTimeMs: 0,
       },
     })

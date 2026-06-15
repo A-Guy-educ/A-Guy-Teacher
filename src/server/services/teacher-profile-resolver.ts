@@ -5,6 +5,11 @@
  * Implements a tiered resolution strategy:
  * - Authenticated users: Tier 1 (user settings) → Tier 2 (default) → Tier 3 (first active) → Tier 4 (failsafe)
  * - Guests: Tier 2 (default) → Tier 4 (failsafe)
+ *
+ * @fileType service
+ * @domain chat
+ * @pattern tiered-resolution
+ * @ai-summary Resolves teacher system prompt with tiered fallback: user settings → default slug → first active → hardcoded failsafe
  */
 
 import type { Payload } from '@/infra/types/backend'

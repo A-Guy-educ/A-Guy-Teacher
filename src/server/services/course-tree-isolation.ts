@@ -2,6 +2,11 @@
  * Course tree isolation validation
  *
  * Ensures all children (chapters) of a course reference that course.
+ *
+ * @fileType service
+ * @domain courses
+ * @pattern validation
+ * @ai-summary Validates referential integrity: every chapter's course field must point back to its parent
  */
 import type { Payload } from '@/infra/types/backend'
 

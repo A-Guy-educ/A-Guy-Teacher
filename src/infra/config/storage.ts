@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-const MEDIA_SUBDIR = path.resolve(dirname, '../../public/media')
+const MEDIA_SUBDIR = path.resolve(dirname, '../../../public/media')
 
 /**
  * Absolute path to local media storage directory

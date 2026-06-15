@@ -6,74 +6,84 @@
  * @pattern env-vault
  * @ai-summary Validates and exposes payment provider environment variables.
  *
- * Validates required payment secrets on first call and provides
- * type-safe access to all payment-related environment variables.
+ * Validates per provider so a deployment can ship with only one provider
+ * configured (e.g. PayPal-only) without the other provider's secrets failing
+ * validation. Throws on first access for whichever provider is requested.
  */
 
-export interface PaymentEnv {
+export type PaymentProviderName = 'Stripe' | 'PayPal'
+
+export class MissingPaymentEnvError extends Error {
+  readonly provider: PaymentProviderName
+  readonly missing: readonly string[]
+
+  constructor(provider: PaymentProviderName, missing: readonly string[]) {
+    super(`Missing required ${provider} environment variables: ${missing.join(', ')}`)
+    this.name = 'MissingPaymentEnvError'
+    this.provider = provider
+    this.missing = missing
+  }
+}
+
+export interface StripeEnv {
   stripeSecretKey: string
   stripePublishableKey: string
   stripeWebhookSecret: string
   stripeCurrency: string
+}
+
+export interface PayPalEnv {
   paypalClientId: string
   paypalClientSecret: string
   paypalWebhookId: string
   paypalSandbox: boolean
 }
 
-interface PaymentEnvValidation {
-  required: boolean
-  value: string | undefined
-  name: string
-}
+let stripeCache: StripeEnv | null = null
+let paypalCache: PayPalEnv | null = null
 
-let validatedEnv: PaymentEnv | null = null
+export function getStripeEnv(): StripeEnv {
+  if (stripeCache) return stripeCache
 
-/**
- * Get and validate all payment environment variables.
- * Throws if any required variable is missing.
- * Caches result after first call.
- */
-export function getPaymentEnv(): PaymentEnv {
-  if (validatedEnv) {
-    return validatedEnv
-  }
+  const missing: string[] = []
+  if (!process.env.STRIPE_SECRET_KEY) missing.push('STRIPE_SECRET_KEY')
+  if (!process.env.STRIPE_WEBHOOK_SECRET) missing.push('STRIPE_WEBHOOK_SECRET')
 
-  const vars: PaymentEnvValidation[] = [
-    { name: 'STRIPE_SECRET_KEY', required: true, value: process.env.STRIPE_SECRET_KEY },
-    { name: 'STRIPE_PUBLISHABLE_KEY', required: false, value: process.env.STRIPE_PUBLISHABLE_KEY },
-    { name: 'STRIPE_WEBHOOK_SECRET', required: true, value: process.env.STRIPE_WEBHOOK_SECRET },
-    { name: 'STRIPE_CURRENCY', required: false, value: process.env.STRIPE_CURRENCY },
-    { name: 'PAYPAL_CLIENT_ID', required: true, value: process.env.PAYPAL_CLIENT_ID },
-    { name: 'PAYPAL_CLIENT_SECRET', required: true, value: process.env.PAYPAL_CLIENT_SECRET },
-    { name: 'PAYPAL_WEBHOOK_ID', required: true, value: process.env.PAYPAL_WEBHOOK_ID },
-    { name: 'PAYPAL_SANDBOX', required: false, value: process.env.PAYPAL_SANDBOX },
-  ]
-
-  const missing = vars.filter((v) => v.required && !v.value)
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required payment environment variables: ${missing.map((v) => v.name).join(', ')}`,
-    )
+    throw new MissingPaymentEnvError('Stripe', missing)
   }
 
-  validatedEnv = {
+  stripeCache = {
     stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? '',
     stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY ?? '',
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',
     stripeCurrency: process.env.STRIPE_CURRENCY ?? 'ILS',
+  }
+  return stripeCache
+}
+
+export function getPayPalEnv(): PayPalEnv {
+  if (paypalCache) return paypalCache
+
+  const missing: string[] = []
+  if (!process.env.PAYPAL_CLIENT_ID) missing.push('PAYPAL_CLIENT_ID')
+  if (!process.env.PAYPAL_CLIENT_SECRET) missing.push('PAYPAL_CLIENT_SECRET')
+  if (!process.env.PAYPAL_WEBHOOK_ID) missing.push('PAYPAL_WEBHOOK_ID')
+
+  if (missing.length > 0) {
+    throw new MissingPaymentEnvError('PayPal', missing)
+  }
+
+  paypalCache = {
     paypalClientId: process.env.PAYPAL_CLIENT_ID ?? '',
     paypalClientSecret: process.env.PAYPAL_CLIENT_SECRET ?? '',
     paypalWebhookId: process.env.PAYPAL_WEBHOOK_ID ?? '',
     paypalSandbox: process.env.PAYPAL_SANDBOX !== 'false',
   }
-
-  return validatedEnv
+  return paypalCache
 }
 
-/**
- * Reset the cached environment (useful for testing)
- */
 export function resetPaymentEnvCache(): void {
-  validatedEnv = null
+  stripeCache = null
+  paypalCache = null
 }

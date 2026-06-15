@@ -6,6 +6,7 @@ import {
   locales,
   getLocaleFromSubdomain,
 } from './i18n/config'
+import { contentSecurityPolicy } from './infra/security/content-security-policy.js'
 
 /**
  * Check if a path is a protected learning route that requires authentication.
@@ -28,6 +29,18 @@ function isProtectedLearningPath(pathname: string): boolean {
 function hasAuthToken(request: NextRequest): boolean {
   const cookieStore = request.cookies
   return cookieStore.get('payload-token')?.value !== undefined
+}
+
+function isKodyFlyPreviewHost(host: string): boolean {
+  const hostname = host.split(':')[0]?.toLowerCase() ?? ''
+  return hostname.startsWith('kp-') && hostname.endsWith('.fly.dev')
+}
+
+function allowsPreviewAuthBypass(request: NextRequest): boolean {
+  if (process.env.KODY_PREVIEW_AUTH_BYPASS !== 'true') return false
+
+  const host = request.headers.get('host') || request.nextUrl.host
+  return isKodyFlyPreviewHost(host)
 }
 
 function resolveCookieDomain(host: string): string | undefined {
@@ -53,6 +66,11 @@ function resolveCookieDomain(host: string): string | undefined {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
+  const response = NextResponse.next()
+
+  if (!pathname.startsWith('/api/pdfjs-viewer')) {
+    response.headers.set('Content-Security-Policy', contentSecurityPolicy)
+  }
 
   // Exclude paths from locale handling (double safety, even though matcher already excludes many)
   const shouldExclude =
@@ -62,13 +80,17 @@ export function middleware(request: NextRequest) {
     pathname.includes('.')
 
   if (shouldExclude) {
-    return NextResponse.next()
+    return response
   }
 
   // Auth guard: redirect unauthenticated users to login for protected learning routes
-  if (isProtectedLearningPath(pathname) && !hasAuthToken(request)) {
+  if (
+    isProtectedLearningPath(pathname) &&
+    !hasAuthToken(request) &&
+    !allowsPreviewAuthBypass(request)
+  ) {
     const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('returnTo', pathname)
+    loginUrl.searchParams.set('returnTo', `${pathname}${request.nextUrl.search}`)
     return NextResponse.redirect(loginUrl)
   }
 
@@ -101,8 +123,6 @@ export function middleware(request: NextRequest) {
       }
     }
   }
-
-  const response = NextResponse.next()
 
   if (shouldSetCookie) {
     const cookieDomain = resolveCookieDomain(host)
@@ -137,7 +157,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Locale handling — exclude admin, api routes, static assets
-    '/((?!api|admin|_next|_static|.*\\..*).*)',
+    // Security headers run broadly; locale handling still exits early for admin/api/assets.
+    '/((?!api/pdfjs-viewer|_next|_static|.*\\..*).*)',
   ],
 }

@@ -31,6 +31,13 @@ describe('getPublicBaseUrl', () => {
       expect(getPublicBaseUrl(req)).toBe('https://app.example.com')
     })
 
+    it('uses the host header before falling back to an internal request origin', () => {
+      const req = makeReq('http://localhost:3000/api/oauth/google', {
+        host: 'www.aguy.co.il',
+      })
+      expect(getPublicBaseUrl(req)).toBe('https://www.aguy.co.il')
+    })
+
     // Bug reproduction: chained proxies (CDN -> LB -> app) make these headers
     // comma-separated lists. The base URL must use only the first
     // (client-facing) value, or redirect_uri won't match Google's registration.

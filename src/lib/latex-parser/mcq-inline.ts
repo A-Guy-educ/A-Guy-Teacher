@@ -1,3 +1,9 @@
+/**
+ * @fileType parser
+ * @domain exercises
+ * @ai-summary Parses inline MCQ where options follow the pattern (a) ... (b) ... (c) ... on a single \item. Supports both Latin and Hebrew letter markers. Requires at least 2 options to be recognised; first option is always treated as correct since there is no marking convention.
+ */
+
 import { generateId } from '@/infra/types/exercise'
 import type { QuestionSelectMcqBlock, InlineRichText, McqOption } from '@/infra/types/exercise'
 

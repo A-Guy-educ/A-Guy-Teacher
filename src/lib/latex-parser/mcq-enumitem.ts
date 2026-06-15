@@ -1,3 +1,9 @@
+/**
+ * @fileType parser
+ * @domain exercises
+ * @ai-summary Parses enumitem-style MCQ where options are nested enumerate [(a)], [(b)], etc. — used in Bagrut exams alongside exam.cls style. Like mcq-exam-cls, defaults to first option when no correct answer is marked.
+ */
+
 import { generateId } from '@/infra/types/exercise'
 import type { QuestionSelectMcqBlock, InlineRichText, McqOption } from '@/infra/types/exercise'
 

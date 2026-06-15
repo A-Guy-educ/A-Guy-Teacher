@@ -112,6 +112,19 @@ describe('Middleware - Locale Routing', () => {
     })
   })
 
+  describe('Protected route redirects', () => {
+    it('should preserve query params in login returnTo', () => {
+      const path = '/study?grade=7&courseId=abc&locale=he'
+      const request = createRequest('example.com', path)
+      const response = middleware(request)
+
+      expect(response.status).toBe(307)
+      expect(response.headers.get('location')).toContain(
+        `/login?returnTo=${encodeURIComponent(path)}`,
+      )
+    })
+  })
+
   describe('Cookie configuration', () => {
     it('should set cookie with correct attributes', () => {
       const request = createRequest('he.example.com', '/')

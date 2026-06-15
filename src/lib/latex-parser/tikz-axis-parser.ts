@@ -1,4 +1,8 @@
 /**
+ * @fileType parser
+ * @domain exercises
+ * @ai-summary Parses TikZ axis environments and raw \draw ... plot expressions into question_axis blocks. parseTikzDrawPlot (raw plots without \begin{axis}) infers viewport from axis-drawing commands — if those are absent, defaults to [-10, 10] for both axes, which may not match the exercise intent.
+ *
  * Parses TikZ \begin{axis}[...] environments into AxisSpecV1 blocks.
  *
  * Handles:

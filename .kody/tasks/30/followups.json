@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Exam route doesn't exist - exam intro page is not addressable",
+    "body": "The issue mentioned lines 161-169 in page.tsx for an exam route rendering ExamExercise directly. However, there is no `/courses/[slug]/chapters/[chapterSlug]/exams/[examSlug]/page.tsx` route in the current codebase. The exam intro page component was not implemented because there is no exam page to modify.",
+    "rationale": "The issue spec included exam intro pages but the exam route doesn't exist in this codebase. Needs investigation if exams are supposed to have a separate route.",
+    "priority": "low"
+  },
+  {
+    "title": "Deep-link ?exerciseId= param needs exercise navigation wiring",
+    "body": "LessonIntroPage reads ?exerciseId= from searchParams and skips the intro, but blocks-only lessons show EmptyLessonPlaceholder in the workspace (no exercise content). The deep-link correctly bypasses intro but there's nothing to navigate to. True deep-linking into specific exercises requires ExercisePager or similar — the blocks-only case doesn't have per-exercise URLs.",
+    "rationale": "The deep-link skip mechanism is wired but since blocks-only lessons have no individual exercises, the workspace shows EmptyLessonPlaceholder. This is correct behavior — deep-linking only makes sense when there are exercises to deep-link to.",
+    "priority": "low"
+  },
+  {
+    "title": "Integration test unverified in this environment",
+    "body": "tests/int/lesson-intro-page.int.spec.ts cannot load 'payload' package in this environment (pre-existing monorepo workspace issue). The test is correctly structured and follows existing patterns (lesson-types.int.spec.ts). Verify passed with typecheck+lint.",
+    "rationale": "The test code is correct per project conventions but cannot be verified due to a pre-existing environment limitation.",
+    "priority": "low"
+  }
+]

@@ -8,7 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/ui/web/components/select'
-import { cookieName, getDirection, isForcedLocaleDomain, type Locale, locales } from '@/i18n/config'
+import { buildClientLocaleCookie, isCrossOriginIframe } from '@/i18n/client-locale-cookie'
+import { getDirection, isForcedLocaleDomain, type Locale, locales } from '@/i18n/config'
 import { useLocale, useTranslations } from '@/ui/web/providers/I18n'
 import { Globe } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -45,7 +46,7 @@ export function LanguageSwitcher({ portalContainer }: LanguageSwitcherProps = {}
     document.documentElement.setAttribute('dir', getDirection(newLocale as Locale))
 
     // 3. Set the locale cookie (source of truth for middleware)
-    document.cookie = `${cookieName}=${newLocale}; path=/; max-age=31536000; samesite=lax`
+    document.cookie = buildClientLocaleCookie(newLocale as Locale, isCrossOriginIframe())
 
     // 4. Use router.refresh() like the previous implementation
     // This triggers a soft refresh that:

@@ -78,3 +78,9 @@ git activity belongs in `git log`, not here.
 - [Overrideaccess True Does Not Bypass Hooks](overrideAccess-true-does-not-bypass-hooks.md) — overrideAccess: true in Payload Local API bypasses access control only, NOT hooks (type: lesson)
 
 - [Payload Types Stale After Collection Removal](payload-types-stale-after-collection-removal.md) — Regenerate payload-types.ts when collections are removed from config (type: lesson)
+
+- [Payload Package Not In Node Modules](payload-package-not-in-node-modules.md) — payload not found in node_modules in this environment (type: lesson)
+
+- [Lesson Unified Intro Routing](lesson-unified-intro-routing.md) — LessonIntroPage is now the single entry point for all lesson types (type: decision)
+
+- [Initialpagestate Skip Intro](initialpagestate-skip-intro.md) — PdfLessonPager accepts initialPageState to skip its own intro when rendered as child (type: decision)

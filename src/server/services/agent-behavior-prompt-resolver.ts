@@ -6,6 +6,13 @@
  * - Tier 1 (Authenticated users): User settings → Tier 2 → Tier 3 → Tier 4 (failsafe)
  * - Tier 2: Default by isDefault flag → Tier 3 → Tier 4 (failsafe)
  * - Tier 3: Highest priority published → Tier 4 (failsafe)
+ *
+ * @fileType service
+ * @domain chat
+ * @pattern tiered-resolution
+ * @ai-summary Resolves agent behavior profile with tiered fallback: user settings → default → highest priority → hardcoded failsafe
+ *
+ * Gotcha: User settings tier is not yet implemented — always falls through to default
  */
 
 import type { Payload } from '@/infra/types/backend'

@@ -14,7 +14,7 @@ import {
 } from '@/ui/web/components/dropdown-menu'
 import { UserAvatar } from '@/ui/web/UserAvatar'
 import { useTranslations } from '@/ui/web/providers/I18n'
-import { logoutAction } from '@/app/(frontend)/actions/auth-action'
+import { logoutUser } from '@/client/auth/logout'
 import { analytics } from '@/infra/analytics'
 import type { User } from '@/infra/types/content'
 
@@ -25,11 +25,15 @@ export function UserDropdown({ user }: { user: User }) {
 
   async function handleLogout() {
     setIsLoggingOut(true)
-    analytics.reset()
-    await logoutAction()
-    window.dispatchEvent(new Event('auth:changed'))
-    router.push('/login')
-    router.refresh()
+    try {
+      analytics.reset()
+      await logoutUser()
+      window.dispatchEvent(new Event('auth:changed'))
+      router.push('/login')
+      router.refresh()
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   return (

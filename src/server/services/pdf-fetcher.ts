@@ -1,3 +1,16 @@
+/**
+ * PDF Fetcher Service
+ *
+ * Fetches PDF files from Vercel Blob, Payload media, or external URLs.
+ * Validates size, magic bytes, and mime type before returning buffer.
+ *
+ * @fileType service
+ * @domain media
+ * @pattern blob-fetching
+ * @ai-summary Fetches and validates PDF buffers from storage with size/mime/magic-byte checks
+ *
+ * Gotcha: Relative URLs are resolved against NEXT_PUBLIC_SERVER_URL or VERCEL_PROJECT_PRODUCTION_URL — fails silently to localhost in dev without env vars
+ */
 import type { Payload } from '@/infra/types/backend'
 import { getPdfBufferFromUrl, isVercelBlobUrl } from '@/infra/blob/vercel-blob-adapter'
 import { fetchBuffer } from '@/infra/utils/http'

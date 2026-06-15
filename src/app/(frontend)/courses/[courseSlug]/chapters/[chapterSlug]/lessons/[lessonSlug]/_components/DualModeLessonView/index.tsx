@@ -12,7 +12,7 @@
 
 'use client'
 
-import React from 'react'
+import React, { useEffect, useMemo } from 'react'
 import type { Exercise, FormulaSheet, Media as MediaType } from '@/infra/types/content'
 import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
 import { ChatInterface } from '@/ui/web/chat'
@@ -54,6 +54,9 @@ interface DualModeLessonViewProps {
   formulaSheet?: FormulaSheet | null
   /** Renderer modes enabled by the admin for this lesson. Defaults to all three. */
   visibleRenderers?: LessonMode[]
+  initialExerciseIndex?: number
+  initialMode?: LessonMode
+  nextLesson?: { title?: string | null; slug?: string | null } | null
 }
 
 /**
@@ -95,12 +98,24 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
     showChat,
     formulaSheet,
     visibleRenderers,
+    initialExerciseIndex,
+    initialMode,
+    nextLesson,
   } = props
 
   const t = useTranslations('courses')
   const hasMedia = validFiles.length > 0
-  const visibleTabs = getVisibleTabs(visibleRenderers, hasMedia)
+  const visibleTabs = useMemo(
+    () => getVisibleTabs(visibleRenderers, hasMedia),
+    [visibleRenderers, hasMedia],
+  )
   const [mode, select] = useLessonViewMode(lessonId, visibleRenderers)
+
+  useEffect(() => {
+    if (initialMode && visibleTabs[initialMode]) {
+      select(initialMode)
+    }
+  }, [initialMode, select, visibleTabs])
 
   // Resolve the active tab, falling back when the stored mode is no longer allowed.
   const effectiveMode = (() => {
@@ -243,6 +258,9 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
         formulaSheet={formulaSheet}
         headerSlot={tabBar}
         hideLatexBlocks
+        skipIntro
+        initialExerciseIndex={initialExerciseIndex}
+        nextLesson={nextLesson}
       />
     </section>
   )

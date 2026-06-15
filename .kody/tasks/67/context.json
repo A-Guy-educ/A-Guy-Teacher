@@ -1,0 +1,21 @@
+{
+  "taskId": "67",
+  "taskType": "issue",
+  "target": "67",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "All lesson types now route through LessonIntroPage as unified entry point",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/page.tsx",
+    "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/index.tsx",
+    "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/useLessonIntroPage.ts",
+    "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/PdfLessonPager/index.tsx",
+    "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/PdfLessonPager/usePdfLessonPager.ts",
+    "tests/int/lesson-intro-page.int.spec.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27296865489-1-1.jsonl",
+  "startedAt": "2026-06-10T18:30:00.000Z",
+  "finishedAt": "2026-06-10T18:37:00.000Z"
+}

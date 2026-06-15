@@ -1,3 +1,9 @@
+/**
+ * @fileType utility
+ * @domain exercises
+ * @ai-summary Low-level brace-counting utilities for the tokenizer. findMatchingEnd uses a depth counter to handle nested environments — changing the counting direction would silently break parsing. countLines is called on every token boundary so line numbers track correctly.
+ */
+
 import type { LatexToken } from '@/lib/latex-parser/types'
 
 /**

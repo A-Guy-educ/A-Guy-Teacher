@@ -1,3 +1,15 @@
+/**
+ * Course Search Service
+ *
+ * Provides course-wide and per-course content search (courses, lessons, exercises).
+ *
+ * @fileType service
+ * @domain courses
+ * @pattern search-aggregation
+ * @ai-summary Aggregates search results across courses, lessons, and exercises with enrollment filtering
+ *
+ * Gotcha: Without courseSlug, searches all content. With courseSlug, narrows to that course's hierarchy.
+ */
 import type { Exercise, Lesson } from '@/infra/types/content'
 import { buildExerciseUrl, buildLessonUrl } from '@/server/utils/course-url-builder'
 import { queryChaptersByCourse } from '@/server/repos/queries/chapters'

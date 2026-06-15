@@ -100,11 +100,9 @@ export function LessonPager({
   })
 
   const [showConfetti, setShowConfetti] = useState(false)
-  const [isAt85Percent, setIsAt85Percent] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
 
-  // Focus management ref - must be declared before scroll tracking effect
   const contentRef = useRef<HTMLDivElement>(null)
   const minSwipeDistance = 50
 
@@ -113,30 +111,6 @@ export function LessonPager({
       setShowConfetti(true)
     }
   }, [pageState.type])
-
-  // Track scroll progress to show navigation arrows at 85% scroll
-  useEffect(() => {
-    const contentEl = contentRef.current
-    if (!contentEl) return
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = contentEl
-      const scrollableHeight = scrollHeight - clientHeight
-      if (scrollableHeight <= 0) {
-        // Content is shorter than viewport - show navigation immediately
-        setIsAt85Percent(true)
-        return
-      }
-      const scrollPercent = (scrollTop / scrollableHeight) * 100
-      setIsAt85Percent(scrollPercent >= 85)
-    }
-
-    // Initial check
-    handleScroll()
-
-    contentEl.addEventListener('scroll', handleScroll, { passive: true })
-    return () => contentEl.removeEventListener('scroll', handleScroll)
-  }, [])
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null)
@@ -237,39 +211,36 @@ export function LessonPager({
               </div>
             </div>
 
-            {/* Fixed bottom navigation bar - hidden until 85% scroll */}
-            {isAt85Percent ? (
-              <div className="sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
-                <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
-                  <button
-                    onClick={handlePrev}
-                    disabled={!canGoPrev || isNavigating}
-                    aria-label="Previous page"
-                    className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
-                      !canGoPrev || isNavigating
-                        ? 'text-muted-foreground/40'
-                        : 'bg-muted text-foreground hover:bg-muted/80',
-                    )}
-                  >
-                    <span className="text-heading-lg font-light">‹</span>
-                  </button>
-                  <button
-                    onClick={handleNext}
-                    disabled={!canGoNext || isNavigating}
-                    aria-label="Next page"
-                    className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
-                      !canGoNext || isNavigating
-                        ? 'text-muted-foreground/40'
-                        : 'bg-muted text-foreground hover:bg-muted/80',
-                    )}
-                  >
-                    <span className="text-heading-lg font-light">›</span>
-                  </button>
-                </div>
+            <div className="sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
+                <button
+                  onClick={handlePrev}
+                  disabled={!canGoPrev || isNavigating}
+                  aria-label="Previous page"
+                  className={cn(
+                    'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                    !canGoPrev || isNavigating
+                      ? 'text-muted-foreground/40'
+                      : 'bg-muted text-foreground hover:bg-muted/80',
+                  )}
+                >
+                  <span className="text-heading-lg font-light">‹</span>
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={!canGoNext || isNavigating}
+                  aria-label="Next page"
+                  className={cn(
+                    'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                    !canGoNext || isNavigating
+                      ? 'text-muted-foreground/40'
+                      : 'bg-muted text-foreground hover:bg-muted/80',
+                  )}
+                >
+                  <span className="text-heading-lg font-light">›</span>
+                </button>
               </div>
-            ) : null}
+            </div>
           </div>
         }
         chatContent={
@@ -376,39 +347,36 @@ export function LessonPager({
           </div>
         </main>
 
-        {/* Fixed bottom navigation bar - hidden until 85% scroll */}
-        {isAt85Percent ? (
-          <div className="sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
-              <button
-                onClick={handlePrev}
-                disabled={!canGoPrev || isNavigating}
-                aria-label="Previous page"
-                className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
-                  !canGoPrev || isNavigating
-                    ? 'text-muted-foreground/40'
-                    : 'bg-muted text-foreground hover:bg-muted/80',
-                )}
-              >
-                <span className="text-heading-lg font-light">‹</span>
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={!canGoNext || isNavigating}
-                aria-label="Next page"
-                className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
-                  !canGoNext || isNavigating
-                    ? 'text-muted-foreground/40'
-                    : 'bg-muted text-foreground hover:bg-muted/80',
-                )}
-              >
-                <span className="text-heading-lg font-light">›</span>
-              </button>
-            </div>
+        <div className="sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
+            <button
+              onClick={handlePrev}
+              disabled={!canGoPrev || isNavigating}
+              aria-label="Previous page"
+              className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                !canGoPrev || isNavigating
+                  ? 'text-muted-foreground/40'
+                  : 'bg-muted text-foreground hover:bg-muted/80',
+              )}
+            >
+              <span className="text-heading-lg font-light">‹</span>
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={!canGoNext || isNavigating}
+              aria-label="Next page"
+              className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                !canGoNext || isNavigating
+                  ? 'text-muted-foreground/40'
+                  : 'bg-muted text-foreground hover:bg-muted/80',
+              )}
+            >
+              <span className="text-heading-lg font-light">›</span>
+            </button>
           </div>
-        ) : null}
+        </div>
       </div>
     )
   }

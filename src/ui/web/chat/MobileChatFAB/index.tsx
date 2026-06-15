@@ -1,73 +1,82 @@
 'use client'
 
-import { useTranslations } from '@/ui/web/providers/I18n'
 import { cn } from '@/infra/utils/ui'
+import { useTranslations } from '@/ui/web/providers/I18n'
 import { MessageSquare, X } from 'lucide-react'
 import React, { useCallback, useEffect } from 'react'
 
 interface MobileChatFABProps {
-  /** Whether the FAB panel is currently open */
+  /** Whether the chat surface controlled by this FAB is currently open. */
   isOpen: boolean
-  /** Called when the panel should open */
+  /** Called when the chat surface should open. */
   onOpen: () => void
-  /** Called when the panel should close */
+  /** Called when the chat surface should close. */
   onClose: () => void
-  /** The ChatInterface component to render inside the panel */
+  /** ChatInterface component rendered inside the default sheet panel. */
   children: React.ReactNode
+  /** Use button-only when a parent renders its own full-screen chat transition. */
+  panelMode?: 'sheet' | 'button-only'
 }
 
 /**
- * Mobile Chat FAB (Floating Action Button) component
+ * Mobile Chat FAB (Floating Action Button).
  *
- * - A single button at bottom-left that toggles a bottom-anchored chat panel
- * - When closed: MessageSquare icon, sits 1.5rem from the bottom
- * - When open: X icon, rises so it sits 1.5rem above the panel
- * - Panel has no internal header — the button itself closes the chat
- * - Sets a CSS custom property `--mobile-chat-panel-h` on documentElement
- *   so other bottom-fixed UI (e.g. the Learning Assistant button) can lift
- *   to clear the panel while it's open.
- *
- * Issue #2192: Add mobile chat FAB (button-to-open) on lesson pages
+ * Default behavior opens a bottom sheet. In exercise view, `button-only` lets the
+ * same button trigger the full-screen swipe-to-chat transition owned upstream.
  */
-export function MobileChatFAB({ isOpen, onOpen, onClose, children }: MobileChatFABProps) {
+export function MobileChatFAB({
+  isOpen,
+  onOpen,
+  onClose,
+  children,
+  panelMode = 'sheet',
+}: MobileChatFABProps) {
   const t = useTranslations('courses')
 
-  // Escape key handler
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) return undefined
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
+
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
-  // focus-chat-input event auto-opens the panel (wrong-answer help, etc.)
   useEffect(() => {
     const handleFocusChatInput = () => onOpen()
+
     window.addEventListener('focus-chat-input', handleFocusChatInput)
     return () => window.removeEventListener('focus-chat-input', handleFocusChatInput)
   }, [onOpen])
 
-  // Expose panel height as a CSS variable so siblings can lift above it.
   useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.documentElement.style.setProperty('--mobile-chat-panel-h', isOpen ? '60dvh' : '0px')
-    return () => {
-      document.documentElement.style.setProperty('--mobile-chat-panel-h', '0px')
+    if (panelMode === 'button-only') return undefined
+
+    const root = document.documentElement
+    if (isOpen) {
+      root.style.setProperty('--mobile-chat-panel-h', '60dvh')
+    } else {
+      root.style.removeProperty('--mobile-chat-panel-h')
     }
-  }, [isOpen])
+
+    return () => {
+      root.style.removeProperty('--mobile-chat-panel-h')
+    }
+  }, [isOpen, panelMode])
 
   const handleToggle = useCallback(() => {
-    if (isOpen) onClose()
-    else onOpen()
-  }, [isOpen, onOpen, onClose])
+    if (isOpen) {
+      onClose()
+      return
+    }
+
+    onOpen()
+  }, [isOpen, onClose, onOpen])
 
   return (
     <>
-      {/* Toggle button — always rendered. Bottom position lifts above the
-          panel via the same --mobile-chat-panel-h variable used by other
-          bottom-fixed UI. */}
       <button
         type="button"
         onClick={handleToggle}
@@ -86,9 +95,7 @@ export function MobileChatFAB({ isOpen, onOpen, onClose, children }: MobileChatF
         {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
       </button>
 
-      {/* Bottom panel — fixed 60dvh so the inner flex layout (messages on
-          top, input pinned at bottom) has a real height to distribute. */}
-      {isOpen && (
+      {panelMode === 'sheet' && isOpen && (
         <div
           className={cn(
             'fixed left-0 right-0 bottom-0 z-[60]',

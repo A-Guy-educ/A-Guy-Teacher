@@ -5,7 +5,15 @@ import type { Exercise, Media as MediaType } from '@/infra/types/content'
 import { Button } from '@/ui/web/components/button'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
-import { BookOpen, ChevronLeft, ChevronRight, Layers, Sparkles, ArrowRight } from 'lucide-react'
+import {
+  BookOpen,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Layers,
+  RotateCcw,
+  Target,
+} from 'lucide-react'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import type { ExerciseContentData } from '@/ui/web/exerciserenderer/types'
 import { Progress } from '@/ui/web/components/progress'
@@ -44,6 +52,9 @@ interface ExercisesPagerProps {
    * inside individual exercises (used by the dual-mode lesson view where LaTeX lives
    * at the lesson level). */
   hideLatexBlocks?: boolean
+  skipIntro?: boolean
+  initialExerciseIndex?: number
+  nextLesson?: { title?: string | null; slug?: string | null } | null
 }
 
 export function ExercisesPager({
@@ -60,6 +71,9 @@ export function ExercisesPager({
   formulaSheet,
   headerSlot,
   hideLatexBlocks,
+  skipIntro,
+  initialExerciseIndex,
+  nextLesson,
 }: ExercisesPagerProps) {
   const t = useTranslations('courses')
   const {
@@ -73,14 +87,21 @@ export function ExercisesPager({
     handleStart,
     getExerciseOrdinal,
     totalExercises,
-  } = useExercisesPager({ exercises, courseSlug, chapterSlug, lessonSlug, lessonId, gradeLevel })
+  } = useExercisesPager({
+    exercises,
+    courseSlug,
+    chapterSlug,
+    lessonSlug,
+    lessonId,
+    gradeLevel,
+    skipIntro,
+    initialExerciseIndex,
+  })
 
   const [showConfetti, setShowConfetti] = useState(false)
-  const [isAt85Percent, setIsAt85Percent] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
 
-  // Focus management ref - must be declared before scroll tracking effect
   const contentRef = useRef<HTMLDivElement>(null)
   const minSwipeDistance = 50
 
@@ -89,30 +110,6 @@ export function ExercisesPager({
       setShowConfetti(true)
     }
   }, [pageState.type])
-
-  // Track scroll progress to show navigation arrows at 85% scroll
-  useEffect(() => {
-    const contentEl = contentRef.current
-    if (!contentEl) return
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = contentEl
-      const scrollableHeight = scrollHeight - clientHeight
-      if (scrollableHeight <= 0) {
-        // Content is shorter than viewport - show navigation immediately
-        setIsAt85Percent(true)
-        return
-      }
-      const scrollPercent = (scrollTop / scrollableHeight) * 100
-      setIsAt85Percent(scrollPercent >= 85)
-    }
-
-    // Initial check
-    handleScroll()
-
-    contentEl.addEventListener('scroll', handleScroll, { passive: true })
-    return () => contentEl.removeEventListener('scroll', handleScroll)
-  }, [])
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null)
@@ -212,6 +209,21 @@ export function ExercisesPager({
   const exerciseOrdinal = getExerciseOrdinal()
   const currentExercise =
     typeof pageState.exerciseIndex === 'number' ? exercises[pageState.exerciseIndex] : null
+  const summaryResults = Object.values(exerciseResults.current)
+  const solvedExerciseCount =
+    summaryResults.filter((result) => result.checkedCount > 0).length || totalExercises
+  const correctAnswerCount = summaryResults.reduce((sum, result) => sum + result.correctCount, 0)
+  const totalQuestionCount = summaryResults.reduce((sum, result) => sum + result.totalQuestions, 0)
+  const scorePercent =
+    totalQuestionCount > 0 ? Math.round((correctAnswerCount / totalQuestionCount) * 100) : 100
+  const correctAnswersLabel =
+    totalQuestionCount > 0 ? `${correctAnswerCount} / ${totalQuestionCount}` : '—'
+  const nextLessonUrl = nextLesson?.slug
+    ? `/courses/${courseSlug}/chapters/${chapterSlug}/lessons/${nextLesson.slug}`
+    : backUrl
+  const primaryActionLabel = nextLesson?.slug
+    ? t('lessonSummaryNextLesson')
+    : t('lessonSummaryBackToCourse')
 
   const handleExerciseResultsChange = useCallback(
     (results: { totalQuestions: number; checkedCount: number; correctCount: number }) => {
@@ -227,11 +239,15 @@ export function ExercisesPager({
       <ExerciseWorkspace
         exerciseTitle={currentExercise.title ?? ''}
         backUrl={backUrl}
+        formulaSheet={formulaSheet}
         primaryContent={
           <div className="h-full flex flex-col">
-            {headerSlot}
+            {headerSlot && <div className="exercise-header-tabs">{headerSlot}</div>}
             {/* Top progress line */}
-            <Progress value={progressPercent} className="h-0.5 rounded-none" />
+            <Progress
+              value={progressPercent}
+              className="exercise-top-progress h-0.5 rounded-none"
+            />
 
             <div
               ref={contentRef}
@@ -243,7 +259,7 @@ export function ExercisesPager({
             >
               <div className="w-full p-card-padding-sm md:p-card-padding space-y-4">
                 {/* Breadcrumb step indicator */}
-                <div className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground pt-3">
+                <div className="exercise-breadcrumb flex items-center gap-content-gap-xs text-body-sm text-muted-foreground pt-3">
                   <span className="truncate max-w-[200px]">{lessonTitle}</span>
                   <ChevronRight className="w-3 h-3 shrink-0 rtl:rotate-180" />
                   <span className="text-foreground font-medium">
@@ -255,7 +271,7 @@ export function ExercisesPager({
 
                 <AnimatePresence mode="wait">
                   <motion.div key={currentExercise.id} {...pageTransition} className="space-y-4">
-                    <div className="bg-card rounded-2xl border border-border/60 shadow-elevation-1 overflow-hidden">
+                    <div className="hidden md:block bg-card rounded-2xl border border-border/60 shadow-elevation-1 overflow-hidden">
                       <div className="p-5 md:p-card-padding">
                         <div className="flex items-center gap-3 mb-2">
                           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -270,7 +286,7 @@ export function ExercisesPager({
                       </div>
                     </div>
 
-                    <div className="bg-card rounded-2xl p-5 md:p-card-padding border border-border/60 shadow-elevation-1">
+                    <div className="md:bg-card md:rounded-2xl md:p-card-padding md:border md:border-border/60 md:shadow-elevation-1">
                       <ExerciseRenderer
                         key={currentExercise.id}
                         content={currentExercise.content as unknown as ExerciseContentData}
@@ -289,39 +305,36 @@ export function ExercisesPager({
               </div>
             </div>
 
-            {/* Fixed bottom navigation bar - hidden until 85% scroll */}
-            {isAt85Percent ? (
-              <div className="sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
-                <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
-                  <button
-                    onClick={handlePrev}
-                    disabled={!canGoPrev || isNavigating}
-                    aria-label="Previous page"
-                    className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
-                      !canGoPrev || isNavigating
-                        ? 'text-muted-foreground/40'
-                        : 'bg-muted text-foreground hover:bg-muted/80',
-                    )}
-                  >
-                    <span className="text-heading-lg font-light">‹</span>
-                  </button>
-                  <button
-                    onClick={handleNext}
-                    disabled={!canGoNext || isNavigating}
-                    aria-label="Next page"
-                    className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
-                      !canGoNext || isNavigating
-                        ? 'text-muted-foreground/40'
-                        : 'bg-muted text-foreground hover:bg-muted/80',
-                    )}
-                  >
-                    <span className="text-heading-lg font-light">›</span>
-                  </button>
-                </div>
+            <div className="exercise-bottom-nav sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
+                <button
+                  onClick={handlePrev}
+                  disabled={!canGoPrev || isNavigating}
+                  aria-label="Previous page"
+                  className={cn(
+                    'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                    !canGoPrev || isNavigating
+                      ? 'text-muted-foreground/40'
+                      : 'bg-muted text-foreground hover:bg-muted/80',
+                  )}
+                >
+                  <span className="text-heading-lg font-light">‹</span>
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={!canGoNext || isNavigating}
+                  aria-label="Next page"
+                  className={cn(
+                    'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                    !canGoNext || isNavigating
+                      ? 'text-muted-foreground/40'
+                      : 'bg-muted text-foreground hover:bg-muted/80',
+                  )}
+                >
+                  <span className="text-heading-lg font-light">›</span>
+                </button>
               </div>
-            ) : null}
+            </div>
           </div>
         }
         chatContent={
@@ -423,77 +436,84 @@ export function ExercisesPager({
 
           {pageState.type === 'outro' && (
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="space-y-8"
+              transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="mx-auto flex w-full max-w-3xl flex-col items-center gap-content-gap-lg text-center"
             >
-              <header className="text-center relative">
-                {/* Decorative background circles */}
-                <div className="absolute inset-0 -top-10 flex items-center justify-center pointer-events-none overflow-hidden">
-                  <div className="w-64 h-64 rounded-full bg-gradient-to-br from-secondary/10 to-primary/5 blur-3xl" />
-                  <div className="absolute w-40 h-40 rounded-full bg-gradient-to-tr from-primary/10 to-secondary/5 blur-2xl -translate-x-20 translate-y-10" />
-                </div>
-
-                <span className="relative inline-block px-4 py-1.5 bg-secondary/10 text-secondary rounded-full text-label tracking-[0.2em] uppercase mb-5 border border-secondary/20">
-                  {t('exercisesPagerCompleted')}
+              <header className="space-y-3">
+                <span className="inline-flex items-center gap-content-gap-xs rounded-lg border border-border bg-muted px-4 py-2 text-label uppercase tracking-wider text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  {t('lessonSummaryEndTitle')}
                 </span>
-                <h1 className="relative text-display-lg md:text-display-xl font-bold leading-tight text-foreground mb-3">
-                  {t('exercisesPagerCompletedTitle')}
-                </h1>
-                <div className="w-20 h-1 bg-secondary mx-auto rounded-full" />
+                <div className="space-y-2">
+                  <h1 className="text-display-md font-medium leading-tight text-foreground md:text-display-lg">
+                    {lessonTitle}
+                  </h1>
+                  {gradeLevel ? (
+                    <p className="text-body-md text-muted-foreground">{gradeLevel}</p>
+                  ) : null}
+                </div>
               </header>
 
-              <div className="bg-card rounded-3xl p-card-padding-lg md:p-10 border border-border/60 shadow-card-hover shadow-muted/50 text-center relative overflow-hidden">
-                {/* Decorative corner accents */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-secondary/5 to-transparent rounded-bl-full" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-primary/5 to-transparent rounded-tr-full" />
-
-                <div className="relative">
-                  <div className="w-24 h-24 bg-secondary/10 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-card shadow-secondary/10 border border-secondary/20">
-                    <Sparkles className="w-11 h-11 text-secondary" />
-                  </div>
-
-                  <h2 className="text-display-xl font-bold mb-4 text-foreground">
-                    {t('exercisesPagerCompletedTitle')}
-                  </h2>
-                  <p className="text-muted-foreground mb-6 text-body-lg leading-relaxed max-w-2xl mx-auto">
-                    {t('exercisesPagerCompletedDescription')}
+              <div className="grid w-full gap-content-gap-sm sm:grid-cols-3">
+                <div className="rounded-lg border border-border bg-card p-card-padding shadow-elevation-1">
+                  <Layers className="mx-auto mb-3 h-5 w-5 text-primary" />
+                  <p className="text-heading-xl font-medium text-foreground">
+                    {solvedExerciseCount} / {totalExercises}
                   </p>
+                  <p className="mt-1 text-body-sm text-muted-foreground">
+                    {t('lessonSummarySolvedExercises')}
+                  </p>
+                </div>
 
-                  {/* Summary stats */}
-                  <div className="flex items-center justify-center gap-content-gap mb-10">
-                    <div className="inline-flex items-center gap-content-gap-xs px-4 py-2 bg-secondary/5 rounded-xl border border-secondary/10">
-                      <Layers className="w-4 h-4 text-secondary" />
-                      <span className="text-secondary font-medium">{totalExercises}</span>
-                      <span className="text-body-xs text-muted-foreground">{t('exercise')}</span>
-                    </div>
-                  </div>
+                <div className="rounded-lg border border-border bg-card p-card-padding shadow-elevation-1">
+                  <CheckCircle2 className="mx-auto mb-3 h-5 w-5 text-success" />
+                  <p className="text-heading-xl font-medium text-foreground">
+                    {correctAnswersLabel}
+                  </p>
+                  <p className="mt-1 text-body-sm text-muted-foreground">
+                    {t('lessonSummaryCorrectAnswers')}
+                  </p>
+                </div>
 
-                  <Button
-                    asChild
-                    size="lg"
-                    variant="secondary"
-                    className="w-full py-section-sm rounded-2xl text-body-lg shadow-card shadow-secondary/20 hover:shadow-card-hover hover:shadow-secondary/30 transition-all duration-slow"
-                  >
-                    <SystemLink href={backUrl}>
-                      <Sparkles className="w-5 h-5 me-2" />
-                      {t('exercisesPagerComplete')}
-                    </SystemLink>
-                  </Button>
+                <div className="rounded-lg border border-border bg-card p-card-padding shadow-elevation-1">
+                  <Target className="mx-auto mb-3 h-5 w-5 text-secondary" />
+                  <p className="text-heading-xl font-medium text-foreground">{scorePercent}%</p>
+                  <p className="mt-1 text-body-sm text-muted-foreground">
+                    {t('lessonSummaryScore')}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex justify-center pt-4">
+              {nextLesson?.title ? (
+                <p className="text-body-md text-muted-foreground">
+                  {t('lessonLobbyNextLesson')}: {nextLesson.title}
+                </p>
+              ) : null}
+
+              <div className="flex w-full flex-col gap-content-gap-sm sm:flex-row">
                 <Button
-                  variant="ghost"
-                  onClick={handlePrev}
-                  disabled={isNavigating}
-                  aria-label="Previous page"
-                  className="text-muted-foreground text-body-sm min-h-[44px] hover:text-foreground transition-colors duration-slow gap-content-gap-xs cursor-pointer"
+                  asChild
+                  size="lg"
+                  className="min-h-[48px] flex-1 transition-all duration-normal"
                 >
-                  <ArrowRight className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />
-                  {t('exercisesPagerPrev')}
+                  <SystemLink href={nextLessonUrl}>
+                    {primaryActionLabel}
+                    <ChevronLeft className="ms-2 h-5 w-5 rtl:rotate-0 ltr:rotate-180" />
+                  </SystemLink>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={handleStart}
+                  disabled={isNavigating}
+                  className="min-h-[48px] flex-1 transition-all duration-normal"
+                >
+                  <RotateCcw className="me-2 h-4 w-4" />
+                  {t('lessonSummaryRetry')}
                 </Button>
               </div>
             </motion.div>

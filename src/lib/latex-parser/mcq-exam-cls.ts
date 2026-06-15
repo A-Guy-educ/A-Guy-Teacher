@@ -1,3 +1,9 @@
+/**
+ * @fileType parser
+ * @domain exercises
+ * @ai-summary Parses exam.cls \question + \begin{choices}...\end{choices} MCQ blocks. If no \CorrectChoice is marked, silently defaults to the first option — this means unlabelled MCQs always appear correct in the first slot.
+ */
+
 import { generateId } from '@/infra/types/exercise'
 import type { QuestionSelectMcqBlock, InlineRichText, McqOption } from '@/infra/types/exercise'
 

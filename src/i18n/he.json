@@ -1,4 +1,171 @@
 {
+  "landingPage": {
+    "hero": {
+      "eyebrow": "הדור הבא של הלמידה כבר כאן",
+      "title": "ממש כמו מורה פרטי, רק זמין יותר, משתלם יותר ומותאם בדיוק בשבילך",
+      "subtitle": "לא משנה מה מצבכם כרגע, עם Aguy אפשר להתחיל כל למידת מתמטיקה ממש מאפס. פלטפורמה אישית שמאבחנת, מלמדת, מעודדת למידה עצמית ומעדכנת את הסטטוס בצורה עקבית לפי תוכנית משרד החינוך.",
+      "plansCta": "מסלולים והרשמה",
+      "trialCta": "ניסיון חינם",
+      "loginCta": "כבר מנויים?",
+      "previewBadge": "תצוגת מערכת",
+      "stats": {
+        "lessons": {
+          "label": "שיעורי לימוד",
+          "value": "1,000+"
+        },
+        "exercises": {
+          "label": "תרגילים",
+          "value": "100K+"
+        },
+        "exams": {
+          "label": "בחינות וסימולציות",
+          "value": "500+"
+        }
+      }
+    },
+    "comparison": {
+      "title": "כל מה שטוב במורה פרטי. רק טוב יותר.",
+      "description": "לקחנו יחס אישי, הבנת קשיים והכוונה צמודה, והפכנו אותם לטכנולוגיה חכמה ונגישה.",
+      "criteria": "מה משווים",
+      "aguy": "מערכת Aguy",
+      "tutor": "מורה פרטי רגיל",
+      "rows": {
+        "personal": {
+          "label": "לימוד מותאם אישית",
+          "aguy": "אבחון, בקרה ומשוב דינמי לאורך כל הדרך.",
+          "tutor": "קיים בעיקר בזמן השיעור הפרטי."
+        },
+        "plan": {
+          "label": "תוכנית למידה",
+          "aguy": "מובנית וממוקדת לפי תוכנית משרד החינוך.",
+          "tutor": "ידנית, בדרך כלל סביב השעה השבועית."
+        },
+        "experience": {
+          "label": "מקצועיות וניסיון",
+          "aguy": "מבוסס על 20+ שנות ניסיון הוראה.",
+          "tutor": "תלוי מאוד במורה שמוצאים."
+        },
+        "emotional": {
+          "label": "מענה רגשי",
+          "aguy": "המערכת מזהה תסכול ומעודדת בזמן אמת.",
+          "tutor": "יכול להיות מצוין, אבל תלוי בכימיה ובזמינות."
+        },
+        "cost": {
+          "label": "עלות כספית",
+          "aguy": "משתלם בהרבה משיעור פרטי בודד.",
+          "tutor": "מאות שקלים לכל שעה."
+        },
+        "availability": {
+          "label": "זמינות לשאלות",
+          "aguy": "זמינות מלאה 24/7 בדיוק כשנתקעים.",
+          "tutor": "בדרך כלל רק בזמן שנקבע מראש."
+        }
+      }
+    },
+    "story": {
+      "title": "ידע אנושי שהומר לטכנולוגיה.",
+      "description": "מתוך מודעות לרגישות ולשוני בין תלמידים, יצרנו פלטפורמה שמביאה לידי ביטוי עשרות אלפי שעות לימוד פרטניות וקבוצתיות.",
+      "stats": {
+        "experience": {
+          "value": "20+",
+          "label": "שנות ניסיון"
+        },
+        "hours": {
+          "value": "50K+",
+          "label": "שעות לימוד"
+        },
+        "exercises": {
+          "value": "100K+",
+          "label": "תרגילים"
+        },
+        "lessons": {
+          "value": "1,000+",
+          "label": "מערכי שיעור"
+        },
+        "research": {
+          "value": "אלפי",
+          "label": "שעות מחקר למידה"
+        }
+      }
+    },
+    "features": {
+      "title": "אז מה המערכת כוללת?",
+      "description": "מעטפת לימודית שלמה שסוגרת את כל הפינות, מהיסודות ועד ההרחבה.",
+      "items": {
+        "lessons": {
+          "title": "1,000+ שיעורים",
+          "description": "שיעורי תרגול ולימוד מעמיקים שמסבירים את החומר ממש מאפס."
+        },
+        "exercises": {
+          "title": "100K+ תרגילים",
+          "description": "מאגר מגוון לתרגול מקיף בכל נושא ובכל רמת קושי."
+        },
+        "exams": {
+          "title": "500+ בחינות",
+          "description": "סימולציות ומבחנים מסכמים שמדמים בחינות אמת."
+        },
+        "teacher": {
+          "title": "מורה מלווה צמוד",
+          "description": "ליווי וירטואלי שמסביר בפירוט היכן טעיתם וכיצד להשתפר."
+        },
+        "plan": {
+          "title": "תוכנית למידה אישית",
+          "description": "לוח זמנים ממוקד לפי תאריכי מבחנים ויעדים אישיים."
+        },
+        "emotional": {
+          "title": "פיצ'רים רגשיים",
+          "description": "אבחון חכם, משוב דינמי, עידוד בזמן אמת ודוחות התקדמות."
+        }
+      }
+    },
+    "simulation": {
+      "title": "למידה שעובדת. לפי תוכנית משרד החינוך.",
+      "description": "מבט קצר על אזור השיעורים, הצ'אט המלווה והמחברת הדיגיטלית.",
+      "tabs": {
+        "dashboard": "לוח שיעורים",
+        "chat": "צ'אט ותרגול",
+        "notebook": "מחברת חכמה"
+      },
+      "dashboard": {
+        "url": "app.aguy.co.il/math/dashboard",
+        "title": "כיתה ז׳",
+        "progress": "3% הושלמו",
+        "triangles": {
+          "badge": "המשך ללמוד",
+          "title": "קטעים מיוחדים במשולש",
+          "status": "50% הושלם"
+        },
+        "order": {
+          "badge": "חדש שיעור 1",
+          "title": "סדר פעולות חשבון",
+          "status": "עדיין לא התחלת"
+        },
+        "fractions": {
+          "badge": "חדש שיעור 2",
+          "title": "כפל שברים",
+          "status": "עדיין לא התחלת"
+        }
+      },
+      "chat": {
+        "teacher": "Aguy - מורה דיגיטלי",
+        "message": "שלום! בואו נפתור ביחד את סעיף ב׳ ונמקם את הערכים החסרים על ציר המספרים.",
+        "feedback": "משוב למידה: הצבה מעולה! מה לגבי הערך האחרון מימין?",
+        "exerciseTitle": "סעיף ב׳: השלימו את המספרים החסרים בציר",
+        "next": "תרגול הבא"
+      },
+      "notebook": {
+        "title": "מחברת רישום חכמה",
+        "prompt": "סרטטו את גרף הפונקציה וקבעו את שיעורי קודקוד הפרבולה.",
+        "feedback": "מצוין! אפשר לראות את הקודקוד ואת צורת הפרבולה."
+      }
+    },
+    "cta": {
+      "title": "כל אחד יכול ללמוד מתמטיקה לבד.",
+      "description": "זה הזמן להתחיל עם מערכת שמלווה, מסבירה ומעודדת בכל שלב.",
+      "join": "הצטרפו עכשיו",
+      "trial": "ניסיון חינם"
+    }
+  },
   "landing": {
     "hero": {
       "badge": "המורה הדיגיטלי שלך למתמטיקה",
@@ -360,6 +527,7 @@
     "notesPlaceholder": "הוסף הערות כאן...",
     "selectBadge": "בחירה",
     "of": "מתוך",
+    "pages": "עמודים",
     "exercisesPagerIntroDescriptionPart1": "השיעור מכיל",
     "exercisesPagerIntroDescriptionPart2": "תרגילים. בואו נתחיל!",
     "exercisesPagerWelcome": "ברוכים הבאים לשיעור",
@@ -371,12 +539,32 @@
     "exercisesPagerNext": "הבא",
     "exercisesPagerIntro": "פתיחה",
     "exercisesPagerCompleted": "הושלם",
+    "lessonSummaryEndTitle": "סוף השיעור",
+    "lessonSummarySolvedExercises": "תרגילים שנפתרו",
+    "lessonSummaryCorrectAnswers": "תשובות נכונות",
+    "lessonSummaryScore": "ציון",
+    "lessonSummaryNextLesson": "המשך לשיעור הבא",
+    "lessonSummaryBackToCourse": "חזרה לקורס",
+    "lessonSummaryRetry": "נסה שוב",
     "pdfLessonPagerIntroDescriptionPart1": "השיעור מכיל",
     "pdfLessonPagerIntroDescriptionPart2": "מסמכים. בואו נתחיל!",
     "pdfLessonPagerDocuments": "מסמכים",
     "pdfLessonPagerCompletedDescription": "סקרת את כל המסמכים בשיעור זה.",
     "exercisesPagerBackToLesson": "חזור לשיעור",
     "startLesson": "התחל שיעור",
+    "lessonIntro": "פתיחה",
+    "lessonIntroWelcome": "ברוכים הבאים לשיעור",
+    "lessonIntroStart": "התחל",
+    "lessonLobbySummary": "תקציר השיעור",
+    "lessonLobbyProgress": "ההתקדמות שלך",
+    "lessonLobbyContinue": "המשך שיעור",
+    "lessonLobbyRestart": "התחל מחדש",
+    "lessonLobbyReview": "חזרה על השיעור",
+    "lessonLobbyReady": "אפשר להתחיל.",
+    "lessonLobbyInProgress": "כבר התחלת את השיעור הזה.",
+    "lessonLobbyComplete": "השלמת את השיעור.",
+    "lessonLobbyNoProgress": "אין עדיין התקדמות",
+    "lessonLobbyNextLesson": "השיעור הבא בקורס",
     "soonBadge": "בקרוב",
     "justAddedBadge": "חדש",
     "contentLocked": "תוכן זה בהכנה ויהיה זמין בקרוב.",

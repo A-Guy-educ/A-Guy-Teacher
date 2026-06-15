@@ -3,6 +3,13 @@
  *
  * Aggregates user learning data for injection into the agent's system prompt.
  * Fetches progress, activity, and study plans to personalize agent responses.
+ *
+ * @fileType service
+ * @domain chat
+ * @pattern context-aggregation
+ * @ai-summary Aggregates user progress, streak, and study plan for personalized agent responses
+ *
+ * Gotcha: Returns empty context on error — agent works without personalization rather than failing
  */
 
 import type { Payload } from '@/infra/types/backend'

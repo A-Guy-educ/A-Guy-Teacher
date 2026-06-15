@@ -2,23 +2,11 @@
 
 import { cookies } from 'next/headers'
 
-import { createPasswordUser } from '@/infra/auth/web-auth'
+import { createPasswordUser, setAuthCookie } from '@/infra/auth/web-auth'
 import { checkRateLimit } from './signup_rateLimit-action'
 import { SignupSchema, type SignupResult } from '../signup_schemas'
 
-type CookieStore = {
-  set: (
-    name: string,
-    value: string,
-    options: {
-      httpOnly: boolean
-      secure: boolean
-      sameSite: 'lax' | 'strict' | 'none'
-      path: string
-      maxAge: number
-    },
-  ) => void
-}
+type CookieStore = Parameters<typeof setAuthCookie>[0]['cookies']
 
 export async function signupAction(
   formData: FormData,
@@ -82,13 +70,7 @@ export async function signupAction(
   }
 
   const store = _cookieStore ?? (await cookies())
-  store.set('payload-token', session.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-  })
+  setAuthCookie({ cookies: store }, session.token)
 
   return { success: true, userId: session.user.id, data: { userId: session.user.id } }
 }

@@ -26,6 +26,9 @@ interface PdfLessonPagerProps {
   showChat?: boolean
   /** Formula sheet data (passed to ChatInterface) */
   formulaSheet?: import('@/infra/types/content').FormulaSheet | null
+  /** When provided, overrides URL-based state initialization — used when PdfLessonPager
+   *  is rendered as a child after LessonIntroPage (skip the intro page). */
+  initialPageState?: { type: 'intro' | 'pdf' | 'outro'; pageNumber: number }
 }
 
 export function PdfLessonPager({
@@ -40,6 +43,7 @@ export function PdfLessonPager({
   chatLessonId,
   showChat,
   formulaSheet,
+  initialPageState,
 }: PdfLessonPagerProps) {
   const t = useTranslations('courses')
   const {
@@ -59,6 +63,7 @@ export function PdfLessonPager({
     lessonSlug,
     lessonId,
     gradeLevel,
+    initialPageState,
   })
 
   if (pageState.type === 'pdf') {

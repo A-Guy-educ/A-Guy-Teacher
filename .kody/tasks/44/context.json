@@ -1,0 +1,28 @@
+{
+  "taskId": "44",
+  "taskType": "issue",
+  "target": "docs-coverage: src/lib/latex-parser/",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added @ai-summary to all 13 modules; folder-level header added to index.ts",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/lib/latex-parser/index.ts",
+    "src/lib/latex-parser/types.ts",
+    "src/lib/latex-parser/tokenizer.ts",
+    "src/lib/latex-parser/tokenizer-env.ts",
+    "src/lib/latex-parser/sanitizer.ts",
+    "src/lib/latex-parser/block-generators.ts",
+    "src/lib/latex-parser/enumerate-parser.ts",
+    "src/lib/latex-parser/mcq-exam-cls.ts",
+    "src/lib/latex-parser/mcq-enumitem.ts",
+    "src/lib/latex-parser/mcq-inline.ts",
+    "src/lib/latex-parser/tabular-parser.ts",
+    "src/lib/latex-parser/tikz-axis-parser.ts",
+    "src/lib/latex-parser/tikz-geometry-parser.ts"
+  ],
+  "sessionLog": ".kody/runs/gh-27273363194-1/events.jsonl",
+  "startedAt": "2026-06-10T11:35:00Z",
+  "finishedAt": "2026-06-10T11:36:30Z"
+}

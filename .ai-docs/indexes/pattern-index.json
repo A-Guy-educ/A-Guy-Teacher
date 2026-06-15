@@ -42,6 +42,8 @@
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/ExercisesPager/index.tsx",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonAnalytics.tsx",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonContent.tsx",
+        "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/index.tsx",
+        "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/useLessonIntroPage.ts",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonPager/index.tsx",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonPager/useLessonPager.ts",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/MediaTabContent/index.tsx",
@@ -281,6 +283,7 @@
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/DualModeLessonView/index.tsx",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/ExercisesPager/index.tsx",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonContent.tsx",
+        "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/index.tsx",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonPager/index.tsx",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/PdfLessonPager/index.tsx",
         "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/ViewToggle.tsx",
@@ -598,6 +601,7 @@
       "files": [
         "src/app/api/exercises/convert/queue-v2/schema.ts",
         "src/app/api/exercises/convert/queue/schema.ts",
+        "src/server/services/course-tree-isolation.ts",
         "src/server/services/lesson-context-conversion/validate-latex.ts"
       ]
     },
@@ -1030,6 +1034,14 @@
         "src/server/email/templates/purchase-receipt/purchase-receipt.he.ts"
       ]
     },
+    "tiered-resolution": {
+      "pattern": "tiered-resolution",
+      "description": "No description available",
+      "files": [
+        "src/server/services/agent-behavior-prompt-resolver.ts",
+        "src/server/services/teacher-profile-resolver.ts"
+      ]
+    },
     "rolling-window-quota": {
       "pattern": "rolling-window-quota",
       "description": "No description available",
@@ -1039,6 +1051,16 @@
       "pattern": "service-layer",
       "description": "No description available",
       "files": ["src/server/services/conversation-service.ts"]
+    },
+    "repository-wrappers": {
+      "pattern": "repository-wrappers",
+      "description": "No description available",
+      "files": ["src/server/services/course-list-service.ts"]
+    },
+    "search-aggregation": {
+      "pattern": "search-aggregation",
+      "description": "No description available",
+      "files": ["src/server/services/course-search-service.ts"]
     },
     "diff-classifier": {
       "pattern": "diff-classifier",
@@ -1161,6 +1183,21 @@
       "pattern": "subject-detector",
       "description": "No description available",
       "files": ["src/server/services/lesson-duplication/subject-detector.ts"]
+    },
+    "blob-fetching": {
+      "pattern": "blob-fetching",
+      "description": "No description available",
+      "files": ["src/server/services/pdf-fetcher.ts"]
+    },
+    "sliding-window-quota": {
+      "pattern": "sliding-window-quota",
+      "description": "No description available",
+      "files": ["src/server/services/rate-limit.ts"]
+    },
+    "context-aggregation": {
+      "pattern": "context-aggregation",
+      "description": "No description available",
+      "files": ["src/server/services/user-learning-context.ts"]
     },
     "variant-component": {
       "pattern": "variant-component",
@@ -1533,6 +1570,22 @@
       "type": "unknown",
       "domain": "general",
       "patterns": ["i18n-component", "client-component"],
+      "aiSummary": "",
+      "dependencies": ["react"]
+    },
+    "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/index.tsx": {
+      "path": "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/index.tsx",
+      "type": "unknown",
+      "domain": "general",
+      "patterns": ["i18n-component", "client-component"],
+      "aiSummary": "",
+      "dependencies": ["lucide-react", "next/navigation", "react"]
+    },
+    "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/useLessonIntroPage.ts": {
+      "path": "src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/LessonIntroPage/useLessonIntroPage.ts",
+      "type": "unknown",
+      "domain": "general",
+      "patterns": ["client-component"],
       "aiSummary": "",
       "dependencies": ["react"]
     },
@@ -3264,6 +3317,14 @@
       "aiSummary": "Hebrew purchase receipt email sent to users after successful payment",
       "dependencies": []
     },
+    "src/server/services/agent-behavior-prompt-resolver.ts": {
+      "path": "src/server/services/agent-behavior-prompt-resolver.ts",
+      "type": "service",
+      "domain": "chat",
+      "patterns": ["tiered-resolution"],
+      "aiSummary": "Resolves agent behavior profile with tiered fallback: user settings → default → highest priority → hardcoded failsafe",
+      "dependencies": []
+    },
     "src/server/services/chat-quota.ts": {
       "path": "src/server/services/chat-quota.ts",
       "type": "service",
@@ -3278,6 +3339,30 @@
       "domain": "chat",
       "patterns": ["service-layer", "context-scoped"],
       "aiSummary": "Service for managing conversations with context scoping and access control",
+      "dependencies": []
+    },
+    "src/server/services/course-list-service.ts": {
+      "path": "src/server/services/course-list-service.ts",
+      "type": "service",
+      "domain": "courses",
+      "patterns": ["repository-wrappers"],
+      "aiSummary": "Thin wrapper around queryPublishedCourses repo — no business logic",
+      "dependencies": []
+    },
+    "src/server/services/course-search-service.ts": {
+      "path": "src/server/services/course-search-service.ts",
+      "type": "service",
+      "domain": "courses",
+      "patterns": ["search-aggregation"],
+      "aiSummary": "Aggregates search results across courses, lessons, and exercises with enrollment filtering",
+      "dependencies": []
+    },
+    "src/server/services/course-tree-isolation.ts": {
+      "path": "src/server/services/course-tree-isolation.ts",
+      "type": "service",
+      "domain": "courses",
+      "patterns": ["validation"],
+      "aiSummary": "Validates referential integrity: every chapter's course field must point back to its parent",
       "dependencies": []
     },
     "src/server/services/diff.ts": {
@@ -3454,6 +3539,38 @@
       "domain": "lessons",
       "patterns": ["lesson-export"],
       "aiSummary": "Converts exercise content blocks to canonical export format.",
+      "dependencies": []
+    },
+    "src/server/services/pdf-fetcher.ts": {
+      "path": "src/server/services/pdf-fetcher.ts",
+      "type": "service",
+      "domain": "media",
+      "patterns": ["blob-fetching"],
+      "aiSummary": "Fetches and validates PDF buffers from storage with size/mime/magic-byte checks",
+      "dependencies": []
+    },
+    "src/server/services/rate-limit.ts": {
+      "path": "src/server/services/rate-limit.ts",
+      "type": "service",
+      "domain": "chat",
+      "patterns": ["sliding-window-quota"],
+      "aiSummary": "In-memory rate limiting with sliding window per IP/User-Agent (guest) or userId (auth)",
+      "dependencies": []
+    },
+    "src/server/services/teacher-profile-resolver.ts": {
+      "path": "src/server/services/teacher-profile-resolver.ts",
+      "type": "service",
+      "domain": "chat",
+      "patterns": ["tiered-resolution"],
+      "aiSummary": "Resolves teacher system prompt with tiered fallback: user settings → default slug → first active → hardcoded failsafe",
+      "dependencies": []
+    },
+    "src/server/services/user-learning-context.ts": {
+      "path": "src/server/services/user-learning-context.ts",
+      "type": "service",
+      "domain": "chat",
+      "patterns": ["context-aggregation"],
+      "aiSummary": "Aggregates user progress, streak, and study plan for personalized agent responses",
       "dependencies": []
     },
     "src/server/utils/pdf-page-splitter.ts": {
@@ -4719,8 +4836,8 @@
     }
   },
   "metadata": {
-    "generatedAt": "2026-06-10T07:07:42.914Z",
-    "totalFiles": 435,
-    "totalPatterns": 122
+    "generatedAt": "2026-06-10T13:59:01.191Z",
+    "totalFiles": 443,
+    "totalPatterns": 128
   }
 }

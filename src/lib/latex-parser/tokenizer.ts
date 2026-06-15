@@ -1,3 +1,9 @@
+/**
+ * @fileType utility
+ * @domain exercises
+ * @ai-summary Lexes LaTeX source into typed tokens (environment, command, math, text). Relies on tokenizer-env for brace-aware environment matching; order of candidate checks (display math before inline math) matters to avoid false matches.
+ */
+
 import type { LatexToken } from '@/lib/latex-parser/types'
 import { stripComments, parseEnvironment, countLines } from '@/lib/latex-parser/tokenizer-env'
 

@@ -1,3 +1,9 @@
+/**
+ * @fileType types
+ * @domain exercises
+ * @ai-summary Shared types for the LaTeX parser output: LatexToken (lexer output), ParseResult/Warning/Error (pipeline result), and ExerciseGroup/MultiExerciseResult (multi-exercise grouping).
+ */
+
 import type { ContentBlock } from '@/infra/types/exercise'
 
 export interface ParseWarning {

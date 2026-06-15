@@ -251,3 +251,20 @@ export function setAuthCookie(
 ) {
   res.cookies.set(AUTH_COOKIE_NAME, token, AUTH_COOKIE)
 }
+
+export function appendAuthCookieClearHeaders(headers: Headers): void {
+  const isProd = process.env.NODE_ENV === 'production'
+  const baseParts = [
+    `${AUTH_COOKIE_NAME}=`,
+    'Path=/',
+    'Max-Age=0',
+    'HttpOnly',
+    isProd ? 'Secure' : '',
+  ].filter(Boolean)
+
+  headers.append('Set-Cookie', [...baseParts, `SameSite=${isProd ? 'None' : 'Lax'}`].join('; '))
+
+  if (isProd) {
+    headers.append('Set-Cookie', [...baseParts, 'SameSite=None', 'Partitioned'].join('; '))
+  }
+}

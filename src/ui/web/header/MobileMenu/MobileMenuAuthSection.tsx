@@ -8,7 +8,7 @@ import { LogOut, User as UserIcon } from 'lucide-react'
 import type { User } from '@/infra/types/content'
 
 import { Button } from '@/ui/web/components/button'
-import { logoutAction } from '@/app/(frontend)/actions/auth-action'
+import { logoutUser } from '@/client/auth/logout'
 import { analytics } from '@/infra/analytics'
 import { usePasswordLogin } from '@/ui/web/providers/PasswordLoginProvider'
 import { useTranslations } from '@/ui/web/providers/I18n'
@@ -49,7 +49,7 @@ export function MobileMenuAuthSection({
             setIsLoggingOut(true)
             try {
               analytics.reset()
-              await logoutAction()
+              await logoutUser()
               window.dispatchEvent(new Event('auth:changed'))
               onClose()
               router.push('/login')

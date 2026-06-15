@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+
 import type { Exercise } from '@/infra/types/content'
+
 import { getExerciseUrlParam } from './getExerciseUrlParam'
 
 type PageType = 'intro' | 'about' | 'exercise' | 'outro'
@@ -16,9 +18,11 @@ interface UseExercisesPagerProps {
   chapterSlug: string
   lessonSlug: string
   lessonId: string
-  /** Grade bucket to store progress under — must be the lesson's course label, not the user's onboarding grade. */
+  /** Grade bucket to store progress under — must be the lesson's course label, not user's onboarding grade. */
   gradeLevel: string
   hasAboutPage?: boolean
+  skipIntro?: boolean
+  initialExerciseIndex?: number
 }
 
 /** Fire-and-forget progress save (silently ignores errors / unauthenticated users) */
@@ -39,7 +43,7 @@ function saveProgress(
     credentials: 'include',
     body: JSON.stringify({ ...params, gradeLevel }),
   }).catch(() => {
-    /* silent – user may be anonymous */
+    /* silent - user may be anonymous */
   })
 }
 
@@ -51,23 +55,32 @@ export function useExercisesPager({
   lessonId,
   gradeLevel,
   hasAboutPage = false,
+  skipIntro = false,
+  initialExerciseIndex = 0,
 }: UseExercisesPagerProps) {
-  // When hasAboutPage, pages are: intro(0) → about(1) → exercises(2..n+1) → outro(n+2)
-  // Without about: intro(0) → exercises(1..n) → outro(n+1)
+  // When hasAboutPage, pages are: intro(0) -> about(1) -> exercises(2..n+1) -> outro(n+2)
+  // Without about: intro(0) -> exercises(1..n) -> outro(n+1)
   const aboutOffset = hasAboutPage ? 1 : 0
-  const [pageState, setPageState] = useState<PageState>({
-    type: 'intro',
-    pageNumber: 0,
+  const totalPages = exercises.length + 2 + aboutOffset
+  const firstExercisePage = 1 + aboutOffset
+  const firstPageNumber = skipIntro ? firstExercisePage : 0
+
+  const [pageState, setPageState] = useState<PageState>(() => {
+    if (!skipIntro) return { type: 'intro', pageNumber: 0 }
+    if (exercises.length === 0) return { type: 'outro', pageNumber: totalPages - 1 }
+
+    const exerciseIndex = Math.min(Math.max(initialExerciseIndex, 0), exercises.length - 1)
+    return {
+      type: 'exercise',
+      pageNumber: exerciseIndex + firstExercisePage,
+      exerciseIndex,
+    }
   })
 
   const basePath = `/courses/${courseSlug}/chapters/${chapterSlug}/lessons/${lessonSlug}`
   const introUrl = basePath
   const aboutUrl = `${basePath}/about`
   const completeUrl = `${basePath}/complete`
-
-  // intro + about(optional) + exercises + outro
-  const totalPages = exercises.length + 2 + aboutOffset
-  const firstExercisePage = 1 + aboutOffset
 
   const getExerciseUrl = useCallback(
     (index: number) => {
@@ -128,13 +141,17 @@ export function useExercisesPager({
 
   const pageToState = useCallback(
     (page: number): PageState => {
+      if (skipIntro && page < firstExercisePage) {
+        return { type: 'exercise', pageNumber: firstExercisePage, exerciseIndex: 0 }
+      }
       if (page === 0) return { type: 'intro', pageNumber: 0 }
       if (hasAboutPage && page === 1) return { type: 'about', pageNumber: 1 }
       if (page === totalPages - 1) return { type: 'outro', pageNumber: page }
+
       const exerciseIndex = page - firstExercisePage
       return { type: 'exercise', pageNumber: page, exerciseIndex }
     },
-    [hasAboutPage, totalPages, firstExercisePage],
+    [skipIntro, hasAboutPage, totalPages, firstExercisePage],
   )
 
   const [isPending, startTransition] = useTransition()
@@ -150,12 +167,13 @@ export function useExercisesPager({
       if (timerRef.current) clearTimeout(timerRef.current)
       setIsNavigating(false)
     }
+
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
   }, [isPending])
 
-  // Track whether we already saved completion for this lesson (avoid duplicate writes)
+  // Track whether we already saved completion this lesson (avoid duplicate writes)
   const completionSavedRef = useRef(false)
   // Track visited exercises so we only save progress once per exercise
   const visitedExercisesRef = useRef(new Set<number>())
@@ -164,6 +182,7 @@ export function useExercisesPager({
   const saveExerciseProgress = useCallback(
     (prevState: PageState) => {
       if (prevState.type !== 'exercise' || prevState.exerciseIndex === undefined) return
+
       const exercise = exercises[prevState.exerciseIndex]
       if (!exercise) return
 
@@ -195,24 +214,20 @@ export function useExercisesPager({
   )
 
   const handleNext = useCallback(() => {
-    // Capture current state before transition for exercise progress saving
-    setPageState((prev) => prev) // no-op to access current state
     startTransition(() => {
       setPageState((prev) => {
         const nextPage = prev.pageNumber + 1
         if (nextPage >= totalPages) return prev
+
         const nextState = pageToState(nextPage)
 
-        // Save lesson completion when reaching the outro page
-        // Set flag BEFORE saveExerciseProgress to prevent race with 99% write
+        // Set flag before saveExerciseProgress to prevent a race with the 99% write.
         if (nextState.type === 'outro' && !completionSavedRef.current) {
           completionSavedRef.current = true
         }
 
-        // Save exercise progress when leaving an exercise
         saveExerciseProgress(prev)
 
-        // Fire 100% save after exercise progress to ensure correct final state
         if (nextState.type === 'outro') {
           saveProgress(gradeLevel, {
             recordType: 'lesson',
@@ -225,21 +240,20 @@ export function useExercisesPager({
         return nextState
       })
     })
-  }, [totalPages, pageToState, startTransition, lessonId, gradeLevel, saveExerciseProgress])
+  }, [totalPages, pageToState, lessonId, gradeLevel, saveExerciseProgress])
 
   const handlePrev = useCallback(() => {
     startTransition(() => {
       setPageState((prev) => {
         const prevPage = prev.pageNumber - 1
-        if (prevPage < 0) return prev
+        if (prevPage < firstPageNumber) return prev
 
-        // Save exercise progress when leaving an exercise
         saveExerciseProgress(prev)
 
         return pageToState(prevPage)
       })
     })
-  }, [pageToState, startTransition, saveExerciseProgress])
+  }, [firstPageNumber, pageToState, saveExerciseProgress])
 
   const handleStart = useCallback(() => {
     if (hasAboutPage) {
@@ -250,7 +264,7 @@ export function useExercisesPager({
       setPageState({ type: 'outro', pageNumber: totalPages - 1 })
       return
     }
-    // Mark lesson as in_progress when starting exercises
+
     saveProgress(gradeLevel, {
       recordType: 'lesson',
       recordId: lessonId,
@@ -265,7 +279,7 @@ export function useExercisesPager({
       setPageState({ type: 'outro', pageNumber: totalPages - 1 })
       return
     }
-    // Mark lesson as in_progress when starting exercises
+
     saveProgress(gradeLevel, {
       recordType: 'lesson',
       recordId: lessonId,
@@ -284,7 +298,6 @@ export function useExercisesPager({
     if (pageState.type === 'about') return 0
     if (pageState.type === 'outro') return 100
 
-    // For exercise pages, calculate based on exercise completion
     if (pageState.type === 'exercise' && pageState.exerciseIndex !== undefined) {
       const totalExercises = exercises.length
       if (totalExercises === 0) return 0
@@ -305,7 +318,7 @@ export function useExercisesPager({
     progressPercent,
     isNavigating,
     canGoNext: pageState.pageNumber < totalPages - 1,
-    canGoPrev: pageState.pageNumber > 0,
+    canGoPrev: pageState.pageNumber > firstPageNumber,
     handleNext,
     handlePrev,
     handleStart,
