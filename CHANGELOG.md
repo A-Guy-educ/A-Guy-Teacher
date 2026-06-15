@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.25.11 — 2026-06-15
+
+### Features
+
+### Fixes
+
+### Chores
+
 ## v0.25.10 — 2026-05-29
 
 ### Features
