@@ -1,15 +1,7 @@
----
-every: 15m
-staff: cto
-mentions: aguyaharonyair
----
+# Preview health
 
-# PR health
-
-# PR health
-
-> Standing PR-health triage, executed by the **CTO** persona
-> (`worker: cto`). Every 15 minutes, read the open pull requests, detect
+> Standing preview-health triage, executed by the **CTO** persona
+> (`staff: cto`). Every 15 minutes, read the open pull requests, detect
 > which ones need a mechanical repair, and — per the operator's trust
 > ledger — either recommend the repair or (once that verb has graduated)
 > dispatch it. Cadence is enforced by the engine via `every: 15m`; no
@@ -26,7 +18,7 @@ belong to **this job**.
 ## Tick procedure — REQUIRED (fully scripted)
 
 This tick is **fully scripted**. The script
-[pr-health-triage-tick.py](.kody/scripts/pr-health-triage-tick.py) is the
+[preview-health-tick.py](.kody/scripts/preview-health-tick.py) is the
 **single source of truth** for which PRs are candidates, which repair each
 needs, what comments to post, and the next state.
 
@@ -37,7 +29,7 @@ recommendation re-fired. The script removes that failure mode.
 
 You **MUST**:
 
-1. Run exactly: `python3 .kody/scripts/pr-health-triage-tick.py`
+1. Run exactly: `bash .kody/scripts/preview-health-tick.sh`
 2. Emit the script's stdout **verbatim** — the markdown summary table and
    the `kody-job-next-state` fenced block at the end. Do not summarise,
    reorder, or add commentary.
@@ -224,7 +216,7 @@ per-tick:
 (Engine-managed fields like `lastFiredAt` live under `data` automatically;
 do not write or rely on them from the prompt.)
 
-`done`: always `false` — PR-health triage is evergreen.
+`done`: always `false` — preview-health triage is evergreen.
 
 ## Tick output (MANDATORY)
 

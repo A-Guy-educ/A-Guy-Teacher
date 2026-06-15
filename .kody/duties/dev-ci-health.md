@@ -13,7 +13,7 @@ fix is already in flight**, open the single tracking issue and dispatch
 `@kody run` to fix it (the fix lands as a PR into `dev`).
 
 Why: `fix-ci` / `sync` / `resolve` all need a `--pr`, but `dev` has no PR — so a
-broken `dev` build is invisible to `pr-health-triage`. This routes the repair
+broken `dev` build is invisible to `preview-health`. This routes the repair
 through a fix PR. Duplicates are impossible here: `ensure_issue` is keyed and
 idempotent, so a re-tick reuses the one open issue instead of creating another.
 

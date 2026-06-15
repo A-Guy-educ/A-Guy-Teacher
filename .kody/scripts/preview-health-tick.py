@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-pr-health-triage tick (deterministic). Replaces the prose-driven job-tick:
+preview-health tick (deterministic). Replaces the prose-driven job-tick:
 the LLM proved unreliable at emitting the mandatory kody-job-next-state
 block across a heavy multi-PR tick, silently dropping the dedup ledger.
 
 This script is the single source of truth for one tick:
-  1. Read prior state (.kody/jobs/pr-health-triage.state.json).
+  1. Read prior state (.kody/duties/preview-health.state.json).
   2. Read the trust ledger (kody:cto-decisions issue) → per-verb mode.
   3. Enumerate open non-draft PRs.
   4. Detect at most one repair per PR (priority: resolve > fix-ci > sync).
@@ -31,7 +31,10 @@ import sys
 from datetime import datetime, timezone
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
-STATE_PATH = REPO_ROOT / ".kody" / "jobs" / "pr-health-triage.state.json"
+STATE_PATH = REPO_ROOT / os.environ.get(
+    "PREVIEW_HEALTH_STATE_PATH",
+    ".kody/duties/preview-health.state.json",
+)
 KODY_CONFIG_PATH = REPO_ROOT / "kody.config.json"
 
 DECISIONS_LABEL = "kody:cto-decisions"
@@ -52,7 +55,7 @@ STALE_THRESHOLD = 10  # behind_by must exceed this to warrant a sync.
 
 def log(msg: str) -> None:
     """Diagnostics go to stderr so stdout stays the clean state contract."""
-    sys.stderr.write(f"[pr-health-triage] {msg}\n")
+    sys.stderr.write(f"[preview-health] {msg}\n")
 
 
 def now_iso() -> str:
