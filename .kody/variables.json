@@ -160,6 +160,11 @@
       "value": "production",
       "updatedAt": "2026-06-15T13:05:00.000Z",
       "updatedBy": "codex"
+    },
+    "RELEASE_FLOW": {
+      "value": "{\"integrationBranch\":\"main\",\"productionBranch\":\"main\"}",
+      "updatedAt": "2026-06-15T13:15:00.000Z",
+      "updatedBy": "codex"
     }
   }
 }
