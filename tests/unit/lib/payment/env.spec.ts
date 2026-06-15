@@ -5,11 +5,7 @@
  * They're independent so a deployment can configure only one provider.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import {
-  getPayPalEnv,
-  getStripeEnv,
-  resetPaymentEnvCache,
-} from '@/lib/payment/env'
+import { getPayPalEnv, getStripeEnv, resetPaymentEnvCache } from '@/lib/payment/env'
 
 const STRIPE_VARS = [
   'STRIPE_SECRET_KEY',

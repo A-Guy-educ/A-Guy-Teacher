@@ -33,7 +33,10 @@ async function resolveProductItems(itemValues: unknown[]) {
 }
 
 function isMissingEnvError(err: unknown): boolean {
-  return err instanceof Error && /^Missing required (Stripe|PayPal) environment variables/.test(err.message)
+  return (
+    err instanceof Error &&
+    /^Missing required (Stripe|PayPal) environment variables/.test(err.message)
+  )
 }
 
 export async function POST(request: NextRequest) {
