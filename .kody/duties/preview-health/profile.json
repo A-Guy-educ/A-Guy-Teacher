@@ -2,8 +2,8 @@
   "name": "preview-health",
   "describe": "Preview health",
   "action": "preview-health",
+  "executable": "preview-health",
   "every": "15m",
   "staff": "cto",
-  "mentions": ["aguyaharonyair"],
-  "tickScript": ".kody/scripts/preview-health-tick.sh"
+  "mentions": ["aguyaharonyair"]
 }
