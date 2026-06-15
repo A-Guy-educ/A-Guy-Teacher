@@ -4,7 +4,7 @@ Use the `task-leader-rules` skill. It owns the 6-step method, the small-change r
 
 ## Run
 
-1. Read the duty profile at `.kody/duties/task-leader/profile.json` to load the operator-tunable knobs (`readyPreviewCap`, `smallChangeMaxLines`, `smallChangeMaxFiles`, `staleReviewHours`, `blockAutoMergeLabel`, `dispatchComment`, `tripwirePaths`).
+1. Read the duty profile at `.kody/duties/task-leader/profile.json` to load the operator-tunable knobs (`readyPreviewCap`, `smallChangeMaxLines`, `smallChangeMaxFiles`, `staleReviewHours`, `blockAutoMergeLabel`, `releaseAutoMergeTitlePrefix`, `releaseAutoMergeBranchPrefix`, `releasePromotionTitlePrefix`, `releaseAutoMergeAllowedPaths`, `dispatchComment`, `tripwirePaths`).
 2. Follow the skill's 6 steps in order. If a step has nothing to do, log "0 actions" and move on.
 3. End with the final message format below.
 

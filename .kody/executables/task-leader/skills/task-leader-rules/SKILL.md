@@ -12,6 +12,7 @@ Read these from `.kody/duties/task-leader/profile.json`:
 - `releaseAutoMergeTitlePrefix` (default `chore(release):`) - required title prefix for release auto-merge lane.
 - `releaseAutoMergeBranchPrefix` (default `release/v`) - required head branch prefix for release auto-merge lane.
 - `releaseAutoMergeAllowedPaths` (default `package.json`, `pnpm-lock.yaml`, `CHANGELOG.md`) - exact changed files allowed for release auto-merge lane.
+- `releasePromotionTitlePrefix` (default `chore(release): promote`) - required title prefix for production promotion lane.
 - `dispatchComment` (default `@kody`) - bare token dispatches backlog issue.
 - `tripwirePaths` - paths whose presence in a normal PR diff disqualifies auto-merge.
 
@@ -123,7 +124,41 @@ gh pr view <N> --json body --jq .body
 gh pr view <N> --json files --jq '.files[].path'
 ```
 
-If either lane passes, run:
+### Lane C - Release Promotion PR
+
+This lane exists only for the final production promotion PR created by the `release` duty. It may approve and merge because the release version PR already merged into the integration branch and this PR only promotes integration to production.
+
+All following must be true:
+
+1. Read `.kody/variables.json` `RELEASE_FLOW`; `integrationBranch` must differ from `productionBranch`.
+2. PR title starts `releasePromotionTitlePrefix`:
+```sh
+gh pr view <N> --json title --jq .title
+```
+3. PR head branch equals `integrationBranch` and base branch equals `productionBranch`:
+```sh
+gh pr view <N> --json headRefName,baseRefName
+```
+4. PR is not draft, mergeable, and has no changes requested or unresolved review threads.
+5. All required CI checks pass: `gh pr checks <N>`.
+6. The GitHub Release named in the PR title exists. Extract `vX.Y.Z` from the title and verify:
+```sh
+gh release view vX.Y.Z
+```
+
+If Lane C passes and `reviewDecision` is `REVIEW_REQUIRED`, approve it:
+
+```sh
+gh pr review <N> --approve --body "Approved by task-leader release promotion gate."
+```
+
+Then merge it without deleting the integration branch:
+
+```sh
+gh pr merge <N> --merge --delete-branch=false
+```
+
+If Lane A or Lane B passes, run:
 
 ```sh
 gh pr merge <N> --squash --delete-branch=false

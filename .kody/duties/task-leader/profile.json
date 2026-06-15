@@ -13,6 +13,7 @@
   "blockAutoMergeLabel": "status:needs-review",
   "releaseAutoMergeTitlePrefix": "chore(release):",
   "releaseAutoMergeBranchPrefix": "release/v",
+  "releasePromotionTitlePrefix": "chore(release): promote",
   "releaseAutoMergeAllowedPaths": {
     "item": [
       "package.json",
