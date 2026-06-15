@@ -37,13 +37,33 @@
       "updatedBy": "codex"
     },
     "DEV_PREVIEW_BRANCH": {
-      "value": "main",
-      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "value": "dev",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
       "updatedBy": "codex"
     },
     "VERCEL_TARGET": {
       "value": "preview",
       "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_DEV_ALIAS": {
+      "value": "a-guy-dev-aguy.vercel.app",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_DEV_BRANCH": {
+      "value": "dev",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_DEV_TARGET": {
+      "value": "preview",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_PRODUCTION_BRANCH": {
+      "value": "main",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
       "updatedBy": "codex"
     }
   }

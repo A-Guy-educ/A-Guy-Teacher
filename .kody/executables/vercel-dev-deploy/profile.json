@@ -1,7 +1,7 @@
 {
-  "name": "dev-deploy",
+  "name": "vercel-dev-deploy",
   "role": "primitive",
-  "describe": "Deploy the configured branch to Vercel Preview and move the stable dev preview alias.",
+  "describe": "Deploy dev branch to Vercel Preview and move the stable dev preview alias.",
   "inputs": [],
   "claudeCode": {
     "model": "inherit",
@@ -22,7 +22,7 @@
   "scripts": {
     "preflight": [
       {
-        "shell": "deploy-dev-preview.sh"
+        "shell": "vercel-dev-deploy.sh"
       },
       {
         "script": "skipAgent"
@@ -32,8 +32,8 @@
   },
   "output": {
     "actionTypes": [
-      "DEV_DEPLOY_COMPLETED",
-      "DEV_DEPLOY_FAILED",
+      "VERCEL_DEV_DEPLOY_COMPLETED",
+      "VERCEL_DEV_DEPLOY_FAILED",
       "AGENT_NOT_RUN"
     ]
   }

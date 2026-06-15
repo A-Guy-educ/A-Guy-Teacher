@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ALLOW_NON_DEV_DEPLOY="${ALLOW_NON_DEV_DEPLOY:-0}"
 ORIGINAL_BRANCH=""
 
 fail() {
@@ -11,7 +10,7 @@ fail() {
 
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    fail "Missing required command: $1"
+    fail "Missing command: $1"
   fi
 }
 
@@ -51,62 +50,52 @@ value_or_variable() {
   printf '%s' "$default_value"
 }
 
-ALIAS_HOST="$(value_or_variable "${DEV_PREVIEW_ALIAS:-}" "DEV_PREVIEW_ALIAS" "a-guy-dev-aguy.vercel.app")"
-TARGET="$(value_or_variable "${VERCEL_TARGET:-}" "VERCEL_TARGET" "preview")"
 SCOPE="$(value_or_variable "${VERCEL_SCOPE:-}" "VERCEL_SCOPE" "aguy")"
-REQUIRED_BRANCH="$(value_or_variable "${DEV_PREVIEW_BRANCH:-}" "DEV_PREVIEW_BRANCH" "main")"
+DEPLOY_BRANCH="$(value_or_variable "${VERCEL_PRODUCTION_BRANCH:-}" "VERCEL_PRODUCTION_BRANCH" "main")"
 VERCEL_ORG_ID="$(value_or_variable "${VERCEL_ORG_ID:-}" "VERCEL_ORG_ID")"
 VERCEL_PROJECT_ID="$(value_or_variable "${VERCEL_PROJECT_ID:-}" "VERCEL_PROJECT_ID")"
 export VERCEL_ORG_ID VERCEL_PROJECT_ID
 
-if [ -z "${VERCEL_ACCESS_TOKEN:-${VERCEL_TOKEN:-}}" ]; then
+token="${VERCEL_ACCESS_TOKEN:-${VERCEL_TOKEN:-}}"
+if [ -z "$token" ]; then
   fail "VERCEL_ACCESS_TOKEN is required"
 fi
 
-if [ -z "${VERCEL_ORG_ID:-}" ]; then
+if [ -z "$VERCEL_ORG_ID" ]; then
   fail "VERCEL_ORG_ID is required"
 fi
 
-if [ -z "${VERCEL_PROJECT_ID:-}" ]; then
+if [ -z "$VERCEL_PROJECT_ID" ]; then
   fail "VERCEL_PROJECT_ID is required"
 fi
 
-current_branch="$(git branch --show-current)"
-ORIGINAL_BRANCH="$current_branch"
+ORIGINAL_BRANCH="$(git branch --show-current)"
 
-if [ "$ALLOW_NON_DEV_DEPLOY" != "1" ]; then
-  if ! git diff --quiet || ! git diff --cached --quiet; then
-    fail "Working tree has tracked changes. Commit or stash before switching to '${REQUIRED_BRANCH}'."
-  fi
-
-  git fetch origin "$REQUIRED_BRANCH"
-
-  if [ "$current_branch" != "$REQUIRED_BRANCH" ]; then
-    echo "Switching from ${current_branch} to ${REQUIRED_BRANCH}..."
-    git checkout "$REQUIRED_BRANCH"
-  fi
-
-  git pull --ff-only origin "$REQUIRED_BRANCH"
-  current_branch="$(git branch --show-current)"
-fi
-
-vercel_args=(--scope "$SCOPE")
-token="${VERCEL_ACCESS_TOKEN:-${VERCEL_TOKEN:-}}"
-if [ -n "$token" ]; then
-  vercel_args+=(--token "$token")
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  fail "Working tree has tracked changes. Commit or stash before switching to '${DEPLOY_BRANCH}'."
 fi
 
 tmp_json="$(mktemp)"
 cleanup() {
   rm -f "$tmp_json"
-  if [ "$ALLOW_NON_DEV_DEPLOY" != "1" ] && [ -n "$ORIGINAL_BRANCH" ] && [ "$ORIGINAL_BRANCH" != "$(git branch --show-current)" ]; then
+  if [ -n "$ORIGINAL_BRANCH" ] && [ "$ORIGINAL_BRANCH" != "$(git branch --show-current)" ]; then
     git checkout "$ORIGINAL_BRANCH" >/dev/null 2>&1 || true
   fi
 }
 trap cleanup EXIT
 
-echo "Deploying ${current_branch} to Vercel ${TARGET}..."
-vercel deploy --target="$TARGET" --yes --format=json "${vercel_args[@]}" | tee "$tmp_json"
+git fetch origin "$DEPLOY_BRANCH"
+if [ "$ORIGINAL_BRANCH" != "$DEPLOY_BRANCH" ]; then
+  echo "Switching from ${ORIGINAL_BRANCH} to ${DEPLOY_BRANCH}..."
+  git checkout "$DEPLOY_BRANCH"
+fi
+git pull --ff-only origin "$DEPLOY_BRANCH"
+
+current_branch="$(git branch --show-current)"
+vercel_args=(--scope "$SCOPE" --token "$token")
+
+echo "Deploying ${current_branch} to Vercel production..."
+vercel deploy --prod --yes --format=json "${vercel_args[@]}" | tee "$tmp_json"
 
 deployment_url="$(
   # shellcheck disable=SC2016
@@ -115,19 +104,14 @@ deployment_url="$(
     const data = JSON.parse(fs.readFileSync(process.argv[1], "utf8"))
     const deployment = data.deployment && typeof data.deployment === "object" ? data.deployment : {}
     const url = data.url || deployment.url || data.inspectorUrl || deployment.inspectorUrl || ""
-    if (!url) {
-      throw new Error("Vercel deploy output did not include a deployment URL")
-    }
+    if (!url) throw new Error("Vercel deploy output did not include a deployment URL")
     console.log(url.startsWith("http") ? url : `https://${url}`)
   ' "$tmp_json"
 )"
 
-echo "Assigning ${ALIAS_HOST} -> ${deployment_url}"
-vercel alias set "$deployment_url" "$ALIAS_HOST" "${vercel_args[@]}"
-
 cat <<RESULT
 DONE
 PR_SUMMARY:
-- Deployed ${current_branch} to ${deployment_url}.
-- Assigned https://${ALIAS_HOST} to the new deployment.
+- Deployed ${current_branch} to Vercel production.
+- Production deployment URL: ${deployment_url}.
 RESULT
