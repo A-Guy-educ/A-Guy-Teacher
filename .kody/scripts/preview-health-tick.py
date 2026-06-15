@@ -41,6 +41,7 @@ DECISIONS_LABEL = "kody:cto-decisions"
 LEDGER_START = "<!-- kody-cto-decisions:start -->"
 LEDGER_END = "<!-- kody-cto-decisions:end -->"
 VERBS = ("fix-ci", "sync", "resolve")
+AUTO_VERBS = {"resolve"}
 
 # Cap how many PRs we act on per tick. Without this, a wave of stale PRs all
 # fire at once (the 25-sync flood). Lowest PR numbers first; the rest are
@@ -253,11 +254,15 @@ def auto_run(pr_number: int, verb: str, reason: str) -> bool:
         if res.returncode != 0:
             log(f"workflow_dispatch failed for #{pr_number} ({verb}): {res.stderr.strip()}")
             return False
+    auto_reason = (
+        "Policy: preview-health auto-runs `resolve` for merge conflicts."
+        if verb == "resolve"
+        else f"Graduated: operator approved `{verb}` repeatedly. A **Reject** on any `{verb}` returns me asking."
+    )
     audit = (
         f"🧭 **CTO auto-ran** — `{verb}`\n\n"
         f"Dispatched `{verb}` on PR #{pr_number} via workflow_dispatch ({reason}). "
-        f"Graduated: operator approved `{verb}` repeatedly. A **Reject** on any "
-        f"`{verb}` returns me to asking."
+        f"{auto_reason}"
     )
     return post_comment(pr_number, audit)
 
@@ -332,7 +337,7 @@ def main() -> int:
         # successful sync), which is exactly when a repair should re-evaluate.
         fp = f"{verb}|{pr.get('headRefOid', '')}"
         prior = new_prs.get(key)
-        graduated = modes.get(verb) == "auto"
+        graduated = verb in AUTO_VERBS or modes.get(verb) == "auto"
         intended_stage = f"{verb}-auto" if graduated else f"{verb}-recommended"
 
         # Dedup on the branch head SHA *and* the action we'd take. Keying on fp

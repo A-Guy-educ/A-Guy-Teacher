@@ -44,30 +44,30 @@ You **MUST NOT**:
 Everything below documents *what the script does* — it is reference, not a
 second set of instructions to execute by hand.
 
-## Authority — the trust ledger
+## Authority — auto resolve and trust ledger
 
-This job is **advisory by default**. Authority over each verb is governed
-by the operator's trust ledger (the `kody:cto-decisions` issue):
+This job auto-runs `resolve` for merge conflicts. `fix-ci` and `sync` remain
+governed by the operator's trust ledger (the `kody:cto-decisions` issue):
 
-- A verb marked `"auto"` has **graduated** — you may dispatch it yourself
+- `resolve` is policy-auto because conflicts block PR progress and the repair
+  executable owns the merge-conflict workflow.
+- `fix-ci` or `sync` marked `"auto"` has **graduated** — dispatch it on
   this tick.
-- `"ask"`, missing, no ledger, parse failure, or any doubt → **not
-  graduated**: recommend and wait. Fail safe — when in doubt, ask.
-- Each verb graduates independently (`fix-ci` being `"auto"` says nothing
-  about `sync`/`resolve`). A single Reject on a verb resets only that
-  verb to `"ask"`. You only ever *read* `mode`; the dashboard owns the
-  graduation math.
+- `"ask"`, missing, no ledger, parse failure, any doubt → **not graduated**
+  for `fix-ci` / `sync`: recommend and wait.
+- `fix-ci` and `sync` graduate independently. A single Reject on a verb
+  resets only that verb to `"ask"`.
 
 ## Scope (hard limits)
 
-- The only actions this job may ever take are `@kody fix-ci|sync|resolve
-  --pr <n>`, and auto only for the specific verb the ledger marks
-  `"auto"`.
+- only actions this job may ever take are `resolve`, `fix-ci`, and `sync`
+  for a specific PR.
+- `resolve` auto-runs for conflicts; `fix-ci` and `sync` auto-run only
+  when the trust ledger marks that verb `"auto"`.
 - No `merge`, `approve`, `execute`, `qa-review`, `close`, `revert`,
-  `abort`, assign, or label — entirely out of scope here.
-- Never edit, create, or delete any file in the working tree. Never
-  `git commit`, `git push`, or open a PR. The only write path is a
-  `gh pr comment`.
+  `abort`, assign, label — entirely out scope here.
+- Never edit, create, delete any file in working tree. Never `git commit`,
+  `git push`, open PR. Only write paths are workflow dispatch and PR comments.
 
 ### Enumerate
 
@@ -116,15 +116,17 @@ checks 1 and 2 (not conflicting, CI green).
 
 ### Act on the repair
 
-Let `<verb>` be the detected primitive and `<n>` the PR number; the command
-is always `@kody <verb> --pr <n>`.
+Let `<verb>` be the detected primitive and `<n>` the PR number.
 
-- **Verb not graduated** → post one recommendation comment on PR `<n>`
-  (use the recommendation format below). Stage → `<verb>-recommended`.
-- **Verb graduated** → dispatch it (use the auto-run format below).
-  Stage → `<verb>-auto`. Notify, not ask — do not wait. Still honour the
-  dedup ledger: never auto-run the same repair on the same PR twice for
-  the same fingerprint.
+- **`resolve`** → dispatch it via workflow dispatch. Stage → `resolve-auto`.
+- **`fix-ci` / `sync` not graduated** → post one inert recommendation comment
+  on PR `<n>` (use recommendation format below). Stage →
+  `<verb>-recommended`.
+- **`fix-ci` / `sync` graduated** → dispatch it via workflow dispatch. Stage →
+  `<verb>-auto`.
+
+Still honour the dedup ledger: never auto-run the same repair on the same PR
+twice for the same fingerprint.
 
 ## Comment formats
 
@@ -147,19 +149,19 @@ Recommended action: `<verb>` for PR #<n>.
 _Confirm in the dashboard inbox or run the action manually. The CTO will not act on its own._
 ```
 
-**Auto-run** (verb graduated). Post `@kody <verb> --pr <n>` on the PR,
-then a **separate, silent audit-trail** comment. It **MUST NOT
-`@`-mention the operator** — graduation means you've earned the right to
-act *without* interrupting them, and any operator mention routes
-straight to their inbox and push, defeating the point. Leave the mention
-out so the comment is a quiet record only:
+**Auto-run** (`resolve`, or graduated `fix-ci` / `sync`). Dispatch via
+`workflow_dispatch`, then post a separate, silent audit-trail comment. It
+**MUST NOT `@`-mention the operator** — auto mode means the duty acts without
+interrupting them, and any operator mention routes straight into an inbox push,
+defeating the point. Leave the mention out so the comment is a quiet record
+only:
 
 ```
 🧭 **CTO auto-ran** — `<verb>`
 
-Ran `@kody <verb> --pr <n>` (<one-line reason>). Graduated: operator
-approved `<verb>` 10 times running. A **Reject** on any `<verb>` returns
-me to asking.
+Ran `<verb>` on PR #<n> via workflow dispatch (<one-line reason>).
+Policy: preview-health auto-runs `resolve` for merge conflicts, or the trust
+ledger graduated `<verb>`.
 ```
 
 This is a silent record, not a notification and not an ask — do not
