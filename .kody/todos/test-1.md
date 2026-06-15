@@ -9,9 +9,9 @@ createdAt: "2026-06-15T13:27:22.694Z"
     "id": "item-mqf8znsm-0r8cia",
     "title": "tet",
     "body": "1",
-    "completed": true,
+    "completed": false,
     "createdAt": "2026-06-15T13:27:22.694Z",
-    "completedAt": "2026-06-15T13:27:31.332Z"
+    "completedAt": null
   },
   {
     "id": "1181e8ff-504b-417a-b1a3-45d243716179",
