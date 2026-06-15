@@ -2,52 +2,19 @@
 staff: [kody]
 ---
 
-תוכנית עבודה - הכנה כיתה ז
+# Work Plan — Grade 7 Preparation
 
+## TODO
 
-
-דרישה 
-מצב נוכחי
-רצוי
-עמוד נחיתה חדש
-יש ישן, ויש דמו ב-HTML
-עמוד נחיתה זהה לדמו - במקום הישן
-המשך כניסה עם שאלות - איך אתה ואיזה כיתה
-יש ישן, יש דמו ב-ב-HTML
-התצוגה של הדמו במקום הישן
-עמוד מבוא אחיד לפי מבנה קבוע (בתצוגה בדיוק לפי הדמו שיש)- כולל עריכה באדמין  	
-קיים דמו של התצוגה, חסר ניהול של השדות באדמין וחסר עמוד ב-web 
-עמוד מבוא לשיעור, מוצג לאחר עמוד כניסה לשיעור, שמוצג בדיוק לפי הדמו וניתן לעריכה באדמין
-שיפור חווית למידה בנייד
-כרגע, הצט לא נפתח לא אחיד, יש 2 כפתורי צט שונים ….. 
-רצוי, תצוגה של התרגילים במסך מלא, צט משתלב בצורה שניתן לצפות בתרגיל, דף הנוסחאות והערות משתלבים גם (הכין דמו)
-הצגת התרגילים בקונטקסט כתרגילי מערכת	
-כרגע יש 10 תרגילים בכל שיעור בקונטקסט, במבנה האחיד 
-המרה של התרגילים לתרגילים במערכת 
-מערכת תשלום אוטמטית עבור קורס הכנה לכיתה ז, תשלום חד פעמי ופתיחת המערכת ל-3 חודשים, אפשרות גם לעשות הנחה, עם גישה נוחה לתשלום (עדיף apple/goggle)..
-קבלת חשבונית במייל
-אפשרות ביטול במקרה הצורך 
-כרגע יש מערכת תשלום ששי עשה, עדין לא נבדקה 
-מערכת נגישה פשוטה ואוטמטית לתשלום וקבלת חשבונית במייל והסבר על המערכת במייל או ווצאפ
-תיקון באגים
-
-
-
-
-
-
-לא מעכב עלייה
-
-
-אפשרות בנית בניית תוכנית למידה 
-כרגע, אפשר ליצור תוכנית לבחינה, אבל סטטית - ולא נגישה מספיק (חושב שאין הרבה עבודה 
-אפשרות למשתמש - בנית תוכנית למידה לפי דרישה 
-והתגת השיעורים הרולוונטים 
-מערכת נוחה לדיווח באגים או הערות
-כרגע יש כפתור של סוכן - לא פעיל 
-אפשרות דווח של תקלות או הערות, דרך כפתור הצט 
-שיפוע הפיצועים של הצט והצגת התשובות 
-כרגע, מענה יחסית טוב, אבל לפעמים לא מוצג בצורה ברורה 
-התגת הסברים, פתרון, והערות בצורה יותר ברורה, והצגת svg, גרפים או שרטוטים
-
-
+- [ ] **Landing page** — Replace old page with HTML demo
+- [ ] **Entry flow** — Replace old with demo (who/which grade questions)
+- [ ] **Unified intro page** — Demo exists; add admin field management + web page
+- [ ] **Lesson intro page** — Display after entry, editable in admin (demo ready)
+- [ ] **Mobile learning UX** — Fullscreen exercises, formulas + notes embedded (demo ready)
+- [ ] **Exercises as system exercises** — Convert 10 exercises/lesson to unified system format
+- [ ] **Automated payment** — One-time payment → 3-month access, discounts, Apple/Google Pay
+- [ ] **Invoice + cancellation** — Automated payment, invoice by email, cancellation option
+- [ ] **Bug fixes** — Non-blocking for launch
+- [ ] **Learning plan builder** — User-facing plan builder by requirement → tag relevant lessons
+- [ ] **Bug/feedback reporting** — Report issues + feedback via question button (agent button inactive)
+- [ ] **Answer explanation quality** — Clear explanations, solutions, notes + SVG/graphs/diagrams
