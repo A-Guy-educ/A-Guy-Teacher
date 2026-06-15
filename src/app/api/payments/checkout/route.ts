@@ -4,6 +4,7 @@ import { z } from 'zod'
 
 import { getContentDb, relationId } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import { MissingPaymentEnvError } from '@/lib/payment/env'
 import { createPayPalOrder } from '@/lib/payment/paypal'
 import { createStripeCheckout } from '@/lib/payment/stripe'
 
@@ -13,7 +14,13 @@ const BodySchema = z.object({
   couponCode: z.string().max(50).optional(),
 })
 
-type Currency = 'ILS' | 'USD' | 'EUR'
+const SUPPORTED_CURRENCIES = ['ILS', 'USD', 'EUR'] as const
+type Currency = (typeof SUPPORTED_CURRENCIES)[number]
+
+function parseCurrency(raw: unknown): Currency | null {
+  const upper = String(raw ?? 'ILS').toUpperCase()
+  return (SUPPORTED_CURRENCIES as readonly string[]).includes(upper) ? (upper as Currency) : null
+}
 
 async function resolveProductItems(itemValues: unknown[]) {
   const ids = itemValues.map(relationId).filter((id): id is string => Boolean(id))
@@ -30,13 +37,6 @@ async function resolveProductItems(itemValues: unknown[]) {
       .map((doc) => doc.featureKey)
       .filter((key): key is string => typeof key === 'string'),
   }
-}
-
-function isMissingEnvError(err: unknown): boolean {
-  return (
-    err instanceof Error &&
-    /^Missing required (Stripe|PayPal) environment variables/.test(err.message)
-  )
 }
 
 export async function POST(request: NextRequest) {
@@ -99,7 +99,10 @@ export async function POST(request: NextRequest) {
   // query param that the success page reads.
   const stripeSuccessUrl = `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`
   const paypalSuccessUrl = `${baseUrl}/checkout/success`
-  const currency = String(product.currency || 'ILS').toUpperCase() as Currency
+  const currency = parseCurrency(product.currency)
+  if (!currency) {
+    return NextResponse.json({ success: false, error: 'invalid_currency' }, { status: 400 })
+  }
   const productName = String(product.name || product.title || 'Product')
 
   let checkoutUrl: string
@@ -134,7 +137,7 @@ export async function POST(request: NextRequest) {
       successUrl = stripeSuccessUrl
     }
   } catch (err) {
-    if (isMissingEnvError(err)) {
+    if (err instanceof MissingPaymentEnvError) {
       return NextResponse.json(
         { success: false, error: 'payment_provider_not_configured' },
         { status: 503 },

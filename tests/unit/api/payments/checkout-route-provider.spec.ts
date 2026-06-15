@@ -10,6 +10,7 @@
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
+import { MissingPaymentEnvError } from '@/lib/payment/env'
 
 vi.mock('@/infra/web-api/mongo-payload', () => ({
   getWebUser: vi.fn(),
@@ -105,7 +106,7 @@ describe('POST /api/payments/checkout — provider routing', () => {
 
     const { createPayPalOrder } = await import('@/lib/payment/paypal')
     ;(createPayPalOrder as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error('Missing required PayPal environment variables: PAYPAL_CLIENT_ID'),
+      new MissingPaymentEnvError('PayPal', ['PAYPAL_CLIENT_ID']),
     )
 
     const { POST } = await import('@/app/api/payments/checkout/route')
@@ -122,7 +123,7 @@ describe('POST /api/payments/checkout — provider routing', () => {
 
     const { createStripeCheckout } = await import('@/lib/payment/stripe')
     ;(createStripeCheckout as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error('Missing required Stripe environment variables: STRIPE_SECRET_KEY'),
+      new MissingPaymentEnvError('Stripe', ['STRIPE_SECRET_KEY']),
     )
 
     const { POST } = await import('@/app/api/payments/checkout/route')
@@ -148,6 +149,34 @@ describe('POST /api/payments/checkout — provider routing', () => {
 
     expect(res.status).toBe(500)
     expect(body.error).toBe('checkout_failed')
+  })
+
+  it('rejects an unsupported currency with 400 invalid_currency before calling any provider', async () => {
+    const { getWebUser } = await import('@/infra/web-api/mongo-payload')
+    ;(getWebUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: USER_ID })
+
+    // Product configured with a currency we don't support. We must catch this
+    // ourselves and not pass it through to PayPal, where the error message
+    // would be much less actionable.
+    findOneMock.mockResolvedValueOnce({
+      _id: PRODUCT_ID,
+      name: 'Test Product',
+      price: 49,
+      currency: 'GBP',
+      isActive: true,
+      tenant: 'tenant_a',
+      items: [],
+    })
+
+    const { POST } = await import('@/app/api/payments/checkout/route')
+    const res = await POST(buildRequest({ productId: PRODUCT_ID, provider: 'paypal' }))
+    const body = await res.json()
+
+    expect(res.status).toBe(400)
+    expect(body.error).toBe('invalid_currency')
+
+    const { createPayPalOrder } = await import('@/lib/payment/paypal')
+    expect(createPayPalOrder).not.toHaveBeenCalled()
   })
 
   it('rejects unauthenticated requests with 401', async () => {

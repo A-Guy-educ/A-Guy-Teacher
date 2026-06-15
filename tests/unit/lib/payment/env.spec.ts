@@ -5,7 +5,12 @@
  * They're independent so a deployment can configure only one provider.
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { getPayPalEnv, getStripeEnv, resetPaymentEnvCache } from '@/lib/payment/env'
+import {
+  getPayPalEnv,
+  getStripeEnv,
+  MissingPaymentEnvError,
+  resetPaymentEnvCache,
+} from '@/lib/payment/env'
 
 const STRIPE_VARS = [
   'STRIPE_SECRET_KEY',
@@ -151,6 +156,38 @@ describe('Payment Environment Helpers', () => {
       process.env.PAYPAL_WEBHOOK_ID = 'wid'
 
       expect(getPayPalEnv()).toBe(getPayPalEnv())
+    })
+  })
+
+  describe('MissingPaymentEnvError', () => {
+    // The route layer uses `instanceof MissingPaymentEnvError` to distinguish a
+    // missing-env failure from any other thrown error. This guarantees the
+    // class is an actual constructor that survives `throw`/`catch`.
+    it('throws an instance of MissingPaymentEnvError for missing Stripe vars', () => {
+      try {
+        getStripeEnv()
+        throw new Error('expected getStripeEnv to throw')
+      } catch (err) {
+        expect(err).toBeInstanceOf(MissingPaymentEnvError)
+        expect(err).toBeInstanceOf(Error)
+        if (err instanceof MissingPaymentEnvError) {
+          expect(err.provider).toBe('Stripe')
+          expect(err.missing).toContain('STRIPE_SECRET_KEY')
+        }
+      }
+    })
+
+    it('throws an instance of MissingPaymentEnvError for missing PayPal vars', () => {
+      try {
+        getPayPalEnv()
+        throw new Error('expected getPayPalEnv to throw')
+      } catch (err) {
+        expect(err).toBeInstanceOf(MissingPaymentEnvError)
+        if (err instanceof MissingPaymentEnvError) {
+          expect(err.provider).toBe('PayPal')
+          expect(err.missing).toContain('PAYPAL_CLIENT_ID')
+        }
+      }
     })
   })
 

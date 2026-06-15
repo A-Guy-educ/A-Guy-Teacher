@@ -11,6 +11,20 @@
  * validation. Throws on first access for whichever provider is requested.
  */
 
+export type PaymentProviderName = 'Stripe' | 'PayPal'
+
+export class MissingPaymentEnvError extends Error {
+  readonly provider: PaymentProviderName
+  readonly missing: readonly string[]
+
+  constructor(provider: PaymentProviderName, missing: readonly string[]) {
+    super(`Missing required ${provider} environment variables: ${missing.join(', ')}`)
+    this.name = 'MissingPaymentEnvError'
+    this.provider = provider
+    this.missing = missing
+  }
+}
+
 export interface StripeEnv {
   stripeSecretKey: string
   stripePublishableKey: string
@@ -36,7 +50,7 @@ export function getStripeEnv(): StripeEnv {
   if (!process.env.STRIPE_WEBHOOK_SECRET) missing.push('STRIPE_WEBHOOK_SECRET')
 
   if (missing.length > 0) {
-    throw new Error(`Missing required Stripe environment variables: ${missing.join(', ')}`)
+    throw new MissingPaymentEnvError('Stripe', missing)
   }
 
   stripeCache = {
@@ -57,7 +71,7 @@ export function getPayPalEnv(): PayPalEnv {
   if (!process.env.PAYPAL_WEBHOOK_ID) missing.push('PAYPAL_WEBHOOK_ID')
 
   if (missing.length > 0) {
-    throw new Error(`Missing required PayPal environment variables: ${missing.join(', ')}`)
+    throw new MissingPaymentEnvError('PayPal', missing)
   }
 
   paypalCache = {
