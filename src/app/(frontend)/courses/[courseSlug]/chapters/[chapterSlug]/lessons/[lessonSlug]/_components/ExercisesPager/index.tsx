@@ -239,11 +239,15 @@ export function ExercisesPager({
       <ExerciseWorkspace
         exerciseTitle={currentExercise.title ?? ''}
         backUrl={backUrl}
+        formulaSheet={formulaSheet}
         primaryContent={
           <div className="h-full flex flex-col">
-            {headerSlot}
+            {headerSlot && <div className="exercise-header-tabs">{headerSlot}</div>}
             {/* Top progress line */}
-            <Progress value={progressPercent} className="h-0.5 rounded-none" />
+            <Progress
+              value={progressPercent}
+              className="exercise-top-progress h-0.5 rounded-none"
+            />
 
             <div
               ref={contentRef}
@@ -255,7 +259,7 @@ export function ExercisesPager({
             >
               <div className="w-full p-card-padding-sm md:p-card-padding space-y-4">
                 {/* Breadcrumb step indicator */}
-                <div className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground pt-3">
+                <div className="exercise-breadcrumb flex items-center gap-content-gap-xs text-body-sm text-muted-foreground pt-3">
                   <span className="truncate max-w-[200px]">{lessonTitle}</span>
                   <ChevronRight className="w-3 h-3 shrink-0 rtl:rotate-180" />
                   <span className="text-foreground font-medium">
@@ -267,7 +271,7 @@ export function ExercisesPager({
 
                 <AnimatePresence mode="wait">
                   <motion.div key={currentExercise.id} {...pageTransition} className="space-y-4">
-                    <div className="bg-card rounded-2xl border border-border/60 shadow-elevation-1 overflow-hidden">
+                    <div className="hidden md:block bg-card rounded-2xl border border-border/60 shadow-elevation-1 overflow-hidden">
                       <div className="p-5 md:p-card-padding">
                         <div className="flex items-center gap-3 mb-2">
                           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -282,7 +286,7 @@ export function ExercisesPager({
                       </div>
                     </div>
 
-                    <div className="bg-card rounded-2xl p-5 md:p-card-padding border border-border/60 shadow-elevation-1">
+                    <div className="md:bg-card md:rounded-2xl md:p-card-padding md:border md:border-border/60 md:shadow-elevation-1">
                       <ExerciseRenderer
                         key={currentExercise.id}
                         content={currentExercise.content as unknown as ExerciseContentData}
@@ -301,7 +305,7 @@ export function ExercisesPager({
               </div>
             </div>
 
-            <div className="sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="exercise-bottom-nav sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
               <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
                 <button
                   onClick={handlePrev}
