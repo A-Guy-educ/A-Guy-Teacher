@@ -2,11 +2,11 @@
  * Stripe Payment Service
  *
  * Provides checkout session creation, webhook verification, and refund operations.
- * Uses getPaymentEnv() for environment variable access.
+ * Uses getStripeEnv() for environment variable access.
  */
 
 import Stripe from 'stripe'
-import { getPaymentEnv } from './env'
+import { getStripeEnv } from './env'
 import type { CreateCheckoutOptions, CheckoutResult } from './types'
 
 // Lazy-loaded Stripe client (avoids env requirement during module load)
@@ -15,7 +15,7 @@ let _stripeClient: Stripe | null = null
 function getStripeClient(): Stripe {
   if (_stripeClient) return _stripeClient
 
-  const { stripeSecretKey } = getPaymentEnv()
+  const { stripeSecretKey } = getStripeEnv()
 
   _stripeClient = new Stripe(stripeSecretKey, {
     apiVersion: '2025-02-24.acacia',
@@ -67,7 +67,7 @@ export async function verifyStripeWebhook(
   signature: string,
   tolerance?: number,
 ): Promise<Stripe.Event> {
-  const { stripeWebhookSecret } = getPaymentEnv()
+  const { stripeWebhookSecret } = getStripeEnv()
 
   if (!stripeWebhookSecret) {
     throw new Error('Missing STRIPE_WEBHOOK_SECRET environment variable')
