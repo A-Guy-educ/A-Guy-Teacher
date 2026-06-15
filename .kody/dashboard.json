@@ -162,17 +162,6 @@
         "outline": "header#mainHeader: ישרים מקבילים...\nh1: ישרים מקבילים...\nmain#exerciseArea: תרגיל: מצב הדדי בין ישרים נתונות משוואות הישרים הבאות: y = -x + 5, y = x + 1והגרפים המתאימים באיור. א. -4 4 4 -4 x y P A\nh2: תרגיל: מצב הדדי בין ישרים\nbutton: צילום תמונה\nbutton: מדיה\nbutton: f ביטוי מתמטי\ninput#chatInput type=\"text\" label=\"שלח הודעה...\"\nh3: דף נוסחאות מתמטיקה\nbutton: סגור",
         "textPreview": "ישרים מקבילים... תרגיל: מצב הדדי בין ישרים נתונות משוואות הישרים הבאות: y = -x + 5, y = x + 1והגרפים המתאימים באיור. א. -4 4 4 -4 x y P A איזו משוואה מתאימה לישר העובר בנקודה A ונקודה P? צילום תמונה מדיה f ביטוי מתמטי דף נוסחאות מתמטיקה Z = (X - μ) / σ P(X < x) = Φ(Z) סגור // פונקציה לפתיחת/סגירת תפריט הפעולות (פלוס) function toggleActionMenu() { const menu = document.getElementById('actionMenu'); menu.classList.toggle('hidden'); menu.classList.toggle('flex'); } // פונקציה לפתיחת/סגירת תפריט מצבי התצוגה (למעלה) function toggleViewMenu() { const menu = document.getElementById('viewMenu'); menu.classList.toggle('hidden'); menu.classList.toggle('flex'); } // פונקציה להחלפת מצב מסך מלא (פנימי, שומר על מסגרת המכשיר) function toggleFullScreen() { const elem = document.getElementById('mobileContainer'); const enterIcon = document.getElementById('enterFullScreenIcon'); const exitIcon = document.getElementById('exitFullScreenIcon'); // החלפת מחלקת ה-CSS שמדמה מסך מלא פנימי elem.classList.toggle('is-fullscreen'); // עדכון אייקונים if (elem.classList.contains('is-fullscreen')) { enterIcon.classList.add('hidden'); exitIcon.classList.remove('hidden'); } else { enterIcon.classList.remove('hidden'); exitIcon.classList.add('hidden'); } // סגירת התפריט לאחר הבחירה במידה ונשאר פתוח const viewMenu = document.getElementById('viewMenu'); if (!viewMenu.classList.contains('hidden')) { viewMenu.classList.add('hidden'); viewMenu.classList.remove('flex'); } } // סגירת תפריטים בלחיצה מחוצה להם document"
       }
-    },
-    {
-      "id": "env-w8n4",
-      "label": "השוואת מדבקות ניקוטין מול כדורי מציצה_ מדריך מדע",
-      "url": "/api/kody/views/pdf-f7fef487/__pdf_viewer.html?file=-_-.pdf",
-      "repoViewPath": ".kody/views/pdf-f7fef487",
-      "uploadContext": {
-        "name": "השוואת מדבקות ניקוטין מול כדורי מציצה_ מדריך מדעי ומעשי.pdf",
-        "mimeType": "application/pdf",
-        "size": 1166932
-      }
     }
   ],
   "branchPreviews": [
