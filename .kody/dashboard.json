@@ -40,21 +40,6 @@
       }
     },
     {
-      "id": "lesson-login-page-final-html-s2g3",
-      "label": "lesson login page - final.html",
-      "url": "https://kp-866cab-523991-st-e82f70.fly.dev",
-      "staticId": "d7ca9ae5",
-      "expiresAt": 1781954749967,
-      "uploadContext": {
-        "name": "lesson login page - final.html",
-        "mimeType": "text/html",
-        "size": 20468,
-        "title": "סדר פעולות חשבון - סוף השיעור",
-        "outline": "header: Aguy שלום, Guy@guykoren.co.il קורסים עברית G\nbutton: קורסים\nmain: סוף השיעור! סדר פעולות חשבון מתמטיקה כיתה ז' • אלגברה תרגילים שנפתרו 10 / 10 תשובות נכונות 9 / 10 90% המשך לשיעור הבא\nh1: סוף השיעור!\nh2: סדר פעולות חשבון\nbutton#primary-action-btn: המשך לשיעור הבא\nbutton: החלף ציון (הצלחה / נדרשת חזרה)",
-        "textPreview": "Aguy שלום, Guy@guykoren.co.il קורסים עברית G סוף השיעור! סדר פעולות חשבון מתמטיקה כיתה ז' • אלגברה תרגילים שנפתרו 10 / 10 תשובות נכונות 9 / 10 90% המשך לשיעור הבא החלף ציון (הצלחה / נדרשת חזרה) // מצב התחלתי - מעל 60% (הצלחה) let isSuccessState = true; // נתונים קבועים לדמו const totalExercises = 10; const completedExercises = 10; // נניח שפתר הכל function updateUI() { // קביעת ציון לפי המצב (9 הצלחות במצב טוב, 4 הצלחות במצב רע) const correctExercises = isSuccessState ? 9 : 4; const percentage = Math.round((correctExercises / totalExercises) * 100); // עדכון נתונים במספרים document.getElementById('stats-completed').innerText = completedExercises; document.getElementById('stats-correct').innerText = correctExercises; document.getElementById('stats-percentage').innerText = percentage + '%'; // אלמנטים לעדכון const statusIconContainer = document.getElementById('status-icon-container'); const statusIcon = document.getElementById('status-icon'); const accuracyBox = document.getElementById('accuracy-box'); const recContainer = document.getElementById('recommendation-container'); const recIcon = document.getElementById('recommendation-icon'); const recTitle = document.getElementById('recommendation-title'); const recText = document.getElementById('recommendation-text'); const primaryBtnBtn = document.getElementById('primary-action-btn'); const primaryBtnText = document.getElementById('primary-btn-text'); const primaryBtnIcon = document.getElementById('primary-btn-icon'); const secon"
-      }
-    },
-    {
       "id": "html-pre-html-3m7n",
       "label": "HTML pre.html",
       "url": "https://kp-866cab-523991-st-fa4ea6.fly.dev",
