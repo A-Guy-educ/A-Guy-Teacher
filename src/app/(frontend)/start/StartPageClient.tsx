@@ -1,7 +1,6 @@
 'use client'
 
 import { Bot, Play } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { setUserProfile } from '@/client/state/localStorage/userProfile'
@@ -101,7 +100,6 @@ const START_COPY = {
 const moodOrder: Mood[] = ['excellent', 'good', 'tired']
 
 export function StartPageClient({ courses, direction }: StartPageClientProps) {
-  const router = useRouter()
   const locale = useLocale()
   const copy = locale === 'he' ? START_COPY.he : START_COPY.en
   const [pane, setPane] = useState<Pane>('welcome')
@@ -210,10 +208,10 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
       await sleep(900)
       setPane('redirecting')
       window.setTimeout(() => {
-        router.push(getCourseHref(course))
+        window.location.assign(getCourseHref(course))
       }, 800)
     },
-    [copy.selected, playTone, router, selectedMood, sleep, typeText],
+    [copy.selected, playTone, selectedMood, sleep, typeText],
   )
 
   return (
