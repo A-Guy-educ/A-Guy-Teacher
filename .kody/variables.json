@@ -15,6 +15,36 @@
       "value": "https://dev.aguy.co.il",
       "updatedAt": "2026-05-22T11:46:29.479Z",
       "updatedBy": "aguyaharonyair"
+    },
+    "VERCEL_ORG_ID": {
+      "value": "team_I5OEeDKS7oRaELnZp5bdJWpL",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_PROJECT_ID": {
+      "value": "prj_ssaXSGQkzWjCiFn3nn9rQrxPbA7u",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_SCOPE": {
+      "value": "aguy",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "DEV_PREVIEW_ALIAS": {
+      "value": "a-guy-dev-aguy.vercel.app",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "DEV_PREVIEW_BRANCH": {
+      "value": "main",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_TARGET": {
+      "value": "preview",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
     }
   }
 }

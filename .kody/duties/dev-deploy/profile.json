@@ -1,0 +1,12 @@
+{
+  "name": "dev-deploy",
+  "describe": "Deploy stable dev preview",
+  "action": "dev-deploy",
+  "executable": "dev-deploy",
+  "every": "manual",
+  "runner": "cto",
+  "reviewer": "cto",
+  "mentions": [
+    "aguyaharonyair"
+  ]
+}
