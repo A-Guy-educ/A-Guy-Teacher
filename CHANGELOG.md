@@ -1677,6 +1677,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Force dynamic rendering for /products/[slug] ([#251](https://github.com/A-Guy-educ/A-Guy-Web/pull/251)) — @aguyshayb
 - fix: Clear stale auth cookie on /api/users/me 401 ([#249](https://github.com/A-Guy-educ/A-Guy-Web/pull/249)) — @aguyshayb
 - #164: Remove /start fallback from root page ([#165](https://github.com/A-Guy-educ/A-Guy-Web/pull/165)) — @kodyade[bot] · ⚠️ QA 2026-06-11 (#176)
 - fix(lessons): Show Prev/Next nav buttons unconditionally (revert #1766) ([#163](https://github.com/A-Guy-educ/A-Guy-Web/pull/163)) — @aguyshayb · ⚠️ QA 2026-06-11 (#190)
