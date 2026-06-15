@@ -2,10 +2,10 @@
 staff: [*]
 ---
 
-# Grade 7 Preparation — TODO
+# Grade 7 Prep — TODO
 
-- [ ] Unified intro page — Intro page matching demo, editable in admin
-- [ ] Lesson intro page — Displayed after entry, editable in admin
+- [x] ✅ Unified intro page — Intro page matching demo, editable in admin
+- [x] ✅ Lesson intro page — Displayed after entry, editable in admin
 - [ ] Mobile learning UX — Fullscreen exercises, formulas + notes embedded (demo ready)
 - [ ] Exercises as system exercises — Convert to system exercises in unified format
 - [ ] Automated payment — One-time payment → 3-month access, discounts, Apple/Google Pay
