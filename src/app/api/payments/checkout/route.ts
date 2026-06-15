@@ -4,9 +4,10 @@ import { z } from 'zod'
 
 import { getContentDb, relationId } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import { logger } from '@/infra/utils/logger/logger'
 import { MissingPaymentEnvError } from '@/lib/payment/env'
-import { createPayPalOrder } from '@/lib/payment/paypal'
-import { createStripeCheckout } from '@/lib/payment/stripe'
+import { cancelPayPalOrder, createPayPalOrder } from '@/lib/payment/paypal'
+import { cancelStripeCheckout, createStripeCheckout } from '@/lib/payment/stripe'
 
 const BodySchema = z.object({
   productId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'invalid_product_id'),
@@ -14,12 +15,15 @@ const BodySchema = z.object({
   couponCode: z.string().max(50).optional(),
 })
 
-const SUPPORTED_CURRENCIES = ['ILS', 'USD', 'EUR'] as const
-type Currency = (typeof SUPPORTED_CURRENCIES)[number]
+// Match an ISO-4217-shaped three-letter uppercase code. We don't restrict to a
+// specific allowlist here — the active provider validates real support and will
+// reject unknown codes itself. The shape check exists to catch typos / empties
+// / lowercase strings before they reach the provider.
+const CURRENCY_SHAPE = /^[A-Z]{3}$/
 
-function parseCurrency(raw: unknown): Currency | null {
+function parseCurrency(raw: unknown): string | null {
   const upper = String(raw ?? 'ILS').toUpperCase()
-  return (SUPPORTED_CURRENCIES as readonly string[]).includes(upper) ? (upper as Currency) : null
+  return CURRENCY_SHAPE.test(upper) ? upper : null
 }
 
 async function resolveProductItems(itemValues: unknown[]) {
@@ -143,25 +147,75 @@ export async function POST(request: NextRequest) {
         { status: 503 },
       )
     }
+    logger.error(
+      {
+        err: err instanceof Error ? { message: err.message, stack: err.stack } : err,
+        provider: parsed.data.provider,
+        productId: parsed.data.productId,
+        userId: user.id,
+      },
+      'Checkout provider helper threw a non-env error',
+    )
     return NextResponse.json({ success: false, error: 'checkout_failed' }, { status: 500 })
   }
 
+  // From this point on we hold a live order/session at the provider. If we
+  // fail to persist the local transaction record, the order would be
+  // orphaned — buyer could still pay it (PayPal) or it would sit unbillable
+  // (Stripe). Cancel the remote order before returning so we don't leak state.
   const now = new Date()
-  const transaction = await db.collection('transactions').insertOne({
-    tenant: product.tenant,
-    user: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id,
-    product: product._id,
-    provider: parsed.data.provider,
-    providerTransactionId: providerSessionId,
-    status: 'pending',
-    amount,
-    currency,
-    metadata: { itemIds, featureKeys, ...(appliedCoupon ? { appliedCoupon } : {}) },
-    successUrl,
-    cancelUrl,
-    createdAt: now,
-    updatedAt: now,
-  })
+  let transaction: { insertedId: { toString(): string } }
+  try {
+    transaction = await db.collection('transactions').insertOne({
+      tenant: product.tenant,
+      user: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id,
+      product: product._id,
+      provider: parsed.data.provider,
+      providerTransactionId: providerSessionId,
+      status: 'pending',
+      amount,
+      currency,
+      metadata: { itemIds, featureKeys, ...(appliedCoupon ? { appliedCoupon } : {}) },
+      successUrl,
+      cancelUrl,
+      createdAt: now,
+      updatedAt: now,
+    })
+  } catch (insertErr) {
+    logger.error(
+      {
+        err:
+          insertErr instanceof Error
+            ? { message: insertErr.message, stack: insertErr.stack }
+            : insertErr,
+        provider: parsed.data.provider,
+        providerSessionId,
+        productId: parsed.data.productId,
+        userId: user.id,
+      },
+      'Failed to persist transaction record after provider order was created — cancelling remote order',
+    )
+    try {
+      if (parsed.data.provider === 'paypal') {
+        await cancelPayPalOrder(providerSessionId)
+      } else {
+        await cancelStripeCheckout(providerSessionId)
+      }
+    } catch (cancelErr) {
+      logger.error(
+        {
+          err:
+            cancelErr instanceof Error
+              ? { message: cancelErr.message, stack: cancelErr.stack }
+              : cancelErr,
+          provider: parsed.data.provider,
+          providerSessionId,
+        },
+        'Failed to cancel remote order after transaction-record insert failed — manual reconciliation required',
+      )
+    }
+    return NextResponse.json({ success: false, error: 'checkout_failed' }, { status: 500 })
+  }
 
   return NextResponse.json({
     success: true,

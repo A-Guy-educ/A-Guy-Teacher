@@ -217,7 +217,7 @@ export async function capturePayPalOrder(orderId: string): Promise<void> {
 export async function refundPayPal(
   providerTransactionId: string,
   amount?: number,
-  currency: 'ILS' | 'USD' | 'EUR' = 'USD',
+  currency: string = 'USD',
 ): Promise<void> {
   const token = await getPayPalAccessToken()
 

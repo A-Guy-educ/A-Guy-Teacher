@@ -31,9 +31,17 @@ vi.mock('@/infra/db/content-db', () => ({
 
 vi.mock('@/lib/payment/paypal', () => ({
   createPayPalOrder: vi.fn(),
+  cancelPayPalOrder: vi.fn(),
 }))
 vi.mock('@/lib/payment/stripe', () => ({
   createStripeCheckout: vi.fn(),
+  cancelStripeCheckout: vi.fn(),
+}))
+
+const loggerErrorMock = vi.fn()
+vi.mock('@/infra/utils/logger/logger', () => ({
+  logger: { error: loggerErrorMock, info: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+  createRequestLogger: () => ({ error: loggerErrorMock, info: vi.fn() }),
 }))
 
 const PRODUCT_ID = '507f1f77bcf86cd799439011'
@@ -134,7 +142,7 @@ describe('POST /api/payments/checkout — provider routing', () => {
     expect(body.error).toBe('payment_provider_not_configured')
   })
 
-  it('returns checkout_failed (500) on non-env errors from the provider helper', async () => {
+  it('returns checkout_failed (500) and logs the error on non-env failures from the provider helper', async () => {
     const { getWebUser } = await import('@/infra/web-api/mongo-payload')
     ;(getWebUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: USER_ID })
 
@@ -149,20 +157,58 @@ describe('POST /api/payments/checkout — provider routing', () => {
 
     expect(res.status).toBe(500)
     expect(body.error).toBe('checkout_failed')
+    // The PayPal API will fail in real life (outages, malformed responses).
+    // Without a log call the failure is undebuggable in prod, so this is a
+    // hard requirement, not a nice-to-have.
+    expect(loggerErrorMock).toHaveBeenCalled()
+    const [ctx, msg] = loggerErrorMock.mock.calls[loggerErrorMock.mock.calls.length - 1] ?? []
+    expect(ctx?.provider).toBe('paypal')
+    expect(typeof msg).toBe('string')
   })
 
-  it('rejects an unsupported currency with 400 invalid_currency before calling any provider', async () => {
+  it('accepts an ISO-shaped currency the provider may or may not support (shape check only)', async () => {
+    // We deliberately don't keep a tight allowlist here — the active provider
+    // is the source of truth for which currencies it accepts. Our route only
+    // rejects shapes that obviously aren't ISO 4217 codes (typos, empties,
+    // lowercase). So a valid-looking 'GBP' must flow through to the provider.
     const { getWebUser } = await import('@/infra/web-api/mongo-payload')
     ;(getWebUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: USER_ID })
 
-    // Product configured with a currency we don't support. We must catch this
-    // ourselves and not pass it through to PayPal, where the error message
-    // would be much less actionable.
+    const { createPayPalOrder } = await import('@/lib/payment/paypal')
+    ;(createPayPalOrder as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      checkoutUrl: 'https://www.sandbox.paypal.com/checkoutnow?token=GBP_ORDER',
+      providerSessionId: 'GBP_ORDER',
+    })
+
     findOneMock.mockResolvedValueOnce({
       _id: PRODUCT_ID,
       name: 'Test Product',
       price: 49,
       currency: 'GBP',
+      isActive: true,
+      tenant: 'tenant_a',
+      items: [],
+    })
+
+    const { POST } = await import('@/app/api/payments/checkout/route')
+    const res = await POST(buildRequest({ productId: PRODUCT_ID, provider: 'paypal' }))
+
+    expect(res.status).toBe(200)
+    const arg = (createPayPalOrder as unknown as ReturnType<typeof vi.fn>).mock.calls[0]?.[0] as {
+      currency: string
+    }
+    expect(arg.currency).toBe('GBP')
+  })
+
+  it('rejects a malformed currency (lowercase / wrong length / non-letters) with 400', async () => {
+    const { getWebUser } = await import('@/infra/web-api/mongo-payload')
+    ;(getWebUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: USER_ID })
+
+    findOneMock.mockResolvedValueOnce({
+      _id: PRODUCT_ID,
+      name: 'Test Product',
+      price: 49,
+      currency: 'us', // typo: lowercase and too short
       isActive: true,
       tenant: 'tenant_a',
       items: [],
@@ -177,6 +223,30 @@ describe('POST /api/payments/checkout — provider routing', () => {
 
     const { createPayPalOrder } = await import('@/lib/payment/paypal')
     expect(createPayPalOrder).not.toHaveBeenCalled()
+  })
+
+  it('cancels the remote order if persisting the local transaction record fails', async () => {
+    const { getWebUser } = await import('@/infra/web-api/mongo-payload')
+    ;(getWebUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: USER_ID })
+
+    const { createPayPalOrder, cancelPayPalOrder } = await import('@/lib/payment/paypal')
+    ;(createPayPalOrder as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      checkoutUrl: 'https://www.sandbox.paypal.com/checkoutnow?token=ORPHAN1',
+      providerSessionId: 'ORPHAN1',
+    })
+
+    // The remote order is now live; the local insert fails. We must call
+    // cancelPayPalOrder so the buyer can't pay an order we have no record of.
+    insertOneMock.mockRejectedValueOnce(new Error('mongo write conflict'))
+
+    const { POST } = await import('@/app/api/payments/checkout/route')
+    const res = await POST(buildRequest({ productId: PRODUCT_ID, provider: 'paypal' }))
+    const body = await res.json()
+
+    expect(res.status).toBe(500)
+    expect(body.error).toBe('checkout_failed')
+    expect(cancelPayPalOrder).toHaveBeenCalledTimes(1)
+    expect(cancelPayPalOrder).toHaveBeenCalledWith('ORPHAN1')
   })
 
   it('rejects unauthenticated requests with 401', async () => {
