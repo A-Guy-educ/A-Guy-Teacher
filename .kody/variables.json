@@ -162,7 +162,7 @@
       "updatedBy": "codex"
     },
     "RELEASE_FLOW": {
-      "value": "{\"integrationBranch\":\"main\",\"productionBranch\":\"main\"}",
+      "value": "{\"integrationBranch\":\"dev\",\"productionBranch\":\"main\"}",
       "updatedAt": "2026-06-15T13:15:00.000Z",
       "updatedBy": "codex"
     }
