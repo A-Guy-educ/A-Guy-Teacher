@@ -40,21 +40,6 @@
       }
     },
     {
-      "id": "html-pre-html-3m7n",
-      "label": "HTML pre.html",
-      "url": "https://kp-866cab-523991-st-fa4ea6.fly.dev",
-      "staticId": "7df6b511",
-      "expiresAt": 1781954796490,
-      "uploadContext": {
-        "name": "HTML pre.html",
-        "mimeType": "text/html",
-        "size": 15505,
-        "title": "מערכת אינטראקטיבית להצגת תרגילים מ-JSON",
-        "outline": "h3: העלאת תרגילים למערכת\nlabel: אפשרות 1: העלאת קובץ JSON מובנה\ninput#json-file-input type=\"file\"\nlabel: אפשרות 2: הדבקת קוד JSON ישירות\ntextarea#json-text-input type=\"textarea\" label=\"הדבק כאן את מבנה ה-JSON המלא שלך...\"\nbutton: טען תרגילים 🚀",
-        "textPreview": "העלאת תרגילים למערכת אפשרות 1: העלאת קובץ JSON מובנה או אפשרות 2: הדבקת קוד JSON ישירות טען תרגילים 🚀 // האזנה להעלאת קובץ (אפשרות 1) document.getElementById('json-file-input').addEventListener('change', function(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const parsedJSON = JSON.parse(e.target.result); renderExercises(parsedJSON); hideError(); } catch (err) { showError(\"שגיאה: הקובץ שהועלה אינו בפורמט JSON תקין.\"); } }; reader.readAsText(file); }); // עיבוד טקסט שהודבק ידנית (אפשרות 2) function processManualInput() { const rawText = document.getElementById('json-text-input').value.trim(); if (!rawText) { showError(\"אנא העלה קובץ או הדבק קוד JSON תחילה.\"); return; } try { const parsedJSON = JSON.parse(rawText); renderExercises(parsedJSON); hideError(); } catch (err) { showError(\"שגיאה: קוד ה-JSON שהודבק אינו תקין. אנא ודא שלא חסרים פסיקים או סוגריים.\"); } } function showError(msg) { const errorBox = document.getElementById('error-box'); errorBox.innerText = msg; errorBox.style.display = \"block\"; } function hideError() { document.getElementById('error-box').style.display = \"none\"; } // פונקציה לערבוב מערך (כדי שהמסיחים והתשובה הנכונה יוצגו בסדר אקראי) function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[array[j]]] = [array[j], array[array[i]]]; } return array; } // פונקציית הרינדור המרכזית שמקבלת את אובייקט ה-J"
-      }
-    },
-    {
       "id": "introduction-page-and-explanation-of-lesson-html-s2y1",
       "label": "introduction page and explanation of lesson.html",
       "url": "https://kp-866cab-523991-st-d33bc9.fly.dev",
