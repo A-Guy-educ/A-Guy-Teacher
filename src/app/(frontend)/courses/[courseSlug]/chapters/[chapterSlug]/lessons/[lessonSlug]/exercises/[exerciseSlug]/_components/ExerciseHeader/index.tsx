@@ -66,14 +66,14 @@ export function ExerciseHeader({
     <button
       type="button"
       onClick={onFullscreenToggle}
-      className="p-2 rounded-lg hover:bg-muted transition-colors duration-normal lg:hidden text-foreground"
+      className="h-9 w-10 rounded-full border border-foreground/20 bg-muted shadow-elevation-1 hover:bg-card hover:border-foreground/35 transition-all duration-normal lg:hidden text-foreground flex items-center justify-center"
       aria-label={isFullscreen ? 'Collapse exercise view' : 'Expand exercise view'}
       title={isFullscreen ? 'Collapse' : 'Expand'}
     >
       {isFullscreen ? (
-        <Minimize2 className="w-6 h-6 text-foreground" />
+        <Minimize2 className="w-5 h-5 text-foreground" />
       ) : (
-        <Maximize2 className="w-6 h-6 text-foreground" />
+        <Maximize2 className="w-5 h-5 text-foreground" />
       )}
     </button>
   ) : null
@@ -121,7 +121,7 @@ export function ExerciseHeader({
 
       <div
         className={cn(
-          'flex items-center gap-content-gap-xs flex-shrink-0 fixed top-[10px] z-[101]',
+          'flex items-center gap-0 lg:gap-content-gap-xs flex-shrink-0 fixed top-[10px] z-[101]',
           rtl ? 'left-5' : 'right-5',
         )}
       >
