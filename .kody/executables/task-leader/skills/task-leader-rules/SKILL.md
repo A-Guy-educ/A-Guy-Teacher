@@ -152,15 +152,15 @@ If Lane C passes and `reviewDecision` is `REVIEW_REQUIRED`, approve it:
 gh pr review <N> --approve --body "Approved by task-leader release promotion gate."
 ```
 
-If GitHub rejects that approval because Kody is the PR author, retry once with the separate reviewer token from `ALL_SECRETS.GH_PAT`:
+If GitHub rejects that approval because Kody is the PR author, retry once with the separate reviewer token from `TASK_LEAD_REVIEW_TOKEN`, falling back to `ALL_SECRETS.GH_PAT`:
 
 ```sh
-TASK_LEAD_GH_TOKEN="$(node -e 'const s = JSON.parse(process.env.ALL_SECRETS || "{}"); process.stdout.write(s.GH_PAT || "")')"
+TASK_LEAD_GH_TOKEN="$(node -e 'const s = JSON.parse(process.env.ALL_SECRETS || "{}"); process.stdout.write(process.env.TASK_LEAD_REVIEW_TOKEN || s.GH_PAT || "")')"
 test -n "$TASK_LEAD_GH_TOKEN"
 GH_TOKEN="$TASK_LEAD_GH_TOKEN" gh pr review <N> --approve --body "Approved by task-leader release promotion gate."
 ```
 
-Do not print `TASK_LEAD_GH_TOKEN`. If `GH_PAT` is missing or the retry fails, skip the merge and escalate to the operator with the exact approval error.
+Do not print `TASK_LEAD_GH_TOKEN`. If `TASK_LEAD_REVIEW_TOKEN` and `GH_PAT` are missing or the retry fails, skip the merge and escalate to the operator with the exact approval error.
 
 Then merge it without deleting the integration branch:
 

@@ -115,6 +115,7 @@ jobs:
           # KODY_TOKEN unpacked from ALL_SECRETS (the engine's resolver skips
           # env keys that are already set).
           KODY_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+          TASK_LEAD_REVIEW_TOKEN: ${{ secrets.GH_PAT || github.token }}
           SESSION_ID: ${{ inputs.sessionId }}
           INIT_MESSAGE: ${{ inputs.message }}
           MODEL: ${{ inputs.model }}
