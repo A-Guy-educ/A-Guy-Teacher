@@ -133,20 +133,18 @@ is always `@kody <verb> --pr <n>`.
 token `{{mentions}}` below — never hardcode a handle or read it from config;
 future operators only change the duty's `mentions:` list in the dashboard.
 
-**Recommendation** (verb not graduated). One terse, machine-greppable
-comment. It MUST `@`-mention the operator on the first line (that mention
-is what routes it into the dashboard inbox + push) and carry the exact
-command on a single `kody-cmd` line (that is what the inbox **Approve**
-button posts verbatim):
+**Recommendation** (verb not graduated). One terse, machine-greppable comment.
+MUST mention the operator on the first line when an operator handle is configured.
+MUST NOT include a runnable `@kody ...` command or `kody-cmd` marker in the PR
+comment; GitHub issue-comment events treat those as dispatch input. The dashboard
+or operator can still choose the recommended action explicitly.
 
 ```
 {{mentions}} 🧭 **CTO recommendation** — `<verb>`
+<one or two sentences: what's wrong with PR #<n>.>
+Recommended action: `<verb>` for PR #<n>.
 
-<one or two sentences: what's wrong with PR #<n> and what confirming will do>
-
-<!-- kody-cmd: @kody <verb> --pr <n> -->
-
-_Confirm or dismiss this in the dashboard inbox. The CTO will not act on its own._
+_Confirm in the dashboard inbox or run the action manually. The CTO will not act on its own._
 ```
 
 **Auto-run** (verb graduated). Post `@kody <verb> --pr <n>` on the PR,

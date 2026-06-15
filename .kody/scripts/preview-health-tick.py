@@ -226,9 +226,8 @@ def recommend(pr_number: int, verb: str, reason: str, operator: str | None) -> b
     mention = f"@{operator} " if operator else ""
     body = (
         f"{mention}🧭 **CTO recommendation** — `{verb}`\n\n"
-        f"{reason} Confirming will run `@kody {verb} --pr {pr_number}`.\n\n"
-        f"<!-- kody-cmd: @kody {verb} --pr {pr_number} -->\n\n"
-        "_Confirm or dismiss this in the dashboard inbox. The CTO will not act on its own._"
+        f"{reason} Recommended action: `{verb}` for PR #{pr_number}.\n\n"
+        "_Confirm in the dashboard inbox or run the action manually. The CTO will not act on its own._"
     )
     return post_comment(pr_number, body)
 
