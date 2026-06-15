@@ -9,9 +9,9 @@ createdAt: "2026-06-15T13:27:22.694Z"
     "id": "item-mqf8znsm-0r8cia",
     "title": "tet",
     "body": "1",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-06-15T13:27:22.694Z",
-    "completedAt": null
+    "completedAt": "2026-06-15T13:27:31.332Z"
   }
 ]
 -->
