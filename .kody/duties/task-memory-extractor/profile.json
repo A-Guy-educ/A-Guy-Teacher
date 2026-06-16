@@ -1,0 +1,9 @@
+{
+  "name": "task-memory-extractor",
+  "describe": "Task memory extractor",
+  "action": "task-memory-extractor",
+  "executable": "task-memory-extractor",
+  "tickScript": ".kody/executables/task-memory-extractor/tick.py",
+  "every": "30m",
+  "staff": "coo"
+}

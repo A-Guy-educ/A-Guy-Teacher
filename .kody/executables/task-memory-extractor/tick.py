@@ -27,7 +27,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 TASKS_DIR = REPO_ROOT / ".kody" / "tasks"
 MEMORY_DIR = REPO_ROOT / ".kody" / "memory"
 INDEX_PATH = MEMORY_DIR / "INDEX.md"
@@ -163,6 +163,7 @@ def main() -> int:
         log("no .kody/tasks/ — nothing to extract")
         return 0
 
+    dry_run = os.environ.get("TASK_MEMORY_EXTRACTOR_DRY_RUN") == "1"
     now = datetime.now(timezone.utc)
     tasks_seen = 0
     tasks_skipped_done = 0
@@ -188,12 +189,14 @@ def main() -> int:
             recs = json.loads(recs_path.read_text() or "[]")
         except json.JSONDecodeError as e:
             log(f"task {task_dir.name}: invalid JSON ({e})")
-            (task_dir / ".extracted").touch()
+            if not dry_run:
+                (task_dir / ".extracted").touch()
             continue
 
         if not isinstance(recs, list):
             log(f"task {task_dir.name}: memory-recs.json must be a JSON array")
-            (task_dir / ".extracted").touch()
+            if not dry_run:
+                (task_dir / ".extracted").touch()
             continue
 
         for rec in recs:
@@ -215,12 +218,17 @@ def main() -> int:
             if (MEMORY_DIR / f"{rec['name']}.md").exists():
                 skipped_dup += 1
                 continue
-            write_memory(rec, task_dir.name, now)
-            log(f"task {task_dir.name}: wrote .kody/memory/{rec['name']}.md")
+            if dry_run:
+                log(f"task {task_dir.name}: would write .kody/memory/{rec['name']}.md")
+            else:
+                write_memory(rec, task_dir.name, now)
+                log(f"task {task_dir.name}: wrote .kody/memory/{rec['name']}.md")
             written += 1
             written_recs.append((task_dir.name, rec["name"]))
+        if not dry_run:
+            (task_dir / ".extracted").touch()
 
-        (task_dir / ".extracted").touch()
+
 
     log(
         f"tick complete: tasks_seen={tasks_seen} skipped_done={tasks_skipped_done} "
@@ -230,6 +238,9 @@ def main() -> int:
     )
 
     if not written_recs:
+        return 0
+    if dry_run:
+        log("dry run complete (skipped memory writes, markers, commit)")
         return 0
     if os.environ.get("TASK_MEMORY_EXTRACTOR_NO_COMMIT") == "1":
         log("commit suppressed by env")

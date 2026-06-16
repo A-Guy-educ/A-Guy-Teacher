@@ -1,0 +1,53 @@
+{
+  "name": "task-memory-extractor",
+  "role": "watch",
+  "kind": "oneshot",
+  "describe": "Promote high-confidence task memory recommendations into .kody/memory.",
+  "inputs": [],
+  "claudeCode": {
+    "model": "inherit",
+    "permissionMode": "default",
+    "maxTurns": 0,
+    "systemPromptAppend": null,
+    "cacheable": true,
+    "enableVerifyTool": false,
+    "tools": [],
+    "hooks": [],
+    "skills": [],
+    "commands": [],
+    "subagents": [],
+    "plugins": [],
+    "mcpServers": []
+  },
+  "cliTools": [
+    {
+      "name": "git",
+      "install": {
+        "required": true,
+        "checkCommand": "command -v git"
+      },
+      "verify": "git --version",
+      "usage": "Commits and pushes promoted memory files when not in dry-run or no-commit mode.",
+      "allowedUses": [
+        "status",
+        "add",
+        "commit",
+        "push"
+      ]
+    }
+  ],
+  "inputArtifacts": [],
+  "outputArtifacts": [],
+  "scripts": {
+    "preflight": [
+      {
+        "shell": "run.sh",
+        "timeoutSec": 300
+      },
+      {
+        "script": "skipAgent"
+      }
+    ],
+    "postflight": []
+  }
+}

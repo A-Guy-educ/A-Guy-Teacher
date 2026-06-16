@@ -26,12 +26,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 JOBS_DIR = REPO_ROOT / ".kody" / "jobs"
 DUTIES_DIR = REPO_ROOT / ".kody" / "duties"
 MEMORY_DIR = REPO_ROOT / ".kody" / "memory"
 REPORTS_DIR = REPO_ROOT / ".kody" / "reports"
-STATE_PATH = JOBS_DIR / "job-gap-scan.state.json"
+STATE_PATH = DUTIES_DIR / "job-gap-scan.state.json"
 REPORT_PATH = REPORTS_DIR / "job-gap-scan.md"
 
 DISMISS_COOLOFF_DAYS = 30
@@ -78,7 +78,7 @@ that has no open tracking issue yet.
 
 ## Tick procedure — REQUIRED
 
-Fully scripted. See [sentry-digest-tick.py](.kody/scripts/sentry-digest-tick.py).
+Fully scripted. Add `.kody/executables/sentry-digest/tick.py` before enabling it.
 """,
     ),
     Candidate(
@@ -354,7 +354,7 @@ def commit_and_push(slug: str | None) -> bool:
     subject = f"chore(duties): Refresh job-gap-scan report ({subject_tail})"
     body = (
         f"Overwrites `.kody/reports/job-gap-scan.md` and bumps "
-        f"`.kody/jobs/job-gap-scan.state.json`. Advisory only — the operator "
+        f"`.kody/duties/job-gap-scan.state.json`. Advisory only — the operator "
         f"decides Approve/Reject/Dismiss."
     )
     commit_result = subprocess.run(
@@ -427,6 +427,11 @@ def main() -> int:
         f"{current_section}\n"
         f"{history_section}"
     )
+    if os.environ.get("JOB_GAP_SCAN_DRY_RUN") == "1":
+        log("dry run complete (skipped report/state write + commit)")
+        print(report)
+        return 0
+
 
     # Daily ticks that re-pick the same proposal differ only in timestamps.
     # Skip the write/commit entirely so we don't churn `.kody/` on every run —

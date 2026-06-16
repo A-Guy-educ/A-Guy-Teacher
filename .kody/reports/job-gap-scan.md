@@ -38,7 +38,7 @@ that has no open tracking issue yet.
 
 ## Tick procedure — REQUIRED
 
-Fully scripted. See [sentry-digest-tick.py](.kody/scripts/sentry-digest-tick.py).
+Fully scripted. Add `.kody/executables/sentry-digest/tick.py` before enabling it.
 ````
 
 ### Verdict path

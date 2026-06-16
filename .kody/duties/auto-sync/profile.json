@@ -1,0 +1,9 @@
+{
+  "name": "auto-sync",
+  "describe": "Auto sync stale PR branches",
+  "action": "auto-sync",
+  "executable": "auto-sync",
+  "tickScript": ".kody/executables/auto-sync/tick.sh",
+  "every": "15m",
+  "staff": "kody"
+}

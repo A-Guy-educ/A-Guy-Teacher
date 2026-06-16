@@ -1,0 +1,51 @@
+{
+  "name": "redispatch",
+  "role": "watch",
+  "kind": "oneshot",
+  "describe": "Detect stalled running Kody issues and plan or post resume actions.",
+  "inputs": [],
+  "claudeCode": {
+    "model": "inherit",
+    "permissionMode": "default",
+    "maxTurns": 0,
+    "systemPromptAppend": null,
+    "cacheable": true,
+    "enableVerifyTool": false,
+    "tools": [],
+    "hooks": [],
+    "skills": [],
+    "commands": [],
+    "subagents": [],
+    "plugins": [],
+    "mcpServers": []
+  },
+  "cliTools": [
+    {
+      "name": "gh",
+      "install": {
+        "required": true,
+        "checkCommand": "command -v gh"
+      },
+      "verify": "gh auth status",
+      "usage": "Reads issues, comments, workflow runs, and posts resume/stuck comments when live.",
+      "allowedUses": [
+        "issue",
+        "api"
+      ]
+    }
+  ],
+  "inputArtifacts": [],
+  "outputArtifacts": [],
+  "scripts": {
+    "preflight": [
+      {
+        "shell": "run.sh",
+        "timeoutSec": 600
+      },
+      {
+        "script": "skipAgent"
+      }
+    ],
+    "postflight": []
+  }
+}

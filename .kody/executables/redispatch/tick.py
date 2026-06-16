@@ -8,7 +8,7 @@ comment history, parsing kody state blocks, and deciding actions in a single
 turn-bounded session). All of those are deterministic operations — this script
 does the whole tick and emits the kody-job-next-state block on stdout.
 
-The job's agent runs `python3 .kody/scripts/redispatch-tick.py` and
+The job's agent runs `python3 .kody/executables/redispatch/tick.py` and
 emits the script's stdout verbatim. Agent budget: a few turns.
 
 Honors the redispatch.md flags:
@@ -17,7 +17,7 @@ Honors the redispatch.md flags:
 - LIVE_TEST_LABEL gate: when DRY_RUN is False, only act on issues that carry
   the gate label. The flag still records all candidates while DRY_RUN is on.
 
-Reads/writes `.kody/jobs/redispatch.state.json` (read only here — the
+Reads/writes `.kody/duties/redispatch.state.json` (read only here — the
 engine's contents-API state backend persists the emitted next-state block).
 """
 
@@ -36,7 +36,7 @@ LIVE_TEST_LABEL = "kody:test-redispatch"
 EXCLUDE_LABELS = {"kody:stuck", "kody:no-redispatch", "kody:stalled"}
 
 # --- constants ---
-STATE_FILE = ".kody/jobs/redispatch.state.json"
+STATE_FILE = ".kody/duties/redispatch.state.json"
 DRYRUN_LOG_CAP = 50
 FORTY_MIN_SECS = 40 * 60
 

@@ -1,0 +1,37 @@
+{
+  "name": "job-gap-scan",
+  "role": "watch",
+  "kind": "oneshot",
+  "describe": "Propose one high-ROI missing duty and update the job-gap report.",
+  "inputs": [],
+  "claudeCode": {
+    "model": "inherit",
+    "permissionMode": "default",
+    "maxTurns": 0,
+    "systemPromptAppend": null,
+    "cacheable": true,
+    "enableVerifyTool": false,
+    "tools": [],
+    "hooks": [],
+    "skills": [],
+    "commands": [],
+    "subagents": [],
+    "plugins": [],
+    "mcpServers": []
+  },
+  "cliTools": [],
+  "inputArtifacts": [],
+  "outputArtifacts": [],
+  "scripts": {
+    "preflight": [
+      {
+        "shell": "run.sh",
+        "timeoutSec": 300
+      },
+      {
+        "script": "skipAgent"
+      }
+    ],
+    "postflight": []
+  }
+}
