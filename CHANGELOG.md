@@ -1685,6 +1685,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- feat: Show purchases on /account and wire PayPal webhook ([#273](https://github.com/A-Guy-educ/A-Guy-Web/pull/273)) — @aguyshayb
 - fix: Make Vercel deploy duties install CLI ([#272](https://github.com/A-Guy-educ/A-Guy-Web/pull/272)) — @aguyaharonyair
 - chore(release): promote dev to main for v0.25.11 ([#270](https://github.com/A-Guy-educ/A-Guy-Web/pull/270)) — @kodyade[bot]
 ## [v0.25.11] - 2026-06-15
