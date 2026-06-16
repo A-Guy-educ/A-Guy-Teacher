@@ -10,8 +10,8 @@ const root = process.cwd()
 const tasksDir = path.join(root, '.kody', 'tasks')
 const memoryDir = path.join(root, '.kody', 'memory')
 const indexPath = path.join(memoryDir, 'INDEX.md')
-const dryRun = process.env.TASK_MEMORY_EXTRACTOR_DRY_RUN === '1'
-const noCommit = process.env.TASK_MEMORY_EXTRACTOR_NO_COMMIT === '1'
+const dryRun = process.env.KODY_DRY_RUN === '1' || process.env.TASK_MEMORY_EXTRACTOR_DRY_RUN === '1'
+const noCommit = process.env.KODY_NO_COMMIT === '1' || process.env.TASK_MEMORY_EXTRACTOR_NO_COMMIT === '1'
 const validTypes = new Set(['preference', 'decision', 'lesson'])
 const reservedNames = new Set(['index', 'readme'])
 

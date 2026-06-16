@@ -12,8 +12,8 @@ const memoryDir = path.join(root, '.kody', 'memory')
 const reportsDir = path.join(root, '.kody', 'reports')
 const statePath = path.join(dutiesDir, 'job-gap-scan.state.json')
 const reportPath = path.join(reportsDir, 'job-gap-scan.md')
-const dryRun = process.env.JOB_GAP_SCAN_DRY_RUN === '1'
-const noCommit = process.env.JOB_GAP_SCAN_NO_COMMIT === '1'
+const dryRun = process.env.KODY_DRY_RUN === '1' || process.env.JOB_GAP_SCAN_DRY_RUN === '1'
+const noCommit = process.env.KODY_NO_COMMIT === '1' || process.env.JOB_GAP_SCAN_NO_COMMIT === '1'
 
 const catalogue = [
   {
@@ -75,6 +75,12 @@ const catalogue = [
 
 function log(message) {
   console.error(`[job-gap-scan] ${message}`)
+}
+
+function emitNextState(state, cursor) {
+  console.log('```kody-job-next-state')
+  console.log(JSON.stringify({ cursor, data: state, done: false }, null, 2))
+  console.log('```')
 }
 
 function loadState() {
@@ -226,11 +232,13 @@ const report = `# Job Gap Scan\n\n_Cadence: daily - one proposed duty per cycle,
 if (dryRun) {
   log('dry run complete (skipped report/state write + commit)')
   console.log(report)
+  emitNextState(state, chosen?.slug || 'caught-up')
   process.exit(0)
 }
 
 if (proposalAlreadyRecorded && reportUnchanged(report)) {
   log('tick complete: no substantive change (skipped write + commit)')
+  emitNextState(state, chosen?.slug || 'caught-up')
   process.exit(0)
 }
 
@@ -240,8 +248,10 @@ fs.mkdirSync(reportsDir, { recursive: true })
 fs.writeFileSync(reportPath, report)
 if (noCommit) {
   log('tick complete (commit suppressed)')
+  emitNextState(state, chosen?.slug || 'caught-up')
   process.exit(0)
 }
 if (commitAndPush(chosen?.slug || null)) log('tick complete: report + state committed')
 else log('tick complete: nothing commit')
+emitNextState(state, chosen?.slug || 'caught-up')
 NODE
