@@ -20,13 +20,13 @@ enforced by the engine.
 ## Tick procedure — REQUIRED
 
 This tick is **fully scripted**. The script
-[coverage-floor tick](.kody/executables/coverage-floor/tick.py) is the
+[coverage-floor tick](.kody/executables/coverage-floor/tick.sh) is the
 **single source of truth** for fetching coverage and writing the report.
 
 Run the script:
 
 ```
-python3 .kody/executables/coverage-floor/tick.py
+bash .kody/executables/coverage-floor/tick.sh
 ```
 
 The script:

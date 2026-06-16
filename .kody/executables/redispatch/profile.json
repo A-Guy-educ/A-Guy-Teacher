@@ -3,7 +3,15 @@
   "role": "watch",
   "kind": "oneshot",
   "describe": "Detect stalled running Kody issues and plan or post resume actions.",
-  "inputs": [],
+  "inputs": [
+    {
+      "name": "duty",
+      "flag": "--duty",
+      "type": "string",
+      "required": true,
+      "describe": "Scheduled duty slug whose sidecar state is loaded and updated."
+    }
+  ],
   "claudeCode": {
     "model": "inherit",
     "permissionMode": "default",
@@ -39,13 +47,25 @@
   "scripts": {
     "preflight": [
       {
-        "shell": "run.sh",
-        "timeoutSec": 600
-      },
-      {
-        "script": "skipAgent"
+        "script": "runScheduledExecutableTick",
+        "with": {
+          "jobsDir": ".kody/duties",
+          "slugArg": "duty",
+          "shell": "tick.sh",
+          "fenceLabel": "kody-job-next-state"
+        }
       }
     ],
-    "postflight": []
+    "postflight": [
+      {
+        "script": "writeJobStateFile",
+        "with": {
+          "jobsDir": ".kody/duties"
+        }
+      },
+      {
+        "script": "appendCompanyActivity"
+      }
+    ]
   }
 }

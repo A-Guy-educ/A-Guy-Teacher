@@ -3,7 +3,6 @@
   "describe": "Redispatch stalled Kody work",
   "action": "redispatch",
   "executable": "redispatch",
-  "tickScript": ".kody/executables/redispatch/tick.py",
   "every": "30m",
   "staff": "kody"
 }

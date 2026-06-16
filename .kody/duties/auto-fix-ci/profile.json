@@ -3,7 +3,6 @@
   "describe": "Auto fix failing CI",
   "action": "auto-fix-ci",
   "executable": "auto-fix-ci",
-  "tickScript": ".kody/executables/auto-fix-ci/tick.sh",
   "every": "15m",
   "staff": "kody"
 }

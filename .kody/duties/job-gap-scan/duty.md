@@ -5,7 +5,7 @@
 Once per day, run the local `job-gap-scan` executable tick:
 
 ```bash
-python3 .kody/executables/job-gap-scan/tick.py
+bash .kody/executables/job-gap-scan/tick.sh
 ```
 
 The executable writes one advisory proposal report to `.kody/reports/job-gap-scan.md` and updates `.kody/duties/job-gap-scan.state.json`.

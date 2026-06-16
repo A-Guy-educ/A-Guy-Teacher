@@ -3,8 +3,9 @@
   "describe": "Job gap scan",
   "action": "job-gap-scan",
   "executable": "job-gap-scan",
-  "tickScript": ".kody/executables/job-gap-scan/tick.py",
   "every": "24h",
   "staff": "ceo",
-  "mentions": ["aguyaharonyair"]
+  "mentions": [
+    "aguyaharonyair"
+  ]
 }

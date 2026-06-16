@@ -20,13 +20,13 @@ enforced by the engine.
 ## Tick procedure — REQUIRED
 
 This tick is **fully scripted**. The script
-[dead-code-sweep tick](.kody/executables/dead-code-sweep/tick.py) is the
+[dead-code-sweep tick](.kody/executables/dead-code-sweep/tick.sh) is the
 **single source of truth** for running the tools and writing the report.
 
 Run the script:
 
 ```
-python3 .kody/executables/dead-code-sweep/tick.py
+bash .kody/executables/dead-code-sweep/tick.sh
 ```
 
 The script:

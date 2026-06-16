@@ -3,7 +3,15 @@
   "role": "watch",
   "kind": "oneshot",
   "describe": "Scan open conflicting PRs and dispatch resolve comments.",
-  "inputs": [],
+  "inputs": [
+    {
+      "name": "duty",
+      "flag": "--duty",
+      "type": "string",
+      "required": true,
+      "describe": "Scheduled duty slug whose sidecar state is loaded and updated."
+    }
+  ],
   "claudeCode": {
     "model": "inherit",
     "permissionMode": "default",
@@ -50,13 +58,25 @@
   "scripts": {
     "preflight": [
       {
-        "shell": "tick.sh",
-        "timeoutSec": 300
-      },
-      {
-        "script": "skipAgent"
+        "script": "runScheduledExecutableTick",
+        "with": {
+          "jobsDir": ".kody/duties",
+          "slugArg": "duty",
+          "shell": "tick.sh",
+          "fenceLabel": "kody-job-next-state"
+        }
       }
     ],
-    "postflight": []
+    "postflight": [
+      {
+        "script": "writeJobStateFile",
+        "with": {
+          "jobsDir": ".kody/duties"
+        }
+      },
+      {
+        "script": "appendCompanyActivity"
+      }
+    ]
   }
 }
