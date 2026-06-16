@@ -7,7 +7,11 @@
     "issue-auto-triage": {
       "firstSuggestedISO": "2026-05-20T19:54:17Z",
       "openIssue": 1744
+    },
+    "sentry-digest": {
+      "firstSuggestedISO": "2026-06-16T03:23:20.107Z",
+      "lastWrittenISO": "2026-06-16T03:23:20.107Z"
     }
   },
-  "lastRunISO": "2026-05-20T19:54:17Z"
+  "lastRunISO": "2026-06-16T03:23:20.107Z"
 }
