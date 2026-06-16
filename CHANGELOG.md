@@ -1685,6 +1685,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- Release v0.25.12 ([#277](https://github.com/A-Guy-educ/A-Guy-Web/pull/277)) — @kodyade[bot]
 - fix: Wire /checkout/success page to read real transaction state ([#274](https://github.com/A-Guy-educ/A-Guy-Web/pull/274)) — @aguyshayb
 - feat: Show purchases on /account and wire PayPal webhook ([#273](https://github.com/A-Guy-educ/A-Guy-Web/pull/273)) — @aguyshayb
 - fix: Make Vercel deploy duties install CLI ([#272](https://github.com/A-Guy-educ/A-Guy-Web/pull/272)) — @aguyaharonyair
