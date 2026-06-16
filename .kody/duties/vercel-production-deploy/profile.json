@@ -4,6 +4,7 @@
   "action": "vercel-production-deploy",
   "executable": "vercel-production-deploy",
   "every": "manual",
+  "staff": "cto",
   "mentions": [
     "aguyaharonyair"
   ]
