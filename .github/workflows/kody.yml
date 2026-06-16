@@ -120,4 +120,22 @@ jobs:
           INIT_MESSAGE: ${{ inputs.message }}
           MODEL: ${{ inputs.model }}
           DASHBOARD_URL: ${{ inputs.dashboardUrl }}
-        run: npx -y -p @kody-ade/kody-engine@latest kody-engine
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref || '' }}
+        run: |
+          set -o pipefail
+
+          log_file="$(mktemp)"
+          npx -y -p @kody-ade/kody-engine@latest kody-engine 2>&1 | tee "$log_file"
+          status="${PIPESTATUS[0]}"
+
+          if [ "$status" -ne 0 ]; then
+            if [ "$EVENT_NAME" = "pull_request" ] &&
+              [ "$PR_BASE_REF" = "main" ] &&
+              grep -Eq 'createPreviewMachine 422|organization has reached its machine limit' "$log_file"; then
+              echo "::warning::Kody preview build hit the Fly machine limit. Release promotion can continue because CI/build checks own code validity."
+              exit 0
+            fi
+
+            exit "$status"
+          fi
