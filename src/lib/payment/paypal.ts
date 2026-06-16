@@ -175,8 +175,20 @@ export async function verifyPayPalWebhook(body: object, headers: object): Promis
   return result.verification_status === 'SUCCESS'
 }
 
+interface PayPalCaptureResponse {
+  id: string
+  status: string
+  purchase_units?: Array<{
+    payments?: {
+      captures?: Array<{ id: string; status: string }>
+    }
+  }>
+}
+
 /**
- * Capture funds for an approved PayPal order.
+ * Capture funds for an approved PayPal order. Returns `{ captureId }` so the
+ * webhook handler / success page can persist it on the transaction row for
+ * later refunds.
  *
  * Required step in the PayPal v2 flow: an order created with intent: 'CAPTURE'
  * is NOT auto-captured on buyer approval — the merchant must explicitly POST
@@ -185,9 +197,10 @@ export async function verifyPayPalWebhook(body: object, headers: object): Promis
  *
  * Idempotent: PayPal returns 422 ORDER_ALREADY_CAPTURED if the order has
  * already been captured (e.g. user reloads /checkout/success). We treat that
- * as a successful no-op so reloading the page doesn't blow up.
+ * as a successful no-op and return `{ captureId: null }` so callers can
+ * decide whether they need a captureId or are happy without one.
  */
-export async function capturePayPalOrder(orderId: string): Promise<void> {
+export async function capturePayPalOrder(orderId: string): Promise<{ captureId: string | null }> {
   const token = await getPayPalAccessToken()
 
   const response = await fetch(`${getPayPalApiBase()}/v2/checkout/orders/${orderId}/capture`, {
@@ -199,13 +212,18 @@ export async function capturePayPalOrder(orderId: string): Promise<void> {
     },
   })
 
-  if (response.ok) return
+  if (response.ok) {
+    const body = (await response.json().catch(() => null)) as PayPalCaptureResponse | null
+    const captureId = body?.purchase_units?.[0]?.payments?.captures?.[0]?.id ?? null
+    return { captureId }
+  }
 
   const errorText = await response.text()
 
-  // Already-captured is a benign reload scenario — don't throw.
+  // Already-captured is a benign reload scenario — don't throw. We don't have
+  // the captureId here because PayPal doesn't return it in the 422 body.
   if (response.status === 422 && /ORDER_ALREADY_CAPTURED/.test(errorText)) {
-    return
+    return { captureId: null }
   }
 
   throw new Error(`PayPal order capture failed: ${response.status} ${errorText}`)
