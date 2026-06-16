@@ -28,7 +28,11 @@
         "script": "skipAgent"
       }
     ],
-    "postflight": []
+    "postflight": [
+      {
+        "script": "appendCompanyActivity"
+      }
+    ]
   },
   "output": {
     "actionTypes": [
