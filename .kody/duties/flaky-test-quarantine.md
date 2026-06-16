@@ -20,14 +20,14 @@ enforced by the engine.
 ## Tick procedure — REQUIRED
 
 This tick is **fully scripted**. The script
-[flaky-test-quarantine-tick.py](.kody/scripts/flaky-test-quarantine-tick.py)
+[flaky-test-quarantine tick](.kody/executables/flaky-test-quarantine/tick.sh)
 is the **single source of truth** for fetching CI runs and writing the
 report.
 
 Run the script:
 
 ```
-python3 .kody/scripts/flaky-test-quarantine-tick.py
+bash .kody/executables/flaky-test-quarantine/tick.sh
 ```
 
 The script:

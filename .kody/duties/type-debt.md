@@ -20,13 +20,13 @@ enforced by the engine — runs on Wednesday UTC.
 ## Tick procedure — REQUIRED
 
 This tick is **fully scripted**. The script
-[type-debt-tick.py](.kody/scripts/type-debt-tick.py) is the **single
+[type-debt tick](.kody/executables/type-debt/tick.sh) is the **single
 source of truth** for counting and writing the report.
 
 Run the script:
 
 ```
-python3 .kody/scripts/type-debt-tick.py
+bash .kody/executables/type-debt/tick.sh
 ```
 
 The script:

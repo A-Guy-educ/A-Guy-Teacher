@@ -1,0 +1,8 @@
+{
+  "name": "auto-fix-ci",
+  "describe": "Auto fix failing CI",
+  "action": "auto-fix-ci",
+  "executable": "auto-fix-ci",
+  "every": "15m",
+  "staff": "kody"
+}

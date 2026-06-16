@@ -10,8 +10,6 @@ type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded'
 interface TransactionData {
   id: string
   status: TransactionStatus
-  entitlementsGrantedAt?: string | null
-  product?: { name?: string } | string
 }
 
 interface CheckoutSuccessContentProps {
@@ -66,7 +64,11 @@ export function CheckoutSuccessContent({
     )
   }
 
-  const isConfirmed = transaction.status === 'succeeded' && !!transaction.entitlementsGrantedAt
+  // TODO: when grantProductEntitlements is wired up (currently a stub at
+  // src/lib/payment/grant-entitlements.ts), tighten this back to also require
+  // `entitlementsGrantedAt`. Right now nothing ever sets that field, so
+  // requiring it would leave every payment stuck on "Pending" forever.
+  const isConfirmed = transaction.status === 'succeeded'
   const isFailed = transaction.status === 'failed' || transaction.status === 'refunded'
 
   if (isFailed) {

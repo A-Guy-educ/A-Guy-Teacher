@@ -1,4 +1,4 @@
-# vercel production deploy
+# vercel prod deploy
 
 ## Job
 

@@ -1,0 +1,57 @@
+{
+  "name": "job-gap-scan",
+  "role": "watch",
+  "kind": "oneshot",
+  "describe": "Propose one high-ROI missing duty and update the job-gap report.",
+  "inputs": [
+    {
+      "name": "duty",
+      "flag": "--duty",
+      "type": "string",
+      "required": true,
+      "describe": "Scheduled duty slug whose sidecar state is loaded and updated."
+    }
+  ],
+  "claudeCode": {
+    "model": "inherit",
+    "permissionMode": "default",
+    "maxTurns": 0,
+    "systemPromptAppend": null,
+    "cacheable": true,
+    "enableVerifyTool": false,
+    "tools": [],
+    "hooks": [],
+    "skills": [],
+    "commands": [],
+    "subagents": [],
+    "plugins": [],
+    "mcpServers": []
+  },
+  "cliTools": [],
+  "inputArtifacts": [],
+  "outputArtifacts": [],
+  "scripts": {
+    "preflight": [
+      {
+        "script": "runScheduledExecutableTick",
+        "with": {
+          "jobsDir": ".kody/duties",
+          "slugArg": "duty",
+          "shell": "tick.sh",
+          "fenceLabel": "kody-job-next-state"
+        }
+      }
+    ],
+    "postflight": [
+      {
+        "script": "writeJobStateFile",
+        "with": {
+          "jobsDir": ".kody/duties"
+        }
+      },
+      {
+        "script": "appendCompanyActivity"
+      }
+    ]
+  }
+}

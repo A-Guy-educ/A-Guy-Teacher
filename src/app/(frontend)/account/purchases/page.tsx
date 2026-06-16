@@ -13,8 +13,11 @@ import { getDirection } from '@/i18n/config'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { pageMetadata } from '@/infra/seo/pageMetadata'
 import { getMeUser } from '@/infra/utils/getMeUser'
+import { queryUserTransactions } from '@/server/repos/queries/transactions'
 import type { Metadata } from 'next'
 import { PurchasesPageContent } from './PurchasesPageContent'
+
+export const dynamic = 'force-dynamic'
 
 type Props = {
   searchParams: Promise<{ next?: string }>
@@ -44,11 +47,14 @@ export default async function PurchasesPage({ searchParams: searchParamsPromise 
     notFound()
   }
 
-  const locale = await getSystemLocale()
+  const [locale, transactions] = await Promise.all([
+    getSystemLocale(),
+    queryUserTransactions(user.id),
+  ])
 
   return (
     <div dir={getDirection(locale)}>
-      <PurchasesPageContent transactions={[]} />
+      <PurchasesPageContent transactions={transactions} />
     </div>
   )
 }

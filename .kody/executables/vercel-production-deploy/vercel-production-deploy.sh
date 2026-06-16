@@ -16,7 +16,12 @@ require_command() {
 
 require_command git
 require_command node
-require_command vercel
+
+vercel_cmd=(vercel)
+if ! command -v vercel >/dev/null 2>&1; then
+  require_command npx
+  vercel_cmd=(npx -y -p vercel@54.10.2 vercel)
+fi
 
 variable_value() {
   node -e '
@@ -95,7 +100,7 @@ current_branch="$(git branch --show-current)"
 vercel_args=(--scope "$SCOPE" --token "$token")
 
 echo "Deploying ${current_branch} to Vercel production..."
-vercel deploy --prod --yes --format=json "${vercel_args[@]}" | tee "$tmp_json"
+"${vercel_cmd[@]}" deploy --prod --yes --format=json "${vercel_args[@]}" | tee "$tmp_json"
 
 deployment_url="$(
   # shellcheck disable=SC2016

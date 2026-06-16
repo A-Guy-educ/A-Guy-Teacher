@@ -42,17 +42,20 @@ gh pr view <N> --json reviewDecision -q .reviewDecision
 ```
 Treat `APPROVED` code review as passing.
 
-- UI review verdict: treat presence of a comment from a kody-bot account containing `@kody ui-review` followed by approval reaction as UI verdict. No signal means missing.
+- UI review verdict: treat a completed Kody UI review report/comment with PASS or CONCERNS as passing. No signal means missing.
 
-If missing verdict, post separate comments:
+If a verdict is missing, dispatch the executable directly. Do not post `@kody review` or `@kody ui-review` comments; Kody bot comments are ignored by the dispatcher.
 
-- If code review missing: `gh pr comment <N> --body "@kody review"`
-- If UI review missing: `gh pr comment <N> --body "@kody ui-review"`
+- If code review missing and there is no recent in-flight `review` run for this PR:
+  `gh workflow run kody.yml -f executable=review -f issue_number=<N>`
+- If UI review missing and there is no recent in-flight `ui-review` run for this PR:
+  `gh workflow run kody.yml -f executable=ui-review -f issue_number=<N>`
 
-Before posting, check PR's existing comments to avoid duplicates:
+Before dispatching, check PR comments and recent workflow runs to avoid duplicates:
 
 ```sh
 gh pr view <N> --comments --json comments --jq '.comments[].body'
+gh run list --workflow kody.yml --event workflow_dispatch --limit 50
 ```
 
 ## Step 3 - Request fixes for PR concerns

@@ -1,0 +1,8 @@
+{
+  "name": "auto-sync",
+  "describe": "Auto sync stale PR branches",
+  "action": "auto-sync",
+  "executable": "auto-sync",
+  "every": "15m",
+  "staff": "kody"
+}

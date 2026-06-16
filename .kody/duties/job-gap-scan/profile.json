@@ -1,0 +1,11 @@
+{
+  "name": "job-gap-scan",
+  "describe": "Job gap scan",
+  "action": "job-gap-scan",
+  "executable": "job-gap-scan",
+  "every": "24h",
+  "staff": "ceo",
+  "mentions": [
+    "aguyaharonyair"
+  ]
+}

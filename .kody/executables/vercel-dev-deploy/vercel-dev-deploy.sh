@@ -16,7 +16,12 @@ require_command() {
 
 require_command git
 require_command node
-require_command vercel
+
+vercel_cmd=(vercel)
+if ! command -v vercel >/dev/null 2>&1; then
+  require_command npx
+  vercel_cmd=(npx -y -p vercel@54.10.2 vercel)
+fi
 
 variable_value() {
   node -e '
@@ -97,7 +102,7 @@ current_branch="$(git branch --show-current)"
 vercel_args=(--scope "$SCOPE" --token "$token")
 
 echo "Deploying ${current_branch} to Vercel ${TARGET}..."
-vercel deploy --target="$TARGET" --yes --format=json "${vercel_args[@]}" | tee "$tmp_json"
+"${vercel_cmd[@]}" deploy --target="$TARGET" --yes --format=json "${vercel_args[@]}" | tee "$tmp_json"
 
 deployment_url="$(
   # shellcheck disable=SC2016
@@ -112,7 +117,7 @@ deployment_url="$(
 )"
 
 echo "Assigning ${ALIAS_HOST} -> ${deployment_url}"
-vercel alias set "$deployment_url" "$ALIAS_HOST" "${vercel_args[@]}"
+"${vercel_cmd[@]}" alias set "$deployment_url" "$ALIAS_HOST" "${vercel_args[@]}"
 
 cat <<RESULT
 DONE

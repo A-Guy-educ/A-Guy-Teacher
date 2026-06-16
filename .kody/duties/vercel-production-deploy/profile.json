@@ -1,11 +1,10 @@
 {
   "name": "vercel-production-deploy",
-  "describe": "Deploy Vercel production",
+  "describe": "vercel prod deploy",
   "action": "vercel-production-deploy",
   "executable": "vercel-production-deploy",
   "every": "manual",
-  "runner": "cto",
-  "reviewer": "cto",
+  "staff": "cto",
   "mentions": [
     "aguyaharonyair"
   ]
