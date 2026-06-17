@@ -1,12 +1,13 @@
 'use client'
 
+import { Bot, Play } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Bot } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 import { setUserProfile } from '@/client/state/localStorage/userProfile'
 import type { Course } from '@/infra/types/content'
 import { cn } from '@/infra/utils/ui'
+import { LanguageSwitcher } from '@/ui/web/LanguageSwitcher'
+import { useLocale } from '@/ui/web/providers/I18n'
 import { ThemeSelector } from '@/ui/web/providers/Theme/ThemeSelector'
 
 type Direction = 'ltr' | 'rtl'
@@ -19,35 +20,88 @@ interface StartPageClientProps {
   direction: Direction
 }
 
-const moodCards: Array<{ id: Mood; emoji: string; title: string; description: string }> = [
-  {
-    id: 'excellent',
-    emoji: '😊',
-    title: 'מצויין',
-    description: 'מלאי מוטיבציה ואנרגיה ללמוד',
+const START_COPY = {
+  he: {
+    badge: 'מערכת הלמידה האישית למתמטיקה',
+    headline: 'ללמוד מתמטיקה בדרך החכמה',
+    subtitle:
+      'שיעורים אינטראקטיביים, תרגול מונחה, תשובות מיידיות לפענוח שאלות שלך, הכוונה למבחנים - הכל במקום אחד.',
+    start: 'להתחיל ללמוד',
+    intro: 'נעים מאוד! אני Aguy, מורה פרטי למתמטיקה',
+    moodQuestion: 'איך את/ה היום?',
+    courseQuestion: 'איזה כיתה/שאלון את/ה לומד/ת?',
+    selected: 'בואו נתחיל!',
+    noCourses: 'אין כרגע קורסים זמינים בשפה שנבחרה.',
+    courseFallback: 'קורס',
+    openingCourse: 'פותח את הקורס...',
+    redirecting: 'מעביר אותך אל',
+    fallbackCourse: 'הקורס שבחרת',
+    footer: 'Aguy Onboarding Platform © 2026. כל הזכויות שמורות.',
+    moods: {
+      excellent: {
+        emoji: '😊',
+        title: 'מצוין',
+        description: 'מלאי מוטיבציה ואנרגיה ללמוד',
+        response: 'איזה כיף! ננצל את האנרגיה הזאת',
+      },
+      good: {
+        emoji: '👍',
+        title: 'אחלה',
+        description: 'מוכנים להתקדם כרגיל',
+        response: 'מעולה, נתקדם בקצב טוב',
+      },
+      tired: {
+        emoji: '🥱',
+        title: 'קצת עייף',
+        description: 'נשמור על קצב קליל וממוקד',
+        response: 'אין בעיה, ניקח את זה קל וממוקד',
+      },
+    },
   },
-  {
-    id: 'good',
-    emoji: '👍',
-    title: 'אחלה',
-    description: 'מוכנים להתקדם כרגיל',
+  en: {
+    badge: 'Personal math learning system',
+    headline: 'Learn math the smart way',
+    subtitle:
+      'Interactive lessons, guided practice, instant help with questions, and exam preparation in one place.',
+    start: 'Start learning',
+    intro: 'Nice to meet you. I am Aguy, your private math tutor.',
+    moodQuestion: 'How are you feeling today?',
+    courseQuestion: 'Which grade or exam are you studying for?',
+    selected: "Let's begin!",
+    noCourses: 'No courses are available in the selected language yet.',
+    courseFallback: 'Course',
+    openingCourse: 'Opening the course...',
+    redirecting: 'Taking you to',
+    fallbackCourse: 'your selected course',
+    footer: 'Aguy Onboarding Platform © 2026. All rights reserved.',
+    moods: {
+      excellent: {
+        emoji: '😊',
+        title: 'Excellent',
+        description: 'Motivated and ready to learn',
+        response: "Great. Let's use that energy.",
+      },
+      good: {
+        emoji: '👍',
+        title: 'Good',
+        description: 'Ready to keep moving',
+        response: "Perfect. We'll move at a steady pace.",
+      },
+      tired: {
+        emoji: '🥱',
+        title: 'A bit tired',
+        description: 'We will keep it light and focused',
+        response: "No problem. We'll keep it simple and focused.",
+      },
+    },
   },
-  {
-    id: 'tired',
-    emoji: '🥱',
-    title: 'קצת עייף',
-    description: 'נשמור על קצב קליל וממוקד',
-  },
-]
+} as const
 
-const moodResponses: Record<Mood, string> = {
-  excellent: 'איזה כיף! ננצל את האנרגיה הזאת 💪',
-  good: 'מעולה, נתקדם בקצב טוב 👍',
-  tired: 'אין בעיה, ניקח את זה קל וממוקד 🧘',
-}
+const moodOrder: Mood[] = ['excellent', 'good', 'tired']
 
 export function StartPageClient({ courses, direction }: StartPageClientProps) {
-  const router = useRouter()
+  const locale = useLocale()
+  const copy = locale === 'he' ? START_COPY.he : START_COPY.en
   const [pane, setPane] = useState<Pane>('welcome')
   const [interaction, setInteraction] = useState<Interaction>('none')
   const [displayedText, setDisplayedText] = useState('')
@@ -63,7 +117,10 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
   }, [])
 
   const sleep = useCallback(
-    (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms)),
+    (ms: number) =>
+      new Promise((resolve) => {
+        window.setTimeout(resolve, ms)
+      }),
     [],
   )
 
@@ -117,23 +174,23 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
   const startConversation = useCallback(async () => {
     setPane('conversation')
     setInteraction('none')
-    await typeText('נעים מאוד! אני Aguy, מורה פרטי למתמטיקה', 40)
-    await sleep(1500)
-    await typeText('איך את/ה היום?', 45)
+    await typeText(copy.intro, 40)
+    await sleep(900)
+    await typeText(copy.moodQuestion, 45)
     setInteraction('mood')
-  }, [sleep, typeText])
+  }, [copy.intro, copy.moodQuestion, sleep, typeText])
 
   const selectMood = useCallback(
     async (mood: Mood) => {
       setSelectedMood(mood)
       setInteraction('none')
       playTone(580, 120)
-      await typeText(moodResponses[mood], 45)
-      await sleep(1500)
-      await typeText('איזה כיתה/שאלון את/ה לומד/ת?', 45)
+      await typeText(copy.moods[mood].response, 45)
+      await sleep(900)
+      await typeText(copy.courseQuestion, 45)
       setInteraction('courses')
     },
-    [playTone, sleep, typeText],
+    [copy.courseQuestion, copy.moods, playTone, sleep, typeText],
   )
 
   const selectCourse = useCallback(
@@ -147,14 +204,14 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
       })
       setInteraction('none')
       playTone(580, 120)
-      await typeText('בואו נתחיל! ⚡', 50)
-      await sleep(1200)
+      await typeText(copy.selected, 50)
+      await sleep(900)
       setPane('redirecting')
       window.setTimeout(() => {
-        router.push(getCourseHref(course))
+        window.location.assign(getCourseHref(course))
       }, 800)
     },
-    [playTone, router, selectedMood, sleep, typeText],
+    [copy.selected, playTone, selectedMood, sleep, typeText],
   )
 
   return (
@@ -162,18 +219,20 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
       dir={direction}
       className="min-h-screen overflow-hidden bg-background font-sans text-foreground"
     >
-      <div className="pointer-events-none fixed -left-24 top-20 h-72 w-72 rounded-full bg-primary/10 blur-[120px] dark:bg-primary/20" />
-      <div className="pointer-events-none fixed -bottom-24 right-10 h-96 w-96 rounded-full bg-success/10 blur-[120px] dark:bg-success/20" />
+      <div className="pointer-events-none fixed -left-24 top-20 h-72 w-72 rounded-full bg-primary/10 blur-[120px]" />
+      <div className="pointer-events-none fixed -bottom-24 right-10 h-96 w-96 rounded-full bg-success/10 blur-[120px]" />
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        <div className="fixed left-4 top-4 z-50 rounded-xl border border-border bg-card/80 shadow-elevation-1 backdrop-blur">
+        <div className="fixed left-4 top-4 z-50 flex items-center gap-content-gap-xs rounded-xl border border-border bg-card/90 p-1 shadow-elevation-1 backdrop-blur">
+          <LanguageSwitcher />
           <ThemeSelector />
         </div>
 
         <section className="flex flex-1 items-center justify-center px-4 py-section-xs">
-          {pane === 'welcome' && <WelcomePane onStart={startConversation} />}
+          {pane === 'welcome' && <WelcomePane copy={copy} onStart={startConversation} />}
           {pane === 'conversation' && (
             <ConversationPane
+              copy={copy}
               courses={courses}
               displayedText={displayedText}
               interaction={interaction}
@@ -183,42 +242,50 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
               onSelectMood={selectMood}
             />
           )}
-          {pane === 'redirecting' && <RedirectingPane selectedCourse={selectedCourse} />}
+          {pane === 'redirecting' && (
+            <RedirectingPane copy={copy} selectedCourse={selectedCourse} />
+          )}
         </section>
 
-        <StartFooter activeIndex={paneToIndex(pane)} />
+        <StartFooter activeIndex={paneToIndex(pane)} copy={copy} />
       </div>
     </main>
   )
 }
 
-function WelcomePane({ onStart }: { onStart: () => void }) {
+function WelcomePane({
+  copy,
+  onStart,
+}: {
+  copy: (typeof START_COPY)['he'] | (typeof START_COPY)['en']
+  onStart: () => void
+}) {
   return (
     <div className="mx-auto max-w-4xl text-center">
       <div className="mb-8 inline-flex items-center gap-content-gap-xs rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-body-sm font-extrabold text-primary">
         <span className="h-2 w-2 rounded-full bg-primary" />
-        מערכת הלמידה האישית למתמטיקה
+        {copy.badge}
       </div>
       <h1 className="mb-6 text-display-lg font-extrabold leading-tight text-foreground md:text-display-xl">
-        ללמוד מתמטיקה בדרך החכמה
+        {copy.headline}
       </h1>
       <p className="mx-auto mb-10 max-w-2xl text-body-lg font-medium leading-relaxed text-muted-foreground md:text-heading-xl">
-        שיעורים אינטראקטיביים, תרגול מונחה, תשובות מיידיות לפענוח שאלות שלך, הכוונה למבחנים - הכל
-        במקום אחד.
+        {copy.subtitle}
       </p>
       <button
         type="button"
         onClick={onStart}
         className="inline-flex h-14 items-center gap-3 rounded-xl bg-primary px-9 text-body-lg font-extrabold text-primary-foreground shadow-elevation-3 transition-all duration-normal hover:bg-primary/90 active:scale-[0.98]"
       >
-        <span className="text-body-md">▶</span>
-        להתחיל ללמוד
+        <Play className="h-5 w-5 fill-current" aria-hidden />
+        {copy.start}
       </button>
     </div>
   )
 }
 
 function ConversationPane({
+  copy,
   courses,
   displayedText,
   interaction,
@@ -227,6 +294,7 @@ function ConversationPane({
   onSelectMood,
   onSelectCourse,
 }: {
+  copy: (typeof START_COPY)['he'] | (typeof START_COPY)['en']
   courses: Course[]
   displayedText: string
   interaction: Interaction
@@ -267,9 +335,10 @@ function ConversationPane({
           interaction === 'none' ? 'opacity-0' : 'opacity-100',
         )}
       >
-        {interaction === 'mood' ? <MoodGrid onSelectMood={onSelectMood} /> : null}
+        {interaction === 'mood' ? <MoodGrid copy={copy} onSelectMood={onSelectMood} /> : null}
         {interaction === 'courses' ? (
           <CourseGrid
+            copy={copy}
             courses={courses}
             selectedCourse={selectedCourse}
             onSelectCourse={onSelectCourse}
@@ -280,23 +349,29 @@ function ConversationPane({
   )
 }
 
-function MoodGrid({ onSelectMood }: { onSelectMood: (mood: Mood) => void }) {
+function MoodGrid({
+  copy,
+  onSelectMood,
+}: {
+  copy: (typeof START_COPY)['he'] | (typeof START_COPY)['en']
+  onSelectMood: (mood: Mood) => void
+}) {
   return (
     <div className="mx-auto grid max-w-2xl grid-cols-1 gap-content-gap-sm md:grid-cols-3">
-      {moodCards.map((mood) => (
+      {moodOrder.map((mood) => (
         <button
-          key={mood.id}
+          key={mood}
           type="button"
-          onClick={() => onSelectMood(mood.id)}
+          onClick={() => onSelectMood(mood)}
           className="flex flex-col items-center rounded-2xl border border-border bg-card p-5 text-center shadow-elevation-1 transition-all duration-normal hover:-translate-y-0.5 hover:border-primary/50"
         >
           <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-heading-md">
-            {mood.emoji}
+            {copy.moods[mood].emoji}
           </span>
           <span className="mb-1 text-body-md font-extrabold text-card-foreground">
-            {mood.title}
+            {copy.moods[mood].title}
           </span>
-          <span className="text-body-xs text-muted-foreground">{mood.description}</span>
+          <span className="text-body-xs text-muted-foreground">{copy.moods[mood].description}</span>
         </button>
       ))}
     </div>
@@ -304,18 +379,21 @@ function MoodGrid({ onSelectMood }: { onSelectMood: (mood: Mood) => void }) {
 }
 
 function CourseGrid({
+  copy,
   courses,
   selectedCourse,
   onSelectCourse,
 }: {
+  copy: (typeof START_COPY)['he'] | (typeof START_COPY)['en']
   courses: Course[]
   selectedCourse: Course | null
   onSelectCourse: (course: Course) => void
 }) {
   if (courses.length === 0) {
     return (
-      <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-card-padding text-center text-body-md text-muted-foreground">
-        אין כרגע קורסים זמינים במערכת.
+      <div className="mx-auto flex max-w-md flex-col items-center gap-content-gap rounded-2xl border border-border bg-card p-card-padding text-center text-body-md text-muted-foreground">
+        <p>{copy.noCourses}</p>
+        <LanguageSwitcher />
       </div>
     )
   }
@@ -333,7 +411,7 @@ function CourseGrid({
           )}
         >
           <span className="absolute left-3 top-3 rounded border border-primary/10 bg-primary/10 px-2 py-1 text-body-xs font-extrabold text-primary">
-            {course.courseLabel || 'קורס'}
+            {course.courseLabel || copy.courseFallback}
           </span>
           <span className="mt-8 block text-heading-sm font-extrabold text-card-foreground">
             {course.title}
@@ -349,19 +427,31 @@ function CourseGrid({
   )
 }
 
-function RedirectingPane({ selectedCourse }: { selectedCourse: Course | null }) {
+function RedirectingPane({
+  copy,
+  selectedCourse,
+}: {
+  copy: (typeof START_COPY)['he'] | (typeof START_COPY)['en']
+  selectedCourse: Course | null
+}) {
   return (
     <div className="mx-auto max-w-md text-center">
       <div className="mx-auto mb-6 h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      <h2 className="mb-2 text-heading-xl font-extrabold text-foreground">פותח את הקורס...</h2>
+      <h2 className="mb-2 text-heading-xl font-extrabold text-foreground">{copy.openingCourse}</h2>
       <p className="text-body-sm text-muted-foreground">
-        מעביר אותך אל {selectedCourse?.title || 'הקורס שבחרת'}...
+        {copy.redirecting} {selectedCourse?.title || copy.fallbackCourse}...
       </p>
     </div>
   )
 }
 
-function StartFooter({ activeIndex }: { activeIndex: number }) {
+function StartFooter({
+  activeIndex,
+  copy,
+}: {
+  activeIndex: number
+  copy: (typeof START_COPY)['he'] | (typeof START_COPY)['en']
+}) {
   return (
     <div
       role="contentinfo"
@@ -378,7 +468,7 @@ function StartFooter({ activeIndex }: { activeIndex: number }) {
           />
         ))}
       </div>
-      Aguy Onboarding Platform © 2026. כל הזכויות שמורות.
+      {copy.footer}
     </div>
   )
 }
