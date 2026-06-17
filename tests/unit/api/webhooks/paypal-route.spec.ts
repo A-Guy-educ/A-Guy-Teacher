@@ -38,6 +38,11 @@ vi.mock('@/infra/utils/logger/logger', () => ({
   createRequestLogger: () => ({ error: vi.fn(), info: vi.fn(), warn: vi.fn() }),
 }))
 
+const sendReceiptMock = vi.fn().mockResolvedValue({ sent: true })
+vi.mock('@/server/email/services/purchase-receipt-service', () => ({
+  sendPurchaseReceipt: sendReceiptMock,
+}))
+
 const ORDER_ID = 'PAYPAL_ORDER_123'
 const CAPTURE_ID = 'PAYPAL_CAPTURE_456'
 const TX_ID = '507f1f77bcf86cd799439011'
@@ -142,8 +147,12 @@ describe('POST /api/webhooks/paypal', () => {
 
     findOneMock.mockResolvedValueOnce({
       _id: TX_ID,
+      user: '507f191e810c19729de860ea',
+      product: '507f191e810c19729de860eb',
       providerTransactionId: ORDER_ID,
       status: 'pending',
+      amount: 4900,
+      currency: 'ILS',
     })
 
     const { POST } = await import('@/app/api/webhooks/paypal/route')
@@ -156,6 +165,21 @@ describe('POST /api/webhooks/paypal', () => {
     expect(update.status).toBe('succeeded')
     expect(update.captureId).toBe(CAPTURE_ID)
     expect(update.capturedAt).toBeInstanceOf(Date)
+
+    // Receipt service is triggered after the status flip. The service is
+    // mocked so we don't actually email anyone — just that the wiring is
+    // in place and that user/product/amount/currency are forwarded.
+    expect(sendReceiptMock).toHaveBeenCalledTimes(1)
+    expect(sendReceiptMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        transactionId: TX_ID,
+        userId: '507f191e810c19729de860ea',
+        productId: '507f191e810c19729de860eb',
+        providerTransactionId: ORDER_ID,
+        amount: 4900,
+        currency: 'ILS',
+      }),
+    )
   })
 
   it('on CHECKOUT.ORDER.APPROVED for an already-captured order: still marks succeeded, omits captureId update', async () => {

@@ -25,9 +25,10 @@
 import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getContentDb } from '@/infra/db/content-db'
+import { getContentDb, relationId } from '@/infra/db/content-db'
 import { logger } from '@/infra/utils/logger/logger'
 import { capturePayPalOrder, verifyPayPalWebhook } from '@/lib/payment/paypal'
+import { sendPurchaseReceipt } from '@/server/email/services/purchase-receipt-service'
 
 interface PayPalWebhookResource {
   id: string
@@ -122,6 +123,63 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Triggers the purchase-receipt email after a webhook flips a transaction to
+ * `succeeded`. The service is internally idempotent (via `transactions.emailSentAt`),
+ * so calling it from both event handlers is safe — only the first call that
+ * finds the row in the right state actually sends.
+ */
+async function maybeSendReceipt(transaction: {
+  _id: unknown
+  user?: unknown
+  product?: unknown
+  providerTransactionId?: string
+  amount?: number
+  currency?: string
+  metadata?: { appliedCoupon?: unknown } | null
+}): Promise<void> {
+  const transactionId = String(transaction._id)
+  const userId = relationId(transaction.user)
+  const productId = relationId(transaction.product)
+  const providerTransactionId = transaction.providerTransactionId
+
+  if (!userId || !productId || !providerTransactionId) {
+    logger.warn(
+      { transactionId, hasUser: !!userId, hasProduct: !!productId },
+      'PayPal webhook: cannot send receipt — transaction missing user/product/providerTransactionId',
+    )
+    return
+  }
+
+  const appliedCoupon =
+    (transaction.metadata?.appliedCoupon as
+      | {
+          code: string
+          discountType: string
+          discountValue: number
+          originalAmount?: number
+          discountedAmount?: number
+        }
+      | undefined) ?? null
+
+  const result = await sendPurchaseReceipt({
+    transactionId,
+    userId,
+    productId,
+    providerTransactionId,
+    amount: Number(transaction.amount ?? 0),
+    currency: String(transaction.currency ?? 'ILS'),
+    appliedCoupon,
+  })
+
+  if (result.sent) {
+    logger.info({ transactionId }, 'Purchase receipt sent')
+  } else if (result.reason === 'error' || result.reason === 'missing_data') {
+    // already_sent and no_adapter are routine — only log the surprising cases.
+    logger.warn({ transactionId, reason: result.reason }, 'Purchase receipt not sent')
+  }
+}
+
 async function handleEvent(event: PayPalWebhookEvent): Promise<void> {
   switch (event.event_type) {
     case 'CHECKOUT.ORDER.APPROVED':
@@ -179,6 +237,8 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
       },
     },
   )
+
+  await maybeSendReceipt(transaction)
 }
 
 async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> {
@@ -222,4 +282,6 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
       },
     },
   )
+
+  await maybeSendReceipt(transaction)
 }

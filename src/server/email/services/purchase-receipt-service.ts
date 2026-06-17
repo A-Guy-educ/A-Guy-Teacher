@@ -1,20 +1,31 @@
 /**
  * Purchase Receipt Email Service
  *
- * Sends a templated purchase receipt email to the user after successful payment.
- * Implements a no-op fallback when no email adapter is configured so dev/test
- * environments do not fail — the payment and entitlement grant must never roll
- * back due to email failure.
+ * Sends a templated purchase receipt email to the user after a successful
+ * payment. Web-direct against the Resend SDK — does not depend on the Payload
+ * runtime (which was removed from this repo). Templates are pure functions
+ * shared with the (defunct) Payload-side service.
  *
- * Idempotency: if emailSentAt is already set on the transaction, skips sending.
+ * Behavior:
+ *  - Idempotent via `transactions.emailSentAt`: subsequent calls for the same
+ *    transaction skip the send.
+ *  - No-op when `RESEND_API_KEY` is missing — logs a warn and returns
+ *    `{ sent: false, reason: 'no_adapter' }` so the calling webhook can still
+ *    return 200 in dev / preview environments.
+ *  - Never throws on send failure — returns `{ sent: false, reason: 'error' }`
+ *    and logs. The caller's responsibility is to mark the transaction as
+ *    "tried" if it cares, but we deliberately do NOT set `emailSentAt` on a
+ *    failed send so a retry can pick it up.
  *
  * @fileType service
  * @domain email
- * @pattern purchase-receipt
- * @ai-summary Sends purchase receipt emails after successful payment webhooks
  */
 
-import type { Payload } from '@/infra/types/backend'
+import { ObjectId } from 'mongodb'
+import { Resend } from 'resend'
+
+import { getContentDb } from '@/infra/db/content-db'
+import { logger } from '@/infra/utils/logger/logger'
 
 import {
   buildPurchaseReceiptEmailEN,
@@ -23,6 +34,9 @@ import {
 } from '../templates/purchase-receipt'
 
 const PURCHASES_URL = '/account/purchases'
+const DEFAULT_FROM = 'support@aguy.co.il'
+const SUPPORTED_LOCALES = ['en', 'he'] as const
+type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 export interface SendPurchaseReceiptOptions {
   transactionId: string
@@ -31,7 +45,8 @@ export interface SendPurchaseReceiptOptions {
   providerTransactionId: string
   amount: number
   currency: string
-  userLocale?: string
+  /** Defaults to the user's stored locale, or 'he' if missing. */
+  userLocale?: SupportedLocale
   appliedCoupon?: {
     code: string
     discountType: string
@@ -41,40 +56,45 @@ export interface SendPurchaseReceiptOptions {
   } | null
 }
 
-/**
- * Renders an email template to an HTML string.
- */
-function renderEmailTemplate(locale: string, data: PurchaseReceiptData): string {
-  if (locale === 'he') {
-    return buildPurchaseReceiptEmailHE(data)
-  }
-  return buildPurchaseReceiptEmailEN(data)
+export type SendPurchaseReceiptResult =
+  | { sent: true }
+  | { sent: false; reason: 'already_sent' | 'no_adapter' | 'missing_data' | 'error' }
+
+let _resendClient: Resend | null = null
+function getResendClient(): Resend | null {
+  if (_resendClient) return _resendClient
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) return null
+  _resendClient = new Resend(apiKey)
+  return _resendClient
 }
 
-/**
- * Formats a coupon discount value for display in the email.
- */
+/** Reset the cached Resend client (testing only). */
+export function _resetResendClient(): void {
+  _resendClient = null
+}
+
+function renderEmailTemplate(locale: SupportedLocale, data: PurchaseReceiptData): string {
+  return locale === 'he' ? buildPurchaseReceiptEmailHE(data) : buildPurchaseReceiptEmailEN(data)
+}
+
+function pickLocale(rawLocale: unknown): SupportedLocale {
+  return rawLocale === 'en' ? 'en' : 'he'
+}
+
 function formatCouponDiscount(discountType: string, discountValue: number): string {
-  if (discountType === 'percentage') {
-    return `${discountValue}%`
-  }
-  if (discountType === 'fixed') {
-    return `$${(discountValue / 100).toFixed(2)}`
-  }
-  return `${discountValue}`
+  if (discountType === 'percentage') return `${discountValue}%`
+  if (discountType === 'fixed') return `$${(discountValue / 100).toFixed(2)}`
+  return String(discountValue)
 }
 
-/**
- * Sends a purchase receipt email for a successful transaction.
- *
- * @param payload - Payload CMS instance (provides logger and Local API)
- * @param options - Transaction and user details needed to render the receipt
- * @returns true if email was (or already was) sent; false on error (caller must NOT throw)
- */
+function asObjectIdOrString(value: string): ObjectId | string {
+  return ObjectId.isValid(value) ? new ObjectId(value) : value
+}
+
 export async function sendPurchaseReceipt(
-  payload: Payload,
   options: SendPurchaseReceiptOptions,
-): Promise<boolean> {
+): Promise<SendPurchaseReceiptResult> {
   const {
     transactionId,
     userId,
@@ -82,46 +102,49 @@ export async function sendPurchaseReceipt(
     providerTransactionId,
     amount,
     currency,
-    userLocale = 'he',
+    userLocale,
     appliedCoupon,
   } = options
 
-  // ── 1. Idempotency: skip if email already sent ─────────────────────────────
-  const existing = await payload.findByID({
-    collection: 'transactions',
-    id: transactionId,
-    depth: 0,
-    overrideAccess: true,
-  })
+  const db = await getContentDb()
+  const transactionsCol = db.collection('transactions')
 
-  if ((existing as { emailSentAt?: string | null }).emailSentAt) {
-    payload.logger.info({ transactionId }, 'Purchase receipt email already sent — skipping')
-    return true
+  // 1) Idempotency — skip if we already sent a receipt for this transaction.
+  const existing = await transactionsCol.findOne(
+    { _id: new ObjectId(transactionId) },
+    { projection: { emailSentAt: 1 } },
+  )
+  if (existing?.emailSentAt) {
+    return { sent: false, reason: 'already_sent' }
   }
 
-  // ── 2. Fetch user and product data ─────────────────────────────────────────
-  let userEmail: string
-  let productName: string
+  // 2) Resolve user email + product name. Don't catch — let DB outages bubble
+  //    so the caller can decide (we return error below if the fetch returns
+  //    nothing meaningful).
+  const [userDoc, productDoc] = await Promise.all([
+    db
+      .collection('users')
+      .findOne({ _id: asObjectIdOrString(userId) }, { projection: { email: 1, locale: 1 } }),
+    db
+      .collection('products')
+      .findOne({ _id: asObjectIdOrString(productId) }, { projection: { name: 1, title: 1 } }),
+  ])
 
-  try {
-    const [userResult, productResult] = await Promise.all([
-      payload.findByID({ collection: 'users', id: userId, depth: 0, overrideAccess: true }),
-      payload.findByID({ collection: 'products', id: productId, depth: 0, overrideAccess: true }),
-    ])
+  const userEmail = (userDoc as { email?: string } | null)?.email
+  const productName =
+    (productDoc as { name?: string; title?: string } | null)?.name ??
+    (productDoc as { name?: string; title?: string } | null)?.title
 
-    userEmail = (userResult as { email: string }).email
-    productName = (productResult as { name: string }).name
-  } catch (err) {
-    // If we can't fetch user/product data, log and return false without throwing
-    payload.logger.error(
-      { error: err, transactionId, userId, productId },
-      'Purchase receipt email: failed to fetch user or product data',
+  if (!userEmail || !productName) {
+    logger.warn(
+      { transactionId, userId, productId, hasUser: !!userDoc, hasProduct: !!productDoc },
+      'Purchase receipt: missing user email or product name — skipping send',
     )
-    return false
+    return { sent: false, reason: 'missing_data' }
   }
 
-  // ── 3. Build template data ─────────────────────────────────────────────────
-  const paymentDate = new Date().toLocaleDateString(userLocale === 'he' ? 'he-IL' : 'en-US', {
+  const locale = userLocale ?? pickLocale((userDoc as { locale?: string } | null)?.locale)
+  const paymentDate = new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -146,52 +169,64 @@ export async function sendPurchaseReceipt(
       : {}),
   }
 
-  const html = renderEmailTemplate(userLocale, templateData)
+  const html = renderEmailTemplate(locale, templateData)
+  const subject =
+    locale === 'he' ? `קבלה על רכישת ${productName}` : `Your receipt for ${productName}`
 
-  // ── 4. Send email (no-op fallback if adapter not configured) ──────────────
-  // payload.email is only populated when an email adapter (e.g. Resend, SendGrid)
-  // is configured in payload.config.ts. In dev/test environments without an
-  // adapter, we log a warning and return false — this must NOT throw so the
-  // webhook can still return 200.
-  if (!payload.email) {
-    payload.logger.warn(
+  // 3) Send. If no API key configured, no-op cleanly so dev / preview don't break.
+  const resend = getResendClient()
+  if (!resend) {
+    logger.warn(
       { transactionId, userEmail, productName },
-      'Purchase receipt email: no email adapter configured — skipping send (no-op fallback). Configure an email adapter in payload.config.ts to enable sending.',
+      'Purchase receipt: RESEND_API_KEY not set — skipping send (no-op fallback)',
     )
-    return false
+    return { sent: false, reason: 'no_adapter' }
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (payload.email as any).send({
+    const result = await resend.emails.send({
+      from: DEFAULT_FROM,
       to: userEmail,
-      subject:
-        userLocale === 'he'
-          ? `אישור רכישה — ${productName}`
-          : `Purchase Confirmed — ${productName}`,
+      subject,
       html,
     })
 
-    // Record successful send on the transaction
-    await payload.update({
-      collection: 'transactions',
-      id: transactionId,
-      data: { emailSentAt: new Date().toISOString() },
-      overrideAccess: true,
-    })
-
-    payload.logger.info(
-      { transactionId, userEmail, productName },
-      'Purchase receipt email sent successfully',
-    )
-    return true
+    // Resend SDK returns `{ data, error }` — surface either, but never throw.
+    if (result.error) {
+      logger.error(
+        { transactionId, userEmail, error: result.error },
+        'Purchase receipt: Resend rejected the send',
+      )
+      return { sent: false, reason: 'error' }
+    }
   } catch (err) {
-    // Log the error with full context but do NOT throw — email failure must not
-    // fail the webhook (200 still returned, payment + entitlements already granted).
-    payload.logger.error(
-      { error: err, transactionId, userEmail, productName },
-      'Purchase receipt email send failed — email error logged, webhook will not fail',
+    logger.error(
+      {
+        transactionId,
+        userEmail,
+        err: err instanceof Error ? { message: err.message, stack: err.stack } : err,
+      },
+      'Purchase receipt: Resend SDK threw',
     )
-    return false
+    return { sent: false, reason: 'error' }
   }
+
+  // 4) Mark the transaction so retries don't re-send. Failures here are
+  //    non-fatal — the email did go out — but log them.
+  try {
+    await transactionsCol.updateOne(
+      { _id: new ObjectId(transactionId) },
+      { $set: { emailSentAt: new Date(), updatedAt: new Date() } },
+    )
+  } catch (err) {
+    logger.error(
+      {
+        transactionId,
+        err: err instanceof Error ? { message: err.message, stack: err.stack } : err,
+      },
+      'Purchase receipt: failed to set emailSentAt — receipt was sent, retry may double-send',
+    )
+  }
+
+  return { sent: true }
 }
