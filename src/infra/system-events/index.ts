@@ -1,5 +1,6 @@
 /**
- * System Events - Public API
+ * @fileType library
+ * @ai-summary Client-side pub/sub event bus for analytics and engagement tracking. Entry point is `systemEventBus` — never emit events in SSR code (bus is a no-op server-side). All payloads are validated against Zod schemas at emit time; invalid payloads throw in dev and warn in prod.
  *
  * Client-side pub/sub event bus with schema validation.
  *

@@ -1,0 +1,23 @@
+{
+  "taskId": "115",
+  "taskType": "issue",
+  "target": "115",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added @ai-summary headers to all 8 files in src/infra/system-events/ and updated the folder-level header on index.ts with the entry point and SSR trap.",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/system-events/index.ts",
+    "src/infra/system-events/types.ts",
+    "src/infra/system-events/events.ts",
+    "src/infra/system-events/bus.ts",
+    "src/infra/system-events/hooks.ts",
+    "src/infra/system-events/schemas.ts",
+    "src/infra/system-events/exercise-schemas.ts",
+    "src/infra/system-events/study-plan-schemas.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27312345609-1-1.jsonl",
+  "startedAt": "2026-06-10T23:15:00Z",
+  "finishedAt": "2026-06-10T23:17:00Z"
+}

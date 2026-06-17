@@ -1,5 +1,6 @@
 /**
- * System Events - Event Constants
+ * @fileType constants
+ * @ai-summary All event names use the `system.` namespace prefix — do not emit plain strings, always use `SYSTEM_EVENTS.<NAME>` constants or the bus will not route the event.
  *
  * Centralized event name constants with system namespace prefix.
  */

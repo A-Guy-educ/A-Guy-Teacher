@@ -1,5 +1,6 @@
 /**
- * System Events - Exercise Help System Schemas
+ * @fileType schemas
+ * @ai-summary Zod schemas for exercise help system events. All use `.strict()` — unknown fields cause validation failure. These schemas share `exerciseBase` but exercise events must still be emitted separately from lesson events; conflating them produces incorrect analytics.
  *
  * Zod schemas for the 9 exercise-related system events.
  * All schemas use .strict() to reject unknown properties.

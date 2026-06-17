@@ -1,5 +1,6 @@
 /**
- * Study Plan Event Schemas
+ * @fileType schemas
+ * @ai-summary Zod schemas for study plan lifecycle events. `StudyPlanGenerated` requires `exam_date` as an ISO string — passing a Date object directly will fail validation.
  *
  * Zod schemas for study plan system events.
  */
