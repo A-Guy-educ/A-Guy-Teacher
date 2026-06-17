@@ -10,6 +10,8 @@
  * Values:
  * - admin: Platform administrator with full access
  * - student: Learner with standard access (default role)
+ *
+ * @ai-summary User permission levels — `parseAccountRole` throws on invalid values; if a bad role string is persisted to the DB, every auth check that calls it will crash rather than falling back to a default.
  */
 
 export enum AccountRole {

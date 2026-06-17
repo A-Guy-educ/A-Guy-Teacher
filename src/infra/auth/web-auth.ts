@@ -1,3 +1,12 @@
+/**
+ * Web Authentication — password login, Google OAuth, and session management
+ *
+ * @fileType utility
+ * @domain auth
+ * @pattern oauth
+ * @ai-summary Password + Google OAuth auth entry point — `linkGoogleUser` attaches Google credentials to an existing email/password account without touching the password, so users retain email login after linking. Session tokens are JWTs signed with a derived key; short-lived (7 days) with server-side session records for revocation.
+ */
+
 import { createHash, pbkdf2, randomBytes, randomUUID, timingSafeEqual } from 'crypto'
 import { promisify } from 'util'
 
