@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #173: docs-drift: Exercises (#163) ([#175](https://github.com/A-Guy-educ/A-Guy-Web/pull/175)) — @kodyade[bot]
 - #219: Doc coverage: src/infra/loading/ — Loading state management (spin… ([#220](https://github.com/A-Guy-educ/A-Guy-Web/pull/220)) — @kodyade[bot]
 - #230: Doc coverage: src/infra/loading/ — Loading state management (8 fi… ([#233](https://github.com/A-Guy-educ/A-Guy-Web/pull/233)) — @kodyade[bot]
 - #239: Doc coverage: src/infra/types/ — centralized type exports (7 file… ([#240](https://github.com/A-Guy-educ/A-Guy-Web/pull/240)) — @kodyade[bot]
