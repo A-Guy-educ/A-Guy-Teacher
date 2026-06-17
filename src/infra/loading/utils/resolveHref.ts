@@ -1,3 +1,12 @@
+/**
+ * Next.js href normalization utilities
+ *
+ * @fileType utility
+ * @domain ui
+ * @pattern href-resolution
+ * @ai-summary Normalizes Next.js href to string for comparison; hash is stripped so same-page anchors never trigger route loading
+ */
+
 import type { UrlObject } from 'url'
 
 /**
