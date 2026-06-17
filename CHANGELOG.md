@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- docs: add task metadata handoff for inbox processing ([#38](https://github.com/A-Guy-educ/A-Guy-Web/pull/38)) — @kodyade[bot]
 - #82: [LLM] `generateChatCompletionWithTools` always returns `toolCalls:… ([#88](https://github.com/A-Guy-educ/A-Guy-Web/pull/88)) — @kodyade[bot]
 - #115: Doc coverage: src/infra/system-events/ — client-side pub/sub even… ([#116](https://github.com/A-Guy-educ/A-Guy-Web/pull/116)) — @kodyade[bot]
 - #138: Doc coverage: src/infra/auth/ — OAuth/role-based auth infrastruct… ([#140](https://github.com/A-Guy-educ/A-Guy-Web/pull/140)) — @kodyade[bot]
