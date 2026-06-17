@@ -132,15 +132,18 @@ export async function POST(request: NextRequest) {
  * so calling it from both event handlers is safe — only the first call that
  * finds the row in the right state actually sends.
  */
-async function maybeSendReceipt(transaction: {
-  _id: unknown
-  user?: unknown
-  product?: unknown
-  providerTransactionId?: string
-  amount?: number
-  currency?: string
-  metadata?: { appliedCoupon?: unknown } | null
-}): Promise<void> {
+async function maybeSendReceipt(
+  transaction: {
+    _id: unknown
+    user?: unknown
+    product?: unknown
+    providerTransactionId?: string
+    amount?: number
+    currency?: string
+    metadata?: { appliedCoupon?: unknown } | null
+  },
+  capturedAt: Date,
+): Promise<void> {
   const transactionId = String(transaction._id)
   const userId = relationId(transaction.user)
   const productId = relationId(transaction.product)
@@ -172,6 +175,7 @@ async function maybeSendReceipt(transaction: {
     providerTransactionId,
     amount: Number(transaction.amount ?? 0),
     currency: String(transaction.currency ?? 'ILS'),
+    capturedAt,
     appliedCoupon,
   })
 
@@ -226,6 +230,7 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
   // ORDER_ALREADY_CAPTURED as a no-op, returns captureId: null in that case).
   const { captureId } = await capturePayPalOrder(orderId)
 
+  const capturedAt = new Date()
   await transactions.updateOne(
     { _id: new ObjectId(String(transaction._id)) },
     {
@@ -235,13 +240,13 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
         // replies on already-captured orders return null; PAYMENT.CAPTURE.COMPLETED
         // will fill it in on the follow-up event.
         ...(captureId ? { captureId } : {}),
-        capturedAt: new Date(),
-        updatedAt: new Date(),
+        capturedAt,
+        updatedAt: capturedAt,
       },
     },
   )
 
-  await maybeSendReceipt(transaction)
+  await maybeSendReceipt(transaction, capturedAt)
 }
 
 async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> {
@@ -274,17 +279,18 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
     return
   }
 
+  const capturedAt = new Date()
   await transactions.updateOne(
     { _id: new ObjectId(String(transaction._id)) },
     {
       $set: {
         status: 'succeeded',
         captureId,
-        capturedAt: new Date(),
-        updatedAt: new Date(),
+        capturedAt,
+        updatedAt: capturedAt,
       },
     },
   )
 
-  await maybeSendReceipt(transaction)
+  await maybeSendReceipt(transaction, capturedAt)
 }

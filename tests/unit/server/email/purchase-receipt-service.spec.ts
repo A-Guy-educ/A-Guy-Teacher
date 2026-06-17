@@ -173,6 +173,21 @@ describe('sendPurchaseReceipt', () => {
     })
   })
 
+  describe('capturedAt → payment date', () => {
+    it('uses the caller-supplied capturedAt as the rendered payment date, not new Date()', async () => {
+      // Pre-pandemic-ish, definitely not "today" — if the service is leaking
+      // new Date() into the payment-date field this assertion will fail.
+      const capturedAt = new Date('2025-08-15T10:00:00Z')
+
+      // Force English locale via the userLocale override so the rendered date
+      // string is predictable regardless of the user doc's locale.
+      await sendPurchaseReceipt(buildOptions({ userLocale: 'en', capturedAt }))
+
+      const html = sendMock.mock.calls[0]?.[0].html as string
+      expect(html).toMatch(/August 15, 2025/)
+    })
+  })
+
   describe('happy path', () => {
     it('sends with right from/to/subject and passes idempotencyKey = transactionId', async () => {
       const result = await sendPurchaseReceipt(buildOptions())
@@ -192,6 +207,24 @@ describe('sendPurchaseReceipt', () => {
 
       // No extra updateOne after success — the claim itself stamped emailSentAt.
       expect(updateOneMock).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('DB throw between claim and send', () => {
+    // Without rollback on this path the claim would stay set, the webhook's
+    // outer try/catch would return 500, PayPal would retry, and the retry's
+    // status === 'succeeded' early-return would skip the receipt forever.
+    // Symmetric with the Resend rollback below.
+    it('rolls back the claim and re-throws when the user/product findOne rejects', async () => {
+      const dbErr = new Error('mongo: primary unreachable')
+      findOneMock.mockRejectedValueOnce(dbErr)
+
+      await expect(sendPurchaseReceipt(buildOptions())).rejects.toBe(dbErr)
+
+      expect(sendMock).not.toHaveBeenCalled()
+      expect(updateOneMock).toHaveBeenCalledTimes(1)
+      const [, update] = updateOneMock.mock.calls[0] ?? []
+      expect((update as Record<string, unknown>).$unset).toEqual({ emailSentAt: '' })
     })
   })
 
@@ -260,6 +293,26 @@ describe('sendPurchaseReceipt', () => {
 
       const html = sendMock.mock.calls[0]?.[0].html as string
       expect(html).toContain('GBP5.00')
+    })
+
+    it('renders nothing instead of "₪NaN" when a corrupted coupon has a non-numeric discountValue', async () => {
+      // Defense against DB corruption / manual edits / schema drift — without
+      // the Number.isFinite guard, fixed/(discountValue/100).toFixed(2) would
+      // emit "₪NaN" in the buyer's receipt.
+      await sendPurchaseReceipt(
+        buildOptions({
+          appliedCoupon: {
+            code: 'BAD_COUPON',
+            discountType: 'fixed',
+            discountValue: Number.NaN,
+            originalAmount: 5000,
+          },
+        }),
+      )
+
+      const html = sendMock.mock.calls[0]?.[0].html as string
+      expect(html).not.toContain('NaN')
+      expect(html).not.toContain('₪NaN')
     })
 
     it('still works for percentage-discount coupons (no currency involved)', async () => {

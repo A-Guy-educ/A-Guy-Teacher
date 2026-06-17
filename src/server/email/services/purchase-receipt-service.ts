@@ -12,7 +12,8 @@
  *    Defends against PayPal delivering `CHECKOUT.ORDER.APPROVED` and
  *    `PAYMENT.CAPTURE.COMPLETED` simultaneously, or two retries landing on
  *    separate Vercel function instances.
- *  - On Resend failure the timestamp is rolled back with `$unset` so a later
+ *  - On Resend failure — OR on a thrown user / product DB lookup after the
+ *    claim is staked — the timestamp is rolled back with `$unset` so a later
  *    retry can re-claim and try again.
  *  - Resend's own `idempotencyKey` (set to `transactionId`) is the third line
  *    of defense — if a rare race still lets two sends through, Resend dedupes
@@ -61,6 +62,12 @@ export interface SendPurchaseReceiptOptions {
   currency: string
   /** Defaults to the user's stored locale, or 'he' if missing. */
   userLocale?: SupportedLocale
+  /**
+   * Timestamp the payment was actually captured. Used as the receipt's
+   * payment-date so a delayed webhook delivery doesn't show "today" instead
+   * of the real purchase time. Falls back to `new Date()` if not provided.
+   */
+  capturedAt?: Date
   appliedCoupon?: {
     code: string
     discountType: string
@@ -101,6 +108,9 @@ function formatCouponDiscount(
   discountValue: number,
   currency: string,
 ): string {
+  // Guard against bad DB data (manual edits, schema drift, NaN/Infinity).
+  // Without this a corrupted coupon would render `₪NaN` in the email body.
+  if (!Number.isFinite(discountValue)) return ''
   if (discountType === 'percentage') return `${discountValue}%`
   if (discountType === 'fixed') {
     return `${symbolFor(currency)}${(discountValue / 100).toFixed(2)}`
@@ -119,6 +129,7 @@ export async function sendPurchaseReceipt(
     amount,
     currency,
     userLocale,
+    capturedAt,
     appliedCoupon,
   } = options
 
@@ -149,24 +160,43 @@ export async function sendPurchaseReceipt(
     return { sent: false, reason: 'already_sent' }
   }
 
-  // 3) Resolve recipient + product details. If we can't, roll the claim back
-  //    so a future retry (e.g. after a data backfill) can try again.
-  const [userDoc, productDoc] = await Promise.all([
-    db.collection('users').findOne(
+  // 3) Resolve recipient + product details. The whole block runs under a try
+  //    so a thrown findOne (DB blip, primary failover) rolls the claim back
+  //    before re-throwing — otherwise emailSentAt would stay set forever and
+  //    a future re-attempt (manual or via a follow-up event) would see the
+  //    claim and skip the send. Symmetric with the Resend rollback below.
+  let userDoc: Document | null
+  let productDoc: Document | null
+  try {
+    ;[userDoc, productDoc] = await Promise.all([
+      db.collection('users').findOne(
+        {
+          _id: ObjectId.isValid(userId) ? new ObjectId(userId) : (userId as unknown as ObjectId),
+        },
+        { projection: { email: 1, locale: 1 } },
+      ),
+      db.collection('products').findOne(
+        {
+          _id: ObjectId.isValid(productId)
+            ? new ObjectId(productId)
+            : (productId as unknown as ObjectId),
+        },
+        { projection: { name: 1, title: 1 } },
+      ),
+    ])
+  } catch (err) {
+    await rollbackClaim(transactionsCol, txObjectId)
+    logger.error(
       {
-        _id: ObjectId.isValid(userId) ? new ObjectId(userId) : (userId as unknown as ObjectId),
+        transactionId,
+        userId,
+        productId,
+        err: err instanceof Error ? { message: err.message, stack: err.stack } : err,
       },
-      { projection: { email: 1, locale: 1 } },
-    ),
-    db.collection('products').findOne(
-      {
-        _id: ObjectId.isValid(productId)
-          ? new ObjectId(productId)
-          : (productId as unknown as ObjectId),
-      },
-      { projection: { name: 1, title: 1 } },
-    ),
-  ])
+      'Purchase receipt: failed to fetch user/product after claim — rolled back claim, propagating error',
+    )
+    throw err
+  }
 
   const userEmail = (userDoc as { email?: string } | null)?.email
   const productName =
@@ -184,11 +214,17 @@ export async function sendPurchaseReceipt(
 
   // 4) Render + send.
   const locale = userLocale ?? pickLocale((userDoc as { locale?: string } | null)?.locale)
-  const paymentDate = new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  // Use the actual capture timestamp when the caller provided one — that way a
+  // webhook delayed by minutes / replayed manually still shows the real
+  // purchase date instead of "today".
+  const paymentDate = (capturedAt ?? new Date()).toLocaleDateString(
+    locale === 'he' ? 'he-IL' : 'en-US',
+    {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    },
+  )
 
   const templateData: PurchaseReceiptData = {
     productName,

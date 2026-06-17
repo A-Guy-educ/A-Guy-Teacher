@@ -168,7 +168,7 @@ describe('POST /api/webhooks/paypal', () => {
 
     // Receipt service is triggered after the status flip. The service is
     // mocked so we don't actually email anyone — just that the wiring is
-    // in place and that user/product/amount/currency are forwarded.
+    // in place and that user/product/amount/currency/capturedAt are forwarded.
     expect(sendReceiptMock).toHaveBeenCalledTimes(1)
     expect(sendReceiptMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -178,6 +178,10 @@ describe('POST /api/webhooks/paypal', () => {
         providerTransactionId: ORDER_ID,
         amount: 4900,
         currency: 'ILS',
+        // capturedAt is the same Date we just stamped on the row — used as
+        // the receipt's payment-date so a webhook delayed by a few minutes
+        // doesn't show "today" instead of the real purchase time.
+        capturedAt: update.capturedAt,
       }),
     )
   })
