@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #239: Doc coverage: src/infra/types/ — centralized type exports (7 file… ([#240](https://github.com/A-Guy-educ/A-Guy-Web/pull/240)) — @kodyade[bot]
 - #47: Doc gap: src/client/hooks — 0/8 modules with @ai-summary, no centr… ([#48](https://github.com/A-Guy-educ/A-Guy-Web/pull/48)) — @kodyade[bot]
 - #172: Doc coverage: src/client/hooks/ — Client-side React hooks ([#242](https://github.com/A-Guy-educ/A-Guy-Web/pull/242)) — @kodyade[bot]
 - chore: release v0.26.0 ([#284](https://github.com/A-Guy-educ/A-Guy-Web/pull/284)) — @aguyaharonyair
