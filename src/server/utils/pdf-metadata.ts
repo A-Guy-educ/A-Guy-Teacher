@@ -1,6 +1,11 @@
 /**
  * PDF metadata extraction utilities using pdf-lib
  * Serverless-compatible - no worker threads, no external dependencies
+ *
+ * @fileType utility
+ * @domain pdf
+ * @pattern metadata-extraction
+ * @ai-summary Opens encrypted PDFs with `ignoreEncryption: true` — if a PDF was encrypted before metadata was set, the extracted title/author may be empty or reflect pre-encryption values; callers needing encrypted-doc accuracy must detect this from an empty return.
  */
 
 import { PDFDocument } from 'pdf-lib'
