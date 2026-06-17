@@ -1,11 +1,16 @@
-Review pass on PR #282 — all concerns are environmental or explicitly acceptable.
+CI typecheck failure on PR #282 — fixed and verified.
 
-No code changes were needed. All four code findings in the review were explicitly acknowledged as acceptable/working-as-designed by the reviewer:
-- `formatCouponDiscount` unknown-type fallback (`return String(discountValue)`) — acceptable per PR scope
-- `providerTransactionId` passed as `transactionId` to template — intentional (PayPal order ID as user-facing reference)
-- No startup validation of `RESEND_API_KEY` — working-as-designed (warn log per delivery)
-- `capturedAt` defaults to `new Date()` — acceptable; PayPal webhook always passes it
+Root cause: TS2769 at lines 127 and 130 of purchase-receipt-service.ts. The ternary
+`ObjectId.isValid(userId) ? new ObjectId(userId) : (userId as unknown as ObjectId)`
+produces type `string | ObjectId` (TypeScript can't narrow through a ternary whose
+branches aren't directly ObjectId literals). MongoDB's `Filter<Document>` expects
+`Condition<ObjectId>` for `_id`, which doesn't accept `string | ObjectId`.
 
-The three "gaps" (preview unreachable, email rendering unverifiable without live send, e2e flow needs PayPal sandbox) are environmental limitations, not code defects.
+Fix: wrap each ternary in parentheses and add `as ObjectId`:
+  _id: (ObjectId.isValid(userId) ? new ObjectId(userId) : userId) as ObjectId
 
-Only action this round: ran `pnpm install` to install `resend` package whose lockfile entry was added in the PR but not yet materialized in node_modules. TypeScript error TS2307 ("Cannot find module 'resend'") resolved after install.
+Same pattern applied for both userId (line 174) and productId (line 182).
+
+Also ran `pnpm install` to materialize the `resend` v6.12.4 lockfile entry.
+
+Verify: `pnpm typecheck` now passes cleanly.

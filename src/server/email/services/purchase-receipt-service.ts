@@ -171,15 +171,13 @@ export async function sendPurchaseReceipt(
     ;[userDoc, productDoc] = await Promise.all([
       db.collection('users').findOne(
         {
-          _id: ObjectId.isValid(userId) ? new ObjectId(userId) : (userId as unknown as ObjectId),
+          _id: (ObjectId.isValid(userId) ? new ObjectId(userId) : userId) as ObjectId,
         },
         { projection: { email: 1, locale: 1 } },
       ),
       db.collection('products').findOne(
         {
-          _id: ObjectId.isValid(productId)
-            ? new ObjectId(productId)
-            : (productId as unknown as ObjectId),
+          _id: (ObjectId.isValid(productId) ? new ObjectId(productId) : productId) as ObjectId,
         },
         { projection: { name: 1, title: 1 } },
       ),
