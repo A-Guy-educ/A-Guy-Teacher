@@ -442,10 +442,35 @@ export async function createGenkitUnifiedAdapter(
                     }
                   : undefined
 
+              // Extract tool calls from Genkit response messages.
+              // Genkit stores tool requests in result.messages as content parts with toolRequest.
+              const toolCalls: Array<{ name: string; args: Record<string, unknown> }> = []
+              const responseMessages = result.messages as
+                | Array<{ role: string; content: Array<Record<string, unknown>> }>
+                | undefined
+              if (responseMessages) {
+                for (const message of responseMessages) {
+                  if (message.content && Array.isArray(message.content)) {
+                    for (const part of message.content) {
+                      if (part && typeof part === 'object' && 'toolRequest' in part) {
+                        const toolRequest = part.toolRequest as {
+                          name: string
+                          input: Record<string, unknown>
+                        }
+                        toolCalls.push({
+                          name: toolRequest.name,
+                          args: toolRequest.input ?? {},
+                        })
+                      }
+                    }
+                  }
+                }
+              }
+
               return {
                 text: result.text,
                 raw: result,
-                toolCalls: [],
+                toolCalls,
                 usage,
               }
             } catch (error) {

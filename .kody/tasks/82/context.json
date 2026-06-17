@@ -1,0 +1,17 @@
+{
+  "taskId": "82",
+  "taskType": "issue",
+  "target": "82-llm-generatechatcompletionwithtools-always-returns",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Fixed hardcoded toolCalls:[] by extracting tool calls from Genkit result.messages, added tests, all quality gates pass",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/llm/genkit/adapters/unified-adapter.ts",
+    "tests/int/llm/genkit-adapter-messages.int.spec.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27301954172-1-1.jsonl",
+  "startedAt": "2026-06-10T19:00:00Z",
+  "finishedAt": "2026-06-10T20:00:00Z"
+}
