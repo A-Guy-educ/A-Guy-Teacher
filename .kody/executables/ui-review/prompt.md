@@ -14,7 +14,9 @@ Base: {{pr.baseRefName}} ← Head: {{pr.headRefName}}
 
 `{{previewUrl}}` (resolved from: {{previewUrlSource}})
 
-Before you do anything else, navigate to the preview with Playwright MCP:
+Before browsing, read the diff enough to decide whether this PR has a UI surface. If the diff is docs-only, comments-only, backend-only, config-only, or tests-only and has no linked user-visible finding to verify, do a diff-only UI review and do not navigate the preview. In that case, preview reachability and missing QA credentials are not blockers; mention them only as irrelevant gaps if useful.
+
+If the PR changes UI or claims to fix/implement user-visible behavior, navigate preview with Playwright MCP:
 
 ```
 mcp__playwright__browser_navigate({ url: "{{previewUrl}}" })
@@ -22,7 +24,7 @@ mcp__playwright__browser_navigate({ url: "{{previewUrl}}" })
 
 Playwright is the real browser the rest of this review uses, so it's the authoritative reachability check — a page can return a fast HTTP status and still be broken, or load slowly and still be fine. Only the browser knows.
 
-If `browser_navigate` errors out (timeout, DNS, connection refused, navigation aborted), the preview is unreachable. In that case, SKIP further browsing, note the failure in your review under "Browsing", and base your verdict on the diff alone. If the page navigates and renders (even to an error/login page), the preview is reachable — proceed with the steps below.
+If `browser_navigate` errors out (timeout, DNS, connection refused, navigation aborted), preview is unreachable. For UI-affecting PRs, SKIP further browsing, note failure in review under "Browsing", and use `CONCERNS` because the changed UI could not be verified. For PRs with no UI surface, do not downgrade the verdict just because preview is unreachable. If the page navigates and renders (even to an error/login page), the preview is reachable — proceed with the steps below.
 
 # QA context (auto-discovered from the repo)
 
@@ -62,7 +64,7 @@ This PR is meant to deliver the issue below — a **bug fix** or a **feature**. 
 
 # What to do
 
-1. **Identify UI-affecting changes.** Read the diff. Which pages / components / forms / styles did this PR change? Which user-visible behavior should be verified in the browser? If the diff has no UI surface (pure backend, pure config, pure tests), say so and produce a diff-only review — do not spin up Playwright for nothing.
+1. **Identify UI-affecting changes.** Read the diff. Which pages / components / forms / styles did this PR change? Which user-visible behavior should be verified in the browser? If the diff has no UI surface (pure docs, comments, backend, config, or tests), say so and produce a diff-only review — do not spin up Playwright for nothing.
 
 2. **Plan the browse session.** For each UI-affecting change, pick 1–3 routes from the QA context that exercise it. If the change requires an authenticated role, follow the Auth instruction above. If no credentials are available for a role the change depends on, note that as a gap and browse only public pages.
 
@@ -128,7 +130,8 @@ _UI review by kody — browsed {{previewUrl}}_
 - **Never write credentials anywhere.** The QA login is provided only so you can sign in — you MUST NOT put the password (or any token/secret) into the review, findings, steps, or any text posted to GitHub. PRs and issues are often public. When describing an authenticated step, write "log in as the QA account" — never quote the username or the password.
 - No commits. No `git` / `gh` invocations. No edits to files outside `.kody/ui-review/`.
 - Verdict **FAIL** for clear visual regressions, broken flows, or correctness/accessibility issues that block merge. **Also FAIL when the PR claims to fix a specific user-visible symptom (named in the PR body or linked issue) and that symptom is STILL present in the browser** — report against the user-visible outcome, not just whether the diff is technically correct. A fix whose code path is right but whose reported symptom still reproduces is a FAIL.
-- Verdict **CONCERNS** for clarity/polish/edge-case gaps that shouldn't block — **and whenever you could NOT confirm a UI-affecting change in the browser** (couldn't reach the page, couldn't log in, couldn't trigger the state). Do not upgrade an unverified change to PASS on the strength of reading the diff: a reviewer must not bless what it did not see. List every such gap explicitly.
+- Verdict **CONCERNS** for clarity/polish/edge-case gaps that shouldn't block — **and whenever you could NOT confirm a UI-affecting change in the browser** (couldn't reach the page, couldn't log in, couldn't trigger the state). Do not upgrade an unverified UI-affecting change to PASS on the strength of reading the diff: a reviewer must not bless what it did not see. List every relevant gap explicitly.
 - Verdict **PASS** only when you **confirmed in the browser** that the PR's changed behavior works as intended and nothing obvious is broken. PASS is a statement that you *saw it work*, not that the code looks correct.
-- If the preview URL is unreachable, the verdict is **CONCERNS** (not PASS) with the "Gaps" section calling out that nothing could be browser-verified; reserve FAIL for problems you can still prove from the diff alone.
+- If the preview URL is unreachable for a UI-affecting PR, the verdict is **CONCERNS** (not PASS) with "Gaps" section calling out that nothing could be browser-verified; reserve FAIL for problems you can still prove from the diff alone.
+- If the diff has no UI surface, a diff-only **PASS** is allowed when changed files satisfy the stated goal and no UI/code findings exist. Do not mark `CONCERNS` only because preview or credentials were unavailable.
 - Be specific: every finding gets a route + screenshot reference, or a file:line reference. No generic advice.

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { headers } from 'next/headers'
 
 import { cn } from '@/infra/utils/ui'
 import { GeistMono } from 'geist/font/mono'
@@ -52,6 +53,9 @@ async function getMessages(locale: string) {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getSystemLocale()
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') ?? ''
+  const hideChrome = pathname === '/' || pathname === '/start'
   const messages = await getMessages(locale)
   const dir = getDirection(locale)
 
@@ -90,12 +94,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </a>
                 <RouteLoadingIndicator />
                 <LayoutClient />
-                <Header />
-                <NavigationBar />
+                {!hideChrome && <Header />}
+                {!hideChrome && <NavigationBar />}
                 <div id="main-content" className="flex-1">
                   {children}
                 </div>
-                <Footer />
+                {!hideChrome && <Footer />}
                 <Toaster />
               </PasswordLoginProvider>
             </ActiveTimeProvider>

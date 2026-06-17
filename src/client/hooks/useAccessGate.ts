@@ -6,6 +6,15 @@
 
 'use client'
 
+/**
+ * @fileType hook
+ * @domain access-control
+ * @pattern access-gate
+ * @ai-summary Timed access gate for anonymous users on gated content — shows warning then locks after GATED_DELAY_MS. Timer pauses while the warning modal is visible (modal time is not counted).
+ *
+ * Gotcha: Timer start is persisted in localStorage keyed by courseSlug. On full-page OAuth reload, stale timers are cleared on mount — but SPA navigation between gated pages within the same session does NOT clear the timer unless the user logs in.
+ */
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useCurrentUser } from '@/client/hooks/useCurrentUser'

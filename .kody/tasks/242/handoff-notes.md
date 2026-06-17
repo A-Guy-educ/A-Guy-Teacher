@@ -1,0 +1,1 @@
+Resolved merge conflicts in 3 files under `src/client/hooks/`. All conflicts were asymmetric JSDoc metadata only — the actual hook implementations were identical on both sides. Took HEAD's metadata: `domain utility`/`analytics` (more semantically precise than dev's generic `frontend`), plus HEAD's more detailed `ai-summary` fields. Typecheck passes cleanly.

@@ -8,8 +8,9 @@
  * @pattern repository-wrappers
  * @ai-summary Thin wrapper around queryPublishedCourses repo — no business logic
  */
+import type { ContentLocale } from '@/infra/types/content'
 import { queryPublishedCourses } from '@/server/repos/queries/courses'
 
-export async function getPublishedCourseList() {
-  return queryPublishedCourses()
+export async function getPublishedCourseList(locale?: ContentLocale) {
+  return queryPublishedCourses(locale)
 }

@@ -22,6 +22,12 @@ describe('middleware CSP', () => {
     expect(response.headers.get('Content-Security-Policy')).toBe(contentSecurityPolicy)
   })
 
+  it('forwards the current pathname to server components', () => {
+    const response = middleware(createRequest('/start'))
+
+    expect(response.headers.get('x-middleware-request-x-pathname')).toBe('/start')
+  })
+
   it('does not emit frame ancestor restrictions', () => {
     const response = middleware(createRequest('/start'))
     const csp = response.headers.get('Content-Security-Policy')

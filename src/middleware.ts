@@ -66,7 +66,13 @@ function resolveCookieDomain(host: string): string | undefined {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
-  const response = NextResponse.next()
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', pathname)
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
 
   if (!pathname.startsWith('/api/pdfjs-viewer')) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicy)

@@ -6,8 +6,9 @@
  * Sends current lessonId for per-lesson time tracking.
  *
  * @fileType hook
- * @domain frontend
- * @ai-summary Heartbeat + streak tracker — sends to `/api/stats/heartbeat` only when the tab is visible; streak resets at midnight local time (not UTC).
+ * @domain analytics
+ * @pattern heartbeat
+ * @ai-summary Sends a heartbeat every 30 seconds while the tab is visible. Time spent in hidden tabs does NOT count — the streak can only advance when the user is actively looking at the page.
  */
 
 'use client'
