@@ -1,0 +1,22 @@
+{
+  "taskId": "239",
+  "taskType": "issue",
+  "target": "239",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added @ai-summary headers to all 7 files in src/infra/types/ plus folder-level header on index.ts",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/types/index.ts",
+    "src/infra/types/backend.ts",
+    "src/infra/types/content.ts",
+    "src/infra/types/exercise.ts",
+    "src/infra/types/environment.d.ts",
+    "src/infra/types/jsxgraph.d.ts",
+    "src/infra/types/markdown.d.ts"
+  ],
+  "sessionLog": ".kody/sessions/239.jsonl",
+  "startedAt": "2026-06-12T12:15:08Z",
+  "finishedAt": "2026-06-12T12:15:08Z"
+}
