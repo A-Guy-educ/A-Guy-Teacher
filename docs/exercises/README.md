@@ -45,6 +45,17 @@ The Exercises collection provides a minimal foundation for creating and managing
                  │
                  ▼
 ┌─────────────────────────────────────────────────────────┐
+│          Lesson Entry Page (LessonIntroPage)              │
+│  src/app/(frontend)/courses/.../LessonIntroPage/        │
+│                                                          │
+│  - Unified entry for all lesson types (#30, #67)        │
+│  - Displays lesson title, description, content counts   │
+│  - Routes to DualModeLessonView or ExerciseWorkspace    │
+│  - Deep-link support via ?exerciseId= search param      │
+└────────────────┬────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────┐
 │             Scroll View (BlocksDocumentLessonView)       │
 │  src/app/(frontend)/courses/.../BlocksDocumentLessonView│
 │                                                          │
@@ -117,6 +128,58 @@ Ensure you have:
 
 Follow the complete manual verification guide:
 - [📋 MANUAL_VERIFICATION.md](./MANUAL_VERIFICATION.md)
+
+---
+
+## Lesson Entry Point (#30, #67)
+
+All lesson types (exercises, PDF, blocks-only) now route through `LessonIntroPage` as the unified entry point. Previously, PDF lessons bypassed `LessonIntroPage` and went directly to `PdfLessonPager` (#67 fix).
+
+### Routing Logic
+
+`LessonIntroPage` determines content type from lesson data and passes renderer modes to `DualModeLessonView`:
+
+| Condition | Visible Renderers | Navigation |
+|-----------|-----------------|------------|
+| `hasMedia` (`mediaFiles.length > 0`) | `['media']` | → `DualModeLessonView` (PDF tab) |
+| `hasExerciseContent` (`exercises.some(hasBlocks)`) | `['pdf', 'interactive']` | → `DualModeLessonView` (PDF + Interactive tabs) |
+| No content | `[]` | → `ExerciseWorkspace` (empty/placeholder) |
+
+`DualModeLessonView` internally uses `ExercisesPager` and `PdfLessonPager` for their respective tabs. When `hasExerciseContent` is true, both `'pdf'` and `'interactive'` renderers are registered — the user can switch between PDF view and interactive exercise view.
+
+### Deep-Linking
+
+`LessonIntroPage` supports deep-linking to a specific exercise via the `?exerciseId=` search param. When present, the intro screen is skipped and `ExerciseWorkspace` is shown directly.
+
+```typescript
+// useLessonIntroPage.ts
+const { pageState, handleStart } = useLessonIntroPage({
+  deepLinkedExerciseId: searchParams.get('exerciseId'),
+})
+// pageState:
+//   | { type: 'intro' }
+//   | { type: 'content'; initialExerciseIndex: number }
+//   | { type: 'workspace' }
+```
+
+### Content Type Indicators
+
+The intro screen displays counts for each content type present in the lesson (exercise count, PDF count, content page count) before the user selects where to go.
+
+### File Structure
+
+```
+src/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/
+  lessons/[lessonSlug]/
+    _components/
+      LessonIntroPage/
+        index.tsx             # LessonIntroPage React component
+        useLessonIntroPage.ts # State hook (pageState + handleStart)
+    page.tsx                 # Lesson page — queries data, renders LessonIntroPage
+    exercises/[exerciseSlug]/
+      _components/
+        ExerciseWorkspace/    # Interactive exercise workspace (with chat)
+```
 
 ---
 

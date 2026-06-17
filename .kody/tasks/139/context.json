@@ -1,0 +1,16 @@
+{
+  "taskId": "139",
+  "taskType": "issue",
+  "target": "docs-drift-exercises-34",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Docs updated — added Lesson Entry Point section and updated architecture diagram to reflect the LessonIntroPage unified entry page added in #30/#67",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "docs/exercises/README.md"
+  ],
+  "sessionLog": ".kody/sessions/gh-27323450839-1.jsonl",
+  "startedAt": "2026-06-11T04:17:00Z",
+  "finishedAt": "2026-06-11T04:21:52Z"
+}
