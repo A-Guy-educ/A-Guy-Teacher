@@ -1,0 +1,1 @@
+Fixed `.kody/duties/docs-readme.md` line 96: replaced phantom verb `chore` with valid engine verb `run` in the kody-cmd comment. The kody engine only has `run --issue <N>`, not `chore --issue`. No other changes were needed — the duty is correctly structured and will resume catching doc drift from its last cursor once re-enabled.
