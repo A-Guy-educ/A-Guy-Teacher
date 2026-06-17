@@ -9,9 +9,12 @@
  * resolve it later. Idempotent: replays from PayPal hit the same target row
  * with a no-op update.
  *
+ * Triggers the purchase-receipt email (via `sendPurchaseReceipt` — Resend SDK
+ * direct) once the row is flipped to `succeeded`. The receipt service has its
+ * own atomic-claim idempotency on `emailSentAt`.
+ *
  * Deliberately NOT in this handler (defer to follow-ups):
  *  - Coupon consumption hook
- *  - Purchase-receipt email
  *  - PAYMENT.CAPTURE.REFUNDED → status='refunded'
  *  - Webhook-event dedup collection (we rely on per-row idempotency for now)
  *  - Entitlement grant beyond status flip (grantProductEntitlements is a stub)

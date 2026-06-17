@@ -2,11 +2,15 @@
  * Unit tests for the web-direct purchase receipt sender.
  *
  * Pinned behavior:
- *   - idempotent on `emailSentAt` — second call for the same transaction skips
- *   - no-op when RESEND_API_KEY isn't set (dev / preview don't break)
- *   - missing user email or product name → skip with reason 'missing_data'
- *   - happy path: calls Resend, then marks transaction.emailSentAt
- *   - Resend SDK reject / throw → returns `error`, does NOT set emailSentAt
+ *   - no_adapter when RESEND_API_KEY is missing — checked FIRST so dev /
+ *     preview deployments don't even open a DB connection per webhook
+ *   - atomic claim via findOneAndUpdate({...emailSentAt: $exists: false}):
+ *       - claim returns null → already_sent, no send
+ *       - claim returns the doc → proceeds
+ *   - rollback ($unset emailSentAt) on missing_data, Resend error, or SDK throw
+ *     so a later retry can re-claim
+ *   - Resend send called with idempotencyKey = transactionId
+ *   - currency-aware fixed-coupon rendering
  */
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { ObjectId } from 'mongodb'
@@ -23,6 +27,7 @@ vi.mock('resend', () => {
 })
 
 const findOneMock = vi.fn()
+const findOneAndUpdateMock = vi.fn()
 const updateOneMock = vi.fn()
 vi.mock('@/infra/db/content-db', async () => {
   const actual =
@@ -32,6 +37,7 @@ vi.mock('@/infra/db/content-db', async () => {
     getContentDb: vi.fn(async () => ({
       collection: () => ({
         findOne: findOneMock,
+        findOneAndUpdate: findOneAndUpdateMock,
         updateOne: updateOneMock,
       }),
     })),
@@ -65,22 +71,27 @@ function buildOptions(overrides: Partial<Parameters<typeof sendPurchaseReceipt>[
   }
 }
 
+function setupHappyPathMocks() {
+  // The atomic claim succeeds (returns the row that just had emailSentAt set).
+  findOneAndUpdateMock.mockResolvedValue({ _id: new ObjectId(TX_ID_HEX) })
+  // Users + products lookups: route by collection isn't trivial since we
+  // share one findOne mock, so route by _id payload.
+  findOneMock.mockImplementation(async (filter: { _id: unknown }) => {
+    const id = filter._id instanceof ObjectId ? filter._id.toString() : String(filter._id)
+    if (id === USER_ID_HEX) return { email: 'buyer@example.com', locale: 'he' }
+    if (id === PRODUCT_ID_HEX) return { name: 'Test Product' }
+    return null
+  })
+  sendMock.mockResolvedValue({ data: { id: 'msg_abc' }, error: null })
+  updateOneMock.mockResolvedValue({ acknowledged: true, modifiedCount: 1 })
+}
+
 describe('sendPurchaseReceipt', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     _resetResendClient()
     process.env.RESEND_API_KEY = 're_test_key'
-    // Default DB shape: transaction (without emailSentAt), user with email, product with name.
-    findOneMock.mockImplementation(async (filter: { _id: unknown; projection?: unknown }) => {
-      // findOne is called three times: transactions (idempotency), users, products.
-      const id = filter._id instanceof ObjectId ? filter._id.toString() : String(filter._id)
-      if (id === TX_ID_HEX) return { _id: new ObjectId(TX_ID_HEX) /* no emailSentAt */ }
-      if (id === USER_ID_HEX) return { email: 'buyer@example.com', locale: 'he' }
-      if (id === PRODUCT_ID_HEX) return { name: 'Test Product' }
-      return null
-    })
-    updateOneMock.mockResolvedValue({ acknowledged: true, modifiedCount: 1 })
-    sendMock.mockResolvedValue({ data: { id: 'msg_abc' }, error: null })
+    setupHappyPathMocks()
   })
 
   afterEach(() => {
@@ -88,119 +99,185 @@ describe('sendPurchaseReceipt', () => {
     _resetResendClient()
   })
 
-  it('returns already_sent and skips Resend when emailSentAt is already set', async () => {
-    findOneMock.mockImplementationOnce(async () => ({
-      _id: new ObjectId(TX_ID_HEX),
-      emailSentAt: new Date('2026-06-15T10:00:00Z'),
-    }))
+  describe('adapter-missing short-circuit', () => {
+    it('returns no_adapter when RESEND_API_KEY is missing — and makes zero DB calls', async () => {
+      delete process.env.RESEND_API_KEY
+      _resetResendClient()
 
-    const result = await sendPurchaseReceipt(buildOptions())
+      const result = await sendPurchaseReceipt(buildOptions())
 
-    expect(result).toEqual({ sent: false, reason: 'already_sent' })
-    expect(sendMock).not.toHaveBeenCalled()
-    expect(updateOneMock).not.toHaveBeenCalled()
+      expect(result).toEqual({ sent: false, reason: 'no_adapter' })
+      expect(sendMock).not.toHaveBeenCalled()
+      expect(findOneMock).not.toHaveBeenCalled()
+      expect(findOneAndUpdateMock).not.toHaveBeenCalled()
+      expect(updateOneMock).not.toHaveBeenCalled()
+    })
   })
 
-  it('returns no_adapter when RESEND_API_KEY is missing', async () => {
-    delete process.env.RESEND_API_KEY
-    _resetResendClient()
+  describe('atomic claim', () => {
+    it('uses findOneAndUpdate with an emailSentAt-not-set filter, not a read-then-write', async () => {
+      await sendPurchaseReceipt(buildOptions())
 
-    const result = await sendPurchaseReceipt(buildOptions())
-
-    expect(result).toEqual({ sent: false, reason: 'no_adapter' })
-    expect(sendMock).not.toHaveBeenCalled()
-    expect(updateOneMock).not.toHaveBeenCalled()
-  })
-
-  it('returns missing_data when user has no email', async () => {
-    findOneMock.mockImplementation(async (filter: { _id: unknown }) => {
-      const id = filter._id instanceof ObjectId ? filter._id.toString() : String(filter._id)
-      if (id === TX_ID_HEX) return { _id: new ObjectId(TX_ID_HEX) }
-      if (id === USER_ID_HEX) return { /* no email */ locale: 'he' }
-      if (id === PRODUCT_ID_HEX) return { name: 'Test Product' }
-      return null
+      expect(findOneAndUpdateMock).toHaveBeenCalledTimes(1)
+      const [filter, update] = findOneAndUpdateMock.mock.calls[0] ?? []
+      expect(filter).toMatchObject({ emailSentAt: { $exists: false } })
+      expect((update as Record<string, Record<string, unknown>>).$set).toMatchObject({
+        emailSentAt: expect.any(Date),
+      })
     })
 
-    const result = await sendPurchaseReceipt(buildOptions())
+    it('returns already_sent and skips Resend when the claim returns null (concurrent caller already won)', async () => {
+      findOneAndUpdateMock.mockResolvedValueOnce(null)
 
-    expect(result).toEqual({ sent: false, reason: 'missing_data' })
-    expect(sendMock).not.toHaveBeenCalled()
-    expect(updateOneMock).not.toHaveBeenCalled()
+      const result = await sendPurchaseReceipt(buildOptions())
+
+      expect(result).toEqual({ sent: false, reason: 'already_sent' })
+      expect(sendMock).not.toHaveBeenCalled()
+      // Also: should NOT have done any user/product reads — claim failure
+      // means another invocation already owns this transaction.
+      expect(findOneMock).not.toHaveBeenCalled()
+    })
   })
 
-  it('falls back to product.title when product.name is missing', async () => {
-    findOneMock.mockImplementation(async (filter: { _id: unknown }) => {
-      const id = filter._id instanceof ObjectId ? filter._id.toString() : String(filter._id)
-      if (id === TX_ID_HEX) return { _id: new ObjectId(TX_ID_HEX) }
-      if (id === USER_ID_HEX) return { email: 'buyer@example.com' }
-      if (id === PRODUCT_ID_HEX) return { title: 'Title Fallback' }
-      return null
+  describe('missing data after claim', () => {
+    it('rolls back the claim ($unset emailSentAt) when user has no email', async () => {
+      findOneMock.mockImplementation(async (filter: { _id: unknown }) => {
+        const id = filter._id instanceof ObjectId ? filter._id.toString() : String(filter._id)
+        if (id === USER_ID_HEX) return { /* no email */ locale: 'he' }
+        if (id === PRODUCT_ID_HEX) return { name: 'Test Product' }
+        return null
+      })
+
+      const result = await sendPurchaseReceipt(buildOptions())
+
+      expect(result).toEqual({ sent: false, reason: 'missing_data' })
+      expect(sendMock).not.toHaveBeenCalled()
+      expect(updateOneMock).toHaveBeenCalledTimes(1)
+      const [, update] = updateOneMock.mock.calls[0] ?? []
+      expect((update as Record<string, unknown>).$unset).toEqual({ emailSentAt: '' })
     })
 
-    const result = await sendPurchaseReceipt(buildOptions())
+    it('falls back to product.title when product.name is missing — happy send path', async () => {
+      findOneMock.mockImplementation(async (filter: { _id: unknown }) => {
+        const id = filter._id instanceof ObjectId ? filter._id.toString() : String(filter._id)
+        if (id === USER_ID_HEX) return { email: 'buyer@example.com' }
+        if (id === PRODUCT_ID_HEX) return { title: 'Title Fallback' }
+        return null
+      })
 
-    expect(result).toEqual({ sent: true })
-    expect(sendMock).toHaveBeenCalledTimes(1)
-    expect(sendMock.mock.calls[0]?.[0].html).toContain('Title Fallback')
+      const result = await sendPurchaseReceipt(buildOptions())
+
+      expect(result).toEqual({ sent: true })
+      expect(sendMock).toHaveBeenCalledTimes(1)
+      expect(sendMock.mock.calls[0]?.[0].html).toContain('Title Fallback')
+    })
   })
 
-  it('sends via Resend with the right from/to/subject and marks transaction.emailSentAt', async () => {
-    const result = await sendPurchaseReceipt(buildOptions())
+  describe('happy path', () => {
+    it('sends with right from/to/subject and passes idempotencyKey = transactionId', async () => {
+      const result = await sendPurchaseReceipt(buildOptions())
 
-    expect(result).toEqual({ sent: true })
-    expect(sendMock).toHaveBeenCalledTimes(1)
-    const sendArg = sendMock.mock.calls[0]?.[0] as {
-      from: string
-      to: string
-      subject: string
-      html: string
-    }
-    expect(sendArg.from).toBe('support@aguy.co.il')
-    expect(sendArg.to).toBe('buyer@example.com')
-    expect(typeof sendArg.subject).toBe('string')
-    expect(sendArg.html).toContain('Test Product')
+      expect(result).toEqual({ sent: true })
+      expect(sendMock).toHaveBeenCalledTimes(1)
 
-    // The third call to updateOne stamps emailSentAt.
-    const lastUpdate = updateOneMock.mock.calls.at(-1)
-    expect(lastUpdate?.[1]?.$set).toMatchObject({ emailSentAt: expect.any(Date) })
+      const [payload, sendOptions] = sendMock.mock.calls[0] ?? []
+      const p = payload as { from: string; to: string; subject: string; html: string }
+      expect(p.from).toBe('support@aguy.co.il')
+      expect(p.to).toBe('buyer@example.com')
+      expect(typeof p.subject).toBe('string')
+      expect(p.html).toContain('Test Product')
+      // Critical for review: Resend's server-side dedup needs the
+      // idempotencyKey so two sends with the same key collapse to one mail.
+      expect(sendOptions as { idempotencyKey?: string }).toEqual({ idempotencyKey: TX_ID_HEX })
+
+      // No extra updateOne after success — the claim itself stamped emailSentAt.
+      expect(updateOneMock).not.toHaveBeenCalled()
+    })
   })
 
-  it('returns error when Resend resolves with an error payload — does NOT set emailSentAt', async () => {
-    sendMock.mockResolvedValueOnce({
-      data: null,
-      error: { name: 'validation_error', message: 'Invalid to address' },
+  describe('failure rollback', () => {
+    it('returns error and rolls back the claim when Resend resolves with an error payload', async () => {
+      sendMock.mockResolvedValueOnce({
+        data: null,
+        error: { name: 'validation_error', message: 'Invalid to address' },
+      })
+
+      const result = await sendPurchaseReceipt(buildOptions())
+
+      expect(result).toEqual({ sent: false, reason: 'error' })
+      expect(updateOneMock).toHaveBeenCalledTimes(1)
+      const [, update] = updateOneMock.mock.calls[0] ?? []
+      expect((update as Record<string, unknown>).$unset).toEqual({ emailSentAt: '' })
     })
 
-    const result = await sendPurchaseReceipt(buildOptions())
+    it('returns error and rolls back the claim when the Resend SDK throws', async () => {
+      sendMock.mockRejectedValueOnce(new Error('network timeout'))
 
-    expect(result).toEqual({ sent: false, reason: 'error' })
-    expect(updateOneMock).not.toHaveBeenCalled() // emailSentAt would only be set on success
+      const result = await sendPurchaseReceipt(buildOptions())
+
+      expect(result).toEqual({ sent: false, reason: 'error' })
+      expect(updateOneMock).toHaveBeenCalledTimes(1)
+      const [, update] = updateOneMock.mock.calls[0] ?? []
+      expect((update as Record<string, unknown>).$unset).toEqual({ emailSentAt: '' })
+    })
   })
 
-  it('returns error when Resend SDK throws — does NOT set emailSentAt', async () => {
-    sendMock.mockRejectedValueOnce(new Error('network timeout'))
+  describe('coupon currency awareness', () => {
+    it('renders a fixed-amount coupon in the transaction currency (₪ for ILS, NOT $)', async () => {
+      await sendPurchaseReceipt(
+        buildOptions({
+          currency: 'ILS',
+          appliedCoupon: {
+            code: 'TENOFF',
+            discountType: 'fixed',
+            discountValue: 1000, // 10.00 of whatever currency
+            originalAmount: 5000,
+            discountedAmount: 4000,
+          },
+        }),
+      )
 
-    const result = await sendPurchaseReceipt(buildOptions())
+      const html = sendMock.mock.calls[0]?.[0].html as string
+      // Coupon line should show ₪10.00 (project is ILS-first); $10.00 would
+      // be the old hardcoded-symbol bug.
+      expect(html).toContain('₪10.00')
+      expect(html).not.toContain('$10.00')
+    })
 
-    expect(result).toEqual({ sent: false, reason: 'error' })
-    expect(updateOneMock).not.toHaveBeenCalled()
-  })
+    it('falls back to using the currency code as a prefix for unknown currencies', async () => {
+      await sendPurchaseReceipt(
+        buildOptions({
+          currency: 'GBP',
+          appliedCoupon: {
+            code: 'GBPOFF',
+            discountType: 'fixed',
+            discountValue: 500,
+            originalAmount: 5000,
+            discountedAmount: 4500,
+          },
+        }),
+      )
 
-  it('passes coupon details into the template when an applied coupon is provided', async () => {
-    await sendPurchaseReceipt(
-      buildOptions({
-        appliedCoupon: {
-          code: 'WELCOME10',
-          discountType: 'percentage',
-          discountValue: 10,
-          originalAmount: 5000,
-          discountedAmount: 4500,
-        },
-      }),
-    )
+      const html = sendMock.mock.calls[0]?.[0].html as string
+      expect(html).toContain('GBP5.00')
+    })
 
-    expect(sendMock).toHaveBeenCalledTimes(1)
-    const html = sendMock.mock.calls[0]?.[0].html as string
-    expect(html).toContain('WELCOME10')
+    it('still works for percentage-discount coupons (no currency involved)', async () => {
+      await sendPurchaseReceipt(
+        buildOptions({
+          appliedCoupon: {
+            code: 'WELCOME10',
+            discountType: 'percentage',
+            discountValue: 10,
+            originalAmount: 5000,
+            discountedAmount: 4500,
+          },
+        }),
+      )
+
+      const html = sendMock.mock.calls[0]?.[0].html as string
+      expect(html).toContain('WELCOME10')
+      expect(html).toContain('10%')
+    })
   })
 })

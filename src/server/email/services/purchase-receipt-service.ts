@@ -1,27 +1,37 @@
 /**
  * Purchase Receipt Email Service
  *
- * Sends a templated purchase receipt email to the user after a successful
- * payment. Web-direct against the Resend SDK — does not depend on the Payload
- * runtime (which was removed from this repo). Templates are pure functions
- * shared with the (defunct) Payload-side service.
+ * Sends a templated purchase receipt email after a successful payment.
+ * Web-direct against the Resend SDK — does not depend on the Payload runtime
+ * (which was removed from this repo).
  *
- * Behavior:
- *  - Idempotent via `transactions.emailSentAt`: subsequent calls for the same
- *    transaction skip the send.
- *  - No-op when `RESEND_API_KEY` is missing — logs a warn and returns
- *    `{ sent: false, reason: 'no_adapter' }` so the calling webhook can still
- *    return 200 in dev / preview environments.
- *  - Never throws on send failure — returns `{ sent: false, reason: 'error' }`
- *    and logs. The caller's responsibility is to mark the transaction as
- *    "tried" if it cares, but we deliberately do NOT set `emailSentAt` on a
- *    failed send so a retry can pick it up.
+ * Concurrency model:
+ *  - Atomically *claims* the slot via `findOneAndUpdate({ _id, emailSentAt:
+ *    { $exists: false } }, { $set: { emailSentAt: <now> } })` before sending,
+ *    so a second concurrent call sees the claim and bails with `already_sent`.
+ *    Defends against PayPal delivering `CHECKOUT.ORDER.APPROVED` and
+ *    `PAYMENT.CAPTURE.COMPLETED` simultaneously, or two retries landing on
+ *    separate Vercel function instances.
+ *  - On Resend failure the timestamp is rolled back with `$unset` so a later
+ *    retry can re-claim and try again.
+ *  - Resend's own `idempotencyKey` (set to `transactionId`) is the third line
+ *    of defense — if a rare race still lets two sends through, Resend dedupes
+ *    server-side and the buyer still only sees one mail.
+ *
+ * Other guarantees:
+ *  - No-op when `RESEND_API_KEY` is missing (returns `no_adapter`). Checked
+ *    FIRST so dev/preview environments don't even open a DB connection per
+ *    webhook delivery.
+ *  - Never throws on send failure — the caller's webhook can still return
+ *    200 so PayPal doesn't retry forever on transient Resend outages.
  *
  * @fileType service
  * @domain email
+ * @pattern purchase-receipt
+ * @ai-summary Sends purchase receipt emails after successful payment webhooks, with atomic-claim idempotency
  */
 
-import { ObjectId } from 'mongodb'
+import { ObjectId, type Collection, type Document } from 'mongodb'
 import { Resend } from 'resend'
 
 import { getContentDb } from '@/infra/db/content-db'
@@ -36,6 +46,11 @@ import {
 const PURCHASES_URL = '/account/purchases'
 const DEFAULT_FROM = 'support@aguy.co.il'
 type SupportedLocale = 'en' | 'he'
+
+const CURRENCY_SYMBOLS: Record<string, string> = { ILS: '₪', USD: '$', EUR: '€' }
+function symbolFor(currency: string): string {
+  return CURRENCY_SYMBOLS[currency] ?? currency
+}
 
 export interface SendPurchaseReceiptOptions {
   transactionId: string
@@ -81,9 +96,15 @@ function pickLocale(rawLocale: unknown): SupportedLocale {
   return rawLocale === 'en' ? 'en' : 'he'
 }
 
-function formatCouponDiscount(discountType: string, discountValue: number): string {
+function formatCouponDiscount(
+  discountType: string,
+  discountValue: number,
+  currency: string,
+): string {
   if (discountType === 'percentage') return `${discountValue}%`
-  if (discountType === 'fixed') return `$${(discountValue / 100).toFixed(2)}`
+  if (discountType === 'fixed') {
+    return `${symbolFor(currency)}${(discountValue / 100).toFixed(2)}`
+  }
   return String(discountValue)
 }
 
@@ -101,21 +122,35 @@ export async function sendPurchaseReceipt(
     appliedCoupon,
   } = options
 
+  // 1) Adapter check FIRST — short-circuit before any DB work so dev/preview
+  //    deployments without RESEND_API_KEY don't pay 3 Mongo round-trips per
+  //    webhook delivery.
+  const resend = getResendClient()
+  if (!resend) {
+    logger.warn(
+      { transactionId },
+      'Purchase receipt: RESEND_API_KEY not set — skipping send (no-op fallback)',
+    )
+    return { sent: false, reason: 'no_adapter' }
+  }
+
   const db = await getContentDb()
   const transactionsCol = db.collection('transactions')
+  const txObjectId = new ObjectId(transactionId)
 
-  // 1) Idempotency — skip if we already sent a receipt for this transaction.
-  const existing = await transactionsCol.findOne(
-    { _id: new ObjectId(transactionId) },
-    { projection: { emailSentAt: 1 } },
+  // 2) Atomic claim — set emailSentAt only if it isn't already set. Any
+  //    concurrent call sees the claim and returns already_sent without
+  //    invoking Resend.
+  const claim = await transactionsCol.findOneAndUpdate(
+    { _id: txObjectId, emailSentAt: { $exists: false } },
+    { $set: { emailSentAt: new Date(), updatedAt: new Date() } },
   )
-  if (existing?.emailSentAt) {
+  if (!claim) {
     return { sent: false, reason: 'already_sent' }
   }
 
-  // 2) Resolve user email + product name. Don't catch — let DB outages bubble
-  //    so the caller can decide (we return error below if the fetch returns
-  //    nothing meaningful).
+  // 3) Resolve recipient + product details. If we can't, roll the claim back
+  //    so a future retry (e.g. after a data backfill) can try again.
   const [userDoc, productDoc] = await Promise.all([
     db.collection('users').findOne(
       {
@@ -139,13 +174,15 @@ export async function sendPurchaseReceipt(
     (productDoc as { name?: string; title?: string } | null)?.title
 
   if (!userEmail || !productName) {
+    await rollbackClaim(transactionsCol, txObjectId)
     logger.warn(
       { transactionId, userId, productId, hasUser: !!userDoc, hasProduct: !!productDoc },
-      'Purchase receipt: missing user email or product name — skipping send',
+      'Purchase receipt: missing user email or product name — rolled back claim, skipping send',
     )
     return { sent: false, reason: 'missing_data' }
   }
 
+  // 4) Render + send.
   const locale = userLocale ?? pickLocale((userDoc as { locale?: string } | null)?.locale)
   const paymentDate = new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
     year: 'numeric',
@@ -166,6 +203,7 @@ export async function sendPurchaseReceipt(
           couponDiscount: formatCouponDiscount(
             appliedCoupon.discountType,
             appliedCoupon.discountValue,
+            currency,
           ),
           originalAmount: appliedCoupon.originalAmount,
         }
@@ -176,60 +214,58 @@ export async function sendPurchaseReceipt(
   const subject =
     locale === 'he' ? `קבלה על רכישת ${productName}` : `Your receipt for ${productName}`
 
-  // 3) Send. If no API key configured, no-op cleanly so dev / preview don't break.
-  const resend = getResendClient()
-  if (!resend) {
-    logger.warn(
-      { transactionId, userEmail, productName },
-      'Purchase receipt: RESEND_API_KEY not set — skipping send (no-op fallback)',
-    )
-    return { sent: false, reason: 'no_adapter' }
-  }
-
   try {
-    const result = await resend.emails.send({
-      from: DEFAULT_FROM,
-      to: userEmail,
-      subject,
-      html,
-    })
+    const result = await resend.emails.send(
+      {
+        from: DEFAULT_FROM,
+        to: userEmail,
+        subject,
+        html,
+      },
+      // Defense in depth: even if a freak race lets two sends slip past our
+      // atomic claim, Resend dedupes server-side by this key.
+      { idempotencyKey: transactionId },
+    )
 
-    // Resend SDK returns `{ data, error }` — surface either, but never throw.
     if (result.error) {
+      await rollbackClaim(transactionsCol, txObjectId)
       logger.error(
         { transactionId, userEmail, error: result.error },
-        'Purchase receipt: Resend rejected the send',
+        'Purchase receipt: Resend rejected the send — rolled back claim',
       )
       return { sent: false, reason: 'error' }
     }
   } catch (err) {
+    await rollbackClaim(transactionsCol, txObjectId)
     logger.error(
       {
         transactionId,
         userEmail,
         err: err instanceof Error ? { message: err.message, stack: err.stack } : err,
       },
-      'Purchase receipt: Resend SDK threw',
+      'Purchase receipt: Resend SDK threw — rolled back claim',
     )
     return { sent: false, reason: 'error' }
   }
 
-  // 4) Mark the transaction so retries don't re-send. Failures here are
-  //    non-fatal — the email did go out — but log them.
+  return { sent: true }
+}
+
+async function rollbackClaim(col: Collection<Document>, txObjectId: ObjectId): Promise<void> {
   try {
-    await transactionsCol.updateOne(
-      { _id: new ObjectId(transactionId) },
-      { $set: { emailSentAt: new Date(), updatedAt: new Date() } },
+    await col.updateOne(
+      { _id: txObjectId },
+      { $unset: { emailSentAt: '' }, $set: { updatedAt: new Date() } },
     )
   } catch (err) {
+    // The slot stays claimed, retries will see already_sent and skip. This
+    // is the worst-case "lost receipt" path, but it's bounded to "DB outage
+    // during rollback of a failed send" so the surface is tiny.
     logger.error(
       {
-        transactionId,
         err: err instanceof Error ? { message: err.message, stack: err.stack } : err,
       },
-      'Purchase receipt: failed to set emailSentAt — receipt was sent, retry may double-send',
+      'Purchase receipt: failed to roll back emailSentAt claim — future retries will skip',
     )
   }
-
-  return { sent: true }
 }
