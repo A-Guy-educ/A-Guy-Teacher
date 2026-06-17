@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #146: Doc coverage: src/infra/loading/ — Client-side loading state mana… ([#147](https://github.com/A-Guy-educ/A-Guy-Web/pull/147)) — @kodyade[bot]
 - #189: Doc coverage: src/server/utils/ — Server-side auth, course URL, P… ([#223](https://github.com/A-Guy-educ/A-Guy-Web/pull/223)) — @kodyade[bot]
 - docs: add task metadata handoff for inbox processing ([#38](https://github.com/A-Guy-educ/A-Guy-Web/pull/38)) — @kodyade[bot]
 - #82: [LLM] `generateChatCompletionWithTools` always returns `toolCalls:… ([#88](https://github.com/A-Guy-educ/A-Guy-Web/pull/88)) — @kodyade[bot]
