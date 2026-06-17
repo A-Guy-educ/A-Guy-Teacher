@@ -10,7 +10,9 @@
 import type { UrlObject } from 'url'
 
 /**
- * Resolve Next.js href (string or UrlObject) to normalized string
+ * @ai-summary Normalizes Next.js href (string or UrlObject) to comparable string form — strips trailing slashes and optionally strips hash for route-comparison; hash-only hrefs return '/' when ignoreHash=true.
+ */
+/**
  * Handles edge cases: hash-only, trailing slashes, query strings
  *
  * @param ignoreHash - If true, strips hash from result (for route comparison)

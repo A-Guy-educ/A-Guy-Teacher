@@ -24,10 +24,10 @@ src/infra/loading/
 │   └── useRouterWithLoading.ts  # useRouter that registers route loading
 ├── components/
 │   ├── RouteLoadingIndicator.tsx # Global indeterminate progress bar
-│   ├── SystemLink.tsx           # Link with local loading indication
-│   └── Spinner.tsx             # Animated spinner
+│   ├── SystemLink.tsx            # Link with local loading indication
+│   └── Spinner.tsx              # Animated spinner
 └── utils/
-    └── resolveHref.ts          # Next.js href normalization (ignores hash)
+    └── resolveHref.ts           # Next.js href normalization (ignores hash)
 ```
 
 ## Core Concepts
@@ -37,11 +37,33 @@ src/infra/loading/
 - **Duplicate prevention**: `asyncAction` refuses to re-run the same key while busy
 - **Hash-safe comparison**: `resolveHrefToString` strips hash so same-page anchor links don't trigger loading
 
+## Loading Types
+
+| Type     | Description                       | Safety Timeout      |
+| -------- | --------------------------------- | ------------------- |
+| `route`  | Next.js navigation                | 15s auto-unregister |
+| `screen` | Full-screen operations            | None                |
+| `inline` | Inline/component-level operations | None                |
+| `action` | Form submissions, async actions   | None                |
+
 ## Gotchas
 
 - `loadingManager` is a **module singleton** — not reset between tests unless `createLoadingManager()` is used for DI
 - Route loading is registered at **trigger time** (click/push), not when navigation completes — if navigation is instant, the indicator may not appear due to threshold/flicker guards
 - `useRouterWithLoading` only registers loading for cross-page navigation — same-path changes (hash anchors, query-only changes) are intentionally ignored
+
+## Entry Point
+
+Import everything from `@/infra/loading`:
+
+```typescript
+import {
+  loadingManager,
+  useLoadingState,
+  asyncAction,
+  RouteLoadingIndicator,
+} from '@/infra/loading'
+```
 
 ## Related Documentation
 
