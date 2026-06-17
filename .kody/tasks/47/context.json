@@ -1,0 +1,24 @@
+{
+  "taskId": "47",
+  "taskType": "issue",
+  "target": "src/client/hooks",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added @ai-summary headers to all 8 client hook modules and created central index.ts with folder-level header and gotchas",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/client/hooks/index.ts",
+    "src/client/hooks/useAccessGate.ts",
+    "src/client/hooks/useCurrentUser.ts",
+    "src/client/hooks/useCourseSearch.ts",
+    "src/client/hooks/useActiveTimeTracker.ts",
+    "src/client/hooks/useProgressMap.ts",
+    "src/client/hooks/useDebounce.ts",
+    "src/client/hooks/useMediaQuery.ts",
+    "src/client/hooks/useExamCountdown.ts"
+  ],
+  "sessionLog": ".kody/runs/gh-27277072041-1/events.jsonl",
+  "startedAt": "2026-06-10T12:44:00Z",
+  "finishedAt": "2026-06-10T12:45:00Z"
+}

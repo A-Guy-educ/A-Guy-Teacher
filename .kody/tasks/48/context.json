@@ -1,0 +1,24 @@
+{
+  "taskId": "48",
+  "taskType": "pr",
+  "target": "47-doc-gap-srcclienthooks-08-modules-with-ai-summary",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "All 9 conflicted files resolved by taking origin/dev JSDoc headers (more structured @ai-summary format), typecheck passes",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/client/hooks/index.ts",
+    "src/client/hooks/useAccessGate.ts",
+    "src/client/hooks/useActiveTimeTracker.ts",
+    "src/client/hooks/useCourseSearch.ts",
+    "src/client/hooks/useCurrentUser.ts",
+    "src/client/hooks/useDebounce.ts",
+    "src/client/hooks/useExamCountdown.ts",
+    "src/client/hooks/useMediaQuery.ts",
+    "src/client/hooks/useProgressMap.ts"
+  ],
+  "sessionLog": ".kody/runs/gh-27684204125-1/events.jsonl",
+  "startedAt": "2026-06-17T00:00:00.000Z",
+  "finishedAt": "2026-06-17T00:00:00.000Z"
+}
