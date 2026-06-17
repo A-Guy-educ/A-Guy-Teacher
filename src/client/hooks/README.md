@@ -1,6 +1,6 @@
 # Client-Side React Hooks
 
-Entry point for all client-side React hooks used throughout the frontend application.
+Client-only React hooks shared across the frontend.
 
-**Entry point:** Individual hook files — import directly by name (e.g., `useCurrentUser`)
-**Gotcha:** All hooks in this folder are client-only (`'use client'`). Do not import them in Server Components without proper boundary serialization — hook props must be serializable.
+**Entry point:** Import individual hooks by file/name, for example `useCurrentUser`.
+**Gotcha:** Hooks here run on the client. Do not import them into Server Components unless the boundary is explicit and all props crossing it are serializable.
