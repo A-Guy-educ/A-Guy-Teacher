@@ -1,0 +1,18 @@
+{
+  "taskId": "242",
+  "taskType": "pr",
+  "target": "172-doc-coverage-srcclienthooks-client-side-react-hook",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "All three conflicts resolved by taking HEAD metadata; typecheck passes",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/client/hooks/useActiveTimeTracker.ts",
+    "src/client/hooks/useDebounce.ts",
+    "src/client/hooks/useMediaQuery.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27678631772-1-1.jsonl",
+  "startedAt": "2026-06-17T00:00:00.000Z",
+  "finishedAt": "2026-06-17T00:00:00.000Z"
+}

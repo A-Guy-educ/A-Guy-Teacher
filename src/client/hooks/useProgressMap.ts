@@ -6,6 +6,15 @@
 
 'use client'
 
+/**
+ * @fileType hook
+ * @domain progress
+ * @pattern progress-map
+ * @ai-summary Batch-fetches progress for a list of record IDs in a single `/api/progress` call. Requires an authenticated user — returns empty maps for anonymous users without making a request.
+ *
+ * Gotcha: When `gradeLevel` is not passed, the hook falls back to `getUserProfile()?.gradeLevel` from localStorage. This is the *content's* grade bucket, not the user's onboarding grade — these can differ on dashboards that show content from a grade other than the user's own.
+ */
+
 import { useEffect, useMemo, useState } from 'react'
 import { getUserProfile } from '@/client/state/localStorage/userProfile'
 

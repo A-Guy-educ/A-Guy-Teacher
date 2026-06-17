@@ -6,6 +6,15 @@
 
 'use client'
 
+/**
+ * @fileType hook
+ * @domain search
+ * @pattern course-search
+ * @ai-summary Debounces the query at 300ms before hitting `/api/course-search`. Aborts in-flight requests on new keystrokes — only the latest request's result is used. Returns `null` results when the query length is under 2 characters.
+ *
+ * Gotcha: When `courseSlug` is provided, results are scoped to that course (no `courses` in the response). When `courseSlug` is `null`, the search is global across all courses.
+ */
+
 import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from '@/client/hooks/useDebounce'
 
