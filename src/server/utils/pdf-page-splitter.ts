@@ -7,6 +7,7 @@
  * @fileType utility
  * @domain conversion
  * @pattern pdf-processing
+ * @ai-summary Loads the entire PDF into memory before splitting — very large files may exhaust serverless memory limits; prefer streaming for files over ~50 pages.
  */
 import { PDFDocument } from 'pdf-lib'
 

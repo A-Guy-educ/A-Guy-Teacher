@@ -1,3 +1,5 @@
+// @ai-summary Central string registry for all loading keys; using constants prevents typos and makes keys grep-able. Future keys are commented but not yet wired.
+
 /**
  * Central registry of loading keys
  *

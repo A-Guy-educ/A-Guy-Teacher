@@ -1,0 +1,14 @@
+{
+  "taskId": "173",
+  "taskType": "issue",
+  "target": "docs-drift-exercises-163",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Doc is doc-irrelevant — PR #163 removed scroll-gated button visibility (an internal UI detail never described in docs); docs/exercises/README.md covers the Exercises collection data model and block types, not UI interaction specs",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [],
+  "sessionLog": ".kody/sessions/placeholder.jsonl",
+  "startedAt": "2026-06-11T12:34:00Z",
+  "finishedAt": "2026-06-11T12:36:00Z"
+}

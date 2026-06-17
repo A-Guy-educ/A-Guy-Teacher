@@ -456,6 +456,102 @@ describe.skipIf(!hasDatabaseUrl)('Genkit adapter message structure', () => {
       expect(allText).toContain('Question 2')
       expect(allText).toContain('Answer 2')
     })
+
+    it('extracts tool calls from response messages', async () => {
+      resetMocks()
+      // Mock ai.generate to return tool calls in response messages
+      mockGenerate.mockResolvedValue({
+        text: 'Mock response',
+        raw: {},
+        messages: [
+          {
+            role: 'user',
+            content: [{ text: 'What is the weather?' }],
+          },
+          {
+            role: 'model',
+            content: [
+              {
+                toolRequest: {
+                  name: 'getWeather',
+                  input: { location: 'New York' },
+                },
+              },
+            ],
+          },
+          {
+            role: 'tool',
+            content: [
+              {
+                toolResponse: {
+                  name: 'getWeather',
+                  output: '{"temp":72,"condition":"sunny"}',
+                },
+              },
+            ],
+          },
+          {
+            role: 'model',
+            content: [{ text: 'The weather in New York is sunny and 72°F.' }],
+          },
+        ],
+      })
+
+      const adapter = await createGenkitUnifiedAdapter(payload)
+      const result = await adapter.generateChatCompletionWithTools(
+        {
+          system: 'You are a helpful assistant.',
+          messages: [{ role: 'user' as const, content: 'What is the weather?' }],
+          model: createTestModel(),
+          acknowledgment: 'ack',
+          tools: [{ name: 'getWeather', description: 'Get weather info', inputSchema: {} }],
+          toolExecutor: vi.fn() as never,
+        },
+        payload,
+      )
+
+      expect(mockGenerate).toHaveBeenCalled()
+      expect(result.toolCalls).toBeDefined()
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls![0]).toEqual({
+        name: 'getWeather',
+        args: { location: 'New York' },
+      })
+    })
+
+    it('returns empty toolCalls when no tools are called', async () => {
+      resetMocks()
+      mockGenerate.mockResolvedValue({
+        text: 'Just a regular response',
+        raw: {},
+        messages: [
+          {
+            role: 'user',
+            content: [{ text: 'Hello' }],
+          },
+          {
+            role: 'model',
+            content: [{ text: 'Hi there!' }],
+          },
+        ],
+      })
+
+      const adapter = await createGenkitUnifiedAdapter(payload)
+      const result = await adapter.generateChatCompletionWithTools(
+        {
+          system: 'You are a helpful assistant.',
+          messages: [{ role: 'user' as const, content: 'Hello' }],
+          model: createTestModel(),
+          acknowledgment: 'ack',
+          tools: [],
+          toolExecutor: vi.fn() as never,
+        },
+        payload,
+      )
+
+      expect(result.toolCalls).toBeDefined()
+      expect(result.toolCalls).toHaveLength(0)
+    })
   })
 
   describe('role mapping', () => {

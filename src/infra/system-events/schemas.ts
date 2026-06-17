@@ -1,5 +1,6 @@
 /**
- * System Events - Zod Schemas
+ * @fileType schemas
+ * @ai-summary Zod schemas for all non-exercise events. Every schema uses `.strict()` — payloads with unknown fields will be rejected (throws in dev, warns in prod). `PII_FIELDS` is the canonical list of fields that must never appear in any event payload.
  *
  * Strict schema validation for all 10 system events.
  * All schemas use .strict() to reject unknown properties.

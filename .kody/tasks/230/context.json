@@ -1,0 +1,26 @@
+{
+  "taskId": "230",
+  "taskType": "issue",
+  "target": "src/infra/loading/",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added README with @ai-summary folder header and @ai-summary to all 8 source modules; quality gates passed",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/loading/README.md",
+    "src/infra/loading/LoadingManager.ts",
+    "src/infra/loading/AsyncAction.ts",
+    "src/infra/loading/keys.ts",
+    "src/infra/loading/hooks/useAsyncAction.ts",
+    "src/infra/loading/hooks/useLoadingState.ts",
+    "src/infra/loading/hooks/useRouterWithLoading.ts",
+    "src/infra/loading/utils/resolveHref.ts",
+    "src/infra/loading/components/RouteLoadingIndicator.tsx",
+    "src/infra/loading/components/Spinner.tsx",
+    "src/infra/loading/components/SystemLink.tsx"
+  ],
+  "sessionLog": ".kody/sessions/gh-27402200866-1.jsonl",
+  "startedAt": "2026-06-12T07:46:00Z",
+  "finishedAt": "2026-06-12T07:46:45Z"
+}

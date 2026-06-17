@@ -15,6 +15,8 @@ import { loadingManager } from '../LoadingManager'
 import { LOADING_KEYS } from '../keys'
 import { resolveHrefToString, buildCurrentPath } from '../utils/resolveHref'
 
+// @ai-summary useRouter replacement that registers ROUTE_TRANSITION loading at navigation trigger time (not completion). Ignores same-page anchor links and hash navigation.
+
 /**
  * Router hook that registers route loading at trigger time
  * Use this instead of useRouter for programmatic navigation with loading indicators

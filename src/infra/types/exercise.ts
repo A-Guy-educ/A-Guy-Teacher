@@ -1,4 +1,9 @@
 /**
+ * @fileType utility
+ * @domain types
+ * @pattern exercise-content
+ * @ai-summary All exercise block shapes used by both the renderer and the parser. ContentBlock is a raw `any` union — type narrowing is done at runtime in the renderer, not via TypeScript discriminated unions. Adding a new block variant requires updating the renderer switch, not just adding a type here.
+ *
  * Shared Exercise Content Types
  *
  * These types are shared by the public exercise renderers and parser utilities.

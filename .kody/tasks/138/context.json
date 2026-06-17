@@ -1,0 +1,18 @@
+{
+  "taskId": "138",
+  "taskType": "issue",
+  "target": "src/infra/auth doc coverage",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added @ai-summary headers to 3 files lacking them: access-types.ts (access tier fallback trap), roles.ts (parseAccountRole throws on bad values), web-auth.ts (linkGoogleUser non-destructive + session/JWT details)",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/auth/access-types.ts",
+    "src/infra/auth/roles.ts",
+    "src/infra/auth/web-auth.ts"
+  ],
+  "sessionLog": ".kody/sessions/live-test-1776849549.jsonl",
+  "startedAt": "2026-06-11T04:15:00Z",
+  "finishedAt": "2026-06-11T04:16:00Z"
+}

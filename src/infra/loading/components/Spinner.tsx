@@ -12,6 +12,8 @@
 
 import { cn } from '@/infra/utils/ui'
 
+// @ai-summary Pure CSS-animated spinner; no external dependencies or JS animation loops.
+
 interface SpinnerProps {
   size?: 'sm' | 'md' | 'lg'
   className?: string

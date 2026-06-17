@@ -18,6 +18,8 @@ import { LOADING_KEYS } from '../keys'
 import { resolveHrefToString, buildCurrentPath } from '../utils/resolveHref'
 import { useLoadingState } from '../hooks/useLoadingState'
 
+// @ai-summary next/link wrapper that registers ROUTE_TRANSITION loading at click time and dims the link while navigation is in progress. Skips external links, modifier-key clicks, and hash-only anchors.
+
 interface SystemLinkProps extends LinkProps {
   children: React.ReactNode
   className?: string

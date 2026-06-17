@@ -1,5 +1,6 @@
 /**
- * System Events React Hook
+ * @fileType hooks
+ * @ai-summary React hooks wrapping the event bus. All hooks return no-op functions in SSR. `useSystemEvent` does not auto-cleanup on event name change — include the event in the useEffect dep array or you will have stale subscriptions.
  *
  * React hook for subscribing to system events in client components.
  */

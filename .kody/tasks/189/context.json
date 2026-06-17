@@ -1,0 +1,22 @@
+{
+  "taskId": "189",
+  "taskType": "issue",
+  "target": "#189",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added folder-level README.md and @ai-summary headers to all 6 files in src/server/utils/",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/server/utils/README.md",
+    "src/server/utils/access-gate-server.ts",
+    "src/server/utils/check-paid-access.ts",
+    "src/server/utils/course-url-builder.ts",
+    "src/server/utils/hash.ts",
+    "src/server/utils/pdf-metadata.ts",
+    "src/server/utils/pdf-page-splitter.ts"
+  ],
+  "sessionLog": null,
+  "startedAt": "2026-06-12T00:00:00.000Z",
+  "finishedAt": "2026-06-12T00:00:00.000Z"
+}

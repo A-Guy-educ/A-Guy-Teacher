@@ -1,3 +1,10 @@
+/**
+ * @fileType utility
+ * @domain types
+ * @pattern backend-types
+ * @ai-summary Fallback type shims for Payload-generated types not yet available at build time. These are intentionally `any` — using them correctly requires knowing the runtime shape. Adding a new entry here is a signal that a Payload schema change needs a corresponding generated-type update.
+ */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type Payload = any

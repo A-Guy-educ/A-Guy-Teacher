@@ -1,3 +1,14 @@
+/**
+ * Server-side authentication using signed HTTP-only cookies.
+ *
+ * Uses Payload's JWT session cookie to retrieve the authenticated user
+ * in Server Components, Server Actions, and API Route Handlers.
+ *
+ * @fileType utility
+ * @domain auth
+ * @pattern server-auth
+ * @ai-summary Retrieves the authenticated user from a signed HTTP-only cookie on the server; returns `payload: null` to signal this is auth-only, not a full Payload instance.
+ */
 import { cookies } from 'next/headers'
 
 import { AUTH_COOKIE_NAME, getSessionFromToken } from '@/infra/auth/web-auth'

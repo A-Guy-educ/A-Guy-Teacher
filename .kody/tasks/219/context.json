@@ -1,0 +1,26 @@
+{
+  "taskId": "219",
+  "taskType": "issue",
+  "target": "doc-coverage src/infra/loading",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added README.md header and @ai-summary to all 9 modules lacking documentation",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/loading/README.md",
+    "src/infra/loading/LoadingManager.ts",
+    "src/infra/loading/AsyncAction.ts",
+    "src/infra/loading/keys.ts",
+    "src/infra/loading/hooks/useLoadingState.ts",
+    "src/infra/loading/hooks/useAsyncAction.ts",
+    "src/infra/loading/hooks/useRouterWithLoading.ts",
+    "src/infra/loading/components/RouteLoadingIndicator.tsx",
+    "src/infra/loading/components/SystemLink.tsx",
+    "src/infra/loading/components/Spinner.tsx",
+    "src/infra/loading/utils/resolveHref.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27381726595-1.jsonl",
+  "startedAt": "2026-06-11T22:36:00Z",
+  "finishedAt": "2026-06-11T22:36:30Z"
+}

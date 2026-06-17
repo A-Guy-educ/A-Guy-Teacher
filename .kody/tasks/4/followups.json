@@ -1,0 +1,8 @@
+[
+  {
+    "title": "Clarify 'issue:4' routing reference",
+    "body": "The kodyade comment (2026-06-10T08:48:19Z) references 'my instructions point me to thread issue:4'. No GitHub issue #4 exists in the inbox. This may be a mis-routed reference or thread-ID confusion. The actual work item is issue #35 (doc-coverage gap in src/server/services/), already addressed by PR #36.",
+    "rationale": "Prevents wasted re-work if an agent acts on a non-existent issue routing target",
+    "priority": "low"
+  }
+]

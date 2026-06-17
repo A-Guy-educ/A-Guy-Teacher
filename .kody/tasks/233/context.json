@@ -1,0 +1,25 @@
+{
+  "taskId": "233",
+  "taskType": "pr",
+  "target": "230-doc-coverage-srcinfraloading-loading-state-managem",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "All 10 conflicted files resolved; typecheck, lint, and format all pass",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/loading/AsyncAction.ts",
+    "src/infra/loading/LoadingManager.ts",
+    "src/infra/loading/README.md",
+    "src/infra/loading/components/RouteLoadingIndicator.tsx",
+    "src/infra/loading/components/Spinner.tsx",
+    "src/infra/loading/components/SystemLink.tsx",
+    "src/infra/loading/hooks/useAsyncAction.ts",
+    "src/infra/loading/hooks/useLoadingState.ts",
+    "src/infra/loading/hooks/useRouterWithLoading.ts",
+    "src/infra/loading/keys.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27678632000-1-1.jsonl",
+  "startedAt": "2026-06-17T00:00:00.000Z",
+  "finishedAt": "2026-06-17T00:05:00.000Z"
+}

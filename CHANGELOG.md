@@ -1813,6 +1813,16 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #189: Doc coverage: src/server/utils/ — Server-side auth, course URL, P… ([#223](https://github.com/A-Guy-educ/A-Guy-Web/pull/223)) — @kodyade[bot]
+- docs: add task metadata handoff for inbox processing ([#38](https://github.com/A-Guy-educ/A-Guy-Web/pull/38)) — @kodyade[bot]
+- #82: [LLM] `generateChatCompletionWithTools` always returns `toolCalls:… ([#88](https://github.com/A-Guy-educ/A-Guy-Web/pull/88)) — @kodyade[bot]
+- #115: Doc coverage: src/infra/system-events/ — client-side pub/sub even… ([#116](https://github.com/A-Guy-educ/A-Guy-Web/pull/116)) — @kodyade[bot]
+- #138: Doc coverage: src/infra/auth/ — OAuth/role-based auth infrastruct… ([#140](https://github.com/A-Guy-educ/A-Guy-Web/pull/140)) — @kodyade[bot]
+- #139: docs-drift: Exercises (#34) ([#141](https://github.com/A-Guy-educ/A-Guy-Web/pull/141)) — @kodyade[bot]
+- #173: docs-drift: Exercises (#163) ([#175](https://github.com/A-Guy-educ/A-Guy-Web/pull/175)) — @kodyade[bot]
+- #219: Doc coverage: src/infra/loading/ — Loading state management (spin… ([#220](https://github.com/A-Guy-educ/A-Guy-Web/pull/220)) — @kodyade[bot]
+- #230: Doc coverage: src/infra/loading/ — Loading state management (8 fi… ([#233](https://github.com/A-Guy-educ/A-Guy-Web/pull/233)) — @kodyade[bot]
+- #239: Doc coverage: src/infra/types/ — centralized type exports (7 file… ([#240](https://github.com/A-Guy-educ/A-Guy-Web/pull/240)) — @kodyade[bot]
 - #47: Doc gap: src/client/hooks — 0/8 modules with @ai-summary, no centr… ([#48](https://github.com/A-Guy-educ/A-Guy-Web/pull/48)) — @kodyade[bot]
 - #172: Doc coverage: src/client/hooks/ — Client-side React hooks ([#242](https://github.com/A-Guy-educ/A-Guy-Web/pull/242)) — @kodyade[bot]
 - chore: release v0.26.0 ([#284](https://github.com/A-Guy-educ/A-Guy-Web/pull/284)) — @aguyaharonyair
