@@ -1685,6 +1685,12 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #56: src/client/hooks/ — under-documented (0% @ai-summary coverage) ([#57](https://github.com/A-Guy-educ/A-Guy-Web/pull/57)) — @kodyade[bot]
+- #231: duty-blocker: docs-readme kody-cmd uses phantom verb ([#232](https://github.com/A-Guy-educ/A-Guy-Web/pull/232)) — @kodyade[bot]
+- #235: Doc coverage: src/infra/loading/ — Loading state manager (4 files) ([#238](https://github.com/A-Guy-educ/A-Guy-Web/pull/238)) — @kodyade[bot]
+- fix: Teach task leader Kody concern comments ([#281](https://github.com/A-Guy-educ/A-Guy-Web/pull/281)) — @aguyaharonyair
+- fix: Let release promotion warn on Fly preview limits ([#278](https://github.com/A-Guy-educ/A-Guy-Web/pull/278)) — @aguyaharonyair
+- Release v0.25.12 ([#277](https://github.com/A-Guy-educ/A-Guy-Web/pull/277)) — @kodyade[bot]
 - fix: Wire /checkout/success page to read real transaction state ([#274](https://github.com/A-Guy-educ/A-Guy-Web/pull/274)) — @aguyshayb
 - feat: Show purchases on /account and wire PayPal webhook ([#273](https://github.com/A-Guy-educ/A-Guy-Web/pull/273)) — @aguyshayb
 - fix: Make Vercel deploy duties install CLI ([#272](https://github.com/A-Guy-educ/A-Guy-Web/pull/272)) — @aguyaharonyair

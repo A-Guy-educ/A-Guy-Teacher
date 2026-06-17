@@ -1,3 +1,12 @@
+/**
+ * Hook for using async actions with loading state
+ *
+ * @fileType hook
+ * @domain ui
+ * @pattern async-action-hook
+ * @ai-summary Combines asyncAction + useLoadingState into a single hook; key must match a LOADING_KEYS entry or the selector will always return false
+ */
+
 'use client'
 
 import { useCallback, useMemo } from 'react'

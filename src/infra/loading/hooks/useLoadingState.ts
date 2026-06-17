@@ -1,3 +1,12 @@
+/**
+ * Hook to subscribe to specific loading states
+ *
+ * @fileType hook
+ * @domain ui
+ * @pattern loading-state-subscription
+ * @ai-summary Subscribes to loadingManager store via useSyncExternalStore; re-renders only when the selected condition changes
+ */
+
 'use client'
 
 import { useSyncExternalStore, useCallback, useMemo } from 'react'

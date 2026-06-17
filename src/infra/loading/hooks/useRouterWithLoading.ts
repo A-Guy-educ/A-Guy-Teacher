@@ -1,3 +1,12 @@
+/**
+ * Router hook that registers route loading at trigger time
+ *
+ * @fileType hook
+ * @domain ui
+ * @pattern router-loading
+ * @ai-summary useRouter that registers loading before navigation commits; intentionally ignores same-path navigations (hash anchors, query-only changes) to avoid false loading indicators
+ */
+
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'

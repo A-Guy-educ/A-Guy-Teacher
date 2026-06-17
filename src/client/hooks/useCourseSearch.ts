@@ -1,3 +1,9 @@
+/**
+ * @fileType hook
+ * @domain frontend
+ * @ai-summary Debounced course search — aborts in-flight requests on each new query via AbortController; requires `courseSlug` for scoped results, or returns global results if null.
+ */
+
 'use client'
 
 import { useEffect, useRef, useState } from 'react'

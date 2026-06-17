@@ -1,3 +1,9 @@
+/**
+ * @fileType hook
+ * @domain frontend
+ * @ai-summary Debounce a value by a fixed delay — delays the returned value until the input stops changing for the specified duration.
+ */
+
 import { useState, useEffect } from 'react'
 
 export function useDebounce<T>(value: T, delay = 200): T {

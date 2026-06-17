@@ -1,3 +1,12 @@
+/**
+ * asyncAction factory and singleton — wraps async operations with loading state management
+ *
+ * @fileType utility
+ * @domain ui
+ * @pattern async-action
+ * @ai-summary Wraps async actions with loading state registration and duplicate prevention; returns normalized { success, data, error } contract; server action results with a `success` field are passed through unchanged
+ */
+
 import { loadingManager, type LoadingManagerInstance } from './LoadingManager'
 
 export interface ActionResult<T = unknown> {

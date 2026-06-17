@@ -1,3 +1,9 @@
+/**
+ * @fileType hook
+ * @domain frontend
+ * @ai-summary Responsive breakpoint hook — returns false on first render (SSR-safe), then the actual match state once the client hydrates.
+ */
+
 import { useEffect, useState } from 'react'
 
 export function useMediaQuery(query: string): boolean {

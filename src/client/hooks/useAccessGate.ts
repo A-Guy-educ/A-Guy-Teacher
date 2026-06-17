@@ -1,3 +1,9 @@
+/**
+ * @fileType hook
+ * @domain frontend
+ * @ai-summary Timed content lock for anonymous users — gate timer survives page refresh via localStorage and pauses during the warning modal so users aren't phantom-locked while dismissing it.
+ */
+
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'

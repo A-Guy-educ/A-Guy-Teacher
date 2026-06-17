@@ -1,0 +1,24 @@
+{
+  "taskId": "56",
+  "taskType": "issue",
+  "target": "56",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added folder-level index.ts header and @ai-summary JSDoc headers to all 8 hooks in src/client/hooks/",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/client/hooks/index.ts",
+    "src/client/hooks/useAccessGate.ts",
+    "src/client/hooks/useActiveTimeTracker.ts",
+    "src/client/hooks/useCourseSearch.ts",
+    "src/client/hooks/useCurrentUser.ts",
+    "src/client/hooks/useDebounce.ts",
+    "src/client/hooks/useExamCountdown.ts",
+    "src/client/hooks/useMediaQuery.ts",
+    "src/client/hooks/useProgressMap.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27290762348-1-1.jsonl",
+  "startedAt": "2026-06-10T16:45:00Z",
+  "finishedAt": "2026-06-10T16:46:30Z"
+}

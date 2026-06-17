@@ -1,3 +1,9 @@
+/**
+ * @fileType hook
+ * @domain frontend
+ * @ai-summary Auth state from `/api/users/me` — listens to the `auth:changed` window event; returns `user: null` (never throws) when unauthenticated; do not use in server components.
+ */
+
 'use client'
 
 import type { User } from '@/infra/types/content'

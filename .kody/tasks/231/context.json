@@ -1,0 +1,14 @@
+{
+  "taskId": "231",
+  "taskType": "issue",
+  "target": "231",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Fixed phantom kody-cmd verb in docs-readme duty file",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [".kody/duties/docs-readme.md"],
+  "sessionLog": ".kody/sessions/",
+  "startedAt": "2026-06-12T00:00:00Z",
+  "finishedAt": "2026-06-12T00:00:00Z"
+}

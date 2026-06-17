@@ -64,6 +64,20 @@ For each open PR, check if either:
 
 - `reviewDecision` equals `CHANGES_REQUESTED`
 - The PR has unresolved review threads
+- Latest completed Kody review or UI-review comment says `## Verdict: CONCERNS`.
+  Read PR comments and treat comments from `kodyade[bot]` / `kodyade`
+  containing either `kody review started`, `## Verdict: PASS`, or
+  `## Verdict: CONCERNS` as the Kody review timeline. Only the latest
+  verdict after the latest matching `kody review started` comment counts.
+  A latest `## Verdict: CONCERNS` is a concern even when GitHub
+  `reviewDecision` is empty.
+
+Useful command:
+
+```sh
+gh api repos/A-Guy-educ/A-Guy-Web/issues/<N>/comments --paginate \
+  --jq '.[] | select(.user.login == "kodyade[bot]" or .user.login == "kodyade") | {created_at, body}'
+```
 
 If either true and no `@kody fix` comment was posted since the last review update, post:
 
@@ -83,6 +97,8 @@ gh pr view <N> --json closingIssuesReferences
 For each referenced issue, check labels with `gh issue view <M> --json labels`.
 3. `reviewDecision` is not `CHANGES_REQUESTED`.
 4. PR has no unresolved review threads.
+5. Latest completed Kody review/UI-review verdict is not `CONCERNS`
+   using the Step 3 PR-comment scan.
 
 After common gates pass, use exactly one lane below.
 
