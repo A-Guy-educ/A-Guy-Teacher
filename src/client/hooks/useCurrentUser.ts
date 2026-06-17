@@ -1,17 +1,13 @@
 /**
  * @fileType hook
- * @domain frontend
- * @ai-summary Auth state from `/api/users/me` — listens to the `auth:changed` window event; returns `user: null` (never throws) when unauthenticated; do not use in server components.
+ * @domain auth
+ * @pattern user-context
+ * @ai-summary Fetches the current user from `/api/users/me` on mount and re-fetches on every `auth:changed` event. Returns `user: null` while unauthenticated and during the initial fetch.
+ *
+ * Gotcha: OAuth callback flows can briefly observe `user: null` before the auth change event fires, so callers should keep loading/anonymous states distinct.
  */
 
 'use client'
-
-/**
- * @fileType hook
- * @domain auth
- * @pattern user-context
- * @ai-summary Fetches the current user from `/api/users/me` on mount and re-fetches on every `auth:changed` event. Returns `user: null` during the initial fetch — the OAuth callback page is a known case where this hook will briefly see `user: null` before the event fires.
- */
 
 import type { User } from '@/infra/types/content'
 import { useCallback, useEffect, useState } from 'react'

@@ -1,19 +1,13 @@
 /**
  * @fileType hook
- * @domain frontend
- * @ai-summary Debounced course search — aborts in-flight requests on each new query via AbortController; requires `courseSlug` for scoped results, or returns global results if null.
+ * @domain search
+ * @pattern course-search
+ * @ai-summary Debounces the query at 300ms before hitting `/api/course-search`. Aborts in-flight requests on new keystrokes, so only the latest request's result is used. Returns `null` results while the query is shorter than 2 characters.
+ *
+ * Gotcha: When `courseSlug` is provided, results are scoped to that course and the response has no `courses` collection. When `courseSlug` is `null`, search is global across all courses.
  */
 
 'use client'
-
-/**
- * @fileType hook
- * @domain search
- * @pattern course-search
- * @ai-summary Debounces the query at 300ms before hitting `/api/course-search`. Aborts in-flight requests on new keystrokes — only the latest request's result is used. Returns `null` results when the query length is under 2 characters.
- *
- * Gotcha: When `courseSlug` is provided, results are scoped to that course (no `courses` in the response). When `courseSlug` is `null`, the search is global across all courses.
- */
 
 import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from '@/client/hooks/useDebounce'
