@@ -1,5 +1,133 @@
 # Changelog
 
+## [0.26.0] - 2026-06-17
+
+### Features
+
+- Show purchases on /account and wire PayPal webhook
+
+### Bug Fixes
+
+- Close task-leader review approval loop
+- Teach task leader Kody concern comments
+- Let release promotion warn on Fly preview limits
+- Wire /checkout/success page to actually read transaction
+- Make Vercel deploy duties install CLI
+- Dispatch task leader reviews directly
+- Emit state from scheduled ticks
+- Add preview health executable
+- Expose task leader review token
+- Use release reviewer token
+- Auto-run preview conflict resolution
+- Wire scheduled task leader duty
+- Keep preview health recommendations inert
+- Reload course after start selection
+- Localize landing and start pages
+- Use selected course ID for study pages
+
+### Documentation
+
+- add @ai-summary headers to src/infra/loading/ (12 items) (#238) (#238)
+
+### Maintenance
+
+- **changelog:** add #57
+- **changelog:** add #232
+- fix(duty): use valid kody verb `run` instead of phantom `chore (#232) (#232)
+- **changelog:** add #238
+- **changelog:** add #281
+- **changelog:** add #278
+- Activate dev CI health duty
+- **changelog:** add #277
+- **changelog:** add #274
+- **changelog:** add #273
+- **changelog:** add #272
+- **duties:** update vercel-production-deploy
+- **duties:** Refresh job-gap-scan report (propose sentry-digest)
+- Migrate duties to scheduled executables
+- **duties:** update vercel-production-deploy
+- Migrate Kody jobs to folder format
+- **changelog:** add #270
+- Use engine preview health executable
+- Allow release promotion gate
+- kody changes
+- Migrate preview health duty
+- **changelog:** release v0.25.11
+- **changelog:** add #269
+- Refresh pattern index
+
+### Other Changes
+
+- Merge remote-tracking branch 'origin/fix/start-locale-theme' into dev
+- #56: src/client/hooks/ — under-documented (0% @ai-summary coverage) (#57)
+- Merge pull request #274 from A-Guy-educ/fix/checkout-success-page
+- Merge pull request #273 from A-Guy-educ/fix/purchases-page-and-paypal-webhook
+
+
+## [0.26.0] - 2026-06-17
+
+### Features
+
+- Show purchases on /account and wire PayPal webhook
+
+### Bug Fixes
+
+- Close task-leader review approval loop
+- Teach task leader Kody concern comments
+- Let release promotion warn on Fly preview limits
+- Wire /checkout/success page to actually read transaction
+- Make Vercel deploy duties install CLI
+- Dispatch task leader reviews directly
+- Emit state from scheduled ticks
+- Add preview health executable
+- Expose task leader review token
+- Use release reviewer token
+- Auto-run preview conflict resolution
+- Wire scheduled task leader duty
+- Keep preview health recommendations inert
+- Reload course after start selection
+- Localize landing and start pages
+- Use selected course ID for study pages
+
+### Documentation
+
+- add @ai-summary headers to src/infra/loading/ (12 items) (#238) (#238)
+
+### Maintenance
+
+- **changelog:** add #57
+- **changelog:** add #232
+- fix(duty): use valid kody verb `run` instead of phantom `chore (#232) (#232)
+- **changelog:** add #238
+- **changelog:** add #281
+- **changelog:** add #278
+- Activate dev CI health duty
+- **changelog:** add #277
+- **changelog:** add #274
+- **changelog:** add #273
+- **changelog:** add #272
+- **duties:** update vercel-production-deploy
+- **duties:** Refresh job-gap-scan report (propose sentry-digest)
+- Migrate duties to scheduled executables
+- **duties:** update vercel-production-deploy
+- Migrate Kody jobs to folder format
+- **changelog:** add #270
+- Use engine preview health executable
+- Allow release promotion gate
+- kody changes
+- Migrate preview health duty
+- **changelog:** release v0.25.11
+- **changelog:** add #269
+- Refresh pattern index
+
+### Other Changes
+
+- Merge remote-tracking branch 'origin/fix/start-locale-theme' into dev
+- #56: src/client/hooks/ — under-documented (0% @ai-summary coverage) (#57)
+- Merge pull request #274 from A-Guy-educ/fix/checkout-success-page
+- Merge pull request #273 from A-Guy-educ/fix/purchases-page-and-paypal-webhook
+
+
 ## v0.25.11 — 2026-06-15
 
 ### Features
