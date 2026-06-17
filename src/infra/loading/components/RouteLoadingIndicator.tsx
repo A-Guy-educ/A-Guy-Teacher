@@ -15,6 +15,8 @@ import { loadingManager } from '../LoadingManager'
 import { cn } from '@/infra/utils/ui'
 import { LOADING_KEYS } from '../keys'
 
+// @ai-summary Global indeterminate progress bar that appears only when route transitions exceed 300 ms. Flicker-prevention enforces a 500 ms minimum visible time. The LoadingManager safety timeout (15 s) acts as a backstop if navigation hangs.
+
 const VISIBILITY_THRESHOLD_MS = 300 // Don't show for fast navigations
 const HIDE_DELAY_MS = 150 // Smooth hide transition
 const MIN_VISIBLE_TIME_MS = 500 // Prevent flicker on rapid nav

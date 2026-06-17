@@ -13,6 +13,8 @@ import { useCallback, useMemo } from 'react'
 import { asyncAction, type ActionResult, type AsyncActionOptions } from '../AsyncAction'
 import { useLoadingState } from './useLoadingState'
 
+// @ai-summary Combines asyncAction wrapper with useLoadingState subscription; memoizes options to avoid re-registering the same key on every render.
+
 interface UseAsyncActionReturn<T, A extends unknown[]> {
   execute: (...args: A) => Promise<ActionResult<T>>
   isLoading: boolean
