@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #115: Doc coverage: src/infra/system-events/ — client-side pub/sub even… ([#116](https://github.com/A-Guy-educ/A-Guy-Web/pull/116)) — @kodyade[bot]
 - #138: Doc coverage: src/infra/auth/ — OAuth/role-based auth infrastruct… ([#140](https://github.com/A-Guy-educ/A-Guy-Web/pull/140)) — @kodyade[bot]
 - #139: docs-drift: Exercises (#34) ([#141](https://github.com/A-Guy-educ/A-Guy-Web/pull/141)) — @kodyade[bot]
 - #173: docs-drift: Exercises (#163) ([#175](https://github.com/A-Guy-educ/A-Guy-Web/pull/175)) — @kodyade[bot]
