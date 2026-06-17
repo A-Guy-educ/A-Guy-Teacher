@@ -35,8 +35,7 @@ import {
 
 const PURCHASES_URL = '/account/purchases'
 const DEFAULT_FROM = 'support@aguy.co.il'
-const SUPPORTED_LOCALES = ['en', 'he'] as const
-type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
+type SupportedLocale = 'en' | 'he'
 
 export interface SendPurchaseReceiptOptions {
   transactionId: string
@@ -88,10 +87,6 @@ function formatCouponDiscount(discountType: string, discountValue: number): stri
   return String(discountValue)
 }
 
-function asObjectIdOrString(value: string): ObjectId | string {
-  return ObjectId.isValid(value) ? new ObjectId(value) : value
-}
-
 export async function sendPurchaseReceipt(
   options: SendPurchaseReceiptOptions,
 ): Promise<SendPurchaseReceiptResult> {
@@ -122,12 +117,20 @@ export async function sendPurchaseReceipt(
   //    so the caller can decide (we return error below if the fetch returns
   //    nothing meaningful).
   const [userDoc, productDoc] = await Promise.all([
-    db
-      .collection('users')
-      .findOne({ _id: asObjectIdOrString(userId) }, { projection: { email: 1, locale: 1 } }),
-    db
-      .collection('products')
-      .findOne({ _id: asObjectIdOrString(productId) }, { projection: { name: 1, title: 1 } }),
+    db.collection('users').findOne(
+      {
+        _id: ObjectId.isValid(userId) ? new ObjectId(userId) : (userId as unknown as ObjectId),
+      },
+      { projection: { email: 1, locale: 1 } },
+    ),
+    db.collection('products').findOne(
+      {
+        _id: ObjectId.isValid(productId)
+          ? new ObjectId(productId)
+          : (productId as unknown as ObjectId),
+      },
+      { projection: { name: 1, title: 1 } },
+    ),
   ])
 
   const userEmail = (userDoc as { email?: string } | null)?.email
