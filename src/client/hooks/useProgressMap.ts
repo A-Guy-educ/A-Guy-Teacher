@@ -1,3 +1,9 @@
+/**
+ * @fileType hook
+ * @domain frontend
+ * @ai-summary Per-grade progress batch-fetch — `gradeLevel` must be the content's grade bucket, not the user's onboarding grade; silently returns empty maps for unauthenticated users.
+ */
+
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'

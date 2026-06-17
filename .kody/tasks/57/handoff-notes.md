@@ -1,0 +1,1 @@
+Applied one reviewer fix to the existing PR branch: changed `@filetype utilities` to `@filetype index` in `src/client/hooks/index.ts` (line 2). The reviewer noted the hooks folder's index should have `@filetype index`, not `@filetype utilities`. All quality gates pass.

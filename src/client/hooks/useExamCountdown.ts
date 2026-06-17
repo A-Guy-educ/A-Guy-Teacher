@@ -1,3 +1,9 @@
+/**
+ * @fileType hook
+ * @domain frontend
+ * @ai-summary Exam countdown from localStorage — polls every 60 s; dates are local-only and not synced to the server.
+ */
+
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
