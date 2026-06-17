@@ -8,6 +8,7 @@
  * @pattern loading-keys
  * @ai-summary Single source of truth for all loading keys — prevents key collisions across the app
  */
+// Only includes keys actually used in this task
 export const LOADING_KEYS = {
   // Route transitions
   ROUTE_TRANSITION: 'route:transition',

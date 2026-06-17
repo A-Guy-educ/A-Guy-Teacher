@@ -9,6 +9,17 @@
 
 'use client'
 
+/**
+ * @ai-summary Global non-blocking progress bar for route transitions — slides across
+ * the top of the viewport. Only becomes visible for navigations lasting over 300ms
+ * (to avoid flash on fast navigations) and enforces a 500ms minimum visible time
+ * to prevent flicker. Unregisters the route loading key when pathname or searchParams change.
+ *
+ * @ai-trap Because the loading key is unregistered when pathname/searchParams change,
+ * very-fast navigations (under the 300ms threshold) never register the key at all,
+ * so no bar is shown. The 15-second LoadingManager safety timeout is the fallback
+ * for genuinely stuck navigations even this component cannot detect.
+ */
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { loadingManager } from '../LoadingManager'

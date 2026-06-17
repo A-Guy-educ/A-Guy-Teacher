@@ -9,6 +9,15 @@
 
 'use client'
 
+/**
+ * @ai-summary Wraps Next.js useRouter with loading state registration — call push/replace
+ * instead of the raw router. Registers ROUTE_TRANSITION key before navigation and unregisters
+ * it via RouteLoadingIndicator when the pathname or searchParams change.
+ *
+ * @ai-trap Loading is unregistered by RouteLoadingIndicator watching pathname/searchParams,
+ * not by the router itself — if RouteLoadingIndicator is not mounted the key leaks.
+ * Same-page hash navigation is intentionally skipped (no loading shown).
+ */
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useCallback, useMemo } from 'react'
 import { loadingManager } from '../LoadingManager'

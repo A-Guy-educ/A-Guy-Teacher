@@ -9,6 +9,15 @@
 
 'use client'
 
+/**
+ * @ai-summary Subscribes a component to loading state via useSyncExternalStore,
+ * re-rendering only when the selected condition changes. Accepts 'busy', 'screen',
+ * 'route', or a specific key to track.
+ *
+ * @ai-trap For key-based selectors, the key string must be stable (not an inline object
+ * on every render) — use useMemo or a constant, otherwise the selector function identity
+ * changes every render and defeats memoization.
+ */
 import { useSyncExternalStore, useCallback, useMemo } from 'react'
 import { loadingManager } from '../LoadingManager'
 

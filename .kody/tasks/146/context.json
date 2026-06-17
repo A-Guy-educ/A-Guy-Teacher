@@ -1,0 +1,26 @@
+{
+  "taskId": "146",
+  "taskType": "issue",
+  "target": "146",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added folder-level @ai-summary header to index.ts and @ai-summary headers to all 8 modules lacking them in src/infra/loading/. All headers capture the why and the trap as specified.",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/loading/index.ts",
+    "src/infra/loading/LoadingManager.ts",
+    "src/infra/loading/AsyncAction.ts",
+    "src/infra/loading/keys.ts",
+    "src/infra/loading/hooks/useLoadingState.ts",
+    "src/infra/loading/hooks/useAsyncAction.ts",
+    "src/infra/loading/hooks/useRouterWithLoading.ts",
+    "src/infra/loading/components/RouteLoadingIndicator.tsx",
+    "src/infra/loading/components/SystemLink.tsx",
+    "src/infra/loading/components/Spinner.tsx",
+    "src/infra/loading/utils/resolveHref.ts"
+  ],
+  "sessionLog": null,
+  "startedAt": "2026-06-11T06:30:00Z",
+  "finishedAt": "2026-06-11T06:32:00Z"
+}

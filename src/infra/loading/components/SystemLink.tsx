@@ -9,6 +9,16 @@
 
 'use client'
 
+/**
+ * @ai-summary Drop-in Next.js Link replacement that registers route loading state
+ * on click, before navigation. Applies reduced opacity while the route is in-flight.
+ * Use for all primary navigation links to get consistent loading feedback without
+ * needing to wire up useRouterWithLoading manually.
+ *
+ * @ai-trap External links, hash-only links, and modifier-key clicks are passed
+ * through without registering loading state. Same-page anchor links also skip
+ * registration intentionally — no loading state for scroll-to-id.
+ */
 import React, { forwardRef, useCallback, useState } from 'react'
 import Link, { type LinkProps } from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'

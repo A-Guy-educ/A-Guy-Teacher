@@ -6,7 +6,6 @@
  * @pattern loading-state-manager
  * @ai-summary Module-level singleton Map of active loading operations with 15s safety timeout on route transitions to prevent stuck loading state; not reset between test runs — use createLoadingManager() for DI
  */
-
 // Types
 export type LoadingType = 'route' | 'screen' | 'inline' | 'action'
 
