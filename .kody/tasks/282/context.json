@@ -1,0 +1,14 @@
+{
+  "taskId": "282",
+  "taskType": "pr",
+  "target": "282",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "TS2769 at lines 127/130: TypeScript couldn't narrow ternary result (string|ObjectId → ObjectId) for MongoDB Filter<_id>. Fixed with as ObjectId cast on the ternary expression. Also ran pnpm install for resend package.",
+  "prUrl": "https://github.com/A-Guy-educ/A-Guy-Web/pull/282",
+  "runUrl": null,
+  "filesTouched": ["src/server/email/services/purchase-receipt-service.ts"],
+  "sessionLog": ".kody/sessions/282.jsonl",
+  "startedAt": "2026-06-17T09:45:00Z",
+  "finishedAt": "2026-06-17T09:46:30Z"
+}

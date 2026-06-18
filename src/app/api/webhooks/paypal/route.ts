@@ -9,9 +9,12 @@
  * resolve it later. Idempotent: replays from PayPal hit the same target row
  * with a no-op update.
  *
+ * Triggers the purchase-receipt email (via `sendPurchaseReceipt` — Resend SDK
+ * direct) once the row is flipped to `succeeded`. The receipt service has its
+ * own atomic-claim idempotency on `emailSentAt`.
+ *
  * Deliberately NOT in this handler (defer to follow-ups):
  *  - Coupon consumption hook
- *  - Purchase-receipt email
  *  - PAYMENT.CAPTURE.REFUNDED → status='refunded'
  *  - Webhook-event dedup collection (we rely on per-row idempotency for now)
  *  - Entitlement grant beyond status flip (grantProductEntitlements is a stub)
@@ -25,9 +28,10 @@
 import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getContentDb } from '@/infra/db/content-db'
+import { getContentDb, relationId } from '@/infra/db/content-db'
 import { logger } from '@/infra/utils/logger/logger'
 import { capturePayPalOrder, verifyPayPalWebhook } from '@/lib/payment/paypal'
+import { sendPurchaseReceipt } from '@/server/email/services/purchase-receipt-service'
 
 interface PayPalWebhookResource {
   id: string
@@ -122,6 +126,67 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Triggers the purchase-receipt email after a webhook flips a transaction to
+ * `succeeded`. The service is internally idempotent (via `transactions.emailSentAt`),
+ * so calling it from both event handlers is safe — only the first call that
+ * finds the row in the right state actually sends.
+ */
+async function maybeSendReceipt(
+  transaction: {
+    _id: unknown
+    user?: unknown
+    product?: unknown
+    providerTransactionId?: string
+    amount?: number
+    currency?: string
+    metadata?: { appliedCoupon?: unknown } | null
+  },
+  capturedAt: Date,
+): Promise<void> {
+  const transactionId = String(transaction._id)
+  const userId = relationId(transaction.user)
+  const productId = relationId(transaction.product)
+  const providerTransactionId = transaction.providerTransactionId
+
+  if (!userId || !productId || !providerTransactionId) {
+    logger.warn(
+      { transactionId, hasUser: !!userId, hasProduct: !!productId },
+      'PayPal webhook: cannot send receipt — transaction missing user/product/providerTransactionId',
+    )
+    return
+  }
+
+  const appliedCoupon =
+    (transaction.metadata?.appliedCoupon as
+      | {
+          code: string
+          discountType: string
+          discountValue: number
+          originalAmount?: number
+          discountedAmount?: number
+        }
+      | undefined) ?? null
+
+  const result = await sendPurchaseReceipt({
+    transactionId,
+    userId,
+    productId,
+    providerTransactionId,
+    amount: Number(transaction.amount ?? 0),
+    currency: String(transaction.currency ?? 'ILS'),
+    capturedAt,
+    appliedCoupon,
+  })
+
+  if (result.sent) {
+    logger.info({ transactionId }, 'Purchase receipt sent')
+  } else if (result.reason === 'error' || result.reason === 'missing_data') {
+    // already_sent and no_adapter are routine — only log the surprising cases.
+    logger.warn({ transactionId, reason: result.reason }, 'Purchase receipt not sent')
+  }
+}
+
 async function handleEvent(event: PayPalWebhookEvent): Promise<void> {
   switch (event.event_type) {
     case 'CHECKOUT.ORDER.APPROVED':
@@ -156,8 +221,13 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
     return
   }
 
-  // Idempotent: if we've already captured + marked succeeded, replays do nothing.
-  if (transaction.status === 'succeeded' && transaction.captureId) {
+  // Idempotent: if we've already captured + marked succeeded AND already sent
+  // the receipt, replays do nothing. If the receipt service rolled back its
+  // emailSentAt claim (e.g. a DB blip during user/product lookup), let the
+  // retry re-enter the send path — capturePayPalOrder treats
+  // ORDER_ALREADY_CAPTURED as a no-op and the updateOne is essentially a
+  // no-op for already-succeeded rows.
+  if (transaction.status === 'succeeded' && transaction.captureId && transaction.emailSentAt) {
     return
   }
 
@@ -165,6 +235,7 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
   // ORDER_ALREADY_CAPTURED as a no-op, returns captureId: null in that case).
   const { captureId } = await capturePayPalOrder(orderId)
 
+  const capturedAt = new Date()
   await transactions.updateOne(
     { _id: new ObjectId(String(transaction._id)) },
     {
@@ -174,11 +245,13 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
         // replies on already-captured orders return null; PAYMENT.CAPTURE.COMPLETED
         // will fill it in on the follow-up event.
         ...(captureId ? { captureId } : {}),
-        capturedAt: new Date(),
-        updatedAt: new Date(),
+        capturedAt,
+        updatedAt: capturedAt,
       },
     },
   )
+
+  await maybeSendReceipt(transaction, capturedAt)
 }
 
 async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> {
@@ -206,20 +279,31 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
     return
   }
 
-  // Idempotent: already marked succeeded with this capture → nothing to do.
-  if (transaction.status === 'succeeded' && transaction.captureId === captureId) {
+  // Idempotent: already marked succeeded with this capture AND the receipt has
+  // already gone out → nothing to do. If emailSentAt isn't set (the receipt
+  // service rolled back its claim on a prior attempt), let the retry re-enter
+  // the send path. updateOne is essentially a no-op when status + captureId
+  // already match.
+  if (
+    transaction.status === 'succeeded' &&
+    transaction.captureId === captureId &&
+    transaction.emailSentAt
+  ) {
     return
   }
 
+  const capturedAt = new Date()
   await transactions.updateOne(
     { _id: new ObjectId(String(transaction._id)) },
     {
       $set: {
         status: 'succeeded',
         captureId,
-        capturedAt: new Date(),
-        updatedAt: new Date(),
+        capturedAt,
+        updatedAt: capturedAt,
       },
     },
   )
+
+  await maybeSendReceipt(transaction, capturedAt)
 }
