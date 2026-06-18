@@ -9,12 +9,24 @@
 
 'use client'
 
+/**
+ * @ai-summary Combines asyncAction + useLoadingState into a single hook — returns
+ * a stable execute() function and an isLoading boolean derived from the loading key.
+ * The action function can accept arbitrary arguments passed through to the underlying async call.
+ *
+ * @ai-trap The returned execute() is stable across renders only when the action
+ * and options are stable — never inline an arrow function as the action or the
+ * options object, or a new execute will be created on every render.
+ */
 import { useCallback, useMemo } from 'react'
 import { asyncAction, type ActionResult, type AsyncActionOptions } from '../AsyncAction'
 import { useLoadingState } from './useLoadingState'
 
-// @ai-summary Combines asyncAction wrapper with useLoadingState subscription; memoizes options to avoid re-registering the same key on every render.
-
+/**
+ * @fileType client-hook
+ * @domain frontend
+ * @ai-summary Combines useLoadingState and asyncAction into one hook — returns stable execute fn and isLoading bool; pass a stable options reference (not a fresh object each render) or the execute fn will be recreated on every render.
+ */
 interface UseAsyncActionReturn<T, A extends unknown[]> {
   execute: (...args: A) => Promise<ActionResult<T>>
   isLoading: boolean

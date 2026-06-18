@@ -10,10 +10,18 @@
 
 'use client'
 
+/**
+ * @ai-summary Animated SVG spinner with three size variants. Pure presentational —
+ * does not manage any loading state; compose with useLoadingState or useAsyncAction
+ * to control visibility.
+ */
 import { cn } from '@/infra/utils/ui'
 
-// @ai-summary Pure CSS-animated spinner; no external dependencies or JS animation loops.
-
+/**
+ * @fileType component
+ * @domain frontend
+ * @ai-summary Animated SVG spinner with three size variants; pure presentational, no loading state integration.
+ */
 interface SpinnerProps {
   size?: 'sm' | 'md' | 'lg'
   className?: string

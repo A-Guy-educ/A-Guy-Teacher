@@ -6,8 +6,6 @@
 
 ---
 
-## Entry Point
-
 [`index.ts`](index.ts) — public API exports
 
 ## Architecture

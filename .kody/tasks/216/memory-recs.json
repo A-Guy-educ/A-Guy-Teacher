@@ -1,0 +1,10 @@
+[
+  {
+    "type": "lesson",
+    "name": "loadingmanager-singleton-test-pollution",
+    "hook": "asyncAction uses the real singleton by default — tests must use createAsyncAction(manager)",
+    "body": "The exported `asyncAction` and `useAsyncAction` both call through to the process-wide `loadingManager` singleton. In unit/integration tests, any component that uses these will pollute the shared store across test cases. Pass a custom manager from `createLoadingManager()` to `createAsyncAction(manager)` to isolate each test.",
+    "why": "A future agent or developer writing a test for a component that uses `useAsyncAction` will get flaky tests if they don't know to inject a test manager — the singleton retains state from previous tests in the same process.",
+    "confidence": 0.85
+  }
+]

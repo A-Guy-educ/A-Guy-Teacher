@@ -1,0 +1,14 @@
+{
+  "taskId": "147",
+  "taskType": "pr",
+  "target": "146-doc-coverage-srcinfraloading-client-side-loading-s",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Single symmetric JSDoc comment conflict in resolveHref.ts merged by combining HEAD's detailed @ai-summary with origin/dev's edge-cases note",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": ["src/infra/loading/utils/resolveHref.ts"],
+  "sessionLog": null,
+  "startedAt": "2026-06-17T22:54:51Z",
+  "finishedAt": "2026-06-17T22:54:51Z"
+}

@@ -1,0 +1,14 @@
+{
+  "taskId": "217",
+  "taskType": "pr",
+  "target": "216-doc-coverage-srcinfraloading-client-side-loading-s",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Single asymmetric conflict in JSDoc comment — origin/dev consolidated @ai-summary taken over HEAD's split comment blocks; code was identical",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": ["src/infra/loading/utils/resolveHref.ts"],
+  "sessionLog": ".kody/sessions/gh-27727978527-1-1.jsonl",
+  "startedAt": "2026-06-18T00:00:00.000Z",
+  "finishedAt": "2026-06-18T00:00:30.000Z"
+}

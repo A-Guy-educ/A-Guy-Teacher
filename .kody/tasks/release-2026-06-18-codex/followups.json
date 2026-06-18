@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Previous promotion PR #285 was closed",
+    "body": "PR #285 'Publish dev → production' was closed on 2026-06-17 without being merged. Verify there was no blocking issue before merging #290.",
+    "rationale": "If #285 was closed for a reason, that reason may still apply to #290",
+    "priority": "medium"
+  },
+  {
+    "title": "Tag and GitHub release after PR merge",
+    "body": "After PR #290 is merged, run release-publish to tag the commit and create GitHub release. Current last tag is v0.25.11.",
+    "rationale": "release-publish creates the actual version tag and GitHub release",
+    "priority": "high"
+  }
+]
