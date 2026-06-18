@@ -211,14 +211,21 @@ describe('POST /api/webhooks/paypal', () => {
     expect(update.captureId).toBeUndefined()
   })
 
-  it('on PAYMENT.CAPTURE.COMPLETED: flips status to succeeded with the event capture ID', async () => {
+  it('on PAYMENT.CAPTURE.COMPLETED: flips status to succeeded with the event capture ID and triggers the receipt', async () => {
     const { verifyPayPalWebhook } = await import('@/lib/payment/paypal')
     ;(verifyPayPalWebhook as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true)
 
+    // Mirror the APPROVED test: include user/product/amount/currency so the
+    // receipt-trigger wiring actually fires (the maybeSendReceipt guard
+    // short-circuits silently if any of those are missing).
     findOneMock.mockResolvedValueOnce({
       _id: TX_ID,
+      user: '507f191e810c19729de860ea',
+      product: '507f191e810c19729de860eb',
       providerTransactionId: ORDER_ID,
       status: 'pending',
+      amount: 4900,
+      currency: 'ILS',
     })
 
     const { POST } = await import('@/app/api/webhooks/paypal/route')
@@ -228,17 +235,34 @@ describe('POST /api/webhooks/paypal', () => {
     const update = updateOneMock.mock.calls[0]?.[1]?.$set as Record<string, unknown>
     expect(update.status).toBe('succeeded')
     expect(update.captureId).toBe(CAPTURE_ID)
+
+    expect(sendReceiptMock).toHaveBeenCalledTimes(1)
+    expect(sendReceiptMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        transactionId: TX_ID,
+        userId: '507f191e810c19729de860ea',
+        productId: '507f191e810c19729de860eb',
+        providerTransactionId: ORDER_ID,
+        amount: 4900,
+        currency: 'ILS',
+        capturedAt: update.capturedAt,
+      }),
+    )
   })
 
-  it('is idempotent when CHECKOUT.ORDER.APPROVED arrives for a row already succeeded with a captureId', async () => {
+  it('is idempotent when CHECKOUT.ORDER.APPROVED arrives for a row already succeeded with a captureId AND emailSentAt', async () => {
     const { verifyPayPalWebhook, capturePayPalOrder } = await import('@/lib/payment/paypal')
     ;(verifyPayPalWebhook as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true)
 
+    // Fully-settled row: succeeded, captureId, AND receipt already sent.
+    // Only this combination should early-return — see the
+    // "re-enters the send path" test below for the rollback recovery case.
     findOneMock.mockResolvedValueOnce({
       _id: TX_ID,
       providerTransactionId: ORDER_ID,
       status: 'succeeded',
       captureId: CAPTURE_ID,
+      emailSentAt: new Date('2026-06-15T10:00:00Z'),
     })
 
     const { POST } = await import('@/app/api/webhooks/paypal/route')
@@ -247,9 +271,10 @@ describe('POST /api/webhooks/paypal', () => {
     expect(res.status).toBe(200)
     expect(capturePayPalOrder).not.toHaveBeenCalled()
     expect(updateOneMock).not.toHaveBeenCalled()
+    expect(sendReceiptMock).not.toHaveBeenCalled()
   })
 
-  it('is idempotent when PAYMENT.CAPTURE.COMPLETED replays for the same capture ID', async () => {
+  it('is idempotent when PAYMENT.CAPTURE.COMPLETED replays for the same capture ID AND emailSentAt is set', async () => {
     const { verifyPayPalWebhook } = await import('@/lib/payment/paypal')
     ;(verifyPayPalWebhook as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true)
 
@@ -258,6 +283,7 @@ describe('POST /api/webhooks/paypal', () => {
       providerTransactionId: ORDER_ID,
       status: 'succeeded',
       captureId: CAPTURE_ID,
+      emailSentAt: new Date('2026-06-15T10:00:00Z'),
     })
 
     const { POST } = await import('@/app/api/webhooks/paypal/route')
@@ -265,6 +291,37 @@ describe('POST /api/webhooks/paypal', () => {
 
     expect(res.status).toBe(200)
     expect(updateOneMock).not.toHaveBeenCalled()
+    expect(sendReceiptMock).not.toHaveBeenCalled()
+  })
+
+  it('on CHECKOUT.ORDER.APPROVED retry: re-enters the send path when emailSentAt is missing after a prior rollback', async () => {
+    // The whole point of gating early-return on emailSentAt: if the receipt
+    // service had to roll back its claim (DB blip during user/product lookup),
+    // PayPal's retry should re-attempt the send. Without this, the receipt
+    // would be permanently lost.
+    const { verifyPayPalWebhook, capturePayPalOrder } = await import('@/lib/payment/paypal')
+    ;(verifyPayPalWebhook as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+    ;(capturePayPalOrder as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      captureId: CAPTURE_ID,
+    })
+
+    findOneMock.mockResolvedValueOnce({
+      _id: TX_ID,
+      user: '507f191e810c19729de860ea',
+      product: '507f191e810c19729de860eb',
+      providerTransactionId: ORDER_ID,
+      status: 'succeeded',
+      captureId: CAPTURE_ID,
+      amount: 4900,
+      currency: 'ILS',
+      // NB: no emailSentAt — prior attempt rolled back.
+    })
+
+    const { POST } = await import('@/app/api/webhooks/paypal/route')
+    const res = await POST(buildRequest(orderApprovedEvent()))
+
+    expect(res.status).toBe(200)
+    expect(sendReceiptMock).toHaveBeenCalledTimes(1)
   })
 
   it('acknowledges (200) without DB writes when the order ID is unknown', async () => {

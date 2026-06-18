@@ -221,8 +221,13 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
     return
   }
 
-  // Idempotent: if we've already captured + marked succeeded, replays do nothing.
-  if (transaction.status === 'succeeded' && transaction.captureId) {
+  // Idempotent: if we've already captured + marked succeeded AND already sent
+  // the receipt, replays do nothing. If the receipt service rolled back its
+  // emailSentAt claim (e.g. a DB blip during user/product lookup), let the
+  // retry re-enter the send path — capturePayPalOrder treats
+  // ORDER_ALREADY_CAPTURED as a no-op and the updateOne is essentially a
+  // no-op for already-succeeded rows.
+  if (transaction.status === 'succeeded' && transaction.captureId && transaction.emailSentAt) {
     return
   }
 
@@ -274,8 +279,16 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
     return
   }
 
-  // Idempotent: already marked succeeded with this capture → nothing to do.
-  if (transaction.status === 'succeeded' && transaction.captureId === captureId) {
+  // Idempotent: already marked succeeded with this capture AND the receipt has
+  // already gone out → nothing to do. If emailSentAt isn't set (the receipt
+  // service rolled back its claim on a prior attempt), let the retry re-enter
+  // the send path. updateOne is essentially a no-op when status + captureId
+  // already match.
+  if (
+    transaction.status === 'succeeded' &&
+    transaction.captureId === captureId &&
+    transaction.emailSentAt
+  ) {
     return
   }
 

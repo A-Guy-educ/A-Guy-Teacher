@@ -35,7 +35,7 @@
 import { ObjectId, type Collection, type Document } from 'mongodb'
 import { Resend } from 'resend'
 
-import { getContentDb } from '@/infra/db/content-db'
+import { getContentDb, objectIdFromString } from '@/infra/db/content-db'
 import { logger } from '@/infra/utils/logger/logger'
 
 import {
@@ -45,7 +45,12 @@ import {
 } from '../templates/purchase-receipt'
 
 const PURCHASES_URL = '/account/purchases'
-const DEFAULT_FROM = 'support@aguy.co.il'
+// Override per environment with RESEND_FROM if you need preview / staging to
+// send from a non-production verified sender. Default keeps prod behavior.
+const FALLBACK_FROM = 'support@aguy.co.il'
+function getFromAddress(): string {
+  return process.env.RESEND_FROM || FALLBACK_FROM
+}
 type SupportedLocale = 'en' | 'he'
 
 const CURRENCY_SYMBOLS: Record<string, string> = { ILS: '₪', USD: '$', EUR: '€' }
@@ -152,9 +157,10 @@ export async function sendPurchaseReceipt(
   // 2) Atomic claim — set emailSentAt only if it isn't already set. Any
   //    concurrent call sees the claim and returns already_sent without
   //    invoking Resend.
+  const claimedAt = new Date()
   const claim = await transactionsCol.findOneAndUpdate(
     { _id: txObjectId, emailSentAt: { $exists: false } },
-    { $set: { emailSentAt: new Date(), updatedAt: new Date() } },
+    { $set: { emailSentAt: claimedAt, updatedAt: claimedAt } },
   )
   if (!claim) {
     return { sent: false, reason: 'already_sent' }
@@ -169,18 +175,18 @@ export async function sendPurchaseReceipt(
   let productDoc: Document | null
   try {
     ;[userDoc, productDoc] = await Promise.all([
-      db.collection('users').findOne(
-        {
-          _id: (ObjectId.isValid(userId) ? new ObjectId(userId) : userId) as ObjectId,
-        },
-        { projection: { email: 1, locale: 1 } },
-      ),
-      db.collection('products').findOne(
-        {
-          _id: (ObjectId.isValid(productId) ? new ObjectId(productId) : productId) as ObjectId,
-        },
-        { projection: { name: 1, title: 1 } },
-      ),
+      db
+        .collection('users')
+        .findOne(
+          { _id: objectIdFromString(userId) as unknown as ObjectId },
+          { projection: { email: 1, locale: 1 } },
+        ),
+      db
+        .collection('products')
+        .findOne(
+          { _id: objectIdFromString(productId) as unknown as ObjectId },
+          { projection: { name: 1, title: 1 } },
+        ),
     ])
   } catch (err) {
     await rollbackClaim(transactionsCol, txObjectId)
@@ -251,7 +257,7 @@ export async function sendPurchaseReceipt(
   try {
     const result = await resend.emails.send(
       {
-        from: DEFAULT_FROM,
+        from: getFromAddress(),
         to: userEmail,
         subject,
         html,
