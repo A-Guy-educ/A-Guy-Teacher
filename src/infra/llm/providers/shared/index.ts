@@ -4,6 +4,7 @@
  *
  * @fileType module
  * @domain ai
+ * @ai-summary Re-exports barrel — consuming code only imports from here, not individual sub-modules. This isolates callers from internal file structure changes. All utilities are provider-agnostic; none know about Genkit specifics.
  */
 
 export * from './circuit-breaker'

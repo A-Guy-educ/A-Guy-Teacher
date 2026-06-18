@@ -1,6 +1,8 @@
 /**
  * Output schemas for the lesson-duplication variation pipeline.
  *
+ * @ai-summary These schemas are NOT wired to Gemini's responseSchema — both passes use text-mode parsing with post-hoc safeParse validation. Gemini's responseSchema collapses nested object arrays into literal string arrays (issue #1748). If Genkit/Gemini structured-output support improves, pass 1 can opt back in by re-adding outputSchema. sanitizeAiBlocks + payload.create's strict Zod validation are the actual enforcement.
+ *
  * Status (2026-05-13):
  *  - `SolutionDerivationOutputSchema` (pass 2): POST-HOC VALIDATION ONLY.
  *    NOT passed to Genkit's outputSchema / Gemini's responseSchema — verified

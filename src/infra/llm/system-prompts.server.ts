@@ -4,6 +4,7 @@
  * @fileType ai-utility
  * @domain chat
  * @pattern server-only
+ * @ai-summary Returns empty array if no prompts exist (graceful degradation). Sort order is ASC by createdAt then id as tiebreaker — this is deterministic even if multiple prompts share the same timestamp. Prompts are admin-only, hence overrideAccess: true.
  */
 import type { Prompt } from '@/infra/types/content'
 import { logger } from '@/infra/utils/logger'

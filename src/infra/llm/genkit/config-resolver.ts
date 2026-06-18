@@ -5,6 +5,7 @@
  * @fileType implementation
  * @domain ai
  * @pattern config-mapping, genkit
+ * @ai-summary Config hierarchy: env-var override > ConfigValues (DB) > MODEL_REGISTRY (code defaults). If ConfigValues are unavailable at runtime, falls back silently to registry defaults — the app won't crash but will use less-specific model configs. maxOutputTokens takes the higher of DB and registry to avoid truncation.
  *
  * Configuration hierarchy (highest → lowest):
  * 1. LLM_MODEL_OVERRIDE_* env vars

@@ -1,0 +1,18 @@
+[
+  {
+    "type": "preference",
+    "name": "ai-summary-never-restates-code",
+    "hook": "@ai-summary captures why and trap, never what the code does",
+    "body": "@ai-summary must document the non-obvious: why the module exists, what can go wrong, and what assumptions callers must not break. It should NEVER restate what the code obvious says (e.g. 'retries with exponential backoff' for a file named retry.ts). Use the @ai-summary to surface gotchas that grepping across files won't reveal.\n\nWhy: A coding agent reading a cold file needs to understand the trap, not the mechanic. Restating mechanics wastes the tag and trains agents to ignore it.\n\nHow to apply: When adding @ai-summary, ask 'what would a developer mis-understand or mis-configure here?' and put that in the summary.",
+    "why": "Without this convention, @ai-summary devolves into restating the obvious, providing no value over reading the code.",
+    "confidence": 0.95
+  },
+  {
+    "type": "decision",
+    "name": "ts-nocheck-files-documented",
+    "hook": "@ts-nocheck files get explicit @ai-summary warning about type safety",
+    "body": "For files with @ts-nocheck (media-validation.ts, support-generation-prompt-builder.ts, lesson-duplication-variation-service.ts), the @ai-summary explicitly calls out the @ts-nocheck status and what the developer must keep in sync manually.\n\nWhy: @ts-nocheck means TypeScript will not catch shape mismatches at compile time. Changes to shared types can silently break @ts-nocheck files without any warning.\n\nHow to apply: When adding @ai-summary to a @ts-nocheck file, include a sentence like '// @ts-nocheck — if you change X shape, search for all usages to update manually since TS won't catch breaks here.'",
+    "why": "Preventing silent type contract breaks in files that opt out of the type system's safety net.",
+    "confidence": 0.9
+  }
+]

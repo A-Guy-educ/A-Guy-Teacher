@@ -3,6 +3,8 @@
  * Protocol: Extracts questions with multiple-choice or free-response answers
  * Use case: Converting static exercise images to structured JSON
  * Note: This prompt expects ONLY the image - no additional context text
+ *
+ * @ai-summary Output must be plain JSON (no markdown fences). Only extracts the FIRST separate exercise if the image has multiple. Error keys are returned as JSON (not plain text) so callers can detect them programmatically. Use V3 prompt (v3-exercise-with-diagrams.ts) for multi-part exercises with stem/sub-questions.
  */
 
 export const SIMPLE_TEXT_QUESTION_PROMPT = `You are an expert at converting exercise images into structured JSON format for an educational platform.

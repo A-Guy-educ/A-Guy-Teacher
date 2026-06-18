@@ -5,6 +5,7 @@
  * @fileType utility
  * @domain ai
  * @pattern timeout
+ * @ai-summary Promise.race between the operation and a timeout. If timeout wins, the operation keeps running in the background — it is NOT aborted. Use createAbortSignal if you need actual cancellation via AbortController.
  */
 
 export interface TimeoutOptions {

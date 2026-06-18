@@ -1,0 +1,18 @@
+[
+  {
+    "type": "lesson",
+    "name": "genkit-toolcall-shape-mapping",
+    "hook": "Genkit toolCalls: {toolName, arguments} ≠ UnifiedLLMProvider: {name, args}",
+    "body": "When extracting tool calls from Genkit's GenerateResponse, Genkit uses `{ toolName: string; arguments?: any }[]` while UnifiedLLMProvider expects `{ name: string; args: Record<string, unknown> }[]`. A mapping is required — not a direct assignment.\n\nWhy: The shape mismatch means directly assigning `result.toolCalls` would cause type errors and wrong field names at runtime.\n\nHow to apply: When editing generateChatCompletionWithTools or any code that bridges Genkit tool calls to the UnifiedLLMProvider interface, always map `toolName → name` and `arguments → args`.",
+    "why": "Without this mapping, tool call extraction would silently produce wrong field names, causing tool executors to receive empty args.",
+    "confidence": 0.95
+  },
+  {
+    "type": "lesson",
+    "name": "scan-for-duplicate-declarations",
+    "hook": "After adding a new variable, scan for pre-existing same-name declarations in same scope",
+    "body": "Before adding a new `const X` in a function or block scope, grep for existing `const X` in the same scope or parent scope to avoid TS2451 'Cannot redeclare block-scoped variable'. This is especially likely when editing a function that already had similar extraction logic.\n\nWhy: TypeScript treats two `const` declarations with the same name in the same scope as an error. The fix requires merging or renaming.\n\nHow to apply: When adding new extraction logic (e.g., toolCalls), search the function body for any prior declaration of the same variable name before committing the change.",
+    "why": "A prior session may have added the same variable name in the same scope for a different data source, and both exist in the diff without being visible together.",
+    "confidence": 0.95
+  }
+]

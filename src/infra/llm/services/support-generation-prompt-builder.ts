@@ -2,6 +2,8 @@
 /**
  * Prompt builder for support generation
  * Extracts block context into a structured user prompt
+ *
+ * @ai-summary @ts-nocheck — if block types change, no compile errors will catch mismatches. The prompt format must stay compatible with what SUPPORT_GENERATION_PROMPT expects (three keys: hints, solution, fullSolution). Adding a new block type here with a different answer extraction path requires updating the prompt template too.
  */
 import type { ContentBlock } from '@/infra/types/exercise'
 

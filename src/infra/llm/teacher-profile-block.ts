@@ -7,6 +7,7 @@
  * @fileType ai-utility
  * @domain chat
  * @pattern server-only
+ * @ai-summary The block format is consumed by the prompt template using a specific regex to extract the profile label and description. If you change the XML-like format here, the prompt template's extraction regex will break silently and the profile will not be injected correctly. Keep the format stable.
  */
 
 import type { ResolvedTeacherProfile } from '@/server/services/teacher-profile-resolver'

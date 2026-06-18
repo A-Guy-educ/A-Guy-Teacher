@@ -5,6 +5,8 @@
  * - Strips solutions and correct answers (prevent leakage)
  * - Includes hints (helps LLM guide student)
  * - Caps output at 2000 characters
+ *
+ * @ai-summary Strips answer data to prevent LLM from seeing solutions. The 2000-char cap means very long exercises are truncated mid-block — the LLM gets partial context. If the LLM needs full exercise content, this cap must be raised (with cost/latency implications).
  */
 
 import type {

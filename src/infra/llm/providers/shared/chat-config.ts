@@ -1,6 +1,8 @@
 /**
  * Chat Config
  * Loads configuration from ConfigValues (chat domain)
+ *
+ * @ai-summary Reads from ConfigValues (DB) with no fallback — if the chat domain isn't configured, getChatConfig() throws. This is intentional: a missing chat config means the app hasn't been initialized properly and should fail fast rather than silently using wrong defaults.
  */
 import { ConfigDomain } from '@/infra/config/config-constants'
 import { getConfigDomain } from '@/infra/config/runtime'

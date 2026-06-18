@@ -1,0 +1,14 @@
+[
+  {
+    "title": "unified-adapter.ts lacks @ai-summary",
+    "body": "src/infra/llm/genkit/adapters/unified-adapter.ts (~497 lines) has no @ai-summary. It was not read during this session because the file path didn't match the initial scan pattern. It should be added.",
+    "rationale": "The unified-adapter is the central Genkit wrapper — a coding agent hitting it cold won't understand the error classification hierarchy or the outputJsonSchema vs outputSchema distinction without reading the full file.",
+    "priority": "medium"
+  },
+  {
+    "title": "genkit-tools.ts has @ai-summary but should be verified",
+    "body": "src/infra/llm/genkit/tools/genkit-tools.ts already has @ai-summary (lines 5-7 per earlier scan). Verify it's substantive and not just a code restatement, per the convention established during this task.",
+    "rationale": "Pre-existing @ai-summary was not audited for quality during this session. If it merely restates what the code says, it should be improved.",
+    "priority": "low"
+  }
+]

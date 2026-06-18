@@ -1,6 +1,8 @@
 /**
  * Image optimization utilities for AI processing
  * Reusable across all AI features that accept images
+ *
+ * @ai-summary Only resizes when the largest dimension exceeds maxDimension (default 2048). Smaller images pass through unchanged. Aspect ratio is always preserved; the image is never cropped or distorted.
  */
 import sharp from 'sharp'
 

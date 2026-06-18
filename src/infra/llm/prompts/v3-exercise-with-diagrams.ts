@@ -3,6 +3,8 @@
  * Protocol: Extracts multi-part exercises with stem + sub-questions, plus diagram descriptions
  * Use case: V3 converter that preserves diagram information and supports exercises with א/ב/ג parts
  * Note: This prompt expects ONLY the image - no additional context text
+ *
+ * @ai-summary diagramPosition is deprecated — the prompt instructs the LLM to omit it; global diagrams always go before the stem. The title must be 3-8 words describing the CONCEPT, not the task. Per-sub-question diagrams must be placed in that sub-question's diagramDescription field only, not the top-level field. Only extracts the FIRST separate exercise if the image has multiple.
  */
 
 export const V3_EXERCISE_WITH_DIAGRAMS_PROMPT = `You are an expert at converting exercise images into structured JSON format for an educational platform.

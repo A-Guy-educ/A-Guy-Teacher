@@ -2,6 +2,8 @@
  * AI Service Layer - Public API
  * Centralized exports for all AI functionality
  *
+ * @ai-summary Entry point for all AI services in the infra layer. Import from here rather than reaching into submodules — this is the stable public contract. Submodule imports may shift as the codebase evolves.
+ *
  * Future-ready: Easy to extend with new features like:
  * - Exercise editing suggestions
  * - Content generation

@@ -5,6 +5,7 @@
  *
  * @fileType types
  * @domain ai
+ * @ai-summary Only two providers: GEMINI and OPENAI_COMPATIBLE. The string values match the LLM_PROVIDER env var — do not change them without updating the env var convention.
  */
 
 // Provider types - matches LLM_PROVIDER env var values

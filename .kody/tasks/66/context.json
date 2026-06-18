@@ -1,0 +1,16 @@
+{
+  "taskId": "66",
+  "taskType": "pr",
+  "target": "PR #66 (fix round for #63: docs: src/infra/llm/ missing @ai-summary headers)",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Fixed TS2451: Cannot redeclare block-scoped variable 'toolCalls' at unified-adapter.ts:439,458. The PR's new toolCalls extraction from result.toolCalls conflicted with an existing extraction from result.messages in the same scope. Merged into a single const toolCalls array, spreading result.toolCalls as the base and pushing result.messages toolRequests into it. Typecheck passes.",
+  "prUrl": null,
+  "runUrl": "https://github.com/A-Guy-educ/A-Guy-Web/actions/runs/27724953862",
+  "filesTouched": [
+    "src/infra/llm/genkit/adapters/unified-adapter.ts"
+  ],
+  "sessionLog": ".kody/sessions/66.jsonl",
+  "startedAt": "2026-06-17T22:59:00.000Z",
+  "finishedAt": "2026-06-17T23:05:00.000Z"
+}
