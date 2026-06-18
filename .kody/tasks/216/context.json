@@ -1,0 +1,27 @@
+{
+  "taskId": "216",
+  "taskType": "issue",
+  "target": "216",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added README.md header and @ai-summary to all 11 files in src/infra/loading/",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/loading/README.md",
+    "src/infra/loading/index.ts",
+    "src/infra/loading/LoadingManager.ts",
+    "src/infra/loading/AsyncAction.ts",
+    "src/infra/loading/keys.ts",
+    "src/infra/loading/hooks/useLoadingState.ts",
+    "src/infra/loading/hooks/useAsyncAction.ts",
+    "src/infra/loading/hooks/useRouterWithLoading.ts",
+    "src/infra/loading/components/RouteLoadingIndicator.tsx",
+    "src/infra/loading/components/SystemLink.tsx",
+    "src/infra/loading/components/Spinner.tsx",
+    "src/infra/loading/utils/resolveHref.ts"
+  ],
+  "sessionLog": ".kody/sessions/61b5cc16-ef9d-4885-9700-f4d76d6a5362.jsonl",
+  "startedAt": "2026-06-11T21:00:00Z",
+  "finishedAt": "2026-06-11T21:03:00Z"
+}

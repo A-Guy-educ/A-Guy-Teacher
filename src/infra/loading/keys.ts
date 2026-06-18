@@ -1,6 +1,11 @@
 // @ai-summary Central string registry for all loading keys; using constants prevents typos and makes keys grep-able. Future keys are commented but not yet wired.
 
 /**
+ * @fileType utility
+ * @domain frontend
+ * @ai-summary Canonical string keys for loading operations — collocates all keys in one place so duplicate-key bugs surface early.
+ */
+/**
  * Central registry of loading keys
  *
  * @fileType constant

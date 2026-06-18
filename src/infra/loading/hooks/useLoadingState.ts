@@ -21,8 +21,11 @@
 import { useSyncExternalStore, useCallback, useMemo } from 'react'
 import { loadingManager } from '../LoadingManager'
 
-// @ai-summary Subscribes to LoadingManager state; re-renders only when the selected condition changes, not on every store mutation. SSR-safe (returns false).
-
+/**
+ * @fileType client-hook
+ * @domain frontend
+ * @ai-summary Subscribes to LoadingManager state — re-renders only when the selected condition (busy/screen/route/key) actually changes.
+ */
 type LoadingSelector = 'busy' | 'screen' | 'route' | { key: string }
 
 /**

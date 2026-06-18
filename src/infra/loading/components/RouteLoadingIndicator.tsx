@@ -33,6 +33,11 @@ const HIDE_DELAY_MS = 150 // Smooth hide transition
 const MIN_VISIBLE_TIME_MS = 500 // Prevent flicker on rapid nav
 
 /**
+ * @fileType component
+ * @domain frontend
+ * @ai-summary Top-of-screen indeterminate progress bar for route transitions — shows only after 300 ms of continuous loading and enforces a 500 ms minimum visible time to prevent flicker; unregisters on pathname or searchParams change, not on actual nav completion.
+ */
+/**
  * Global route loading indicator
  * - Indeterminate progress bar (no fake percentages)
  * - Only shows if navigation exceeds threshold

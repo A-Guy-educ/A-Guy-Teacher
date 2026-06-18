@@ -8,6 +8,11 @@
  */
 import { loadingManager, type LoadingManagerInstance } from './LoadingManager'
 
+/**
+ * @fileType utility
+ * @domain frontend
+ * @ai-summary Wraps async operations with loading state — registers key on start, unregisters in finally; defaults to singleton manager (use createAsyncAction in tests to avoid cross-test pollution).
+ */
 export interface ActionResult<T = unknown> {
   success: boolean
   data?: T
