@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- feat: Send purchase receipt email via Resend on capture ([#282](https://github.com/A-Guy-educ/A-Guy-Web/pull/282)) — @aguyshayb
 - #216: Doc coverage: src/infra/loading/ — Client-side loading state mana… ([#217](https://github.com/A-Guy-educ/A-Guy-Web/pull/217)) — @kodyade[bot]
 - #146: Doc coverage: src/infra/loading/ — Client-side loading state mana… ([#147](https://github.com/A-Guy-educ/A-Guy-Web/pull/147)) — @kodyade[bot]
 - #189: Doc coverage: src/server/utils/ — Server-side auth, course URL, P… ([#223](https://github.com/A-Guy-educ/A-Guy-Web/pull/223)) — @kodyade[bot]
