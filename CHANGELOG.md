@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #63: docs: src/infra/llm/ missing @ai-summary headers ([#66](https://github.com/A-Guy-educ/A-Guy-Web/pull/66)) — @kodyade[bot]
 - feat: Send purchase receipt email via Resend on capture ([#282](https://github.com/A-Guy-educ/A-Guy-Web/pull/282)) — @aguyshayb
 - #216: Doc coverage: src/infra/loading/ — Client-side loading state mana… ([#217](https://github.com/A-Guy-educ/A-Guy-Web/pull/217)) — @kodyade[bot]
 - #146: Doc coverage: src/infra/loading/ — Client-side loading state mana… ([#147](https://github.com/A-Guy-educ/A-Guy-Web/pull/147)) — @kodyade[bot]
