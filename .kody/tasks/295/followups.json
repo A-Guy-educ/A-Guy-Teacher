@@ -1,0 +1,8 @@
+[
+  {
+    "title": "Fix keys.ts @ai-summary comment style inconsistency",
+    "body": "src/infra/loading/keys.ts:1 opens with `// @ai-summary` (line comment) instead of the `/** @ai-summary */` JSDoc block used by all sibling files. Cosmetic — the annotation is still present inside a proper JSDoc at line 6, so functionality is unaffected.",
+    "rationale": "Consistency with sibling files; low priority.",
+    "priority": "low"
+  }
+]

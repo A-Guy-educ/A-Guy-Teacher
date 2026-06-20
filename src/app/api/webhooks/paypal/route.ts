@@ -181,10 +181,18 @@ async function maybeSendReceipt(
 
   if (result.sent) {
     logger.info({ transactionId }, 'Purchase receipt sent')
-  } else if (result.reason === 'error' || result.reason === 'missing_data') {
-    // already_sent and no_adapter are routine — only log the surprising cases.
-    logger.warn({ transactionId, reason: result.reason }, 'Purchase receipt not sent')
+  } else if (result.reason === 'error') {
+    // result.error from Resend means the claim was rolled back inside
+    // sendPurchaseReceipt, but PayPal still needs to retry. Throw so the
+    // webhook returns 500 and PayPal re-delivers the event.
+    logger.warn({ transactionId }, 'Purchase receipt send failed — throwing so PayPal retries')
+    throw new Error(`Purchase receipt send failed: ${transactionId}`)
+  } else if (result.reason === 'missing_data') {
+    // missing_data is already rolled back inside sendPurchaseReceipt.
+    // Nothing to retry — return 200 so PayPal doesn't spin forever.
+    logger.warn({ transactionId }, 'Purchase receipt missing data — acknowledging')
   }
+  // already_sent and no_adapter are routine no-ops — acknowledge.
 }
 
 async function handleEvent(event: PayPalWebhookEvent): Promise<void> {

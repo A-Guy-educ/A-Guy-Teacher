@@ -337,6 +337,60 @@ describe('POST /api/webhooks/paypal', () => {
     expect(updateOneMock).not.toHaveBeenCalled()
   })
 
+  it('on PAYMENT.CAPTURE.COMPLETED retry: re-enters the send path when emailSentAt is missing after a prior rollback', async () => {
+    // Mirror of the CHECKOUT.ORDER.APPROVED retry test above: if the receipt
+    // service rolled back its claim (DB blip during user/product lookup),
+    // PayPal's retry should re-attempt the send.
+    const { verifyPayPalWebhook } = await import('@/lib/payment/paypal')
+    ;(verifyPayPalWebhook as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+
+    findOneMock.mockResolvedValueOnce({
+      _id: TX_ID,
+      user: '507f191e810c19729de860ea',
+      product: '507f191e810c19729de860eb',
+      providerTransactionId: ORDER_ID,
+      status: 'succeeded',
+      captureId: CAPTURE_ID,
+      amount: 4900,
+      currency: 'ILS',
+      // NB: no emailSentAt — prior attempt rolled back.
+    })
+
+    const { POST } = await import('@/app/api/webhooks/paypal/route')
+    const res = await POST(buildRequest(captureCompletedEvent()))
+
+    expect(res.status).toBe(200)
+    expect(sendReceiptMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('on PAYMENT.CAPTURE.COMPLETED: returns 500 when sendPurchaseReceipt returns error (PayPal retries)', async () => {
+    // When sendPurchaseReceipt returns { sent: false, reason: 'error' } (Resend
+    // result-level error), maybeSendReceipt throws so PayPal retries.
+    // The sendReceiptMock is set to return error below.
+    sendReceiptMock.mockResolvedValueOnce({ sent: false, reason: 'error' })
+
+    const { verifyPayPalWebhook } = await import('@/lib/payment/paypal')
+    ;(verifyPayPalWebhook as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+
+    findOneMock.mockResolvedValueOnce({
+      _id: TX_ID,
+      user: '507f191e810c19729de860ea',
+      product: '507f191e810c19729de860eb',
+      providerTransactionId: ORDER_ID,
+      status: 'succeeded',
+      captureId: CAPTURE_ID,
+      amount: 4900,
+      currency: 'ILS',
+      // emailSentAt missing — prior attempt's rollback means we can re-enter.
+    })
+
+    const { POST } = await import('@/app/api/webhooks/paypal/route')
+    const res = await POST(buildRequest(captureCompletedEvent()))
+
+    expect(res.status).toBe(500)
+    expect(sendReceiptMock).toHaveBeenCalledTimes(1)
+  })
+
   it('acknowledges (200) for unhandled event types without DB writes', async () => {
     const { verifyPayPalWebhook } = await import('@/lib/payment/paypal')
     ;(verifyPayPalWebhook as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true)

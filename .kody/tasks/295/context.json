@@ -1,0 +1,17 @@
+{
+  "taskId": "295",
+  "taskType": "pr",
+  "target": "PR #295: deploy dev → main (v0.26.0)",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Fixed BLOCK (maybeSendReceipt swallowing result.error) and added missing tests",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/app/api/webhooks/paypal/route.ts",
+    "tests/unit/api/webhooks/paypal-route.spec.ts"
+  ],
+  "sessionLog": ".kody/sessions/live-1778597280857-cfqzgo.jsonl",
+  "startedAt": "2026-06-20T11:30:00Z",
+  "finishedAt": "2026-06-20T11:35:00Z"
+}
