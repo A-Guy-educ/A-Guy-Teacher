@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore(deps): bump actions/cache from 4 to 5 ([#2](https://github.com/A-Guy-educ/A-Guy-Web/pull/2)) — @dependabot[bot]
 - #63: docs: src/infra/llm/ missing @ai-summary headers ([#66](https://github.com/A-Guy-educ/A-Guy-Web/pull/66)) — @kodyade[bot]
 - feat: Send purchase receipt email via Resend on capture ([#282](https://github.com/A-Guy-educ/A-Guy-Web/pull/282)) — @aguyshayb
 - #216: Doc coverage: src/infra/loading/ — Client-side loading state mana… ([#217](https://github.com/A-Guy-educ/A-Guy-Web/pull/217)) — @kodyade[bot]
