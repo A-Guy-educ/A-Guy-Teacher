@@ -185,7 +185,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Cache .next build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .next
           key: ${{ runner.os }}-next-${{ github.sha }}
@@ -240,7 +240,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Restore .next build from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .next
           key: ${{ runner.os }}-next-${{ github.sha }}
@@ -342,7 +342,7 @@ jobs:
 
       - name: Restore .next build from cache
         if: needs.build.result == 'success'
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .next
           key: ${{ runner.os }}-next-${{ github.sha }}
@@ -439,7 +439,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Restore .next build from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .next
           key: ${{ runner.os }}-next-${{ github.sha }}
@@ -523,7 +523,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Restore .next build from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .next
           key: ${{ runner.os }}-next-${{ github.sha }}
