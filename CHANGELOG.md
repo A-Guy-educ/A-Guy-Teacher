@@ -1813,6 +1813,8 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+## [v0.26.0] - 2026-06-20
+
 - chore(deps): bump actions/upload-pages-artifact from 3 to 5 ([#5](https://github.com/A-Guy-educ/A-Guy-Web/pull/5)) — @dependabot[bot]
 - chore(deps): bump actions/cache from 4 to 5 ([#2](https://github.com/A-Guy-educ/A-Guy-Web/pull/2)) — @dependabot[bot]
 - #63: docs: src/infra/llm/ missing @ai-summary headers ([#66](https://github.com/A-Guy-educ/A-Guy-Web/pull/66)) — @kodyade[bot]
