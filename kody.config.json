@@ -14,6 +14,10 @@
     "repo": "A-Guy-Web",
     "operators": ["aguyaharonyair"]
   },
+  "state": {
+    "repo": "https://github.com/A-Guy-educ/kody-state",
+    "path": "A-Guy-Web"
+  },
   "agent": {
     "model": "minimax/MiniMax-M2.7-highspeed"
   },
