@@ -58,9 +58,6 @@
     "default": "run"
   },
   "company": {
-    "activeGoals": [
-      "web-release"
-    ],
     "activeAgentResponsibilities": [
       "agent-responsibility-call"
     ]
