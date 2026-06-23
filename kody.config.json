@@ -67,7 +67,6 @@
       "cto"
     ],
     "activeAgentActions": [
-      "release-merge",
       "vercel-production-deploy"
     ]
   }
