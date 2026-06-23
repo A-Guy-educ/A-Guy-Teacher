@@ -67,7 +67,6 @@
     ],
     "activeAgentActions": [
       "release-prepare",
-      "release-merge",
       "vercel-production-deploy"
     ]
   }
