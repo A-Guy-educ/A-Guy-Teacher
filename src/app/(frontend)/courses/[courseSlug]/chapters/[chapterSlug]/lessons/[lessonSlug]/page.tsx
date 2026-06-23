@@ -246,9 +246,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   for (const page of contentPagesInBlocks) {
     const bodyBlocks = getContentPageBodyBlocks(page.body)
     if (!bodyBlocks || bodyBlocks.length === 0) continue
-    contentPageBodies[page.id] = (
-      <ContentPageBodyRenderer blocks={bodyBlocks as never} />
-    )
+    contentPageBodies[page.id] = <ContentPageBodyRenderer blocks={bodyBlocks as never} />
   }
   const [courseLessons, progress] = await Promise.all([
     queryLessonsByCourse({ courseId: course.id }),
