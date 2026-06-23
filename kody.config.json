@@ -70,9 +70,6 @@
     "activeAgentActions": [
       "release-merge",
       "vercel-production-deploy"
-    ],
-    "activeGoals": [
-      "web-release"
     ]
   }
 }
