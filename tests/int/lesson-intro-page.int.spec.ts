@@ -118,6 +118,7 @@ beforeAll(async () => {
     _id: chapterObjectId,
     title: `LessonIntro Test Chapter ${timestamp}`,
     chapterLabel: `LI-${timestamp}`,
+    slug: `lesson-intro-chapter-${timestamp}`,
     course: courseObjectId,
     order: 0,
     status: 'published',
