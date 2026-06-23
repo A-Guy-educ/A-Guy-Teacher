@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #308: Remove free-registration button from /login, prepend free-of-char… ([#312](https://github.com/A-Guy-educ/A-Guy-Web/pull/312)) — @kodyade[bot]
 ## [v0.26.0] - 2026-06-20
 
 - chore(deps): bump actions/upload-pages-artifact from 3 to 5 ([#5](https://github.com/A-Guy-educ/A-Guy-Web/pull/5)) — @dependabot[bot]
