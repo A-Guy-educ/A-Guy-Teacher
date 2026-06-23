@@ -62,7 +62,6 @@
       "agent-responsibility-call",
       "release",
       "release-prepare",
-      "release-merge",
       "vercel-production-deploy"
     ],
     "activeAgents": [
