@@ -300,6 +300,54 @@ export function useExercisesPager({
     })
   }, [firstPageNumber, pageToState, saveBlockProgress])
 
+  const handleJumpToExercise = useCallback(
+    (exerciseOrdinal: number) => {
+      if (exerciseOrdinal < 1 || exerciseOrdinal > totalExercises) return
+
+      let exerciseCount = 0
+      let targetBlockIndex = -1
+      for (let i = 0; i < resolvedBlocks.length; i++) {
+        if (resolvedBlocks[i]?.type === 'exercise') {
+          exerciseCount++
+          if (exerciseCount === exerciseOrdinal) {
+            targetBlockIndex = i
+            break
+          }
+        }
+      }
+      if (targetBlockIndex < 0) return
+
+      const targetPage = targetBlockIndex + firstBlockPage
+
+      startTransition(() => {
+        setPageState((prev) => {
+          if (targetPage === prev.pageNumber) return prev
+
+          saveBlockProgress(prev)
+
+          saveProgress(gradeLevel, {
+            recordType: 'lesson',
+            recordId: lessonId,
+            completionPercentage:
+              totalExercises > 0 ? Math.round((exerciseOrdinal / totalExercises) * 100) : 0,
+            status: 'in_progress',
+          })
+
+          return pageToState(targetPage)
+        })
+      })
+    },
+    [
+      totalExercises,
+      resolvedBlocks,
+      firstBlockPage,
+      gradeLevel,
+      lessonId,
+      pageToState,
+      saveBlockProgress,
+    ],
+  )
+
   const handleStart = useCallback(() => {
     if (resolvedBlocks.length === 0) {
       setPageState({ type: 'outro', pageNumber: totalPages - 1 })
@@ -368,6 +416,7 @@ export function useExercisesPager({
     canGoPrev: pageState.pageNumber > firstPageNumber,
     handleNext,
     handlePrev,
+    handleJumpToExercise,
     handleStart,
     getExerciseOrdinal,
     getContentPageOrdinal,

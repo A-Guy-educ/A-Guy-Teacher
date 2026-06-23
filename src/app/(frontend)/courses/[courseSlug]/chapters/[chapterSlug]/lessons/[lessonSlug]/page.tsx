@@ -16,7 +16,14 @@ import {
   isAuthenticatedServer,
 } from '@/server/utils/access-gate-server'
 import { checkPaidAccess } from '@/server/utils/check-paid-access'
-import type { Chapter, Course, Exercise, Media } from '@/infra/types/content'
+import type {
+  Chapter,
+  Course,
+  Exercise,
+  Lesson,
+  LessonPrerequisite,
+  Media,
+} from '@/infra/types/content'
 import { isValidContentLocale } from '@/infra/types/content'
 import { AccessGateProvider } from '@/ui/web/auth/AccessGateProvider'
 import { extractAllMediaIds } from '@/ui/web/exerciserenderer/utils/extractMediaIds'
@@ -260,6 +267,9 @@ export default async function LessonPage({ params }: LessonPageProps) {
         gradeLevel={course.courseLabel || ''}
         progress={progress}
         nextLesson={nextLesson}
+        prerequisites={
+          (lesson as Lesson & { prerequisites?: LessonPrerequisite[] }).prerequisites ?? []
+        }
       />
     </AccessGateProvider>
   )

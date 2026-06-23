@@ -10,7 +10,6 @@ import { Button } from '@/ui/web/components/button'
 import { Card, CardContent, CardHeader } from '@/ui/web/components/card'
 import { Input } from '@/ui/web/components/input'
 import { Label } from '@/ui/web/components/label'
-import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { usePasswordLogin } from '@/ui/web/providers/PasswordLoginProvider'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
@@ -64,23 +63,15 @@ function LoginFormContent() {
           className="w-full h-14 rounded-xl text-body-md font-semibold"
         />
 
-        {/* Registration Link - appears below Google button when password is disabled */}
+        {/* Subtitle - appears below Google button when password is disabled */}
         {!passwordEnabled && (
-          <>
-            <div className="flex justify-center">
-              <SystemLink
-                href="/signup"
-                className="bg-muted text-primary font-bold rounded-full px-6 py-2 text-body-sm hover:bg-primary-soft transition-colors duration-normal inline-block"
-              >
-                {t('freeRegistration')}
-              </SystemLink>
-            </div>
-            <p className="text-body-sm text-muted-foreground text-center pt-2">
-              {t('secureAccess')}
-              <br />
-              {t('oneClickEntry')}
-            </p>
-          </>
+          <p className="text-body-sm text-muted-foreground text-center pt-2">
+            {t('loginFreeOfCharge')}
+            <br />
+            {t('secureAccess')}
+            <br />
+            {t('oneClickEntry')}
+          </p>
         )}
 
         {/* Email/Password Form - appears when password login is enabled */}
@@ -119,20 +110,14 @@ function LoginFormContent() {
               </Button>
             </form>
 
-            {/* Registration Link - appears below form when password is enabled */}
-            <div className="flex flex-col items-center gap-2 pt-2">
-              <SystemLink
-                href="/signup"
-                className="bg-muted text-primary font-bold rounded-full px-6 py-2 text-body-sm hover:bg-primary-soft transition-colors duration-normal inline-block"
-              >
-                {t('freeRegistration')}
-              </SystemLink>
-              <p className="text-body-sm text-muted-foreground text-center">
-                {t('secureAccess')}
-                <br />
-                {t('oneClickEntry')}
-              </p>
-            </div>
+            {/* Subtitle - appears below form when password is enabled */}
+            <p className="text-body-sm text-muted-foreground text-center">
+              {t('loginFreeOfCharge')}
+              <br />
+              {t('secureAccess')}
+              <br />
+              {t('oneClickEntry')}
+            </p>
           </>
         )}
       </CardContent>

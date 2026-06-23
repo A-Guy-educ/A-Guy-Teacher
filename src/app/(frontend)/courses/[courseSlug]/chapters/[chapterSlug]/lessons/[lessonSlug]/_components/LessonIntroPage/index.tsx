@@ -5,8 +5,9 @@ import { BookOpen, ChevronLeft, FileText, Layers, RotateCcw, Sparkles } from 'lu
 import { useSearchParams } from 'next/navigation'
 
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
-import type { Lesson, Media } from '@/infra/types/content'
+import type { Lesson, LessonPrerequisite, Media } from '@/infra/types/content'
 import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
+import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ChatInterface } from '@/ui/web/chat'
 import { Button } from '@/ui/web/components/button'
 import { Progress } from '@/ui/web/components/progress'
@@ -42,6 +43,8 @@ interface LessonIntroPageProps {
   gradeLevel?: string
   progress?: LessonProgressSummary
   nextLesson?: Pick<Lesson, 'title' | 'slug'> | null
+  /** Populated prerequisite lessons with URL info */
+  prerequisites?: LessonPrerequisite[]
 }
 
 function plainText(value?: string | null) {
@@ -69,6 +72,7 @@ export function LessonIntroPage({
   gradeLevel = '',
   progress,
   nextLesson,
+  prerequisites = [],
 }: LessonIntroPageProps) {
   const t = useTranslations('courses')
   const searchParams = useSearchParams()
@@ -293,6 +297,26 @@ export function LessonIntroPage({
                   {t('lessonLobbyNextLesson')}
                 </p>
                 <p className="mt-2 text-body-md font-medium text-foreground">{nextLesson.title}</p>
+              </div>
+            ) : null}
+
+            {prerequisites.length > 0 ? (
+              <div className="rounded-lg border border-border bg-muted p-card-padding-sm md:p-card-padding">
+                <p className="text-label uppercase tracking-wider text-muted-foreground">
+                  {t('lessonLobbyPrerequisites')}
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {prerequisites.map((prereq) => (
+                    <li key={prereq.id}>
+                      <SystemLink
+                        href={`/courses/${prereq.courseSlug}/chapters/${prereq.chapterSlug}/lessons/${prereq.slug}`}
+                        className="block text-body-sm font-medium text-foreground transition-colors hover:text-primary"
+                      >
+                        {prereq.title}
+                      </SystemLink>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : null}
           </aside>
