@@ -65,9 +65,6 @@
     ],
     "activeAgents": [
       "cto"
-    ],
-    "activeAgentActions": [
-      "vercel-production-deploy"
     ]
   }
 }
