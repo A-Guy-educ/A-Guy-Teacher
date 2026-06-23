@@ -133,6 +133,18 @@ export interface Lesson {
   contentStatusLabel?: string | null
   tenant?: string | Tenant | null
   meta?: Meta | null
+  prerequisites?: Array<string | Lesson> | null
+}
+
+/**
+ * Minimal lesson info needed to render a prerequisite row with a link.
+ */
+export interface LessonPrerequisite {
+  id: string
+  title: string
+  slug: string
+  chapterSlug: string
+  courseSlug: string
 }
 
 export interface Exercise {
