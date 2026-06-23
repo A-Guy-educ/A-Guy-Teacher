@@ -60,8 +60,7 @@
   "company": {
     "activeAgentResponsibilities": [
       "agent-responsibility-call",
-      "release",
-      "vercel-production-deploy"
+      "release"
     ],
     "activeAgents": [
       "cto"
