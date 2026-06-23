@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Exercise, Media as MediaType } from '@/infra/types/content'
 import { Button } from '@/ui/web/components/button'
+import { Input } from '@/ui/web/components/input'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
 import {
@@ -84,6 +85,7 @@ export function ExercisesPager({
     canGoPrev,
     handleNext,
     handlePrev,
+    handleJumpToExercise,
     handleStart,
     getExerciseOrdinal,
     totalExercises,
@@ -101,6 +103,7 @@ export function ExercisesPager({
   const [showConfetti, setShowConfetti] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [jumpInputValue, setJumpInputValue] = useState<string>('')
 
   const contentRef = useRef<HTMLDivElement>(null)
   const minSwipeDistance = 50
@@ -207,6 +210,14 @@ export function ExercisesPager({
   }, [pageState.type, lessonId, lessonTitle])
 
   const exerciseOrdinal = getExerciseOrdinal()
+
+  // Sync jump input value with current exercise ordinal
+  useEffect(() => {
+    if (exerciseOrdinal !== null) {
+      setJumpInputValue(String(exerciseOrdinal))
+    }
+  }, [exerciseOrdinal])
+
   const currentExercise =
     typeof pageState.exerciseIndex === 'number' ? exercises[pageState.exerciseIndex] : null
   const summaryResults = Object.values(exerciseResults.current)
@@ -320,6 +331,54 @@ export function ExercisesPager({
                 >
                   <span className="text-heading-lg font-light">‹</span>
                 </button>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={totalExercises}
+                  value={jumpInputValue}
+                  aria-label={t('exercisesPagerJumpToExercise')}
+                  aria-valuemin={1}
+                  aria-valuemax={totalExercises}
+                  aria-valuenow={exerciseOrdinal ?? undefined}
+                  className="w-16 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '')
+                    setJumpInputValue(val)
+                  }}
+                  onFocus={(e) => {
+                    e.target.select()
+                  }}
+                  onBlur={() => {
+                    const parsed = parseInt(jumpInputValue, 10)
+                    if (
+                      !isNaN(parsed) &&
+                      parsed >= 1 &&
+                      parsed <= totalExercises &&
+                      parsed !== exerciseOrdinal
+                    ) {
+                      handleJumpToExercise(parsed)
+                    } else {
+                      setJumpInputValue(exerciseOrdinal !== null ? String(exerciseOrdinal) : '')
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const parsed = parseInt(jumpInputValue, 10)
+                      if (
+                        !isNaN(parsed) &&
+                        parsed >= 1 &&
+                        parsed <= totalExercises &&
+                        parsed !== exerciseOrdinal
+                      ) {
+                        handleJumpToExercise(parsed)
+                      } else {
+                        setJumpInputValue(exerciseOrdinal !== null ? String(exerciseOrdinal) : '')
+                      }
+                      ;(e.target as HTMLInputElement).blur()
+                    }
+                  }}
+                />
                 <button
                   onClick={handleNext}
                   disabled={!canGoNext || isNavigating}

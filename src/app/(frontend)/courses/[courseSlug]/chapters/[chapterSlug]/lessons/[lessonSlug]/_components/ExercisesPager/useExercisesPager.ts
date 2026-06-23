@@ -255,6 +255,34 @@ export function useExercisesPager({
     })
   }, [firstPageNumber, pageToState, saveExerciseProgress])
 
+  const handleJumpToExercise = useCallback(
+    (exerciseOrdinal: number) => {
+      if (exerciseOrdinal < 1 || exerciseOrdinal > exercises.length) return
+
+      const exerciseIndex = exerciseOrdinal - 1
+      const targetPage = exerciseIndex + firstExercisePage
+
+      startTransition(() => {
+        setPageState((prev) => {
+          if (targetPage === prev.pageNumber) return prev
+
+          saveExerciseProgress(prev)
+
+          saveProgress(gradeLevel, {
+            recordType: 'lesson',
+            recordId: lessonId,
+            completionPercentage:
+              exercises.length > 0 ? Math.round(((exerciseIndex + 1) / exercises.length) * 100) : 0,
+            status: 'in_progress',
+          })
+
+          return pageToState(targetPage)
+        })
+      })
+    },
+    [exercises.length, firstExercisePage, gradeLevel, lessonId, pageToState, saveExerciseProgress],
+  )
+
   const handleStart = useCallback(() => {
     if (hasAboutPage) {
       setPageState({ type: 'about', pageNumber: 1 })
@@ -321,6 +349,7 @@ export function useExercisesPager({
     canGoPrev: pageState.pageNumber > firstPageNumber,
     handleNext,
     handlePrev,
+    handleJumpToExercise,
     handleStart,
     handleStartExercises,
     getExerciseOrdinal,
