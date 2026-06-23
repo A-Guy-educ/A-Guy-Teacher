@@ -72,9 +72,6 @@
       "release-prepare",
       "release-merge",
       "vercel-production-deploy"
-    ],
-    "activeGoals": [
-      "web-release"
     ]
   }
 }
