@@ -539,6 +539,7 @@
     "exercisesPagerNext": "Next",
     "exercisesPagerIntro": "Intro",
     "exercisesPagerCompleted": "Completed",
+    "exercisesPagerJumpToExercise": "Jump to exercise number",
     "lessonSummaryEndTitle": "End of lesson",
     "lessonSummarySolvedExercises": "Exercises solved",
     "lessonSummaryCorrectAnswers": "Correct answers",
