@@ -61,8 +61,7 @@
     "activeAgentResponsibilities": [
       "agent-responsibility-call",
       "release",
-      "release-prepare",
-      "vercel-production-deploy"
+      "release-prepare"
     ],
     "activeAgents": [
       "cto"
