@@ -60,8 +60,7 @@
   "company": {
     "activeAgentResponsibilities": [
       "agent-responsibility-call",
-      "release",
-      "release-prepare"
+      "release"
     ],
     "activeAgents": [
       "cto"
