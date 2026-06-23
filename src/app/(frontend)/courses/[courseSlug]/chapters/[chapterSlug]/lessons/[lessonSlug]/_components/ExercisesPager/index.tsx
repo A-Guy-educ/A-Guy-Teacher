@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  FileText,
   Layers,
   RotateCcw,
   Target,
@@ -32,7 +33,12 @@ const pageTransition = {
 }
 
 interface ExercisesPagerProps {
-  exercises: Exercise[]
+  /** Exercises array (used when no blocks are provided) */
+  exercises?: Exercise[]
+  /** Ordered lesson blocks (exercises and content pages) — preferred over exercises prop */
+  blocks?: import('@/server/repos/queries/lesson-blocks').ResolvedLessonBlock[]
+  /** Pre-rendered content page bodies (keyed by content page ID) */
+  contentPageBodies?: Record<string, React.ReactNode>
   lessonTitle: string
   backUrl: string
   courseSlug: string
@@ -59,6 +65,8 @@ interface ExercisesPagerProps {
 
 export function ExercisesPager({
   exercises,
+  blocks,
+  contentPageBodies,
   lessonTitle,
   backUrl,
   courseSlug,
@@ -86,9 +94,12 @@ export function ExercisesPager({
     handlePrev,
     handleStart,
     getExerciseOrdinal,
+    getContentPageOrdinal,
     totalExercises,
+    totalContentPages,
   } = useExercisesPager({
-    exercises,
+    exercises: exercises ?? [],
+    blocks,
     courseSlug,
     chapterSlug,
     lessonSlug,
@@ -134,7 +145,7 @@ export function ExercisesPager({
     if (pageState.type === 'exercise' && contentRef.current) {
       contentRef.current.focus()
     }
-  }, [pageState.exerciseIndex, pageState.type])
+  }, [pageState.type])
 
   // Store per-exercise question results from ExerciseRenderer
   const exerciseResults = useRef<
@@ -148,10 +159,16 @@ export function ExercisesPager({
   useEffect(() => {
     if (
       prevExerciseIndex.current !== undefined &&
-      prevExerciseIndex.current !== pageState.exerciseIndex
+      prevExerciseIndex.current !== pageState.blockIndex
     ) {
-      const prevExercise = exercises[prevExerciseIndex.current]
-      if (prevExercise && !trackedExercises.current.has(prevExercise.id)) {
+      // Only process if previous block was an exercise (not a content page)
+      const prevBlock = blocks?.[prevExerciseIndex.current]
+      if (prevBlock?.type !== 'exercise') {
+        prevExerciseIndex.current = pageState.blockIndex
+        return
+      }
+      const prevExercise = prevBlock.data as Exercise
+      if (!trackedExercises.current.has(prevExercise.id)) {
         const results = exerciseResults.current[prevExercise.id]
         const checkedCount = results?.checkedCount || 0
 
@@ -180,8 +197,8 @@ export function ExercisesPager({
         }
       }
     }
-    prevExerciseIndex.current = pageState.exerciseIndex
-  }, [pageState.exerciseIndex, exercises, lessonId])
+    prevExerciseIndex.current = pageState.blockIndex
+  }, [pageState.blockIndex, blocks, lessonId])
 
   // Track lesson completion when reaching outro — only if student attempted exercises
   useEffect(() => {
@@ -207,8 +224,12 @@ export function ExercisesPager({
   }, [pageState.type, lessonId, lessonTitle])
 
   const exerciseOrdinal = getExerciseOrdinal()
+  const contentPageOrdinal = getContentPageOrdinal()
+  const currentBlock = pageState.blockIndex !== undefined ? blocks?.[pageState.blockIndex] : undefined
   const currentExercise =
-    typeof pageState.exerciseIndex === 'number' ? exercises[pageState.exerciseIndex] : null
+    pageState.type === 'exercise' && currentBlock?.type === 'exercise'
+      ? (currentBlock.data as Exercise)
+      : null
   const summaryResults = Object.values(exerciseResults.current)
   const solvedExerciseCount =
     summaryResults.filter((result) => result.checkedCount > 0).length || totalExercises
@@ -373,6 +394,107 @@ export function ExercisesPager({
           ) : null
         }
       />
+    )
+  }
+
+  // Render content page block
+  if (pageState.type === 'contentPage' && currentBlock?.type === 'contentPage') {
+    const contentPage = currentBlock.data as { id: string; title?: string | null; slug?: string | null }
+    const bodyRendered = contentPageBodies?.[contentPage.id]
+
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {headerSlot}
+        <Progress value={progressPercent} className="h-0.5 rounded-none" />
+
+        <main
+          ref={contentRef}
+          tabIndex={-1}
+          className="flex-1 overflow-y-auto pb-4 outline-none"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="container mx-auto px-4 sm:px-6 py-section-md md:py-section-lg max-w-3xl">
+            <AnimatePresence mode="wait">
+              <motion.div key={pageState.blockIndex} {...pageTransition} className="space-y-8">
+                {/* Breadcrumb step indicator */}
+                <div className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground">
+                  <span className="truncate max-w-[200px]">{lessonTitle}</span>
+                  <ChevronRight className="w-3 h-3 shrink-0 rtl:rotate-180" />
+                  <span className="text-foreground font-medium">
+                    {contentPageOrdinal !== null
+                      ? `${t('contentPageLabel')} ${contentPageOrdinal} ${t('of')} ${totalContentPages}`
+                      : ''}
+                  </span>
+                </div>
+
+                <header className="text-center">
+                  <span className="inline-block px-4 py-1.5 bg-muted text-muted-foreground rounded-full text-label tracking-[0.2em] uppercase mb-5 border border-border/40">
+                    <FileText className="w-3 h-3 inline-block me-1" />
+                    {contentPageOrdinal !== null
+                      ? `${t('contentPageLabel')} ${contentPageOrdinal} ${t('of')} ${totalContentPages}`
+                      : ''}
+                  </span>
+                  <h1 className="text-display-md md:text-display-lg font-medium leading-tight text-foreground mb-3">
+                    {contentPage.title}
+                  </h1>
+                  <div className="w-20 h-1 bg-primary mx-auto rounded-full" />
+                </header>
+
+                <div className="bg-card rounded-3xl p-card-padding-lg md:p-10 border border-border/60 shadow-card-hover shadow-muted/50">
+                  {bodyRendered ? (
+                    <div className="prose prose-lg max-w-none dark:prose-invert leading-relaxed">
+                      {bodyRendered}
+                    </div>
+                  ) : (
+                    <div className="text-center py-section-md">
+                      <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                        <FileText className="w-6 h-6 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-body-sm font-medium text-muted-foreground">No content</p>
+                      <p className="text-body-xs text-muted-foreground/60 mt-1">
+                        This page has no content yet
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
+
+        <div className="sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
+            <button
+              onClick={handlePrev}
+              disabled={!canGoPrev || isNavigating}
+              aria-label="Previous page"
+              className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                !canGoPrev || isNavigating
+                  ? 'text-muted-foreground/40'
+                  : 'bg-muted text-foreground hover:bg-muted/80',
+              )}
+            >
+              <span className="text-heading-lg font-light">‹</span>
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={!canGoNext || isNavigating}
+              aria-label="Next page"
+              className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                !canGoNext || isNavigating
+                  ? 'text-muted-foreground/40'
+                  : 'bg-muted text-foreground hover:bg-muted/80',
+              )}
+            >
+              <span className="text-heading-lg font-light">›</span>
+            </button>
+          </div>
+        </div>
+      </div>
     )
   }
 
