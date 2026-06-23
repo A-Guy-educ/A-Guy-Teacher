@@ -59,7 +59,20 @@
   },
   "company": {
     "activeAgentResponsibilities": [
-      "agent-responsibility-call"
+      "agent-responsibility-call",
+      "release",
+      "release-merge",
+      "vercel-production-deploy"
+    ],
+    "activeAgents": [
+      "cto"
+    ],
+    "activeAgentActions": [
+      "release-merge",
+      "vercel-production-deploy"
+    ],
+    "activeGoals": [
+      "web-release"
     ]
   }
 }
