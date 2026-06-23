@@ -165,6 +165,7 @@ export interface ContentPage {
   slug?: string | null
   content?: unknown
   layout?: unknown[] | null
+  body?: unknown
 }
 
 export interface FormulaSheet {

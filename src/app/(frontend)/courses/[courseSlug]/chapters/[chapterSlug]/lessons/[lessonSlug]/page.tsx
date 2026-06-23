@@ -18,6 +18,7 @@ import {
 import { checkPaidAccess } from '@/server/utils/check-paid-access'
 import type {
   Chapter,
+  ContentPage,
   Course,
   Exercise,
   Lesson,
@@ -26,6 +27,7 @@ import type {
 } from '@/infra/types/content'
 import { isValidContentLocale } from '@/infra/types/content'
 import { AccessGateProvider } from '@/ui/web/auth/AccessGateProvider'
+import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
 import { extractAllMediaIds } from '@/ui/web/exerciserenderer/utils/extractMediaIds'
 import { stripHtml } from '@/utils/strip-html'
 import { findUserProgress } from '@/server/web-api/progress'
@@ -42,6 +44,15 @@ interface LessonPageProps {
     chapterSlug: string
     lessonSlug: string
   }>
+}
+
+function getContentPageBodyBlocks(body: unknown): unknown[] | null {
+  if (Array.isArray(body)) return body
+  if (body && typeof body === 'object' && 'blocks' in body) {
+    const inner = (body as { blocks?: unknown }).blocks
+    return Array.isArray(inner) ? inner : null
+  }
+  return null
 }
 
 function hasBlocks(exercise: Exercise): boolean {
@@ -219,9 +230,29 @@ export default async function LessonPage({ params }: LessonPageProps) {
     }),
   ])
 
+  const contentPagesInBlocks = blocks
+    .filter((block) => block.type === 'contentPage')
+    .map((block) => block.data as ContentPage)
+
   const mediaMap = await queryMediaByIds(
-    extractAllMediaIds(exercises.map((exercise) => ({ content: exercise.content ?? null }))),
+    extractAllMediaIds([
+      ...exercises.map((exercise) => ({ content: exercise.content ?? null })),
+      ...contentPagesInBlocks.map((page) => ({ content: page.body ?? null })),
+    ]),
   )
+
+  const contentPageBodies: Record<string, React.ReactNode> = {}
+  for (const page of contentPagesInBlocks) {
+    const bodyBlocks = getContentPageBodyBlocks(page.body)
+    if (!bodyBlocks || bodyBlocks.length === 0) continue
+    contentPageBodies[page.id] = (
+      <ExerciseRenderer
+        content={{ blocks: bodyBlocks as never }}
+        mediaMap={mediaMap}
+        lessonId={lesson.id}
+      />
+    )
+  }
   const [courseLessons, progress] = await Promise.all([
     queryLessonsByCourse({ courseId: course.id }),
     getLessonProgress({
@@ -254,6 +285,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
       <LessonIntroPage
         lesson={lesson}
         blocks={blocks}
+        contentPageBodies={contentPageBodies}
         backUrl={backUrl}
         showChat={showChat}
         formulaSheet={formulaSheet}
