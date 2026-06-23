@@ -78,9 +78,7 @@ export function LessonIntroPage({
   const exerciseCount = exercises.length
   const contentPageCount = useMemo(
     () =>
-      Array.isArray(blocks)
-        ? blocks.filter((block) => block.type === 'contentPage').length
-        : 0,
+      Array.isArray(blocks) ? blocks.filter((block) => block.type === 'contentPage').length : 0,
     [blocks],
   )
   const pdfCount = mediaFiles.length
@@ -162,9 +160,7 @@ export function LessonIntroPage({
         gradeLevel={gradeLevel}
         exercises={exercises}
         interactive={
-          hasContentPagesInBlocks
-            ? { kind: 'blocks', blocks }
-            : { kind: 'exercises', exercises }
+          hasContentPagesInBlocks ? { kind: 'blocks', blocks } : { kind: 'exercises', exercises }
         }
         validFiles={mediaFiles}
         mediaMap={mediaMap}

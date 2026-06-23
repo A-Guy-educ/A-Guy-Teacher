@@ -71,7 +71,8 @@ export function useExercisesPager({
   initialExerciseIndex = 0,
 }: UseExercisesPagerProps) {
   // Use blocks if provided, otherwise build from exercises
-  const resolvedBlocks: ResolvedLessonBlock[] = blocks ?? exercises.map((e) => ({ type: 'exercise', data: e }))
+  const resolvedBlocks: ResolvedLessonBlock[] =
+    blocks ?? exercises.map((e) => ({ type: 'exercise', data: e }))
 
   const exerciseBlocks = resolvedBlocks.filter((b) => b.type === 'exercise')
   const contentPageBlocks = resolvedBlocks.filter((b) => b.type === 'contentPage')

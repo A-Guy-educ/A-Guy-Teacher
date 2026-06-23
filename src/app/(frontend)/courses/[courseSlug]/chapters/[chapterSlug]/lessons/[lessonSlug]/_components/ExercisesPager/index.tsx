@@ -225,7 +225,8 @@ export function ExercisesPager({
 
   const exerciseOrdinal = getExerciseOrdinal()
   const contentPageOrdinal = getContentPageOrdinal()
-  const currentBlock = pageState.blockIndex !== undefined ? blocks?.[pageState.blockIndex] : undefined
+  const currentBlock =
+    pageState.blockIndex !== undefined ? blocks?.[pageState.blockIndex] : undefined
   const currentExercise =
     pageState.type === 'exercise' && currentBlock?.type === 'exercise'
       ? (currentBlock.data as Exercise)
@@ -399,7 +400,11 @@ export function ExercisesPager({
 
   // Render content page block
   if (pageState.type === 'contentPage' && currentBlock?.type === 'contentPage') {
-    const contentPage = currentBlock.data as { id: string; title?: string | null; slug?: string | null }
+    const contentPage = currentBlock.data as {
+      id: string
+      title?: string | null
+      slug?: string | null
+    }
     const bodyRendered = contentPageBodies?.[contentPage.id]
 
     return (
