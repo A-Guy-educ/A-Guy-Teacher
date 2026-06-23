@@ -80,7 +80,11 @@ export function LessonIntroPage({
   const { pageState, handleStart } = useLessonIntroPage({ deepLinkedExerciseId })
 
   const exerciseCount = exercises.length
-  const contentPageCount = useMemo(() => (Array.isArray(blocks) ? blocks.length : 0), [blocks])
+  const contentPageCount = useMemo(
+    () =>
+      Array.isArray(blocks) ? blocks.filter((block) => block.type === 'contentPage').length : 0,
+    [blocks],
+  )
   const pdfCount = mediaFiles.length
   const description = plainText(lesson.description)
 
@@ -95,10 +99,14 @@ export function LessonIntroPage({
     return false
   })
 
+  /** True when blocks contain at least one contentPage block — routes to LessonPager instead of ExercisesPager */
+  const hasContentPagesInBlocks = contentPageCount > 0
+
   const hasMedia = pdfCount > 0
   const visibleRenderers: LessonMode[] = []
   if (hasMedia) visibleRenderers.push('media')
   if (hasExerciseContent) visibleRenderers.push('pdf', 'interactive')
+  else if (hasContentPagesInBlocks) visibleRenderers.push('interactive')
 
   const completed = progress?.completed ?? 0
   const total = progress?.total ?? exerciseCount
@@ -155,7 +163,9 @@ export function LessonIntroPage({
         lessonSlug={lessonSlug}
         gradeLevel={gradeLevel}
         exercises={exercises}
-        interactive={{ kind: 'exercises', exercises }}
+        interactive={
+          hasContentPagesInBlocks ? { kind: 'blocks', blocks } : { kind: 'exercises', exercises }
+        }
         validFiles={mediaFiles}
         mediaMap={mediaMap}
         chatLessonId={lesson.id}
@@ -163,7 +173,7 @@ export function LessonIntroPage({
         formulaSheet={formulaSheet}
         visibleRenderers={visibleRenderers}
         initialExerciseIndex={pageState.initialExerciseIndex}
-        initialMode={hasExerciseContent ? 'interactive' : undefined}
+        initialMode={hasExerciseContent || hasContentPagesInBlocks ? 'interactive' : undefined}
         nextLesson={nextLesson}
       />
     )

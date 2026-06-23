@@ -56,7 +56,7 @@ describe('useExercisesPager handleJumpToExercise', () => {
     )
 
     expect(result.current.pageState.type).toBe('exercise')
-    expect(result.current.pageState.exerciseIndex).toBe(0)
+    expect(result.current.pageState.blockIndex).toBe(0)
     expect(result.current.getExerciseOrdinal()).toBe(1)
     expect(result.current.totalExercises).toBe(3)
     expect(result.current.canGoPrev).toBe(false)
@@ -80,7 +80,7 @@ describe('useExercisesPager handleJumpToExercise', () => {
     })
 
     expect(result.current.getExerciseOrdinal()).toBe(3)
-    expect(result.current.pageState.exerciseIndex).toBe(2)
+    expect(result.current.pageState.blockIndex).toBe(2)
   })
 
   it('jumps to middle exercise (2) and updates state correctly', () => {
@@ -100,7 +100,7 @@ describe('useExercisesPager handleJumpToExercise', () => {
     })
 
     expect(result.current.getExerciseOrdinal()).toBe(2)
-    expect(result.current.pageState.exerciseIndex).toBe(1)
+    expect(result.current.pageState.blockIndex).toBe(1)
   })
 
   it('does not navigate when given out-of-range number greater than total', () => {
@@ -121,7 +121,7 @@ describe('useExercisesPager handleJumpToExercise', () => {
 
     // State should not change
     expect(result.current.getExerciseOrdinal()).toBe(1)
-    expect(result.current.pageState.exerciseIndex).toBe(0)
+    expect(result.current.pageState.blockIndex).toBe(0)
   })
 
   it('does not navigate when given out-of-range number less than 1', () => {
