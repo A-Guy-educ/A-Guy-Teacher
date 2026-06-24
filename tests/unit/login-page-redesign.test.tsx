@@ -96,6 +96,35 @@ describe('LoginPageContent', () => {
   })
 })
 
+describe('LoginForm - brand.heroSubtitle rendering', () => {
+  const renderWithPasswordDisabled = (children: React.ReactNode) => {
+    return render(
+      <I18nProvider locale="he" messages={mergedHeMessages}>
+        <PasswordLoginProvider enabled={false}>{children}</PasswordLoginProvider>
+      </I18nProvider>,
+    )
+  }
+
+  it('renders brand.heroSubtitle text in Hebrew (not the translation key)', () => {
+    renderWithPasswordDisabled(<LoginForm />)
+
+    // Should render the Hebrew translation, NOT the key "auth.login.brand.heroSubtitle"
+    expect(screen.getByText('A-Guy המורה הפרטי שלכם')).toBeTruthy()
+  })
+
+  it('renders brand.heroSubtitle text in English', () => {
+    render(
+      <I18nProvider locale="en" messages={mergedEnMessages}>
+        <PasswordLoginProvider enabled={false}>
+          <LoginForm />
+        </PasswordLoginProvider>
+      </I18nProvider>,
+    )
+
+    expect(screen.getByText('A-Guy Your Personal Tutor')).toBeTruthy()
+  })
+})
+
 describe('LoginForm - Google only mode (password disabled)', () => {
   const renderWithPasswordDisabled = (children: React.ReactNode) => {
     return render(
