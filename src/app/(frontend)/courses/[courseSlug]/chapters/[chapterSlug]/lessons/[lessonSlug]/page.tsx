@@ -27,8 +27,9 @@ import type {
 } from '@/infra/types/content'
 import { isValidContentLocale } from '@/infra/types/content'
 import { AccessGateProvider } from '@/ui/web/auth/AccessGateProvider'
-import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
 import { extractAllMediaIds } from '@/ui/web/exerciserenderer/utils/extractMediaIds'
+
+import { ContentPageBodyRenderer } from './_components/ContentPageBodyRenderer'
 import { stripHtml } from '@/utils/strip-html'
 import { findUserProgress } from '@/server/web-api/progress'
 
@@ -245,13 +246,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   for (const page of contentPagesInBlocks) {
     const bodyBlocks = getContentPageBodyBlocks(page.body)
     if (!bodyBlocks || bodyBlocks.length === 0) continue
-    contentPageBodies[page.id] = (
-      <ExerciseRenderer
-        content={{ blocks: bodyBlocks as never }}
-        mediaMap={mediaMap}
-        lessonId={lesson.id}
-      />
-    )
+    contentPageBodies[page.id] = <ContentPageBodyRenderer blocks={bodyBlocks as never} />
   }
   const [courseLessons, progress] = await Promise.all([
     queryLessonsByCourse({ courseId: course.id }),
