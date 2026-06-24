@@ -421,7 +421,7 @@ export function StudyContent({
                 {ts('noTopicsAvailable')}
               </p>
               <p className="text-body-sm text-muted-foreground/60 mt-1">
-                Check back later for new content
+                {ts('noTopicsAvailableSub')}
               </p>
             </div>
           )}
