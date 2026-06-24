@@ -149,7 +149,7 @@ export function PersonaSelectionStep({ returnTo }: PersonaSelectionStepProps) {
                 onClick={() => handleSelect(profile.slug)}
               >
                 <div className="p-card-padding">
-                  <div className="flex items-center justify-between mb-2 min-h-[1.75rem]">
+                  <div className="flex items-center justify-between mb-2 min-h-6">
                     <h3 className="font-medium">{profile.label}</h3>
                     <Badge
                       variant="secondary"
