@@ -15,18 +15,25 @@ export const Search: React.FC = () => {
     router.push(`/search${debouncedValue ? `?q=${debouncedValue}` : ''}`)
   }, [debouncedValue, router])
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const query = formData.get('search') as string
+    if (query?.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`)
+    }
+  }
+
   return (
     <div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-        }}
-      >
+      <form onSubmit={handleSubmit}>
         <Label htmlFor="search" className="sr-only">
           Search
         </Label>
         <Input
           id="search"
+          name="search"
+          value={value}
           onChange={(event) => {
             setValue(event.target.value)
           }}

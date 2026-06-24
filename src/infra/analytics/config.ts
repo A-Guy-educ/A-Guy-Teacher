@@ -1,8 +1,11 @@
 /**
- * Analytics Configuration
+ * @filetype index
+ * @domain analytics
+ * @ai-summary Environment-based analytics configuration — presence of a token/key auto-enables that platform. Uses a lazy-loaded singleton Proxy to avoid SSR issues; `analyticsConfig` always defers reads until first access client-side.
  *
- * Environment-based configuration for analytics system
- * Simplified: presence of token/key enables the platform
+ * Gotcha: `analyticsConfig` is a Proxy, not a plain object — accessing any property (e.g., `analyticsConfig.enabled`) triggers initialization. Server-side access always reads the uninitialized default (enabled=false) because the Proxy's `get` never fires on a plain object used as target.
+ *
+ * Gotcha: `window.__analyticsEnabled === true` is the E2E test override — it bypasses token presence checks and forces both platforms enabled without rebuilding the app.
  */
 
 import type { AnalyticsConfig } from './types'

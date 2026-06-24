@@ -363,7 +363,7 @@ function MoodGrid({
           key={mood}
           type="button"
           onClick={() => onSelectMood(mood)}
-          className="flex flex-col items-center rounded-2xl border border-border bg-card p-5 text-center shadow-elevation-1 transition-all duration-normal hover:-translate-y-0.5 hover:border-primary/50"
+          className="flex flex-col items-center rounded-2xl border border-border bg-card p-5 text-center shadow-elevation-1 transition-transform duration-normal hover:-translate-y-0.5 hover:border-primary/50"
         >
           <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-heading-md">
             {copy.moods[mood].emoji}
@@ -406,7 +406,7 @@ function CourseGrid({
           type="button"
           onClick={() => onSelectCourse(course)}
           className={cn(
-            'relative min-h-32 rounded-xl border border-border bg-card p-card-padding-sm text-start shadow-elevation-1 transition-all duration-normal hover:-translate-y-0.5 hover:border-primary/50',
+            'relative min-h-32 rounded-xl border border-border bg-card p-card-padding-sm text-start shadow-elevation-1 transition-transform duration-normal hover:-translate-y-0.5 hover:border-primary/50',
             selectedCourse?.id === course.id && 'border-primary',
           )}
         >

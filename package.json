@@ -1,8 +1,8 @@
 {
   "name": "a-guy",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "description": "A-Guy web app",
-  "license": "MIT",
+  "license": "BSL-1.1",
   "type": "module",
   "scripts": {
     "kody": "npx @kody-ade/kody-engine serve",

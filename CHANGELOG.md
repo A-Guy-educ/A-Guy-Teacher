@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.26.1 — 2026-06-24
+
+_No notable commits since the last release._
 ## [0.26.0] - 2026-06-17
 
 ### Features
@@ -1813,6 +1816,24 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #215: [P3] Signup form contains an unnamed textbox in accessibility tree ([#345](https://github.com/A-Guy-educ/A-Guy-Web/pull/345)) — @kodyade[bot]
+- #379: [Cards] Add hover lift effect to clickable UnifiedCards across th… ([#414](https://github.com/A-Guy-educ/A-Guy-Web/pull/414)) — @kodyade[bot]
+- #322: [UI] מסגרת הסעיף נעלמת במצב כהה ([#325](https://github.com/A-Guy-educ/A-Guy-Web/pull/325)) — @kodyade[bot]
+- #373: [UI] Lesson intro button — text too small, outline variant hard t… ([#413](https://github.com/A-Guy-educ/A-Guy-Web/pull/413)) — @kodyade[bot]
+- #316: [Button] ghost variant hover hides text on light backgrounds ([#338](https://github.com/A-Guy-educ/A-Guy-Web/pull/338)) — @kodyade[bot]
+- #211: [P1] Courses page renders empty with no course cards ([#333](https://github.com/A-Guy-educ/A-Guy-Web/pull/333)) — @kodyade[bot]
+- #355: [Start Page] Hover over mood/course buttons makes text unreadable ([#418](https://github.com/A-Guy-educ/A-Guy-Web/pull/418)) — @kodyade[bot]
+- #320: [Onboarding] Persona cards shift layout when one is selected ([#337](https://github.com/A-Guy-educ/A-Guy-Web/pull/337)) — @kodyade[bot]
+- #214: [P2] Search form does not submit on Enter or button click ([#348](https://github.com/A-Guy-educ/A-Guy-Web/pull/348)) — @kodyade[bot]
+- #354: [Landing] כפתורים נעלמים ב-hover — טקסט לא קריא על primary/90 ([#411](https://github.com/A-Guy-educ/A-Guy-Web/pull/411)) — @kodyade[bot]
+- chore: release v0.26.1 ([#522](https://github.com/A-Guy-educ/A-Guy-Web/pull/522)) — @kodyade[bot]
+- fix(lesson-pager): Read current block from reordered list (regression from #475) ([#539](https://github.com/A-Guy-educ/A-Guy-Web/pull/539)) — @aguyshayb
+- feat(lesson): Show content pages as universal preamble after lobby ([#556](https://github.com/A-Guy-educ/A-Guy-Web/pull/556)) — @aguyshayb
+- #498: החלף LICENSE ל-BSL 1.1 — מנע שימוש מסחרי ([#512](https://github.com/A-Guy-educ/A-Guy-Web/pull/512)) — @kodyade[bot]
+- #460: Show content pages before exercises and drop the second Welcome i… ([#475](https://github.com/A-Guy-educ/A-Guy-Web/pull/475)) — @kodyade[bot]
+- #228: Doc coverage: src/infra/analytics/ — Analytics tracking layer ([#412](https://github.com/A-Guy-educ/A-Guy-Web/pull/412)) — @kodyade[bot]
+- #391: [Lessons] Interactive view disappears when switching from scroll … ([#407](https://github.com/A-Guy-educ/A-Guy-Web/pull/407)) — @kodyade[bot]
+- #330: Add back button to lesson intro page ([#344](https://github.com/A-Guy-educ/A-Guy-Web/pull/344)) — @kodyade[bot]
 - #323: Fix hardcoded English subtitle in study page empty state ([#339](https://github.com/A-Guy-educ/A-Guy-Web/pull/339)) — @kodyade[bot]
 - #326: Fix "Continue from last point" button showing broken link when co… ([#335](https://github.com/A-Guy-educ/A-Guy-Web/pull/335)) — @kodyade[bot]
 - #332: Disable Ask button on /study route ([#340](https://github.com/A-Guy-educ/A-Guy-Web/pull/340)) — @kodyade[bot]

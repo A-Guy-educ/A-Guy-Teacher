@@ -5,7 +5,7 @@ import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
 
 import { getExerciseUrlParam } from './getExerciseUrlParam'
 
-type PageType = 'intro' | 'contentPage' | 'exercise' | 'outro'
+type PageType = 'contentPage' | 'exercise' | 'outro'
 
 interface PageState {
   type: PageType
@@ -22,7 +22,6 @@ interface UseExercisesPagerProps {
   lessonId: string
   /** Grade bucket to store progress under — must be the lesson's course label, not user's onboarding grade. */
   gradeLevel: string
-  skipIntro?: boolean
   initialExerciseIndex?: number
 }
 
@@ -67,57 +66,55 @@ export function useExercisesPager({
   lessonSlug,
   lessonId,
   gradeLevel,
-  skipIntro = false,
   initialExerciseIndex = 0,
 }: UseExercisesPagerProps) {
   // Use blocks if provided, otherwise build from exercises
-  const resolvedBlocks: ResolvedLessonBlock[] =
+  const rawBlocks: ResolvedLessonBlock[] =
     blocks ?? exercises.map((e) => ({ type: 'exercise', data: e }))
 
-  const exerciseBlocks = resolvedBlocks.filter((b) => b.type === 'exercise')
-  const contentPageBlocks = resolvedBlocks.filter((b) => b.type === 'contentPage')
+  // Partition: content pages first (preserving relative order), then exercises (preserving relative order)
+  const contentPageBlocks = rawBlocks.filter((b) => b.type === 'contentPage')
+  const exerciseBlocks = rawBlocks.filter((b) => b.type === 'exercise')
+  const resolvedBlocks: ResolvedLessonBlock[] = [...contentPageBlocks, ...exerciseBlocks]
+
   const totalExercises = exerciseBlocks.length
   const totalContentPages = contentPageBlocks.length
-  const totalPages = resolvedBlocks.length + 2 // intro + blocks + outro
-  const firstBlockPage = 1
-  const firstPageNumber = skipIntro ? firstBlockPage : 0
+  const totalPages = resolvedBlocks.length + 1 // blocks + outro
 
   const [pageState, setPageState] = useState<PageState>(() => {
-    if (!skipIntro) return { type: 'intro', pageNumber: 0 }
     if (resolvedBlocks.length === 0) return { type: 'outro', pageNumber: totalPages - 1 }
 
     const blockIndex = Math.min(Math.max(initialExerciseIndex, 0), resolvedBlocks.length - 1)
     return {
       type: resolvedBlocks[blockIndex]?.type === 'contentPage' ? 'contentPage' : 'exercise',
-      pageNumber: blockIndex + firstBlockPage,
+      pageNumber: blockIndex,
       blockIndex,
     }
   })
 
   const basePath = `/courses/${courseSlug}/chapters/${chapterSlug}/lessons/${lessonSlug}`
-  const introUrl = basePath
   const completeUrl = `${basePath}/complete`
 
   const getExerciseUrl = useCallback(
     (index: number) => {
       const block = resolvedBlocks[index]
-      if (!block || block.type !== 'exercise') return introUrl
+      if (!block || block.type !== 'exercise') return basePath
       const exercise = block.data as Exercise
       const slug = getExerciseUrlParam(exercise)
       return `${basePath}/exercises/${slug}`
     },
-    [basePath, resolvedBlocks, introUrl],
+    [basePath, resolvedBlocks],
   )
 
   const getContentPageUrl = useCallback(
     (index: number) => {
       const block = resolvedBlocks[index]
-      if (!block || block.type !== 'contentPage') return introUrl
+      if (!block || block.type !== 'contentPage') return basePath
       const contentPage = block.data as { slug?: string | null; id: string }
       const slug = contentPage.slug || contentPage.id
       return `${basePath}/content/${slug}`
     },
-    [basePath, resolvedBlocks, introUrl],
+    [basePath, resolvedBlocks],
   )
 
   useEffect(() => {
@@ -135,7 +132,7 @@ export function useExercisesPager({
       if (index >= 0) {
         setPageState({
           type: 'exercise',
-          pageNumber: index + firstBlockPage,
+          pageNumber: index,
           blockIndex: index,
         })
       }
@@ -149,21 +146,19 @@ export function useExercisesPager({
       if (index >= 0) {
         setPageState({
           type: 'contentPage',
-          pageNumber: index + firstBlockPage,
+          pageNumber: index,
           blockIndex: index,
         })
       }
     }
-  }, [basePath, completeUrl, resolvedBlocks, firstBlockPage])
+  }, [basePath, completeUrl, resolvedBlocks])
 
   const syncUrl = useCallback(
     (state: PageState) => {
       if (typeof window === 'undefined') return
 
       let newUrl: string
-      if (state.type === 'intro') {
-        newUrl = introUrl
-      } else if (state.type === 'contentPage' && state.blockIndex !== undefined) {
+      if (state.type === 'contentPage' && state.blockIndex !== undefined) {
         newUrl = getContentPageUrl(state.blockIndex)
       } else if (state.type === 'exercise' && state.blockIndex !== undefined) {
         newUrl = getExerciseUrl(state.blockIndex)
@@ -178,20 +173,16 @@ export function useExercisesPager({
         window.history.replaceState(null, '', newUrl)
       }
     },
-    [introUrl, completeUrl, getExerciseUrl, getContentPageUrl],
+    [completeUrl, getExerciseUrl, getContentPageUrl],
   )
 
   const pageToState = useCallback(
     (page: number): PageState => {
-      if (skipIntro && page < firstBlockPage) {
-        return { type: 'exercise', pageNumber: firstBlockPage, blockIndex: 0 }
-      }
-      if (page === 0) return { type: 'intro', pageNumber: 0 }
       if (page === totalPages - 1) return { type: 'outro', pageNumber: page }
 
-      const blockIndex = page - firstBlockPage
+      const blockIndex = page
       const block = resolvedBlocks[blockIndex]
-      if (!block) return { type: 'intro', pageNumber: 0 }
+      if (!block) return { type: 'outro', pageNumber: totalPages - 1 }
 
       return {
         type: block.type === 'contentPage' ? 'contentPage' : 'exercise',
@@ -199,7 +190,7 @@ export function useExercisesPager({
         blockIndex,
       }
     },
-    [skipIntro, totalPages, firstBlockPage, resolvedBlocks],
+    [totalPages, resolvedBlocks],
   )
 
   const [isPending, startTransition] = useTransition()
@@ -226,7 +217,7 @@ export function useExercisesPager({
   const saveBlockProgress = useCallback(
     (prevState: PageState) => {
       if (prevState.blockIndex === undefined) return
-      if (prevState.type === 'intro' || prevState.type === 'outro') return
+      if (prevState.type === 'outro') return
 
       const block = resolvedBlocks[prevState.blockIndex]
       if (!block) return
@@ -291,14 +282,14 @@ export function useExercisesPager({
     startTransition(() => {
       setPageState((prev) => {
         const prevPage = prev.pageNumber - 1
-        if (prevPage < firstPageNumber) return prev
+        if (prevPage < 0) return prev
 
         saveBlockProgress(prev)
 
         return pageToState(prevPage)
       })
     })
-  }, [firstPageNumber, pageToState, saveBlockProgress])
+  }, [pageToState, saveBlockProgress])
 
   const handleJumpToExercise = useCallback(
     (exerciseOrdinal: number) => {
@@ -317,11 +308,9 @@ export function useExercisesPager({
       }
       if (targetBlockIndex < 0) return
 
-      const targetPage = targetBlockIndex + firstBlockPage
-
       startTransition(() => {
         setPageState((prev) => {
-          if (targetPage === prev.pageNumber) return prev
+          if (targetBlockIndex === prev.blockIndex) return prev
 
           saveBlockProgress(prev)
 
@@ -333,19 +322,11 @@ export function useExercisesPager({
             status: 'in_progress',
           })
 
-          return pageToState(targetPage)
+          return pageToState(targetBlockIndex)
         })
       })
     },
-    [
-      totalExercises,
-      resolvedBlocks,
-      firstBlockPage,
-      gradeLevel,
-      lessonId,
-      pageToState,
-      saveBlockProgress,
-    ],
+    [totalExercises, resolvedBlocks, gradeLevel, lessonId, pageToState, saveBlockProgress],
   )
 
   const handleStart = useCallback(() => {
@@ -364,17 +345,16 @@ export function useExercisesPager({
     const firstBlock = resolvedBlocks[0]
     setPageState({
       type: firstBlock?.type === 'contentPage' ? 'contentPage' : 'exercise',
-      pageNumber: firstBlockPage,
+      pageNumber: 0,
       blockIndex: 0,
     })
-  }, [resolvedBlocks, totalPages, firstBlockPage, lessonId, gradeLevel])
+  }, [resolvedBlocks, totalPages, lessonId, gradeLevel])
 
   useEffect(() => {
     syncUrl(pageState)
   }, [pageState, syncUrl])
 
   const progressPercent = (() => {
-    if (pageState.type === 'intro') return 0
     if (pageState.type === 'outro') return 100
 
     if (
@@ -413,7 +393,7 @@ export function useExercisesPager({
     progressPercent,
     isNavigating,
     canGoNext: pageState.pageNumber < totalPages - 1,
-    canGoPrev: pageState.pageNumber > firstPageNumber,
+    canGoPrev: pageState.pageNumber > 0,
     handleNext,
     handlePrev,
     handleJumpToExercise,
@@ -423,5 +403,6 @@ export function useExercisesPager({
     totalExercises,
     totalContentPages,
     totalBlocks: resolvedBlocks.length,
+    resolvedBlocks,
   }
 }

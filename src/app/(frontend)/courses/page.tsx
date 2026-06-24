@@ -24,10 +24,10 @@ export default async function CoursesPage() {
       <div className="max-w-7xl mx-auto px-6 py-20">
         {/* Courses Section */}
         <section>
-          {courses.length === 0 ? (
+          {(courses?.length ?? 0) === 0 ? (
             <EmptyState type="noCourses" />
           ) : (
-            <CourseCardGrid courses={courses} />
+            <CourseCardGrid courses={courses ?? []} />
           )}
         </section>
       </div>
