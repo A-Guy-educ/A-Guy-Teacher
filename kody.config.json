@@ -12,7 +12,9 @@
   "github": {
     "owner": "A-Guy-educ",
     "repo": "A-Guy-Web",
-    "operators": ["aguyaharonyair"]
+    "operators": [
+      "aguyaharonyair"
+    ]
   },
   "state": {
     "repo": "https://github.com/A-Guy-educ/kody-state",
@@ -26,7 +28,9 @@
   },
   "release": {
     "releaseBranch": "main",
-    "versionFiles": ["package.json"],
+    "versionFiles": [
+      "package.json"
+    ],
     "e2eCommand": "npx tsx scripts/release-e2e-gate.ts",
     "timeoutMs": 1800000
   },
@@ -49,5 +53,47 @@
       "FIRST_TIME_CONTRIBUTOR",
       "MEMBER"
     ]
+  },
+  "agentActions": {
+    "default": "run"
+  },
+  "company": {
+    "activeAgentResponsibilities": [
+      "agent-responsibility-call",
+      "release",
+      "release-prepare",
+      "release-merge",
+      "vercel-production-deploy"
+    ],
+    "activeAgents": [
+      "cto"
+    ],
+    "activeAgentActions": [
+      "release-prepare",
+      "release-merge",
+      "vercel-production-deploy"
+    ],
+    "activeGoals": [
+      {
+        "template": "web-release",
+        "every": "1d",
+        "idPrefix": "web-release",
+        "preferredRunTime": {
+          "time": "10:00",
+          "timezone": "Asia/Jerusalem"
+        }
+      }
+    ]
+  },
+  "fly": {
+    "previews": {
+      "cpus": 2,
+      "memoryMb": 2048,
+      "ttlDays": 14,
+      "builderCpus": 4,
+      "builderMemoryMb": 4096,
+      "idleSuspend": true,
+      "healthCheck": false
+    }
   }
 }
