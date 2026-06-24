@@ -685,6 +685,7 @@
     "noCoursesAvailable": "אין קורסים זמינים",
     "studyTopics": "נושאי לימוד",
     "noTopicsAvailable": "אין נושאים זמינים בקורס זה",
+    "noTopicsAvailableSub": "חזור מאוחר יותר לתוכן חדש",
     "continueLearning": "המשך ללמוד",
     "continue": "המשך"
   },

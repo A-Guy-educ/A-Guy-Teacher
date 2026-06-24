@@ -329,7 +329,7 @@ export function StudyContent({
 
         {/* Main Content */}
         <main className="container mx-auto px-6 py-section-sm max-w-5xl">
-          {continueLesson && (
+          {courseInfo && continueLesson && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -421,7 +421,7 @@ export function StudyContent({
                 {ts('noTopicsAvailable')}
               </p>
               <p className="text-body-sm text-muted-foreground/60 mt-1">
-                Check back later for new content
+                {ts('noTopicsAvailableSub')}
               </p>
             </div>
           )}

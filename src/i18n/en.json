@@ -685,6 +685,7 @@
     "noCoursesAvailable": "No courses available",
     "studyTopics": "Study Topics",
     "noTopicsAvailable": "No topics available in this course",
+    "noTopicsAvailableSub": "Check back later for new content",
     "continueLearning": "Continue learning",
     "continue": "Continue"
   },

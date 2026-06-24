@@ -277,15 +277,10 @@ function Simulation({
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-elevation-2">
-          <div className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-section-xs">
-            <div className="flex gap-content-gap-xs">
-              <span className="h-3 w-3 rounded-full bg-destructive/70" />
-              <span className="h-3 w-3 rounded-full bg-warning/70" />
-              <span className="h-3 w-3 rounded-full bg-success/70" />
-            </div>
-            <div className="rounded-full bg-background px-3 py-1 font-mono text-[11px] text-muted-foreground shadow-elevation-1">
-              {t('simulation.dashboard.url')}
-            </div>
+          <div className="flex items-center border-b border-border bg-muted/40 px-5 py-section-xs">
+            <span className="h-3 w-3 rounded-full bg-destructive/70" />
+            <span className="h-3 w-3 rounded-full bg-warning/70" />
+            <span className="h-3 w-3 rounded-full bg-success/70" />
           </div>
 
           {activeTab === 'dashboard' && <DashboardPreview t={t} />}

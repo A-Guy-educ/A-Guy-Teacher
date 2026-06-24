@@ -1813,6 +1813,11 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #323: Fix hardcoded English subtitle in study page empty state ([#339](https://github.com/A-Guy-educ/A-Guy-Web/pull/339)) — @kodyade[bot]
+- #326: Fix "Continue from last point" button showing broken link when co… ([#335](https://github.com/A-Guy-educ/A-Guy-Web/pull/335)) — @kodyade[bot]
+- #332: Disable Ask button on /study route ([#340](https://github.com/A-Guy-educ/A-Guy-Web/pull/340)) — @kodyade[bot]
+- #368: [Homepage] הסר את שורת הכתובת מהדפדפן המדומה ב-DemoLandingPage ([#370](https://github.com/A-Guy-educ/A-Guy-Web/pull/370)) — @kodyade[bot]
+- #324: [ask] Fix broken "viewStats" button ([#341](https://github.com/A-Guy-educ/A-Guy-Web/pull/341)) — @kodyade[bot]
 - #334: [Study] Lesson links 404 when chapter has no slug in DB ([#346](https://github.com/A-Guy-educ/A-Guy-Web/pull/346)) — @kodyade[bot]
 - #328: [Study Plan] Chat button opens English conversation when locale i… ([#349](https://github.com/A-Guy-educ/A-Guy-Web/pull/349)) — @kodyade[bot]
 - #321: [Study] UnifiedCard hover effects missing when cardHref is set ([#347](https://github.com/A-Guy-educ/A-Guy-Web/pull/347)) — @kodyade[bot]

@@ -235,9 +235,12 @@ export function AskConversationGrid() {
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-border text-center">
           <div className="flex flex-wrap justify-center gap-content-gap">
-            <button className="text-body-sm font-bold text-muted-foreground bg-card shadow-card px-8 py-3 rounded-full hover:bg-muted transition-all duration-normal text-nowrap">
+            <SystemLink
+              href="/stats"
+              className="text-body-sm font-bold text-muted-foreground bg-card shadow-card px-8 py-3 rounded-full hover:bg-muted transition-all duration-normal text-nowrap"
+            >
               {t('viewStats')}
-            </button>
+            </SystemLink>
             <button className="text-body-sm font-bold text-primary-foreground bg-primary px-8 py-3 rounded-full shadow-card hover:opacity-90 transition-all duration-normal text-nowrap">
               {t('continueLastPoint')}
             </button>
