@@ -52,6 +52,14 @@ createdAt: "2026-06-24T11:19:44.575Z"
     "completed": false,
     "createdAt": "2026-06-24T12:04:34.078Z",
     "completedAt": null
+  },
+  {
+    "id": "18f31b9c-cd92-47b2-bb55-0dd448d13c15",
+    "title": "todo",
+    "body": "",
+    "completed": false,
+    "createdAt": "2026-06-24T13:02:22.383Z",
+    "completedAt": null
   }
 ]
 -->
