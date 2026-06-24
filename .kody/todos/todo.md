@@ -36,6 +36,14 @@ createdAt: "2026-06-24T11:19:44.575Z"
     "completed": false,
     "createdAt": "2026-06-24T11:20:44.231Z",
     "completedAt": null
+  },
+  {
+    "id": "9356fddd-c4b1-401e-a604-de944d695434",
+    "title": "/agent command in chat",
+    "body": "",
+    "completed": false,
+    "createdAt": "2026-06-24T11:38:35.110Z",
+    "completedAt": null
   }
 ]
 -->
