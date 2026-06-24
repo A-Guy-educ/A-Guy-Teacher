@@ -39,7 +39,7 @@ createdAt: "2026-06-24T11:19:44.575Z"
   },
   {
     "id": "9356fddd-c4b1-401e-a604-de944d695434",
-    "title": "/agent command in chat",
+    "title": "@agent command in chat",
     "body": "",
     "completed": false,
     "createdAt": "2026-06-24T11:38:35.110Z",
