@@ -78,14 +78,14 @@
         "template": "web-release",
         "every": "1d",
         "idPrefix": "web-release",
-      "preferredRunTime": {
-        "time": "10:00",
-        "timezone": "Asia/Jerusalem"
-      }
-    },
-    "ci-health"
-  ]
-},
+        "preferredRunTime": {
+          "time": "15:00",
+          "timezone": "Asia/Jerusalem"
+        }
+      },
+      "ci-health"
+    ]
+  },
   "fly": {
     "previews": {
       "cpus": 2,
