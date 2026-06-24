@@ -1,11 +1,13 @@
 /**
- * Core Analytics Tracker
+ * @filetype index
+ * @domain analytics
+ * @ai-summary Core analytics tracker — single entrypoint for all event tracking. Validates events against Zod schemas, enriches payloads with session data, and routes to GA4 and Mixpanel adapters. Adapter initialization is lazy (dynamic import) and events fired before readiness are queued (max 100) then flushed automatically.
  *
- * Single entrypoint for all analytics tracking
- * Handles validation, routing, and platform adapters
+ * Trap: Direct SDK calls (`window.gtag`, `window.mixpanel`) are forbidden — all tracking must go through `track()`. This is the only way to guarantee validation, session enrichment, and correct routing.
  *
- * CRITICAL: This is the ONLY way product code should track events
- * No direct SDK calls allowed (no window.gtag or window.mixpanel)
+ * Trap: The in-memory event queue holds max 100 events — if adapter initialization is slow and the queue fills, subsequent events are dropped silently. This protects against memory leaks during extended initialization failures.
+ *
+ * Trap: `alias()` must be called BEFORE `identify()` during registration (the system-events-subscriber's REGISTRATION_COMPLETED handler enforces this). Calling identify first severs the anonymous history chain.
  */
 
 'use client'
