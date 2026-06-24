@@ -477,7 +477,7 @@ export function ExercisesPager({
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div className="container mx-auto px-4 sm:px-6 py-section-md md:py-section-lg max-w-3xl">
+          <div className="container mx-auto px-4 sm:px-6 py-section-md md:py-section-lg max-w-5xl">
             <AnimatePresence mode="wait">
               <motion.div key={pageState.blockIndex} {...pageTransition} className="space-y-8">
                 {/* Breadcrumb step indicator */}

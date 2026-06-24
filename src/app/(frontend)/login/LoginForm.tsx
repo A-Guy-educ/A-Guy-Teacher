@@ -11,12 +11,13 @@ import { Card, CardContent, CardHeader } from '@/ui/web/components/card'
 import { Input } from '@/ui/web/components/input'
 import { Label } from '@/ui/web/components/label'
 import { usePasswordLogin } from '@/ui/web/providers/PasswordLoginProvider'
-import { useTranslations } from '@/ui/web/providers/I18n'
+import { useI18n, useTranslations } from '@/ui/web/providers/I18n'
 import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
 import { loginAction } from './login_authenticate-action'
 import telescopeSvg from '@/brands/aguy/assets/telescope.svg'
 
 function LoginFormContent() {
+  const { t: tBrand } = useI18n()
   const t = useTranslations('auth.login')
   const tOauth = useTranslations('auth.oauth')
   const passwordEnabled = usePasswordLogin()
@@ -48,7 +49,7 @@ function LoginFormContent() {
         {/* Logo */}
         <div className="flex flex-col items-center gap-1">
           <Image src={telescopeSvg} alt="A-Guy" className="h-24 w-auto" width={224} height={204} />
-          <p className="text-primary font-semibold">{t('brand.heroSubtitle')}</p>
+          <p className="text-primary font-semibold">{tBrand('brand.heroSubtitle')}</p>
         </div>
         {/* Section label with decorative line */}
         <div className="flex flex-col items-center mt-3">
