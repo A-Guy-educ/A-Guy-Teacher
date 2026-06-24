@@ -1816,6 +1816,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #379: [Cards] Add hover lift effect to clickable UnifiedCards across th… ([#414](https://github.com/A-Guy-educ/A-Guy-Web/pull/414)) — @kodyade[bot]
 - #322: [UI] מסגרת הסעיף נעלמת במצב כהה ([#325](https://github.com/A-Guy-educ/A-Guy-Web/pull/325)) — @kodyade[bot]
 - #373: [UI] Lesson intro button — text too small, outline variant hard t… ([#413](https://github.com/A-Guy-educ/A-Guy-Web/pull/413)) — @kodyade[bot]
 - #316: [Button] ghost variant hover hides text on light backgrounds ([#338](https://github.com/A-Guy-educ/A-Guy-Web/pull/338)) — @kodyade[bot]
