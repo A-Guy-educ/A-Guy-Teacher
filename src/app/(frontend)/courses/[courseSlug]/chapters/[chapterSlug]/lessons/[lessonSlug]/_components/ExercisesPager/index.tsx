@@ -96,6 +96,7 @@ export function ExercisesPager({
     getContentPageOrdinal,
     totalExercises,
     totalContentPages,
+    resolvedBlocks,
   } = useExercisesPager({
     exercises: exercises ?? [],
     blocks,
@@ -161,7 +162,7 @@ export function ExercisesPager({
       prevExerciseIndex.current !== pageState.blockIndex
     ) {
       // Only process if previous block was an exercise (not a content page)
-      const prevBlock = blocks?.[prevExerciseIndex.current]
+      const prevBlock = resolvedBlocks[prevExerciseIndex.current]
       if (prevBlock?.type !== 'exercise') {
         prevExerciseIndex.current = pageState.blockIndex
         return
@@ -197,7 +198,7 @@ export function ExercisesPager({
       }
     }
     prevExerciseIndex.current = pageState.blockIndex
-  }, [pageState.blockIndex, blocks, lessonId])
+  }, [pageState.blockIndex, resolvedBlocks, lessonId])
 
   // Track lesson completion when reaching outro — only if student attempted exercises
   useEffect(() => {
@@ -225,7 +226,7 @@ export function ExercisesPager({
   const exerciseOrdinal = getExerciseOrdinal()
   const contentPageOrdinal = getContentPageOrdinal()
   const currentBlock =
-    pageState.blockIndex !== undefined ? blocks?.[pageState.blockIndex] : undefined
+    pageState.blockIndex !== undefined ? resolvedBlocks[pageState.blockIndex] : undefined
 
   useEffect(() => {
     if (exerciseOrdinal !== null) {
