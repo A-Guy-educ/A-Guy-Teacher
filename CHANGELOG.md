@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb
 - fix(lesson): Render content page body via dedicated blockType-based renderer ([#352](https://github.com/A-Guy-educ/A-Guy-Web/pull/352)) — @aguyshayb
 - fix(lesson): Pre-render content page bodies and pass to lesson pager ([#351](https://github.com/A-Guy-educ/A-Guy-Web/pull/351)) — @aguyshayb
 - feat(lesson): render contentPageRef blocks in lesson pager ([#315](https://github.com/A-Guy-educ/A-Guy-Web/pull/315)) — @kodyade[bot]
