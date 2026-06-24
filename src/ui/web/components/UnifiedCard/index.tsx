@@ -222,7 +222,7 @@ export function UnifiedCard({
   if (cardHref) {
     return (
       <div
-        className={cn(cardClasses, 'cursor-pointer')}
+        className={cn(cardClasses, 'cursor-pointer', !isSoon && 'hover:-translate-y-1')}
         style={
           variant === 'lesson'
             ? { borderTopWidth: '4px', borderTopColor: color }
