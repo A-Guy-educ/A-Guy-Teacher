@@ -229,7 +229,9 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
         </div>
 
         <section className="flex flex-1 items-center justify-center px-4 py-section-xs">
-          {pane === 'welcome' && <WelcomePane copy={copy} onStart={startConversation} />}
+          {pane === 'welcome' && (
+            <WelcomePane copy={copy} direction={direction} onStart={startConversation} />
+          )}
           {pane === 'conversation' && (
             <ConversationPane
               copy={copy}
@@ -255,9 +257,11 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
 
 function WelcomePane({
   copy,
+  direction,
   onStart,
 }: {
   copy: (typeof START_COPY)['he'] | (typeof START_COPY)['en']
+  direction: Direction
   onStart: () => void
 }) {
   return (
@@ -275,7 +279,10 @@ function WelcomePane({
       <button
         type="button"
         onClick={onStart}
-        className="inline-flex h-14 items-center gap-3 rounded-xl bg-primary px-9 text-body-lg font-extrabold text-primary-foreground shadow-elevation-3 transition-all duration-normal hover:bg-primary/90 active:scale-[0.98]"
+        className={cn(
+          'inline-flex h-14 items-center gap-3 rounded-xl bg-primary px-9 text-body-lg font-extrabold text-primary-foreground shadow-elevation-3 transition-all duration-normal hover:bg-primary/90 active:scale-[0.98]',
+          direction === 'rtl' ? 'flex-row-reverse' : '',
+        )}
       >
         <Play className="h-5 w-5 fill-current" aria-hidden />
         {copy.start}
