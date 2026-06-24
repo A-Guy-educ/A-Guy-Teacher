@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #391: [Lessons] Interactive view disappears when switching from scroll … ([#407](https://github.com/A-Guy-educ/A-Guy-Web/pull/407)) — @kodyade[bot]
 - #330: Add back button to lesson intro page ([#344](https://github.com/A-Guy-educ/A-Guy-Web/pull/344)) — @kodyade[bot]
 - #323: Fix hardcoded English subtitle in study page empty state ([#339](https://github.com/A-Guy-educ/A-Guy-Web/pull/339)) — @kodyade[bot]
 - #326: Fix "Continue from last point" button showing broken link when co… ([#335](https://github.com/A-Guy-educ/A-Guy-Web/pull/335)) — @kodyade[bot]
