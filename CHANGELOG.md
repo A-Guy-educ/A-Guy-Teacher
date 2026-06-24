@@ -1816,6 +1816,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #355: [Start Page] Hover over mood/course buttons makes text unreadable ([#418](https://github.com/A-Guy-educ/A-Guy-Web/pull/418)) — @kodyade[bot]
 - #320: [Onboarding] Persona cards shift layout when one is selected ([#337](https://github.com/A-Guy-educ/A-Guy-Web/pull/337)) — @kodyade[bot]
 - #214: [P2] Search form does not submit on Enter or button click ([#348](https://github.com/A-Guy-educ/A-Guy-Web/pull/348)) — @kodyade[bot]
 - #354: [Landing] כפתורים נעלמים ב-hover — טקסט לא קריא על primary/90 ([#411](https://github.com/A-Guy-educ/A-Guy-Web/pull/411)) — @kodyade[bot]
