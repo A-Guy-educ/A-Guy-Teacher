@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useExercisesPager } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/ExercisesPager/useExercisesPager'
 import type { Exercise } from '@/infra/types/content'
+import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
 
 const createMockExercises = (count: number): Exercise[] =>
   Array.from({ length: count }, (_, i) => ({
@@ -27,6 +28,13 @@ const defaultParams = {
   lessonId: 'lesson-1',
   gradeLevel: 'Test Grade',
 }
+
+const createMockBlocks = (): ResolvedLessonBlock[] => [
+  { type: 'exercise', data: createMockExercises(1)[0] },
+  { type: 'contentPage', data: { id: 'cp-1', title: 'Content Page 1' } },
+  { type: 'exercise', data: createMockExercises(2)[1] },
+  { type: 'contentPage', data: { id: 'cp-2', title: 'Content Page 2' } },
+]
 
 describe('useExercisesPager handleJumpToExercise', () => {
   beforeEach(() => {
@@ -45,12 +53,11 @@ describe('useExercisesPager handleJumpToExercise', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders with correct initial state (skipIntro=true, 3 exercises)', () => {
+  it('renders with correct initial state (3 exercises)', () => {
     const { result } = renderHook(() =>
       useExercisesPager({
         exercises: createMockExercises(3),
         ...defaultParams,
-        skipIntro: true,
         initialExerciseIndex: 0,
       }),
     )
@@ -68,7 +75,6 @@ describe('useExercisesPager handleJumpToExercise', () => {
       useExercisesPager({
         exercises: createMockExercises(3),
         ...defaultParams,
-        skipIntro: true,
         initialExerciseIndex: 0,
       }),
     )
@@ -88,7 +94,6 @@ describe('useExercisesPager handleJumpToExercise', () => {
       useExercisesPager({
         exercises: createMockExercises(3),
         ...defaultParams,
-        skipIntro: true,
         initialExerciseIndex: 0,
       }),
     )
@@ -108,7 +113,6 @@ describe('useExercisesPager handleJumpToExercise', () => {
       useExercisesPager({
         exercises: createMockExercises(3),
         ...defaultParams,
-        skipIntro: true,
         initialExerciseIndex: 0,
       }),
     )
@@ -129,7 +133,6 @@ describe('useExercisesPager handleJumpToExercise', () => {
       useExercisesPager({
         exercises: createMockExercises(3),
         ...defaultParams,
-        skipIntro: true,
         initialExerciseIndex: 0,
       }),
     )
@@ -148,7 +151,6 @@ describe('useExercisesPager handleJumpToExercise', () => {
       useExercisesPager({
         exercises: createMockExercises(3),
         ...defaultParams,
-        skipIntro: true,
         initialExerciseIndex: 0,
       }),
     )
@@ -167,7 +169,6 @@ describe('useExercisesPager handleJumpToExercise', () => {
       useExercisesPager({
         exercises: createMockExercises(3),
         ...defaultParams,
-        skipIntro: true,
         initialExerciseIndex: 0,
       }),
     )
@@ -186,7 +187,6 @@ describe('useExercisesPager handleJumpToExercise', () => {
       useExercisesPager({
         exercises: createMockExercises(1),
         ...defaultParams,
-        skipIntro: true,
         initialExerciseIndex: 0,
       }),
     )
@@ -199,5 +199,162 @@ describe('useExercisesPager handleJumpToExercise', () => {
 
     // Should not navigate since only 1 exercise exists
     expect(result.current.getExerciseOrdinal()).toBe(1)
+  })
+})
+
+describe('useExercisesPager block reordering', () => {
+  beforeEach(() => {
+    vi.stubGlobal('window', {
+      ...window,
+      history: { ...window.history, replaceState: vi.fn() },
+      location: {
+        ...window.location,
+        pathname: '/courses/test-course/chapters/test-chapter/lessons/test-lesson',
+      },
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('places content pages before exercises in resolved blocks', () => {
+    const { result } = renderHook(() =>
+      useExercisesPager({
+        exercises: [],
+        blocks: createMockBlocks(),
+        ...defaultParams,
+      }),
+    )
+
+    // resolvedBlocks should be [contentPage, contentPage, exercise, exercise]
+    expect(result.current.totalBlocks).toBe(4)
+    expect(result.current.totalContentPages).toBe(2)
+    expect(result.current.totalExercises).toBe(2)
+  })
+
+  it('initial state starts on first content page when blocks are reordered', () => {
+    const { result } = renderHook(() =>
+      useExercisesPager({
+        exercises: [],
+        blocks: createMockBlocks(),
+        ...defaultParams,
+      }),
+    )
+
+    // First block (after reorder) is a content page
+    expect(result.current.pageState.type).toBe('contentPage')
+    expect(result.current.pageState.blockIndex).toBe(0)
+    expect(result.current.getContentPageOrdinal()).toBe(1)
+    expect(result.current.getExerciseOrdinal()).toBe(null)
+  })
+
+  it('getContentPageOrdinal only counts content pages', () => {
+    const { result } = renderHook(() =>
+      useExercisesPager({
+        exercises: [],
+        blocks: createMockBlocks(),
+        ...defaultParams,
+      }),
+    )
+
+    // Navigate to second content page (blockIndex 1 after reorder)
+    act(() => {
+      result.current.handleNext()
+    })
+
+    expect(result.current.pageState.blockIndex).toBe(1)
+    expect(result.current.getContentPageOrdinal()).toBe(2)
+    expect(result.current.getExerciseOrdinal()).toBe(null)
+  })
+
+  it('getExerciseOrdinal only counts exercises after content pages', () => {
+    const { result } = renderHook(() =>
+      useExercisesPager({
+        exercises: [],
+        blocks: createMockBlocks(),
+        ...defaultParams,
+      }),
+    )
+
+    // Navigate past content pages to first exercise (blockIndex 2)
+    act(() => {
+      result.current.handleNext()
+    })
+    act(() => {
+      result.current.handleNext()
+    })
+
+    expect(result.current.pageState.blockIndex).toBe(2)
+    expect(result.current.getContentPageOrdinal()).toBe(null)
+    expect(result.current.getExerciseOrdinal()).toBe(1) // first exercise
+  })
+
+  it('handleJumpToExercise finds correct block after reorder', () => {
+    const { result } = renderHook(() =>
+      useExercisesPager({
+        exercises: [],
+        blocks: createMockBlocks(),
+        ...defaultParams,
+      }),
+    )
+
+    // Jump to exercise 2 (which is at blockIndex 3 after reorder)
+    act(() => {
+      result.current.handleJumpToExercise(2)
+    })
+
+    expect(result.current.pageState.blockIndex).toBe(3)
+    expect(result.current.getExerciseOrdinal()).toBe(2)
+  })
+
+  it('canGoPrev is false on first page (content page at index 0)', () => {
+    const { result } = renderHook(() =>
+      useExercisesPager({
+        exercises: [],
+        blocks: createMockBlocks(),
+        ...defaultParams,
+      }),
+    )
+
+    expect(result.current.canGoPrev).toBe(false)
+  })
+
+  it('canGoNext is true on first content page', () => {
+    const { result } = renderHook(() =>
+      useExercisesPager({
+        exercises: [],
+        blocks: createMockBlocks(),
+        ...defaultParams,
+      }),
+    )
+
+    expect(result.current.canGoNext).toBe(true)
+  })
+
+  it('outro is reached after last exercise', () => {
+    const { result } = renderHook(() =>
+      useExercisesPager({
+        exercises: [],
+        blocks: createMockBlocks(),
+        ...defaultParams,
+      }),
+    )
+
+    // Navigate through all 4 blocks to reach outro
+    act(() => {
+      result.current.handleNext()
+    })
+    act(() => {
+      result.current.handleNext()
+    })
+    act(() => {
+      result.current.handleNext()
+    })
+    act(() => {
+      result.current.handleNext()
+    })
+
+    expect(result.current.pageState.type).toBe('outro')
   })
 })
