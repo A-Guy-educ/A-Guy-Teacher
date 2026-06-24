@@ -14,7 +14,6 @@ import { Button } from '@/ui/web/components/button'
 import { Progress } from '@/ui/web/components/progress'
 import { useTranslations } from '@/ui/web/providers/I18n'
 
-import { BackToChapter } from '@/app/(frontend)/courses/_components/BackToChapter'
 import { DualModeLessonView } from '../DualModeLessonView'
 import type { LessonMode } from '../DualModeLessonView/useLessonViewMode'
 import { EmptyLessonPlaceholder } from '../EmptyLessonPlaceholder'
