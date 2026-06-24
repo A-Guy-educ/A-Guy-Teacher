@@ -147,7 +147,7 @@ const SPACING_CLASS: Record<string, string> = {
 export function ContentPageBodyRenderer({ blocks }: { blocks: BodyBlock[] }) {
   if (!Array.isArray(blocks) || blocks.length === 0) return null
   return (
-    <div>
+    <div className="break-words [overflow-wrap:anywhere]">
       {blocks.map((block, idx) => {
         const id = (typeof block.id === 'string' ? block.id : null) ?? `body-${idx}`
         const spacing = SPACING_CLASS[(block.spacingAfter as string) ?? 'inherit'] ?? 'mb-4'
