@@ -1,7 +1,7 @@
 {
   "name": "classify",
   "role": "primitive",
-  "describe": "Default stub that delegates to feature agentAction",
+  "describe": "Classifies issues and dispatches to the right agentAction",
   "inputs": [
     {
       "name": "issue",
@@ -18,7 +18,7 @@
     "maxTurnTimeoutSec": 1200,
     "systemPromptAppend": null,
     "cacheable": true,
-    "enableVerifyTool": true,
+    "enableVerifyTool": false,
     "verifyAttempts": 4,
     "tools": [
       "Read",
@@ -28,9 +28,7 @@
       "Grep",
       "Glob"
     ],
-    "hooks": [
-      "block-git"
-    ],
+    "hooks": [],
     "skills": [],
     "commands": [],
     "subagents": [],
@@ -38,22 +36,22 @@
     "mcpServers": []
   },
   "cliTools": [],
-  "lifecycle": "pr-branch",
-  "lifecycleConfig": {
-    "label": {
-      "name": "kody:running",
-      "color": "fbca04",
-      "description": "kody: working"
-    },
-    "context": "task",
-    "sync": false,
-    "verify": true,
-    "advance": false,
-    "mirrorState": true,
-    "finalize": true
-  },
   "scripts": {
-    "preflight": [],
-    "postflight": []
+    "preflight": [
+      {
+        "script": "loadIssueContext"
+      },
+      {
+        "script": "composePrompt"
+      }
+    ],
+    "postflight": [
+      {
+        "script": "parseAgentResult"
+      },
+      {
+        "script": "postAgentComment"
+      }
+    ]
   }
 }
