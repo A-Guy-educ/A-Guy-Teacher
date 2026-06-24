@@ -1816,6 +1816,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #565: [Content Page] ביטויים מתמטיים לא מוצגים בכתיב מתמטי טבעי ([#567](https://github.com/A-Guy-educ/A-Guy-Web/pull/567)) — @kodyade[bot]
 - #371: [LessonIntroPage] Button text too small + dark text on dark backg… ([#416](https://github.com/A-Guy-educ/A-Guy-Web/pull/416)) — @kodyade[bot]
 - #318: [onboarding/persona] Selection badge causes card layout shift ([#342](https://github.com/A-Guy-educ/A-Guy-Web/pull/342)) — @kodyade[bot]
 - #215: [P3] Signup form contains an unnamed textbox in accessibility tree ([#345](https://github.com/A-Guy-educ/A-Guy-Web/pull/345)) — @kodyade[bot]
