@@ -74,7 +74,8 @@
       "vercel-production-deploy"
     ],
     "activeGoals": [
-      "web-release"
+      "web-release",
+      "daily-web-release-loop"
     ]
   },
   "fly": {
