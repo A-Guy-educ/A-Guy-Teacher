@@ -1816,6 +1816,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #318: [onboarding/persona] Selection badge causes card layout shift ([#342](https://github.com/A-Guy-educ/A-Guy-Web/pull/342)) — @kodyade[bot]
 - #215: [P3] Signup form contains an unnamed textbox in accessibility tree ([#345](https://github.com/A-Guy-educ/A-Guy-Web/pull/345)) — @kodyade[bot]
 - #379: [Cards] Add hover lift effect to clickable UnifiedCards across th… ([#414](https://github.com/A-Guy-educ/A-Guy-Web/pull/414)) — @kodyade[bot]
 - #322: [UI] מסגרת הסעיף נעלמת במצב כהה ([#325](https://github.com/A-Guy-educ/A-Guy-Web/pull/325)) — @kodyade[bot]
