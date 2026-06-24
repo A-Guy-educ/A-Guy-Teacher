@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #498: החלף LICENSE ל-BSL 1.1 — מנע שימוש מסחרי ([#512](https://github.com/A-Guy-educ/A-Guy-Web/pull/512)) — @kodyade[bot]
 - #460: Show content pages before exercises and drop the second Welcome i… ([#475](https://github.com/A-Guy-educ/A-Guy-Web/pull/475)) — @kodyade[bot]
 - #228: Doc coverage: src/infra/analytics/ — Analytics tracking layer ([#412](https://github.com/A-Guy-educ/A-Guy-Web/pull/412)) — @kodyade[bot]
 - #391: [Lessons] Interactive view disappears when switching from scroll … ([#407](https://github.com/A-Guy-educ/A-Guy-Web/pull/407)) — @kodyade[bot]
