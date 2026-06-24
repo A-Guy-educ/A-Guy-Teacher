@@ -1,7 +1,7 @@
 {
   "name": "classify",
   "role": "primitive",
-  "describe": "Default stub that delegates to feature agentAction",
+  "describe": "Default stub — classifies the issue type and routes to the feature agentAction to create a feature request.",
   "inputs": [
     {
       "name": "issue",
