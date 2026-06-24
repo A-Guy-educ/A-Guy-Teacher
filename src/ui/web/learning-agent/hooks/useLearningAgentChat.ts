@@ -11,6 +11,7 @@ export interface LearningAgentMessage {
 
 interface UseLearningAgentChatOptions {
   gradeLevel: string
+  locale?: string
   initialMessage?: string
   onConversationCreated?: (conversationId: string) => void
 }
@@ -32,14 +33,19 @@ interface UseLearningAgentChatReturn {
  */
 export function useLearningAgentChat({
   gradeLevel,
-  initialMessage = "Hi! I'm your personal learning assistant. How can I help you today?",
+  locale,
+  initialMessage,
   onConversationCreated,
 }: UseLearningAgentChatOptions): UseLearningAgentChatReturn {
+  const defaultWelcomeMessage =
+    locale === 'he'
+      ? 'היי! אני העוזר האישי שלך ללמידה. אני יכול לעזור לך עם הקורסים שלך, להציע מה ללמוד הלאה ולעקוב אחר ההתקדמות שלך. איך אוכל לעזור לך היום?'
+      : "Hi! I'm your personal learning assistant. I can help you with your courses, suggest what to learn next, and track your progress. How can I help you today?"
   const [messages, setMessages] = useState<LearningAgentMessage[]>([
     {
       id: 'welcome',
       role: 'assistant',
-      content: initialMessage,
+      content: initialMessage ?? defaultWelcomeMessage,
     },
   ])
   const [inputValue, setInputValue] = useState('')
@@ -79,6 +85,7 @@ export function useLearningAgentChat({
             acknowledgment: 'Understood',
             conversationId,
             gradeLevel,
+            locale,
           }),
         })
 
@@ -142,7 +149,7 @@ export function useLearningAgentChat({
         setIsLoading(false)
       }
     },
-    [isLoading, conversationId, gradeLevel, onConversationCreated],
+    [isLoading, conversationId, gradeLevel, locale, onConversationCreated],
   )
 
   const resetChat = useCallback(() => {
@@ -150,11 +157,11 @@ export function useLearningAgentChat({
       {
         id: 'welcome',
         role: 'assistant',
-        content: initialMessage,
+        content: initialMessage ?? defaultWelcomeMessage,
       },
     ])
     setConversationId(null)
-  }, [initialMessage])
+  }, [initialMessage, defaultWelcomeMessage])
 
   return {
     messages,
