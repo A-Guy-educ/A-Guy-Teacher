@@ -529,6 +529,7 @@
     "of": "of",
     "pages": "Pages",
     "contentPageLabel": "Page",
+    "contentPageNoBody": "This page has no content yet.",
     "exercisesPagerIntroDescriptionPart1": "This lesson contains",
     "exercisesPagerIntroDescriptionPart2": "exercises. Let's begin!",
     "exercisesPagerWelcome": "Welcome to the Lesson",

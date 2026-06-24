@@ -14,6 +14,7 @@ import { Button } from '@/ui/web/components/button'
 import { Progress } from '@/ui/web/components/progress'
 import { useTranslations } from '@/ui/web/providers/I18n'
 
+import { ContentPagesPreamble } from '../ContentPagesPreamble'
 import { DualModeLessonView } from '../DualModeLessonView'
 import type { LessonMode } from '../DualModeLessonView/useLessonViewMode'
 import { EmptyLessonPlaceholder } from '../EmptyLessonPlaceholder'
@@ -81,14 +82,16 @@ export function LessonIntroPage({
   const t = useTranslations('courses')
   const searchParams = useSearchParams()
   const deepLinkedExerciseId = searchParams.get('exerciseId')
-  const { pageState, handleStart } = useLessonIntroPage({ deepLinkedExerciseId })
-
   const exerciseCount = exercises.length
   const contentPageCount = useMemo(
     () =>
       Array.isArray(blocks) ? blocks.filter((block) => block.type === 'contentPage').length : 0,
     [blocks],
   )
+  const { pageState, handleStart, handleFinishPreamble } = useLessonIntroPage({
+    deepLinkedExerciseId,
+    hasContentPagesPreamble: contentPageCount > 0,
+  })
   const pdfCount = mediaFiles.length
   const description = plainText(lesson.description)
 
@@ -145,6 +148,17 @@ export function LessonIntroPage({
     )
   }
 
+  if (pageState.type === 'preamble') {
+    return (
+      <ContentPagesPreamble
+        lessonTitle={lesson.title}
+        blocks={blocks}
+        contentPageBodies={contentPageBodies}
+        onFinish={() => handleFinishPreamble(pageState.initialExerciseIndex)}
+      />
+    )
+  }
+
   if (pageState.type === 'content') {
     if (visibleRenderers.length === 0) {
       return (
@@ -167,11 +181,7 @@ export function LessonIntroPage({
         lessonSlug={lessonSlug}
         gradeLevel={gradeLevel}
         exercises={exercises}
-        interactive={
-          hasContentPagesInBlocks
-            ? { kind: 'blocks', blocks, contentPageBodies }
-            : { kind: 'exercises', exercises }
-        }
+        interactive={{ kind: 'exercises', exercises }}
         validFiles={mediaFiles}
         mediaMap={mediaMap}
         chatLessonId={lesson.id}
