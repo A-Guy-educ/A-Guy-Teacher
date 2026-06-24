@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix(lesson-pager): Read current block from reordered list (regression from #475) ([#539](https://github.com/A-Guy-educ/A-Guy-Web/pull/539)) — @aguyshayb
 - feat(lesson): Show content pages as universal preamble after lobby ([#556](https://github.com/A-Guy-educ/A-Guy-Web/pull/556)) — @aguyshayb
 - #498: החלף LICENSE ל-BSL 1.1 — מנע שימוש מסחרי ([#512](https://github.com/A-Guy-educ/A-Guy-Web/pull/512)) — @kodyade[bot]
 - #460: Show content pages before exercises and drop the second Welcome i… ([#475](https://github.com/A-Guy-educ/A-Guy-Web/pull/475)) — @kodyade[bot]
