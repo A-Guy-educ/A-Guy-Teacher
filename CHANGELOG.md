@@ -1813,6 +1813,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #328: [Study Plan] Chat button opens English conversation when locale i… ([#349](https://github.com/A-Guy-educ/A-Guy-Web/pull/349)) — @kodyade[bot]
 - #321: [Study] UnifiedCard hover effects missing when cardHref is set ([#347](https://github.com/A-Guy-educ/A-Guy-Web/pull/347)) — @kodyade[bot]
 - #331: [LessonIntroPage] Add back button to lesson lobby screen ([#336](https://github.com/A-Guy-educ/A-Guy-Web/pull/336)) — @kodyade[bot]
 - #356: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#358](https://github.com/A-Guy-educ/A-Guy-Web/pull/358)) — @kodyade[bot]
