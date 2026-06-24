@@ -1,0 +1,116 @@
+Business Source License 1.1
+
+Licensor: A-Guy
+
+Change Date: [INSERT DATE FOUR YEARS FROM NOW OR USE "No Duration"]
+
+Change License: GNU General Public License v3.0 or later
+
+---
+
+Terms and Conditions
+
+This Business Source License ("License") governs use of this software and documentation (the "Software"). By using or copying the Software, You ("You" or "Licensee") accept and agree to be bound by the terms and conditions of this License. If You do not agree, do not use the Software.
+
+1. Definitions
+
+"Commercial Use" means use of the Software for commercial advantage or monetary compensation, including but not limited to:
+(a) use of the Software in a business, commercial enterprise, or as part of a product or service offered for sale;
+(b) use of the Software to provide services to third parties for a fee or other consideration;
+(c) use of the Software to operate a website or application that generates revenue through advertising, subscriptions, or other commercial models.
+
+"Develop" means to copy, modify, translate, adapt, alter, or create derivative works based on the Software.
+
+"Documentation" means the user manuals, operator manuals, guides, and other written materials provided with the Software.
+
+"Licensee" means You, or the company or entity You represent.
+
+"Licensor" means A-Guy and its successors and assignees.
+
+"Software" means the computer programs, source code, object code, and Documentation provided by Licensor under this License.
+
+"You" means the individual exercising permissions under this License, or the company or entity on whose behalf such individual is acting.
+
+2. Grant of Rights
+
+Subject to the terms and conditions of this License, Licensor hereby grants You a worldwide, non-exclusive, non-transferable, royalty-free license to:
+(a) Use, copy, and distribute the Software and Documentation for Non-Commercial Purposes;
+(b) Develop the Software and distribute Derivative Works to You and other licensees for Non-Commercial Purposes;
+(c) Use the Software and Documentation for Non-Commercial Purposes within Your organization.
+
+"Non-Commercial Purposes" means purposes that are not Commercial Use and do not involve the sale, rental, lease, licensing, or transfer of the Software for compensation.
+
+3. Not Permitted
+
+The following uses are NOT permitted under this License:
+
+(a) Any Commercial Use of the Software;
+
+(b) Distribution of the Software or Derivative Works to third parties for Commercial Use;
+
+(c) Use of the Software to operate a software-as-a-service (SaaS), platform-as-a-service (PaaS), or infrastructure-as-a-service (IaaS) offering that competes with Licensor's commercial offerings;
+
+(d) Use of the Software to provide batch processing services to third parties;
+
+(e) Use of the Software in any manner that generates revenue through advertising, sponsorship, or other commercial arrangements;
+
+(f) Removing, obscuring, or altering any proprietary notices, including copyright notices, patent notices, and disclaimers of warranty.
+
+4. Fair Use
+
+This License does not restrict Your rights under applicable law, including fair use, fair dealing, or similar doctrines. Use of the Software for purposes that would otherwise be restricted by copyright law does not constitute a violation of this License provided such use is permitted by applicable law.
+
+5. License for Producing Derivatives
+
+If You Develop a Derivative Work of the Software, You may license that Derivative Work under:
+(a) The terms of this License (BSL 1.1), provided that You comply with all terms and conditions; or
+(b) The terms of the GNU General Public License v3.0 or later.
+
+If You choose to license Your Derivative Work under the GNU General Public License, You must:
+(a) Include a copy of this License with Your Derivative Work;
+(b) Prominently state that Your Derivative Work includes modifications to the Software;
+(c) Retain all copyright notices and disclaimers from the original Software; and
+(d) Make the source code of Your Derivative Work available under the GNU General Public License v3.0 or later.
+
+6. License for Not-for-Profit Use
+
+Notwithstanding any other provision of this License, the Software may be used for Not-for-Profit Use. "Not-for-Profit Use" means use of the Software by:
+(a) Educational institutions for educational purposes;
+(b) Non-profit organizations for non-commercial activities;
+(c) Individuals and organizations using the Software for research, experimentation, or innovation that is not intended for commercial application.
+
+7. Patent Grant
+
+Licensor hereby grants You a non-exclusive, worldwide, royalty-free patent license under Licensor's patent rights necessary to make, use, sell, offer for sale, import, and otherwise transfer the Software, in each case solely to the extent necessary to exercise the rights granted under this License.
+
+8. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+9. Limitation of Liability
+
+IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+10. Trademark
+
+This License does not grant permission to use the trade names, trademarks, service marks, or product names of Licensor, except as required for reasonable and customary use in describing the origin of the Software.
+
+11. Termination
+
+This License is effective until terminated. Your rights under this License will terminate automatically without notice if You fail to comply with any term or condition of this License. Upon termination, You must cease all use of the Software and destroy all copies, full or partial, of the Software and Documentation in Your possession.
+
+12. Severability
+
+If any provision of this License is held to be unenforceable or invalid, such provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions of this License shall continue in full force and effect.
+
+13. Governing Law
+
+This License shall be governed by and construed in accordance with the laws of the jurisdiction in which Licensor is located, without regard to conflicts of law provisions.
+
+14. Entire Agreement
+
+This License constitutes the entire agreement between the parties concerning the subject matter hereof, and supersedes all prior agreements, understandings, and arrangements, whether oral or written, relating to such subject matter.
+
+---
+
+For questions about this license, please contact: [INSERT CONTACT INFORMATION]
