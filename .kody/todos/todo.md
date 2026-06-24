@@ -17,9 +17,9 @@ createdAt: "2026-06-24T11:19:44.575Z"
     "id": "c93138a1-e4bd-4964-b26c-fa95c8e00025",
     "title": "Publish web",
     "body": "",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-06-24T11:20:09.922Z",
-    "completedAt": null
+    "completedAt": "2026-06-24T11:21:53.297Z"
   },
   {
     "id": "7012dcea-7d43-4b67-90e5-9397a1096d9e",
