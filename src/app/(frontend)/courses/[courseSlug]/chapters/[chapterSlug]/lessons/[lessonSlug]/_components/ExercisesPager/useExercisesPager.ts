@@ -403,5 +403,6 @@ export function useExercisesPager({
     totalExercises,
     totalContentPages,
     totalBlocks: resolvedBlocks.length,
+    resolvedBlocks,
   }
 }
