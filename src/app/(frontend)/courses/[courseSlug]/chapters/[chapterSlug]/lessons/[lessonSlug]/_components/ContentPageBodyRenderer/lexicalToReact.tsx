@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { MathMarkdown } from '@/ui/web/shared/MathMarkdown'
 
 interface LexicalNode {
   type: string
@@ -11,6 +12,7 @@ interface LexicalNode {
   listType?: string
   fields?: { url?: string }
   url?: string
+  latex?: string
 }
 
 const FMT_BOLD = 1
@@ -67,6 +69,12 @@ function renderNode(node: LexicalNode | undefined): React.ReactNode {
 
     case 'linebreak':
       return <br />
+
+    case 'math': {
+      const latex = node.latex ?? node.text ?? ''
+      if (!latex) return null
+      return <MathMarkdown content={latex} className="rich-text-content" />
+    }
 
     case 'root':
       return <>{renderChildren(node.children)}</>
