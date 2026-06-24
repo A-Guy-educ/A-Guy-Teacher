@@ -80,7 +80,8 @@
           "timezone": "Asia/Jerusalem"
         }
       },
-      "ci-health"
+      "ci-health",
+      "prs-stay-mergeable"
     ]
   }
 }
