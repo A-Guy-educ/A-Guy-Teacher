@@ -103,7 +103,7 @@ function Hero({ t }: { t: (key: string) => string }) {
         <div className="flex w-full max-w-xl flex-col justify-center gap-content-gap sm:flex-row">
           <Link
             href="/products"
-            className="flex flex-1 items-center justify-center gap-content-gap-xs rounded-xl bg-primary px-8 py-section-xs text-body-lg font-bold text-primary-foreground shadow-elevation-3 transition-all duration-normal hover:-translate-y-1 hover:bg-primary/90"
+            className="flex flex-1 items-center justify-center gap-content-gap-xs rounded-xl bg-primary px-8 py-section-xs text-body-lg font-bold text-primary-foreground shadow-elevation-3 transition-all duration-normal hover:-translate-y-1 hover:bg-primary"
           >
             {t('hero.plansCta')}
           </Link>
@@ -476,7 +476,7 @@ function DashboardPreview({ t }: { t: (key: string) => string }) {
         </div>
         <Link
           href="/start"
-          className="self-stretch rounded-2xl bg-primary px-8 py-3 text-center font-bold text-primary-foreground shadow-elevation-3 transition-all duration-normal hover:bg-primary/90 md:self-auto"
+          className="self-stretch rounded-2xl bg-primary px-8 py-3 text-center font-bold text-primary-foreground shadow-elevation-3 transition-all duration-normal hover:bg-primary md:self-auto"
         >
           {t('hero.trialCta')}
         </Link>
