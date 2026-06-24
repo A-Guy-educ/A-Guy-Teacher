@@ -1816,6 +1816,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #373: [UI] Lesson intro button — text too small, outline variant hard t… ([#413](https://github.com/A-Guy-educ/A-Guy-Web/pull/413)) — @kodyade[bot]
 - #316: [Button] ghost variant hover hides text on light backgrounds ([#338](https://github.com/A-Guy-educ/A-Guy-Web/pull/338)) — @kodyade[bot]
 - #211: [P1] Courses page renders empty with no course cards ([#333](https://github.com/A-Guy-educ/A-Guy-Web/pull/333)) — @kodyade[bot]
 - #355: [Start Page] Hover over mood/course buttons makes text unreadable ([#418](https://github.com/A-Guy-educ/A-Guy-Web/pull/418)) — @kodyade[bot]
