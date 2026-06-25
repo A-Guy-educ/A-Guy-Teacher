@@ -2,6 +2,8 @@
  * Educational Support Generation Service
  * Generates hints, solutions, and full solutions for exercise blocks
  * Server-side only — content is persisted to DB, never sent to client
+ *
+ * @ai-summary "solution" is a GUIDING QUESTION (שאלה מכוונת), NOT a direct answer — this is a pedagogical requirement. If the LLM skips any of the three fields (hints, solution, fullSolution), it retries once with a correction prompt. Hebrew is the default language. The content is server-side only and must never be sent to the client without review.
  */
 import type { Payload } from '@/infra/types/backend'
 import type { AIModel, AIModelKey } from '../models'

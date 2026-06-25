@@ -28,14 +28,6 @@
       "wordCount": 184
     },
     {
-      "path": ".kody/memory/inbox/README.md",
-      "title": "Memory sticky-note inbox",
-      "sections": ["File shape", "Rules"],
-      "relativeUrl": ".kody/memory/inbox/README.md",
-      "category": ".kody",
-      "wordCount": 138
-    },
-    {
       "path": ".kody/README.md",
       "title": "Untitled",
       "sections": [],
@@ -69,7 +61,7 @@
       ],
       "relativeUrl": "access-control/README.md",
       "category": "access-control",
-      "wordCount": 593
+      "wordCount": 608
     },
     {
       "path": "docs/admin-components/README.md",
@@ -81,6 +73,7 @@
         "📝 Component Implementation",
         "🎨 Styling Custom Components",
         "🔍 Real Example: ExerciseContentEditor",
+        "🔍 Real Example: Coupons Admin Components",
         "🔄 Import Map Generation",
         "🎓 Common Patterns",
         "🧪 Testing Admin Components",
@@ -91,7 +84,7 @@
       ],
       "relativeUrl": "admin-components/README.md",
       "category": "admin-components",
-      "wordCount": 728
+      "wordCount": 1079
     },
     {
       "path": "docs/ai/README.md",
@@ -147,7 +140,7 @@
       ],
       "relativeUrl": "block-rendering/README.md",
       "category": "block-rendering",
-      "wordCount": 899
+      "wordCount": 999
     },
     {
       "path": "docs/brain-server/README.md",
@@ -203,7 +196,7 @@
       ],
       "relativeUrl": "course-hierarchy/README.md",
       "category": "course-hierarchy",
-      "wordCount": 790
+      "wordCount": 792
     },
     {
       "path": "eslint-plugin-aguy/README.md",
@@ -244,25 +237,25 @@
     },
     {
       "path": "docs/exercises/README.md",
-      "title": "Exercises Collection - Stage 0 Implementation",
+      "title": "Exercises Collection",
       "sections": [
         "Overview",
         "Architecture",
         "Data Model",
         "Quick Start",
         "Implementation Details",
-        "Supported Question Types",
+        "Supported Question Block Types",
         "Content Block Types",
         "Testing",
         "Related Documentation",
-        "Future Enhancements (Out of Stage 0 Scope)",
+        "Future Enhancements",
         "Troubleshooting",
         "Contributing",
         "License"
       ],
       "relativeUrl": "exercises/README.md",
       "category": "exercises",
-      "wordCount": 751
+      "wordCount": 996
     },
     {
       "path": "docs/features/chat-context/README.md",
@@ -415,11 +408,34 @@
     },
     {
       "path": "src/app/README.md",
-      "title": "Application Routes",
-      "sections": ["Structure", "Patterns", "Key Files", "Common Tasks", "Related"],
+      "title": "App Routes",
+      "sections": [],
       "relativeUrl": "src/app/README.md",
       "category": "src/app",
-      "wordCount": 172
+      "wordCount": 34
+    },
+    {
+      "path": "src/brands/README.md",
+      "title": "Brand Bundle Contract",
+      "sections": [
+        "What a brand bundle owns",
+        "Required exports",
+        "Future required exports",
+        "How to add a new brand",
+        "Environment variable",
+        "Phases 2–7 context"
+      ],
+      "relativeUrl": "src/brands/README.md",
+      "category": "src/brands",
+      "wordCount": 636
+    },
+    {
+      "path": "src/client/hooks/README.md",
+      "title": "Client-Side React Hooks",
+      "sections": [],
+      "relativeUrl": "src/client/hooks/README.md",
+      "category": "src/client",
+      "wordCount": 47
     },
     {
       "path": "src/client/README.md",
@@ -427,7 +443,7 @@
       "sections": ["Structure", "Patterns", "Key Files", "Common Tasks", "Related"],
       "relativeUrl": "src/client/README.md",
       "category": "src/client",
-      "wordCount": 169
+      "wordCount": 163
     },
     {
       "path": "src/infra/analytics/README.md",
@@ -475,6 +491,20 @@
       "wordCount": 421
     },
     {
+      "path": "src/infra/loading/README.md",
+      "title": "Loading State Manager",
+      "sections": [
+        "Entry Point",
+        "Architecture",
+        "Core Concepts",
+        "Gotchas",
+        "Related Documentation"
+      ],
+      "relativeUrl": "src/infra/loading/README.md",
+      "category": "src/infra",
+      "wordCount": 170
+    },
+    {
       "path": "src/infra/README.md",
       "title": "Infrastructure Layer",
       "sections": [
@@ -490,59 +520,15 @@
       ],
       "relativeUrl": "src/infra/README.md",
       "category": "src/infra",
-      "wordCount": 324
+      "wordCount": 325
     },
     {
-      "path": "src/server/payload/blocks/README.md",
-      "title": "Payload CMS Blocks",
-      "sections": [
-        "Block Registry",
-        "Structure",
-        "Block Configuration Pattern",
-        "Usage in Collections",
-        "Rendering Blocks",
-        "Agent Guardrails",
-        "Related Documentation"
-      ],
-      "relativeUrl": "src/server/payload/blocks/README.md",
+      "path": "src/server/api/README.md",
+      "title": "API Utilities",
+      "sections": ["Entry Point", "File Map", "Gotchas"],
+      "relativeUrl": "src/server/api/README.md",
       "category": "src/server",
-      "wordCount": 299
-    },
-    {
-      "path": "src/server/payload/collections/README.md",
-      "title": "Collections Overview",
-      "sections": [
-        "Available Collections",
-        "Access Control Patterns",
-        "Field Reuse Patterns",
-        "Ordering & Hierarchy",
-        "Admin UI Configuration",
-        "Layout Builder Integration",
-        "When to Create a New Collection",
-        "Common Patterns",
-        "Type Safety",
-        "Related Documentation",
-        "Quick Reference Commands"
-      ],
-      "relativeUrl": "src/server/payload/collections/README.md",
-      "category": "src/server",
-      "wordCount": 547
-    },
-    {
-      "path": "src/server/payload/endpoints/README.md",
-      "title": "Payload CMS Custom Endpoints",
-      "sections": [
-        "Endpoint Registry",
-        "Structure",
-        "Endpoint Pattern",
-        "Agent Chat Architecture",
-        "Cron Endpoints",
-        "Agent Guardrails",
-        "Related Documentation"
-      ],
-      "relativeUrl": "src/server/payload/endpoints/README.md",
-      "category": "src/server",
-      "wordCount": 337
+      "wordCount": 230
     },
     {
       "path": "src/server/README.md",
@@ -561,47 +547,15 @@
       ],
       "relativeUrl": "src/server/README.md",
       "category": "src/server",
-      "wordCount": 304
+      "wordCount": 306
     },
     {
       "path": "src/server/repos/README.md",
-      "title": "Repository Layer",
-      "sections": [
-        "Repository Registry",
-        "Structure",
-        "Query Pattern",
-        "MCP Client Pattern",
-        "Agent Guardrails",
-        "Related Documentation"
-      ],
+      "title": "Server Repositories",
+      "sections": [],
       "relativeUrl": "src/server/repos/README.md",
       "category": "src/server",
-      "wordCount": 348
-    },
-    {
-      "path": "src/ui/admin/exercise/README.md",
-      "title": "Exercise Components",
-      "sections": ["Directory Structure", "Migration Status", "Guidelines"],
-      "relativeUrl": "src/ui/admin/exercise/README.md",
-      "category": "src/ui",
-      "wordCount": 112
-    },
-    {
-      "path": "src/ui/admin/README.md",
-      "title": "Admin Panel Components",
-      "sections": [
-        "Structure",
-        "Exercise Content Editor",
-        "Media Preview System",
-        "BeforeDashboard Component",
-        "BeforeLogin Component",
-        "Answer Spec JSON Field",
-        "Shared Admin Utilities",
-        "Related Documentation"
-      ],
-      "relativeUrl": "src/ui/admin/README.md",
-      "category": "src/ui",
-      "wordCount": 347
+      "wordCount": 39
     },
     {
       "path": "src/ui/web/README.md",
@@ -672,12 +626,12 @@
     }
   ],
   "metadata": {
-    "generatedAt": "2026-05-20T12:22:56.494Z",
-    "totalReadmes": 42,
+    "generatedAt": "2026-06-17T20:51:58.781Z",
+    "totalReadmes": 40,
     "categories": {
       ".agents": 1,
       ".claude": 1,
-      ".kody": 2,
+      ".kody": 1,
       "root": 1,
       "README.md": 1,
       "a-guy": 1,
@@ -698,10 +652,11 @@
       "scripts": 5,
       "site-docs": 1,
       "src/app": 1,
-      "src/client": 1,
-      "src/infra": 3,
-      "src/server": 5,
-      "src/ui": 4,
+      "src/brands": 1,
+      "src/client": 2,
+      "src/infra": 4,
+      "src/server": 3,
+      "src/ui": 2,
       "tests": 1
     }
   }

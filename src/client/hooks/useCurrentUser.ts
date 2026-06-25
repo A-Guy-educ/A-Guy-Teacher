@@ -1,3 +1,12 @@
+/**
+ * @fileType hook
+ * @domain auth
+ * @pattern user-context
+ * @ai-summary Fetches the current user from `/api/users/me` on mount and re-fetches on every `auth:changed` event. Returns `user: null` while unauthenticated and during the initial fetch.
+ *
+ * Gotcha: OAuth callback flows can briefly observe `user: null` before the auth change event fires, so callers should keep loading/anonymous states distinct.
+ */
+
 'use client'
 
 import type { User } from '@/infra/types/content'

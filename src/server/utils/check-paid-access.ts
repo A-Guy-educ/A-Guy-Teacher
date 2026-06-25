@@ -1,3 +1,15 @@
+/**
+ * Determines whether a course requires a paid entitlement for access.
+ *
+ * Checks three sources in parallel: explicit user-entitlements record,
+ * active enrollment, and the legacy courseEntitlements array on the user doc.
+ * Admin users bypass all checks (returns `requiresEntitlement: false`).
+ *
+ * @fileType utility
+ * @domain access-control
+ * @pattern paid-entitlement
+ * @ai-summary Grants access to admin users unconditionally — callers must handle `requiresEntitlement: false` for admins separately (e.g., skip rendering a purchase button but allow access).
+ */
 import { ObjectId, type Document } from 'mongodb'
 
 import { getContentDb, relationId } from '@/infra/db/content-db'

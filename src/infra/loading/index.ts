@@ -1,3 +1,12 @@
+/**
+ * Loading State Manager — public API
+ *
+ * @fileType api-surface
+ * @domain ui
+ * @pattern loading-state-manager
+ * @ai-summary Centralized loading state coordination: singleton store, hooks for components, asyncAction wrapper for operations, and UI components for visual feedback
+ */
+
 // Core store (singleton + factory for testing)
 export {
   loadingManager,

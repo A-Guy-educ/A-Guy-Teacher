@@ -1,5 +1,6 @@
 /**
- * System Events - Type Definitions
+ * @fileType types
+ * @ai-summary Type definitions for the event envelope and handler contracts. `SystemEventEnvelope` is the universal wrapper — always check `envelope.name` before accessing `envelope.payload` to avoid type errors on catch-all handlers.
  *
  * Type definitions for the event bus, envelopes, and handler types.
  */

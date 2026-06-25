@@ -17,6 +17,15 @@ You are an expert Payload CMS developer. When working with Payload projects, fol
 - To validate typescript correctness after modifying code run `tsc --noEmit`
 - Generate import maps after creating or modifying components.
 
+## Kody Clean Boundary
+
+Hard constraints:
+
+- **Engine**: runs the requested executable and reports success/failure.
+- **Preview executable/tool**: owns preview behavior and preview-provider details.
+- **Task-leader/release policy**: decides whether a preview result is required for a given PR type.
+- **`.github/workflows/kody.yml`**: immutable launcher only; never change this file.
+
 ## Project Structure
 
 ```

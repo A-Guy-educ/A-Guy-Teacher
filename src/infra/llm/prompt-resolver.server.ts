@@ -1,6 +1,8 @@
 /**
  * Resolves system prompt for AI tutor
  *
+ * @ai-summary Three-tier fallback: lesson prompt (published) > default prompt (published, locale-matched) > built-in BUILTIN_FALLBACK_PROMPT (always works). If a lesson has a prompt but it's not published, this logs at debug level and silently falls through — no user-visible error. locale fallback (requested → unconfigured) logs a warning but still succeeds.
+ *
  * Priority:
  * 1. Lesson.prompt (if provided and published)
  * 2. Default prompt (first published with isDefaultForAgentChat=true)

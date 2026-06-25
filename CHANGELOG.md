@@ -1,5 +1,139 @@
 # Changelog
 
+## v0.26.2 — 2026-06-25
+
+_No notable commits since the last release._
+## v0.26.1 — 2026-06-24
+
+_No notable commits since the last release._
+## [0.26.0] - 2026-06-17
+
+### Features
+
+- Show purchases on /account and wire PayPal webhook
+
+### Bug Fixes
+
+- Close task-leader review approval loop
+- Teach task leader Kody concern comments
+- Let release promotion warn on Fly preview limits
+- Wire /checkout/success page to actually read transaction
+- Make Vercel deploy duties install CLI
+- Dispatch task leader reviews directly
+- Emit state from scheduled ticks
+- Add preview health executable
+- Expose task leader review token
+- Use release reviewer token
+- Auto-run preview conflict resolution
+- Wire scheduled task leader duty
+- Keep preview health recommendations inert
+- Reload course after start selection
+- Localize landing and start pages
+- Use selected course ID for study pages
+
+### Documentation
+
+- add @ai-summary headers to src/infra/loading/ (12 items) (#238) (#238)
+
+### Maintenance
+
+- **changelog:** add #57
+- **changelog:** add #232
+- fix(duty): use valid kody verb `run` instead of phantom `chore (#232) (#232)
+- **changelog:** add #238
+- **changelog:** add #281
+- **changelog:** add #278
+- Activate dev CI health duty
+- **changelog:** add #277
+- **changelog:** add #274
+- **changelog:** add #273
+- **changelog:** add #272
+- **duties:** update vercel-production-deploy
+- **duties:** Refresh job-gap-scan report (propose sentry-digest)
+- Migrate duties to scheduled executables
+- **duties:** update vercel-production-deploy
+- Migrate Kody jobs to folder format
+- **changelog:** add #270
+- Use engine preview health executable
+- Allow release promotion gate
+- kody changes
+- Migrate preview health duty
+- **changelog:** release v0.25.11
+- **changelog:** add #269
+- Refresh pattern index
+
+### Other Changes
+
+- Merge remote-tracking branch 'origin/fix/start-locale-theme' into dev
+- #56: src/client/hooks/ — under-documented (0% @ai-summary coverage) (#57)
+- Merge pull request #274 from A-Guy-educ/fix/checkout-success-page
+- Merge pull request #273 from A-Guy-educ/fix/purchases-page-and-paypal-webhook
+
+
+## [0.26.0] - 2026-06-17
+
+### Features
+
+- Show purchases on /account and wire PayPal webhook
+
+### Bug Fixes
+
+- Close task-leader review approval loop
+- Teach task leader Kody concern comments
+- Let release promotion warn on Fly preview limits
+- Wire /checkout/success page to actually read transaction
+- Make Vercel deploy duties install CLI
+- Dispatch task leader reviews directly
+- Emit state from scheduled ticks
+- Add preview health executable
+- Expose task leader review token
+- Use release reviewer token
+- Auto-run preview conflict resolution
+- Wire scheduled task leader duty
+- Keep preview health recommendations inert
+- Reload course after start selection
+- Localize landing and start pages
+- Use selected course ID for study pages
+
+### Documentation
+
+- add @ai-summary headers to src/infra/loading/ (12 items) (#238) (#238)
+
+### Maintenance
+
+- **changelog:** add #57
+- **changelog:** add #232
+- fix(duty): use valid kody verb `run` instead of phantom `chore (#232) (#232)
+- **changelog:** add #238
+- **changelog:** add #281
+- **changelog:** add #278
+- Activate dev CI health duty
+- **changelog:** add #277
+- **changelog:** add #274
+- **changelog:** add #273
+- **changelog:** add #272
+- **duties:** update vercel-production-deploy
+- **duties:** Refresh job-gap-scan report (propose sentry-digest)
+- Migrate duties to scheduled executables
+- **duties:** update vercel-production-deploy
+- Migrate Kody jobs to folder format
+- **changelog:** add #270
+- Use engine preview health executable
+- Allow release promotion gate
+- kody changes
+- Migrate preview health duty
+- **changelog:** release v0.25.11
+- **changelog:** add #269
+- Refresh pattern index
+
+### Other Changes
+
+- Merge remote-tracking branch 'origin/fix/start-locale-theme' into dev
+- #56: src/client/hooks/ — under-documented (0% @ai-summary coverage) (#57)
+- Merge pull request #274 from A-Guy-educ/fix/checkout-success-page
+- Merge pull request #273 from A-Guy-educ/fix/purchases-page-and-paypal-webhook
+
+
 ## v0.25.11 — 2026-06-15
 
 ### Features
@@ -1685,6 +1819,80 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.26.2 ([#584](https://github.com/A-Guy-educ/A-Guy-Web/pull/584)) — @kodyade[bot]
+- #576: Auto-wrap math expressions in HtmlBlock with $...$ before KaTeX r… ([#581](https://github.com/A-Guy-educ/A-Guy-Web/pull/581)) — @kodyade[bot]
+- #579: [i18n] משתמשים חדשים מקבלים אנגלית במקום עברית ([#580](https://github.com/A-Guy-educ/A-Guy-Web/pull/580)) — @kodyade[bot]
+- #577: [HTML Blocks] Math expressions in CMS html blocks not rendered by… ([#578](https://github.com/A-Guy-educ/A-Guy-Web/pull/578)) — @kodyade[bot]
+- #574: [UI] כפתור חזור — תרגום חסר + עיצוב לא אחיד ([#575](https://github.com/A-Guy-educ/A-Guy-Web/pull/575)) — @kodyade[bot]
+- #188: [P2] 404 page title is generic 'A-Guy | A-Guy' ([#569](https://github.com/A-Guy-educ/A-Guy-Web/pull/569)) — @kodyade[bot]
+- #570: [Start] RTL: אייקון Play מופיע לפני הטקסט במקום אחרי בעברית ([#571](https://github.com/A-Guy-educ/A-Guy-Web/pull/571)) — @kodyade[bot]
+- #566: [ContentPage] Expand content container to use available screen wi… ([#568](https://github.com/A-Guy-educ/A-Guy-Web/pull/568)) — @kodyade[bot]
+- #565: [Content Page] ביטויים מתמטיים לא מוצגים בכתיב מתמטי טבעי ([#567](https://github.com/A-Guy-educ/A-Guy-Web/pull/567)) — @kodyade[bot]
+- #371: [LessonIntroPage] Button text too small + dark text on dark backg… ([#416](https://github.com/A-Guy-educ/A-Guy-Web/pull/416)) — @kodyade[bot]
+- #318: [onboarding/persona] Selection badge causes card layout shift ([#342](https://github.com/A-Guy-educ/A-Guy-Web/pull/342)) — @kodyade[bot]
+- #215: [P3] Signup form contains an unnamed textbox in accessibility tree ([#345](https://github.com/A-Guy-educ/A-Guy-Web/pull/345)) — @kodyade[bot]
+- #379: [Cards] Add hover lift effect to clickable UnifiedCards across th… ([#414](https://github.com/A-Guy-educ/A-Guy-Web/pull/414)) — @kodyade[bot]
+- #322: [UI] מסגרת הסעיף נעלמת במצב כהה ([#325](https://github.com/A-Guy-educ/A-Guy-Web/pull/325)) — @kodyade[bot]
+- #373: [UI] Lesson intro button — text too small, outline variant hard t… ([#413](https://github.com/A-Guy-educ/A-Guy-Web/pull/413)) — @kodyade[bot]
+- #316: [Button] ghost variant hover hides text on light backgrounds ([#338](https://github.com/A-Guy-educ/A-Guy-Web/pull/338)) — @kodyade[bot]
+- #211: [P1] Courses page renders empty with no course cards ([#333](https://github.com/A-Guy-educ/A-Guy-Web/pull/333)) — @kodyade[bot]
+- #355: [Start Page] Hover over mood/course buttons makes text unreadable ([#418](https://github.com/A-Guy-educ/A-Guy-Web/pull/418)) — @kodyade[bot]
+- #320: [Onboarding] Persona cards shift layout when one is selected ([#337](https://github.com/A-Guy-educ/A-Guy-Web/pull/337)) — @kodyade[bot]
+- #214: [P2] Search form does not submit on Enter or button click ([#348](https://github.com/A-Guy-educ/A-Guy-Web/pull/348)) — @kodyade[bot]
+- #354: [Landing] כפתורים נעלמים ב-hover — טקסט לא קריא על primary/90 ([#411](https://github.com/A-Guy-educ/A-Guy-Web/pull/411)) — @kodyade[bot]
+- chore: release v0.26.1 ([#522](https://github.com/A-Guy-educ/A-Guy-Web/pull/522)) — @kodyade[bot]
+- fix(lesson-pager): Read current block from reordered list (regression from #475) ([#539](https://github.com/A-Guy-educ/A-Guy-Web/pull/539)) — @aguyshayb
+- feat(lesson): Show content pages as universal preamble after lobby ([#556](https://github.com/A-Guy-educ/A-Guy-Web/pull/556)) — @aguyshayb
+- #498: החלף LICENSE ל-BSL 1.1 — מנע שימוש מסחרי ([#512](https://github.com/A-Guy-educ/A-Guy-Web/pull/512)) — @kodyade[bot]
+- #460: Show content pages before exercises and drop the second Welcome i… ([#475](https://github.com/A-Guy-educ/A-Guy-Web/pull/475)) — @kodyade[bot]
+- #228: Doc coverage: src/infra/analytics/ — Analytics tracking layer ([#412](https://github.com/A-Guy-educ/A-Guy-Web/pull/412)) — @kodyade[bot]
+- #391: [Lessons] Interactive view disappears when switching from scroll … ([#407](https://github.com/A-Guy-educ/A-Guy-Web/pull/407)) — @kodyade[bot]
+- #330: Add back button to lesson intro page ([#344](https://github.com/A-Guy-educ/A-Guy-Web/pull/344)) — @kodyade[bot]
+- #323: Fix hardcoded English subtitle in study page empty state ([#339](https://github.com/A-Guy-educ/A-Guy-Web/pull/339)) — @kodyade[bot]
+- #326: Fix "Continue from last point" button showing broken link when co… ([#335](https://github.com/A-Guy-educ/A-Guy-Web/pull/335)) — @kodyade[bot]
+- #332: Disable Ask button on /study route ([#340](https://github.com/A-Guy-educ/A-Guy-Web/pull/340)) — @kodyade[bot]
+- #368: [Homepage] הסר את שורת הכתובת מהדפדפן המדומה ב-DemoLandingPage ([#370](https://github.com/A-Guy-educ/A-Guy-Web/pull/370)) — @kodyade[bot]
+- #324: [ask] Fix broken "viewStats" button ([#341](https://github.com/A-Guy-educ/A-Guy-Web/pull/341)) — @kodyade[bot]
+- #334: [Study] Lesson links 404 when chapter has no slug in DB ([#346](https://github.com/A-Guy-educ/A-Guy-Web/pull/346)) — @kodyade[bot]
+- #328: [Study Plan] Chat button opens English conversation when locale i… ([#349](https://github.com/A-Guy-educ/A-Guy-Web/pull/349)) — @kodyade[bot]
+- #321: [Study] UnifiedCard hover effects missing when cardHref is set ([#347](https://github.com/A-Guy-educ/A-Guy-Web/pull/347)) — @kodyade[bot]
+- #331: [LessonIntroPage] Add back button to lesson lobby screen ([#336](https://github.com/A-Guy-educ/A-Guy-Web/pull/336)) — @kodyade[bot]
+- #356: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#358](https://github.com/A-Guy-educ/A-Guy-Web/pull/358)) — @kodyade[bot]
+- #372: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#375](https://github.com/A-Guy-educ/A-Guy-Web/pull/375)) — @kodyade[bot]
+- fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb
+- fix(lesson): Render content page body via dedicated blockType-based renderer ([#352](https://github.com/A-Guy-educ/A-Guy-Web/pull/352)) — @aguyshayb
+- fix(lesson): Pre-render content page bodies and pass to lesson pager ([#351](https://github.com/A-Guy-educ/A-Guy-Web/pull/351)) — @aguyshayb
+- feat(lesson): render contentPageRef blocks in lesson pager ([#315](https://github.com/A-Guy-educ/A-Guy-Web/pull/315)) — @kodyade[bot]
+- #309: Add prerequisite-lessons list to the lesson start page ([#313](https://github.com/A-Guy-educ/A-Guy-Web/pull/313)) — @kodyade[bot]
+- #310: Add jump-to-exercise number input between prev/next arrows ([#314](https://github.com/A-Guy-educ/A-Guy-Web/pull/314)) — @kodyade[bot]
+- #308: Remove free-registration button from /login, prepend free-of-char… ([#312](https://github.com/A-Guy-educ/A-Guy-Web/pull/312)) — @kodyade[bot]
+## [v0.26.0] - 2026-06-20
+
+- chore(deps): bump actions/upload-pages-artifact from 3 to 5 ([#5](https://github.com/A-Guy-educ/A-Guy-Web/pull/5)) — @dependabot[bot]
+- chore(deps): bump actions/cache from 4 to 5 ([#2](https://github.com/A-Guy-educ/A-Guy-Web/pull/2)) — @dependabot[bot]
+- #63: docs: src/infra/llm/ missing @ai-summary headers ([#66](https://github.com/A-Guy-educ/A-Guy-Web/pull/66)) — @kodyade[bot]
+- feat: Send purchase receipt email via Resend on capture ([#282](https://github.com/A-Guy-educ/A-Guy-Web/pull/282)) — @aguyshayb
+- #216: Doc coverage: src/infra/loading/ — Client-side loading state mana… ([#217](https://github.com/A-Guy-educ/A-Guy-Web/pull/217)) — @kodyade[bot]
+- #146: Doc coverage: src/infra/loading/ — Client-side loading state mana… ([#147](https://github.com/A-Guy-educ/A-Guy-Web/pull/147)) — @kodyade[bot]
+- #189: Doc coverage: src/server/utils/ — Server-side auth, course URL, P… ([#223](https://github.com/A-Guy-educ/A-Guy-Web/pull/223)) — @kodyade[bot]
+- docs: add task metadata handoff for inbox processing ([#38](https://github.com/A-Guy-educ/A-Guy-Web/pull/38)) — @kodyade[bot]
+- #82: [LLM] `generateChatCompletionWithTools` always returns `toolCalls:… ([#88](https://github.com/A-Guy-educ/A-Guy-Web/pull/88)) — @kodyade[bot]
+- #115: Doc coverage: src/infra/system-events/ — client-side pub/sub even… ([#116](https://github.com/A-Guy-educ/A-Guy-Web/pull/116)) — @kodyade[bot]
+- #138: Doc coverage: src/infra/auth/ — OAuth/role-based auth infrastruct… ([#140](https://github.com/A-Guy-educ/A-Guy-Web/pull/140)) — @kodyade[bot]
+- #139: docs-drift: Exercises (#34) ([#141](https://github.com/A-Guy-educ/A-Guy-Web/pull/141)) — @kodyade[bot]
+- #173: docs-drift: Exercises (#163) ([#175](https://github.com/A-Guy-educ/A-Guy-Web/pull/175)) — @kodyade[bot]
+- #219: Doc coverage: src/infra/loading/ — Loading state management (spin… ([#220](https://github.com/A-Guy-educ/A-Guy-Web/pull/220)) — @kodyade[bot]
+- #230: Doc coverage: src/infra/loading/ — Loading state management (8 fi… ([#233](https://github.com/A-Guy-educ/A-Guy-Web/pull/233)) — @kodyade[bot]
+- #239: Doc coverage: src/infra/types/ — centralized type exports (7 file… ([#240](https://github.com/A-Guy-educ/A-Guy-Web/pull/240)) — @kodyade[bot]
+- #47: Doc gap: src/client/hooks — 0/8 modules with @ai-summary, no centr… ([#48](https://github.com/A-Guy-educ/A-Guy-Web/pull/48)) — @kodyade[bot]
+- #172: Doc coverage: src/client/hooks/ — Client-side React hooks ([#242](https://github.com/A-Guy-educ/A-Guy-Web/pull/242)) — @kodyade[bot]
+- chore: release v0.26.0 ([#284](https://github.com/A-Guy-educ/A-Guy-Web/pull/284)) — @aguyaharonyair
+- #56: src/client/hooks/ — under-documented (0% @ai-summary coverage) ([#57](https://github.com/A-Guy-educ/A-Guy-Web/pull/57)) — @kodyade[bot]
+- #231: duty-blocker: docs-readme kody-cmd uses phantom verb ([#232](https://github.com/A-Guy-educ/A-Guy-Web/pull/232)) — @kodyade[bot]
+- #235: Doc coverage: src/infra/loading/ — Loading state manager (4 files) ([#238](https://github.com/A-Guy-educ/A-Guy-Web/pull/238)) — @kodyade[bot]
+- fix: Teach task leader Kody concern comments ([#281](https://github.com/A-Guy-educ/A-Guy-Web/pull/281)) — @aguyaharonyair
+- fix: Let release promotion warn on Fly preview limits ([#278](https://github.com/A-Guy-educ/A-Guy-Web/pull/278)) — @aguyaharonyair
+- Release v0.25.12 ([#277](https://github.com/A-Guy-educ/A-Guy-Web/pull/277)) — @kodyade[bot]
 - fix: Wire /checkout/success page to read real transaction state ([#274](https://github.com/A-Guy-educ/A-Guy-Web/pull/274)) — @aguyshayb
 - feat: Show purchases on /account and wire PayPal webhook ([#273](https://github.com/A-Guy-educ/A-Guy-Web/pull/273)) — @aguyshayb
 - fix: Make Vercel deploy duties install CLI ([#272](https://github.com/A-Guy-educ/A-Guy-Web/pull/272)) — @aguyaharonyair

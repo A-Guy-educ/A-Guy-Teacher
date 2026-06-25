@@ -37,6 +37,8 @@ export function CourseLessonCard({
 
   const href = `/courses/${courseSlug}/chapters/${chapterSlug}/lessons/${lesson.slug}`
   const isSoon = lesson.contentStatus === 'soon'
+  // Disable link if chapterSlug is missing to avoid malformed URLs like /chapters//lessons/
+  const isLinkDisabled = isSoon || !chapterSlug
   const accentColor = isSoon ? 'hsl(var(--border))' : (tabColor?.stroke ?? 'hsl(var(--primary))')
 
   const subtitle =
@@ -46,6 +48,11 @@ export function CourseLessonCard({
     if (isSoon) {
       e.preventDefault()
       toast.info(tc('contentLocked'))
+      return
+    }
+    // Don't track analytics for lessons without a valid chapterSlug (malformed URL)
+    if (!chapterSlug) {
+      e.preventDefault()
       return
     }
     storeLessonOpenTimestamp(lesson.id)
@@ -69,7 +76,7 @@ export function CourseLessonCard({
       contentStatusLabel={lesson.contentStatusLabel ?? undefined}
       progress={progress}
       subtitle={subtitle}
-      cardHref={isSoon ? '#' : href}
+      cardHref={isLinkDisabled ? '#' : href}
       cardOnClick={handleClick}
     />
   )

@@ -19,7 +19,6 @@ import { ChatInterface } from '@/ui/web/chat'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { BlocksDocumentLessonView } from '../BlocksDocumentLessonView'
 import { ExercisesPager } from '../ExercisesPager'
-import { LessonPager } from '../LessonPager'
 import { MediaTabContent } from '../MediaTabContent'
 import { TabButton } from './TabButton'
 import { useLessonViewMode, type LessonMode } from './useLessonViewMode'
@@ -218,25 +217,24 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
   if (interactive.kind === 'blocks') {
     return (
       <section role="tabpanel" id={tabIds.interactivePanel} aria-labelledby={tabIds.interactiveTab}>
-        <LessonPager
+        <ExercisesPager
+          exercises={exercises}
           blocks={interactive.blocks}
+          contentPageBodies={interactive.contentPageBodies}
           lessonTitle={lessonTitle}
           backUrl={backUrl}
           courseSlug={courseSlug}
           chapterSlug={chapterSlug}
           lessonSlug={lessonSlug}
           lessonId={lessonId}
+          gradeLevel={gradeLevel}
           mediaMap={mediaMap}
-          contentPageBodies={interactive.contentPageBodies}
-          /* Don't pass validFiles here — when running inside the multi-tab
-             view, the dedicated Media tab handles attached files. Forwarding
-             them would also insert a PDF page into LessonPager's internal
-             flow, making the Interactive tab open on the PDF. */
-          chatLessonId={chatLessonId}
           showChat={showChat}
           formulaSheet={formulaSheet}
           headerSlot={tabBar}
           hideLatexBlocks
+          initialExerciseIndex={initialExerciseIndex}
+          nextLesson={nextLesson}
         />
       </section>
     )
@@ -258,7 +256,6 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
         formulaSheet={formulaSheet}
         headerSlot={tabBar}
         hideLatexBlocks
-        skipIntro
         initialExerciseIndex={initialExerciseIndex}
         nextLesson={nextLesson}
       />

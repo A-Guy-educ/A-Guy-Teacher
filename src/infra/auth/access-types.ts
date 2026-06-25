@@ -3,6 +3,8 @@
  *
  * Canonical location: @/infra/auth/access-types
  * Re-exported from @/server/constants/access-types for backward compat
+ *
+ * @ai-summary Content access tier definitions — `resolveAccessType` falls back to course-level access when a lesson uses 'inherit', so a locked course gates all inheriting lessons unless explicitly overridden at the lesson level.
  */
 
 export const ACCESS_TYPES = ['free', 'mandatory', 'gated', 'paid'] as const

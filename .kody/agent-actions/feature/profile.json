@@ -1,0 +1,73 @@
+{
+  "name": "feature",
+  "role": "primitive",
+  "describe": "Implement a feature / refactor issue end-to-end in ONE session: research → plan → build → test → verify, then branch, commit, open PR. Single-session — no multi-stage orchestration.",
+  "inputs": [
+    {
+      "name": "issue",
+      "flag": "--issue",
+      "type": "int",
+      "required": true,
+      "describe": "GitHub issue number to work on."
+    }
+  ],
+  "claudeCode": {
+    "model": "inherit",
+    "permissionMode": "acceptEdits",
+    "maxTurns": null,
+    "maxTurnTimeoutSec": 1200,
+    "systemPromptAppend": null,
+    "cacheable": true,
+    "enableVerifyTool": true,
+    "verifyAttempts": 4,
+    "tools": [
+      "Read",
+      "Write",
+      "Edit",
+      "Bash",
+      "Grep",
+      "Glob"
+    ],
+    "hooks": [
+      "block-git"
+    ],
+    "skills": [
+      "implementation-session",
+      "design-system",
+      "frontend-design",
+      "shadcn",
+      "vercel-react-best-practices",
+      "next-best-practices"
+    ],
+    "commands": [],
+    "subagents": [],
+    "plugins": [],
+    "mcpServers": []
+  },
+  "cliTools": [],
+  "lifecycle": "pr-branch",
+  "lifecycleConfig": {
+    "label": {
+      "name": "kody:running",
+      "color": "fbca04",
+      "description": "kody: working"
+    },
+    "context": "task",
+    "sync": false,
+    "verify": true,
+    "advance": false,
+    "mirrorState": true,
+    "finalize": true
+  },
+  "scripts": {
+    "preflight": [
+      {
+        "shell": "install-codegraph.sh"
+      },
+      {
+        "script": "buildSyntheticPlugin"
+      }
+    ],
+    "postflight": []
+  }
+}

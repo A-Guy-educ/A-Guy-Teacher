@@ -4,7 +4,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import * as React from 'react'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-[0.875rem] leading-[1.5] font-medium ring-offset-background transition-all duration-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] will-change-transform',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-base leading-[1.5] font-medium ring-offset-background transition-all duration-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] will-change-transform',
   {
     defaultVariants: {
       size: 'default',
@@ -13,19 +13,20 @@ const buttonVariants = cva(
     variants: {
       size: {
         clear: '',
-        default: 'h-10 px-4 py-2',
+        default: 'h-10 px-4 py-2 text-[0.875rem]',
         icon: 'h-10 w-10',
-        lg: 'h-11 rounded-md px-8',
-        sm: 'h-9 rounded-md px-3',
+        lg: 'h-11 rounded-md px-8 text-body-md',
+        sm: 'h-9 rounded-md px-3 text-[0.8125rem]',
       },
       variant: {
         default:
           'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-elevation-1 hover:scale-[1.02]',
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:scale-[1.02]',
-        ghost: 'hover:bg-card hover:text-accent-foreground',
+        ghost: 'hover:bg-card hover:text-card-foreground',
         link: 'text-foreground items-start justify-start underline-offset-4 hover:underline hover:text-accent',
-        outline: 'border border-border bg-background hover:bg-card hover:text-accent-foreground',
+        outline:
+          'border border-border bg-background text-primary-foreground hover:bg-card hover:text-accent-foreground',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:shadow-elevation-1 hover:scale-[1.02]',
       },

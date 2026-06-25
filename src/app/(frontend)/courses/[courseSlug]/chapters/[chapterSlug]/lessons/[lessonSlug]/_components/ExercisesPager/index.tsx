@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Exercise, Media as MediaType } from '@/infra/types/content'
 import { Button } from '@/ui/web/components/button'
+import { Input } from '@/ui/web/components/input'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
 import {
-  BookOpen,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  FileText,
   Layers,
   RotateCcw,
   Target,
@@ -32,7 +33,12 @@ const pageTransition = {
 }
 
 interface ExercisesPagerProps {
-  exercises: Exercise[]
+  /** Exercises array (used when no blocks are provided) */
+  exercises?: Exercise[]
+  /** Ordered lesson blocks (exercises and content pages) — preferred over exercises prop */
+  blocks?: import('@/server/repos/queries/lesson-blocks').ResolvedLessonBlock[]
+  /** Pre-rendered content page bodies (keyed by content page ID) */
+  contentPageBodies?: Record<string, React.ReactNode>
   lessonTitle: string
   backUrl: string
   courseSlug: string
@@ -52,13 +58,14 @@ interface ExercisesPagerProps {
    * inside individual exercises (used by the dual-mode lesson view where LaTeX lives
    * at the lesson level). */
   hideLatexBlocks?: boolean
-  skipIntro?: boolean
   initialExerciseIndex?: number
   nextLesson?: { title?: string | null; slug?: string | null } | null
 }
 
 export function ExercisesPager({
   exercises,
+  blocks,
+  contentPageBodies,
   lessonTitle,
   backUrl,
   courseSlug,
@@ -71,7 +78,6 @@ export function ExercisesPager({
   formulaSheet,
   headerSlot,
   hideLatexBlocks,
-  skipIntro,
   initialExerciseIndex,
   nextLesson,
 }: ExercisesPagerProps) {
@@ -84,23 +90,28 @@ export function ExercisesPager({
     canGoPrev,
     handleNext,
     handlePrev,
+    handleJumpToExercise,
     handleStart,
     getExerciseOrdinal,
+    getContentPageOrdinal,
     totalExercises,
+    totalContentPages,
+    resolvedBlocks,
   } = useExercisesPager({
-    exercises,
+    exercises: exercises ?? [],
+    blocks,
     courseSlug,
     chapterSlug,
     lessonSlug,
     lessonId,
     gradeLevel,
-    skipIntro,
     initialExerciseIndex,
   })
 
   const [showConfetti, setShowConfetti] = useState(false)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [jumpInputValue, setJumpInputValue] = useState<string>('')
 
   const contentRef = useRef<HTMLDivElement>(null)
   const minSwipeDistance = 50
@@ -134,7 +145,7 @@ export function ExercisesPager({
     if (pageState.type === 'exercise' && contentRef.current) {
       contentRef.current.focus()
     }
-  }, [pageState.exerciseIndex, pageState.type])
+  }, [pageState.type])
 
   // Store per-exercise question results from ExerciseRenderer
   const exerciseResults = useRef<
@@ -148,10 +159,16 @@ export function ExercisesPager({
   useEffect(() => {
     if (
       prevExerciseIndex.current !== undefined &&
-      prevExerciseIndex.current !== pageState.exerciseIndex
+      prevExerciseIndex.current !== pageState.blockIndex
     ) {
-      const prevExercise = exercises[prevExerciseIndex.current]
-      if (prevExercise && !trackedExercises.current.has(prevExercise.id)) {
+      // Only process if previous block was an exercise (not a content page)
+      const prevBlock = resolvedBlocks[prevExerciseIndex.current]
+      if (prevBlock?.type !== 'exercise') {
+        prevExerciseIndex.current = pageState.blockIndex
+        return
+      }
+      const prevExercise = prevBlock.data as Exercise
+      if (!trackedExercises.current.has(prevExercise.id)) {
         const results = exerciseResults.current[prevExercise.id]
         const checkedCount = results?.checkedCount || 0
 
@@ -180,8 +197,8 @@ export function ExercisesPager({
         }
       }
     }
-    prevExerciseIndex.current = pageState.exerciseIndex
-  }, [pageState.exerciseIndex, exercises, lessonId])
+    prevExerciseIndex.current = pageState.blockIndex
+  }, [pageState.blockIndex, resolvedBlocks, lessonId])
 
   // Track lesson completion when reaching outro — only if student attempted exercises
   useEffect(() => {
@@ -207,8 +224,19 @@ export function ExercisesPager({
   }, [pageState.type, lessonId, lessonTitle])
 
   const exerciseOrdinal = getExerciseOrdinal()
+  const contentPageOrdinal = getContentPageOrdinal()
+  const currentBlock =
+    pageState.blockIndex !== undefined ? resolvedBlocks[pageState.blockIndex] : undefined
+
+  useEffect(() => {
+    if (exerciseOrdinal !== null) {
+      setJumpInputValue(String(exerciseOrdinal))
+    }
+  }, [exerciseOrdinal])
   const currentExercise =
-    typeof pageState.exerciseIndex === 'number' ? exercises[pageState.exerciseIndex] : null
+    pageState.type === 'exercise' && currentBlock?.type === 'exercise'
+      ? (currentBlock.data as Exercise)
+      : null
   const summaryResults = Object.values(exerciseResults.current)
   const solvedExerciseCount =
     summaryResults.filter((result) => result.checkedCount > 0).length || totalExercises
@@ -320,6 +348,54 @@ export function ExercisesPager({
                 >
                   <span className="text-heading-lg font-light">‹</span>
                 </button>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={totalExercises}
+                  value={jumpInputValue}
+                  aria-label={t('exercisesPagerJumpToExercise')}
+                  aria-valuemin={1}
+                  aria-valuemax={totalExercises}
+                  aria-valuenow={exerciseOrdinal ?? undefined}
+                  className="w-16 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '')
+                    setJumpInputValue(val)
+                  }}
+                  onFocus={(e) => {
+                    e.target.select()
+                  }}
+                  onBlur={() => {
+                    const parsed = parseInt(jumpInputValue, 10)
+                    if (
+                      !isNaN(parsed) &&
+                      parsed >= 1 &&
+                      parsed <= totalExercises &&
+                      parsed !== exerciseOrdinal
+                    ) {
+                      handleJumpToExercise(parsed)
+                    } else {
+                      setJumpInputValue(exerciseOrdinal !== null ? String(exerciseOrdinal) : '')
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const parsed = parseInt(jumpInputValue, 10)
+                      if (
+                        !isNaN(parsed) &&
+                        parsed >= 1 &&
+                        parsed <= totalExercises &&
+                        parsed !== exerciseOrdinal
+                      ) {
+                        handleJumpToExercise(parsed)
+                      } else {
+                        setJumpInputValue(exerciseOrdinal !== null ? String(exerciseOrdinal) : '')
+                      }
+                      ;(e.target as HTMLInputElement).blur()
+                    }
+                  }}
+                />
                 <button
                   onClick={handleNext}
                   disabled={!canGoNext || isNavigating}
@@ -376,6 +452,111 @@ export function ExercisesPager({
     )
   }
 
+  // Render content page block
+  if (pageState.type === 'contentPage' && currentBlock?.type === 'contentPage') {
+    const contentPage = currentBlock.data as {
+      id: string
+      title?: string | null
+      slug?: string | null
+    }
+    const bodyRendered = contentPageBodies?.[contentPage.id]
+
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {headerSlot}
+        <Progress value={progressPercent} className="h-0.5 rounded-none" />
+
+        <main
+          ref={contentRef}
+          tabIndex={-1}
+          className="flex-1 overflow-y-auto pb-4 outline-none"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="container mx-auto px-4 sm:px-6 py-section-md md:py-section-lg max-w-5xl">
+            <AnimatePresence mode="wait">
+              <motion.div key={pageState.blockIndex} {...pageTransition} className="space-y-8">
+                {/* Breadcrumb step indicator */}
+                <div className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground">
+                  <span className="truncate max-w-[200px]">{lessonTitle}</span>
+                  <ChevronRight className="w-3 h-3 shrink-0 rtl:rotate-180" />
+                  <span className="text-foreground font-medium">
+                    {contentPageOrdinal !== null
+                      ? `${t('contentPageLabel')} ${contentPageOrdinal} ${t('of')} ${totalContentPages}`
+                      : ''}
+                  </span>
+                </div>
+
+                <header className="text-center">
+                  <span className="inline-block px-4 py-1.5 bg-muted text-muted-foreground rounded-full text-label tracking-[0.2em] uppercase mb-5 border border-border/40">
+                    <FileText className="w-3 h-3 inline-block me-1" />
+                    {contentPageOrdinal !== null
+                      ? `${t('contentPageLabel')} ${contentPageOrdinal} ${t('of')} ${totalContentPages}`
+                      : ''}
+                  </span>
+                  <h1 className="text-display-md md:text-display-lg font-medium leading-tight text-foreground mb-3">
+                    {contentPage.title}
+                  </h1>
+                  <div className="w-20 h-1 bg-primary mx-auto rounded-full" />
+                </header>
+
+                <div className="bg-card rounded-3xl p-card-padding-lg md:p-10 border border-border/60 shadow-card-hover shadow-muted/50">
+                  {bodyRendered ? (
+                    <div className="prose prose-lg max-w-none dark:prose-invert leading-relaxed">
+                      {bodyRendered}
+                    </div>
+                  ) : (
+                    <div className="text-center py-section-md">
+                      <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                        <FileText className="w-6 h-6 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-body-sm font-medium text-muted-foreground">No content</p>
+                      <p className="text-body-xs text-muted-foreground/60 mt-1">
+                        This page has no content yet
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
+
+        <div className="sticky bottom-0 z-30 bg-card/80 backdrop-blur-xl border-t border-border/50 px-6 py-content-gap pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-3xl mx-auto flex items-center justify-center gap-content-gap-lg">
+            <button
+              onClick={handlePrev}
+              disabled={!canGoPrev || isNavigating}
+              aria-label="Previous page"
+              className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                !canGoPrev || isNavigating
+                  ? 'text-muted-foreground/40'
+                  : 'bg-muted text-foreground hover:bg-muted/80',
+              )}
+            >
+              <span className="text-heading-lg font-light">‹</span>
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={!canGoNext || isNavigating}
+              aria-label="Next page"
+              className={cn(
+                'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                !canGoNext || isNavigating
+                  ? 'text-muted-foreground/40'
+                  : 'bg-muted text-foreground hover:bg-muted/80',
+              )}
+            >
+              <span className="text-heading-lg font-light">›</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {headerSlot}
@@ -384,56 +565,6 @@ export function ExercisesPager({
 
       <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 sm:px-6 py-section-md md:py-section-lg max-w-3xl">
-          {pageState.type === 'intro' && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="space-y-8"
-            >
-              <header className="text-center">
-                <span className="inline-block px-4 py-1.5 bg-muted text-muted-foreground rounded-full text-label tracking-[0.2em] uppercase mb-5 border border-border/40">
-                  {t('exercisesPagerIntro')}
-                </span>
-                <h1 className="text-display-lg md:text-display-xl font-bold leading-tight text-foreground mb-3">
-                  {lessonTitle}
-                </h1>
-                <div className="w-20 h-1 bg-primary mx-auto rounded-full" />
-              </header>
-
-              <div className="bg-card rounded-3xl p-card-padding-lg md:p-10 border border-border/60 shadow-card-hover shadow-muted/50 text-center">
-                <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-card shadow-primary/10 border border-primary/20">
-                  <BookOpen className="w-11 h-11 text-primary" />
-                </div>
-
-                <h2 className="text-display-xl font-medium mb-4 text-foreground">
-                  {t('exercisesPagerWelcome')}
-                </h2>
-                <p className="text-muted-foreground mb-10 text-body-lg leading-relaxed max-w-2xl mx-auto">
-                  {t('exercisesPagerIntroDescriptionPart1')} {totalExercises}{' '}
-                  {t('exercisesPagerIntroDescriptionPart2')}
-                </p>
-
-                <div className="inline-flex items-center gap-3 px-5 py-3 bg-muted rounded-2xl border border-border/60 mb-10">
-                  <Layers className="w-5 h-5 text-primary" />
-                  <span className="text-primary text-heading-xl font-medium">{totalExercises}</span>
-                  <span className="text-label text-muted-foreground uppercase tracking-wider">
-                    {t('exercise')}
-                  </span>
-                </div>
-
-                <Button
-                  onClick={handleStart}
-                  size="lg"
-                  className="w-full py-section-sm rounded-2xl text-body-lg shadow-card shadow-primary/20 hover:shadow-card-hover hover:shadow-primary/30 transition-all duration-slow cursor-pointer"
-                >
-                  {t('exercisesPagerStart')}{' '}
-                  <ChevronLeft className="w-5 h-5 ms-2 rtl:rotate-0 ltr:rotate-180" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
           {pageState.type === 'outro' && (
             <motion.div
               initial={{ opacity: 0, y: 24 }}

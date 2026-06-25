@@ -1,3 +1,10 @@
+/**
+ * @fileType utility
+ * @domain types
+ * @pattern env-types
+ * @ai-summary NodeJS global ProcessEnv augmentation for server-only environment variables. Variables without NEXT_PUBLIC_ are server-only — leaking them to the client bundle is a security risk. Do not add client-safe vars here; add them to next.config.mjs env instead.
+ */
+
 declare global {
   namespace NodeJS {
     interface ProcessEnv {

@@ -1,6 +1,8 @@
 /**
  * LLM Model Registry - Single Source of Truth for All Model Definitions
  *
+ * @ai-summary Changing a temperature or maxOutputTokens here affects ALL providers unless overridden by LLM_MODEL_OVERRIDE_* env vars. The same model key can map to different model names per provider (see PROVIDER_MODEL_NAMES). THINKING_BUDGET is per-model and opt-in (Gemini 2.5+ only) — setting it on unsupported models is silently ignored.
+ *
  * This module centralizes all model configurations to eliminate duplication
  * and enable proper provider switching at runtime.
  *

@@ -5,6 +5,7 @@
  * @fileType implementation
  * @domain ai
  * @pattern singleton, genkit, lazy-loading
+ * @ai-summary Per-process cache of Genkit instances keyed by provider type. In serverless (Vercel), each Lambda/Function instance gets its own cache — instances are NOT shared across cold-starts. The 30s TTL on ConfigValues means the first call per instance pays an extra round-trip if config hasn't been loaded yet.
  */
 import { getSecret, isConfigLoaded } from '@/infra/config/runtime/runtime-config'
 import { logger } from '@/infra/utils/logger'

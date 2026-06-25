@@ -36,6 +36,12 @@ let blocksWithContentPagesLessonId: string
 let pdfLessonId: string
 let pdfLessonSlug: string
 let mediaFileId: string
+/** A prerequisite lesson for testing the prerequisites feature */
+let prerequisiteLessonId: string
+let prerequisiteLessonSlug: string
+/** A lesson that has a prerequisite set */
+let lessonWithPrerequisiteId: string
+let lessonWithPrerequisiteSlug: string
 
 const TENANT_SLUG = `lesson-intro-test-tenant-${Date.now()}`
 
@@ -61,6 +67,8 @@ beforeAll(async () => {
   const blocksWithContentPagesLessonObjectId = new ObjectId()
   const mediaFileObjectId = new ObjectId()
   const pdfLessonObjectId = new ObjectId()
+  const prerequisiteLessonObjectId = new ObjectId()
+  const lessonWithPrerequisiteObjectId = new ObjectId()
 
   courseId = courseObjectId.toString()
   chapterId = chapterObjectId.toString()
@@ -72,6 +80,10 @@ beforeAll(async () => {
   pdfLessonId = pdfLessonObjectId.toString()
   pdfLessonSlug = `pdf-lesson-${timestamp}`
   mediaFileId = mediaFileObjectId.toString()
+  prerequisiteLessonId = prerequisiteLessonObjectId.toString()
+  prerequisiteLessonSlug = `prerequisite-lesson-${timestamp}`
+  lessonWithPrerequisiteId = lessonWithPrerequisiteObjectId.toString()
+  lessonWithPrerequisiteSlug = `lesson-with-prereq-${timestamp}`
 
   await db.collection('tenants').insertOne({
     _id: tenantObjectId,
@@ -106,6 +118,7 @@ beforeAll(async () => {
     _id: chapterObjectId,
     title: `LessonIntro Test Chapter ${timestamp}`,
     chapterLabel: `LI-${timestamp}`,
+    slug: `lesson-intro-chapter-${timestamp}`,
     course: courseObjectId,
     order: 0,
     status: 'published',
@@ -191,14 +204,55 @@ beforeAll(async () => {
     contentStatusVisible: true,
     contentFiles: [mediaFileObjectId],
   })
+
+  // Prerequisite lesson: a lesson that will be referenced as a prerequisite
+  await db.collection('lessons').insertOne({
+    _id: prerequisiteLessonObjectId,
+    title: `Prerequisite Lesson ${timestamp}`,
+    slug: prerequisiteLessonSlug,
+    chapter: chapterObjectId,
+    type: 'learning',
+    order: 4,
+    status: 'published',
+    isActive: true,
+    tenant: tenantObjectId,
+    locale: 'he',
+    accessType: 'inherit',
+    contentStatus: 'none',
+    contentStatusVisible: true,
+    contentFiles: [],
+  })
+
+  // Lesson with prerequisite: has the prerequisite lesson set
+  await db.collection('lessons').insertOne({
+    _id: lessonWithPrerequisiteObjectId,
+    title: `Lesson With Prerequisite ${timestamp}`,
+    slug: lessonWithPrerequisiteSlug,
+    chapter: chapterObjectId,
+    type: 'learning',
+    order: 5,
+    status: 'published',
+    isActive: true,
+    tenant: tenantObjectId,
+    locale: 'he',
+    accessType: 'inherit',
+    contentStatus: 'none',
+    contentStatusVisible: true,
+    contentFiles: [],
+    prerequisites: [prerequisiteLessonObjectId],
+  })
 }, 120_000)
 
 afterAll(async () => {
   await db?.collection('lessons').deleteMany({
     _id: {
-      $in: [blocksOnlyLessonId, blocksWithContentPagesLessonId, pdfLessonId].map(
-        (id) => new ObjectId(id),
-      ),
+      $in: [
+        blocksOnlyLessonId,
+        blocksWithContentPagesLessonId,
+        pdfLessonId,
+        prerequisiteLessonId,
+        lessonWithPrerequisiteId,
+      ].map((id) => new ObjectId(id)),
     },
   })
   await db?.collection('media').deleteOne({ _id: new ObjectId(mediaFileId) })
@@ -323,5 +377,41 @@ describe('LessonIntroPage data layer', () => {
     expect(hasExerciseBlocks).toBe(false)
     expect(fetchedMediaFiles).toHaveLength(1)
     expect(fetchedMediaFiles[0].filename).toContain('test-pdf')
+  })
+
+  it('queryLessonBySlug returns populated prerequisites when set on a lesson', async () => {
+    // Lesson with prerequisite should have the prerequisite fully populated
+    const lesson = await queryLessonBySlug({ slug: lessonWithPrerequisiteSlug })
+    expect(lesson).not.toBeNull()
+    expect(lesson?.id).toBe(lessonWithPrerequisiteId)
+
+    // Prerequisites should be populated with full lesson info (id, title, slug, chapterSlug, courseSlug)
+    const prereqs = lesson?.prerequisites
+    expect(prereqs).toBeDefined()
+    expect(prereqs).toHaveLength(1)
+    expect(prereqs?.[0]).toMatchObject({
+      id: prerequisiteLessonId,
+      title: expect.stringContaining('Prerequisite Lesson'),
+      slug: prerequisiteLessonSlug,
+    })
+    // chapterSlug and courseSlug should be present
+    expect(prereqs?.[0].chapterSlug).toBeTruthy()
+    expect(prereqs?.[0].courseSlug).toBeTruthy()
+  })
+
+  it('queryLessonBySlug returns empty prerequisites array when none are set', async () => {
+    // Lesson without prerequisites should have empty prerequisites array
+    const lesson = await queryLessonBySlug({ slug: blocksOnlyLessonSlug })
+    expect(lesson).not.toBeNull()
+    expect(lesson?.id).toBe(blocksOnlyLessonId)
+    expect(lesson?.prerequisites ?? []).toHaveLength(0)
+  })
+
+  it('prerequisite lesson itself returns empty prerequisites array', async () => {
+    // A prerequisite lesson should not have any prerequisites
+    const lesson = await queryLessonBySlug({ slug: prerequisiteLessonSlug })
+    expect(lesson).not.toBeNull()
+    expect(lesson?.id).toBe(prerequisiteLessonId)
+    expect(lesson?.prerequisites ?? []).toHaveLength(0)
   })
 })

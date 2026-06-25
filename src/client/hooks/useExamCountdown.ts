@@ -1,3 +1,12 @@
+/**
+ * @fileType hook
+ * @domain exam
+ * @pattern countdown
+ * @ai-summary Reads and writes exam dates from localStorage keyed by courseId. Dates are per-browser and per-device, so adding an exam on one device does not appear on another.
+ *
+ * Gotcha: The hook polls localStorage every 60 seconds, so `daysUntil` can be stale for up to 60 seconds after the user adds a new exam.
+ */
+
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'

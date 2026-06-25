@@ -6,6 +6,8 @@ import { GuidedExplanationV1Schema } from '@/infra/contracts/guided-explanation/
 import type { HtmlBlock } from '@/infra/types/exercise'
 import { registerPurifyHook, unregisterPurifyHook } from '@/ui/web/shared/DOMPurifyHooks'
 import { GuidedExplanationRunner } from '@/ui/web/GuidedExplanationRunner'
+import { MathMarkdown } from '@/ui/web/shared/MathMarkdown'
+import { preprocessHtmlMath } from '@/infra/utils/preprocessHtmlMath'
 
 interface HtmlBlockRendererProps {
   block: HtmlBlock
@@ -92,12 +94,18 @@ function StaticHtmlRenderer({ html }: { html: string }) {
     }
   }, [])
 
-  const cleanHtml = useMemo(() => {
+  const processedHtml = useMemo(() => {
     if (!isMounted || !html?.trim()) return ''
-    return DOMPurify.sanitize(html, PURIFY_CONFIG)
+    const clean = DOMPurify.sanitize(html, PURIFY_CONFIG)
+    return preprocessHtmlMath(clean)
   }, [isMounted, html])
 
-  if (!cleanHtml) return null
+  if (!processedHtml) return null
 
-  return <div className="html-block-content" dangerouslySetInnerHTML={{ __html: cleanHtml }} />
+  return (
+    <MathMarkdown
+      content={processedHtml}
+      className="html-block-content w-full overflow-x-auto px-3 py-4 text-lg leading-relaxed"
+    />
+  )
 }

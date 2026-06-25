@@ -1,3 +1,15 @@
+/**
+ * SHA-256 content hashing for exercise deduplication.
+ *
+ * Produces deterministic, content-addressable hashes by canonicalizing
+ * whitespace, LaTeX, and string values before hashing, so identical
+ * content produces the same hash across different JS runtimes and versions.
+ *
+ * @fileType utility
+ * @domain deduplication
+ * @pattern content-hash
+ * @ai-summary Canonicalizes whitespace and LaTeX before hashing so identical exercises produce the same hash; if the normalization logic changes, all existing hashes become invalid for deduplication.
+ */
 import { createHash } from 'crypto'
 
 // ========== Text Hashing ==========

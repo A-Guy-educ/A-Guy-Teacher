@@ -1,5 +1,8 @@
 /**
- * Minimal type declarations for JSXGraph
+ * @fileType utility
+ * @domain types
+ * @pattern jsxgraph-types
+ * @ai-summary Minimal JSXGraph type declarations for TypeScript support. Covers boards, elements, and attributes but intentionally omits most JSXGraph plugins. If a JSXGraph method is missing, extend this file rather than adding `as any` casts in consumer code.
  * @see https://jsxgraph.org/docs/
  */
 

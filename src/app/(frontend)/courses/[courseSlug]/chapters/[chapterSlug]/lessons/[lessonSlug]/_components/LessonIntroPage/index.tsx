@@ -5,13 +5,16 @@ import { BookOpen, ChevronLeft, FileText, Layers, RotateCcw, Sparkles } from 'lu
 import { useSearchParams } from 'next/navigation'
 
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
-import type { Lesson, Media } from '@/infra/types/content'
+import type { Lesson, LessonPrerequisite, Media } from '@/infra/types/content'
 import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
+import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ChatInterface } from '@/ui/web/chat'
+import { BackButton } from '@/ui/web/components/BackButton'
 import { Button } from '@/ui/web/components/button'
 import { Progress } from '@/ui/web/components/progress'
 import { useTranslations } from '@/ui/web/providers/I18n'
 
+import { ContentPagesPreamble } from '../ContentPagesPreamble'
 import { DualModeLessonView } from '../DualModeLessonView'
 import type { LessonMode } from '../DualModeLessonView/useLessonViewMode'
 import { EmptyLessonPlaceholder } from '../EmptyLessonPlaceholder'
@@ -27,6 +30,8 @@ interface LessonProgressSummary {
 interface LessonIntroPageProps {
   lesson: Lesson
   blocks: ResolvedLessonBlock[]
+  /** Pre-rendered content page bodies, keyed by content page ID (built server-side) */
+  contentPageBodies?: Record<string, React.ReactNode>
   backUrl: string
   showChat: boolean
   formulaSheet?: import('@/infra/types/content').FormulaSheet | null
@@ -42,6 +47,8 @@ interface LessonIntroPageProps {
   gradeLevel?: string
   progress?: LessonProgressSummary
   nextLesson?: Pick<Lesson, 'title' | 'slug'> | null
+  /** Populated prerequisite lessons with URL info */
+  prerequisites?: LessonPrerequisite[]
 }
 
 function plainText(value?: string | null) {
@@ -56,6 +63,7 @@ function plainText(value?: string | null) {
 export function LessonIntroPage({
   lesson,
   blocks,
+  contentPageBodies,
   backUrl,
   showChat,
   formulaSheet,
@@ -69,14 +77,21 @@ export function LessonIntroPage({
   gradeLevel = '',
   progress,
   nextLesson,
+  prerequisites = [],
 }: LessonIntroPageProps) {
   const t = useTranslations('courses')
   const searchParams = useSearchParams()
   const deepLinkedExerciseId = searchParams.get('exerciseId')
-  const { pageState, handleStart } = useLessonIntroPage({ deepLinkedExerciseId })
-
   const exerciseCount = exercises.length
-  const contentPageCount = useMemo(() => (Array.isArray(blocks) ? blocks.length : 0), [blocks])
+  const contentPageCount = useMemo(
+    () =>
+      Array.isArray(blocks) ? blocks.filter((block) => block.type === 'contentPage').length : 0,
+    [blocks],
+  )
+  const { pageState, handleStart, handleFinishPreamble } = useLessonIntroPage({
+    deepLinkedExerciseId,
+    hasContentPagesPreamble: contentPageCount > 0,
+  })
   const pdfCount = mediaFiles.length
   const description = plainText(lesson.description)
 
@@ -91,10 +106,14 @@ export function LessonIntroPage({
     return false
   })
 
+  /** True when blocks contain at least one contentPage block — routes to LessonPager instead of ExercisesPager */
+  const hasContentPagesInBlocks = contentPageCount > 0
+
   const hasMedia = pdfCount > 0
   const visibleRenderers: LessonMode[] = []
   if (hasMedia) visibleRenderers.push('media')
   if (hasExerciseContent) visibleRenderers.push('pdf', 'interactive')
+  else if (hasContentPagesInBlocks) visibleRenderers.push('interactive')
 
   const completed = progress?.completed ?? 0
   const total = progress?.total ?? exerciseCount
@@ -129,6 +148,17 @@ export function LessonIntroPage({
     )
   }
 
+  if (pageState.type === 'preamble') {
+    return (
+      <ContentPagesPreamble
+        lessonTitle={lesson.title}
+        blocks={blocks}
+        contentPageBodies={contentPageBodies}
+        onFinish={() => handleFinishPreamble(pageState.initialExerciseIndex)}
+      />
+    )
+  }
+
   if (pageState.type === 'content') {
     if (visibleRenderers.length === 0) {
       return (
@@ -159,7 +189,7 @@ export function LessonIntroPage({
         formulaSheet={formulaSheet}
         visibleRenderers={visibleRenderers}
         initialExerciseIndex={pageState.initialExerciseIndex}
-        initialMode={hasExerciseContent ? 'interactive' : undefined}
+        initialMode={hasExerciseContent || hasContentPagesInBlocks ? 'interactive' : undefined}
         nextLesson={nextLesson}
       />
     )
@@ -168,6 +198,9 @@ export function LessonIntroPage({
   return (
     <div className="min-h-screen bg-background">
       <main className="mx-auto flex w-full max-w-6xl flex-col px-4 py-5 sm:px-6 md:min-h-screen md:py-section-lg">
+        <div className="flex w-full justify-end">
+          <BackButton href={backUrl} />
+        </div>
         <section className="grid gap-content-gap-md md:flex-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-center">
           <div className="space-y-4 md:space-y-6">
             <div className="inline-flex items-center gap-content-gap-xs rounded-full border border-border bg-muted px-3 py-1.5 text-label uppercase tracking-wider text-muted-foreground md:px-4 md:py-2">
@@ -283,6 +316,26 @@ export function LessonIntroPage({
                   {t('lessonLobbyNextLesson')}
                 </p>
                 <p className="mt-2 text-body-md font-medium text-foreground">{nextLesson.title}</p>
+              </div>
+            ) : null}
+
+            {prerequisites.length > 0 ? (
+              <div className="rounded-lg border border-border bg-muted p-card-padding-sm md:p-card-padding">
+                <p className="text-label uppercase tracking-wider text-muted-foreground">
+                  {t('lessonLobbyPrerequisites')}
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {prerequisites.map((prereq) => (
+                    <li key={prereq.id}>
+                      <SystemLink
+                        href={`/courses/${prereq.courseSlug}/chapters/${prereq.chapterSlug}/lessons/${prereq.slug}`}
+                        className="block text-body-sm font-medium text-foreground transition-colors hover:text-primary"
+                      >
+                        {prereq.title}
+                      </SystemLink>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : null}
           </aside>

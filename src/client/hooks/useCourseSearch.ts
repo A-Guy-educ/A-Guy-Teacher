@@ -1,3 +1,12 @@
+/**
+ * @fileType hook
+ * @domain search
+ * @pattern course-search
+ * @ai-summary Debounces the query at 300ms before hitting `/api/course-search`. Aborts in-flight requests on new keystrokes, so only the latest request's result is used. Returns `null` results while the query is shorter than 2 characters.
+ *
+ * Gotcha: When `courseSlug` is provided, results are scoped to that course and the response has no `courses` collection. When `courseSlug` is `null`, search is global across all courses.
+ */
+
 'use client'
 
 import { useEffect, useRef, useState } from 'react'

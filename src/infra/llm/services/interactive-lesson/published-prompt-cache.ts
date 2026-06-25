@@ -1,6 +1,8 @@
 /**
  * Module-scope cache of the currently-published `interactive_lesson` prompt.
  *
+ * @ai-summary The afterChange/afterDelete hook in the Prompts collection calls invalidatePublishedInteractiveLessonPrompt() to drop the cache eagerly. Without this, a 30s TTL means admin edits take up to 30s to propagate. Each serverless instance has its own copy — edits on one instance don't auto-evict other instances' caches within the TTL window.
+ *
  * Both lesson generation (which needs the template) and lesson cache
  * eviction (which needs the source provenance) hit this on every request.
  * Without memoization, every cached-lesson read pays an extra DB round-trip

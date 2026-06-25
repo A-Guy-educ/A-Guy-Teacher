@@ -2,6 +2,8 @@
  * Summary Maintenance Service
  * Manages conversation compression and message trimming
  *
+ * @ai-summary Runs AFTER the chat response is already sent to the user — failures are silent and do not affect the response. Thresholds: normal at 40 messages, safety cutoff at 80. After summarization, older messages are permanently deleted from the conversation (only the last 20 remain). This is irreversible — if summarization fails mid-write, some messages could be lost.
+ *
  * Key Features:
  * - Automatic triggering based on message count thresholds
  * - Preserves recent window for immediate context

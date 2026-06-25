@@ -4,6 +4,8 @@
  * can execute. This bridges the two systems: the LLM generates structured
  * primitives, and the GuidedExplanationRunner renders them.
  *
+ * @ai-summary LLM-generated labels (GeoLabel.text, GeoPoint.label) are XML-escaped before insertion into HTML — this is the critical guard against XSS from model output. Segment IDs are canonicalized (alphabetically sorted) so "A→D" and "D→A" produce the same ID. Both scene kinds (geometry and equation) are supported; if the lesson has geometry data it takes precedence over graph and numberLine.
+ *
  * Two scene kinds:
  *  - geometry: segments/points/angles from a diagram.
  *  - equation: a stack of big centered text elements, one per step. Used

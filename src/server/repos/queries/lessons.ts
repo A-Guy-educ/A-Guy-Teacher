@@ -1,6 +1,6 @@
 import { cache } from 'react'
 
-import type { Chapter, Course, Lesson } from '@/infra/types/content'
+import type { Chapter, Course, Lesson, LessonPrerequisite } from '@/infra/types/content'
 import {
   findByIdSerialized,
   findManySerialized,
@@ -10,6 +10,33 @@ import {
   visibleContentFilter,
 } from '../mongo'
 import { queryChaptersByCourse } from './chapters'
+
+async function populateLessonPrerequisite(
+  prerequisiteId: string,
+): Promise<LessonPrerequisite | null> {
+  const lesson = await findByIdSerialized<Lesson>('lessons', prerequisiteId)
+  if (!lesson || lesson.status !== 'published' || !lesson.isActive) return null
+
+  const chapterId = relationId(lesson.chapter)
+  if (!chapterId) return null
+
+  const chapter = await findByIdSerialized<Chapter>('chapters', chapterId)
+  if (!chapter || chapter.status !== 'published' || !chapter.isActive) return null
+
+  const courseId = relationId(chapter.course)
+  if (!courseId) return null
+
+  const course = await findByIdSerialized<Course>('courses', courseId)
+  if (!course || course.status !== 'published' || !course.isActive) return null
+
+  return {
+    id: lesson.id,
+    title: lesson.title,
+    slug: lesson.slug ?? '',
+    chapterSlug: chapter.slug ?? '',
+    courseSlug: course.slug ?? '',
+  }
+}
 
 async function populateLesson(lesson: Lesson): Promise<Lesson | null> {
   const chapterId = relationId(lesson.chapter)
@@ -24,7 +51,17 @@ async function populateLesson(lesson: Lesson): Promise<Lesson | null> {
   const course = await findByIdSerialized<Course>('courses', courseId)
   if (!course || course.status !== 'published' || !course.isActive) return null
 
-  return { ...lesson, chapter: { ...chapter, course } }
+  // Populate prerequisites
+  const prerequisiteIds = (lesson.prerequisites ?? [])
+    .map((p) => (typeof p === 'string' ? p : relationId(p)))
+    .filter((id): id is string => Boolean(id))
+
+  const populatedPrerequisites = await Promise.all(
+    prerequisiteIds.map((id) => populateLessonPrerequisite(id)),
+  )
+  const prerequisites = populatedPrerequisites.filter((p): p is LessonPrerequisite => p !== null)
+
+  return { ...lesson, chapter: { ...chapter, course }, prerequisites }
 }
 
 export const queryLessonsByChapter = cache(async ({ chapterId }: { chapterId: string }) => {

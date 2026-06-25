@@ -5,6 +5,7 @@
  * @fileType factory
  * @domain ai
  * @pattern provider-factory, abstraction, dependency-injection
+ * @ai-summary Env var LLM_PROVIDER is checked FIRST — it takes precedence over runtime ConfigValues. If you set the env var, runtime config is ignored entirely. Always delegates to Genkit adapter; the factory pattern is now a thin wrapper.
  *
  * Uses centralized MODEL_REGISTRY and PROVIDER_MODEL_NAMES from @/infra/llm/models.ts
  * for model configurations. This ensures a single source of truth for all model definitions.

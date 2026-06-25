@@ -20,6 +20,7 @@ export function SignupFormFields({ t, isLoading, errors }: SignupFormFieldsProps
         autoComplete="off"
         className="honeypot-field"
         aria-hidden="true"
+        role="presentation"
       />
 
       <div className="space-y-2">

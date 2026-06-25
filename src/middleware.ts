@@ -66,7 +66,13 @@ function resolveCookieDomain(host: string): string | undefined {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
-  const response = NextResponse.next()
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', pathname)
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
 
   if (!pathname.startsWith('/api/pdfjs-viewer')) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicy)
@@ -108,19 +114,6 @@ export function middleware(request: NextRequest) {
 
     if (cookieLocale && locales.includes(cookieLocale)) {
       locale = cookieLocale
-    } else {
-      // Fallback to Accept-Language header
-      const acceptLanguage = request.headers.get('accept-language')
-      if (acceptLanguage) {
-        const preferredLocale = acceptLanguage.split(',')[0]?.split('-')[0]?.toLowerCase() as
-          | Locale
-          | undefined
-
-        if (preferredLocale && locales.includes(preferredLocale)) {
-          locale = preferredLocale
-          shouldSetCookie = true
-        }
-      }
     }
   }
 

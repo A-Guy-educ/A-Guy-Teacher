@@ -124,7 +124,7 @@ export function PersonaSelectionStep({ returnTo }: PersonaSelectionStepProps) {
 
         {profiles.length > 0 ? (
           <div
-            className="grid gap-content-gap sm:grid-cols-2"
+            className="grid gap-content-gap sm:grid-cols-2 items-start"
             role="radiogroup"
             aria-label={t('title')}
           >
@@ -149,11 +149,14 @@ export function PersonaSelectionStep({ returnTo }: PersonaSelectionStepProps) {
                 onClick={() => handleSelect(profile.slug)}
               >
                 <div className="p-card-padding">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-2 min-h-6">
                     <h3 className="font-medium">{profile.label}</h3>
-                    {selectedSlug === profile.slug && (
-                      <Badge variant="secondary">{t('selected')}</Badge>
-                    )}
+                    <Badge
+                      variant="secondary"
+                      className={selectedSlug === profile.slug ? '' : 'invisible'}
+                    >
+                      {t('selected')}
+                    </Badge>
                   </div>
                   <p className="text-body-sm text-muted-foreground">{profile.description}</p>
                 </div>

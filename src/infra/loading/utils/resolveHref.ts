@@ -1,10 +1,27 @@
+/**
+ * Next.js href normalization utilities
+ *
+ * @fileType utility
+ * @domain ui
+ * @pattern href-resolution
+ * @ai-summary Normalizes Next.js href to string for comparison; hash is stripped so same-page anchors never trigger route loading
+ */
+
 import type { UrlObject } from 'url'
 
+// @ai-summary Normalizes Next.js hrefs (string or UrlObject) for reliable route comparison: strips trailing slashes, normalizes query strings, and optionally ignores hash fragments.
+
 /**
- * Resolve Next.js href (string or UrlObject) to normalized string
+ * @ai-summary Normalizes Next.js href (string or UrlObject) into a comparable
+ * string path. Strips trailing slashes, merges search params, and optionally strips
+ * hash fragments for reliable same-page anchor detection.
+ *
  * Handles edge cases: hash-only, trailing slashes, query strings
  *
- * @param ignoreHash - If true, strips hash from result (for route comparison)
+ * @ai-trap ignoreHash must be explicitly set to true when using these functions
+ * for route-transition detection — SystemLink and useRouterWithLoading pass true
+ * for this reason. Without it, a link to the current page with a new hash would
+ * be treated as a cross-page navigation.
  */
 export function resolveHrefToString(href: string | UrlObject, ignoreHash = false): string {
   if (typeof href === 'string') {

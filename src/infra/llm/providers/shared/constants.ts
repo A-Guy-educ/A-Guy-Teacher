@@ -4,6 +4,7 @@
  *
  * @fileType constants
  * @domain ai
+ * @ai-summary Single source of truth for all LLM defaults. If you change a constant here, check whether ConfigValues in the DB already override it — DB values take precedence at runtime. Constants here are only the floor when DB is unconfigured.
  */
 
 // Timeouts for different operation types (in milliseconds)

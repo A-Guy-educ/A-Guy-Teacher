@@ -95,7 +95,7 @@ export function UnifiedCard({
   const cardClasses = cn(
     'group relative rounded-2xl border border-border/60 bg-card shadow-card overflow-hidden',
     'transition-all duration-normal will-change-transform',
-    !isSoon && !cardHref && 'hover:border-border/80 hover:shadow-card-hover active:scale-[0.98]',
+    !isSoon && 'hover:border-border/80 hover:shadow-card-hover active:scale-[0.98]',
     isSoon && 'opacity-60',
     className,
   )
@@ -222,15 +222,26 @@ export function UnifiedCard({
   if (cardHref) {
     return (
       <div
-        className={cardClasses}
+        className={cn(cardClasses, 'cursor-pointer', !isSoon && 'hover:-translate-y-1')}
         style={
           variant === 'lesson'
             ? { borderTopWidth: '4px', borderTopColor: color }
             : { borderInlineStartWidth: '4px', borderInlineStartColor: color }
         }
+        onClick={(e) => {
+          cardOnClick?.(e)
+          if (!e.defaultPrevented && !isSoon) {
+            loadingManager.register(LOADING_KEYS.ROUTE_TRANSITION, 'route')
+            window.location.href = cardHref
+          }
+        }}
       >
-        {/* Transparent overlay — whole card is a link */}
-        <CardLink href={cardHref} onClick={cardOnClick} />
+        {/* Transparent overlay — whole card is a link. pointer-events-none lets hover reach the card. */}
+        <a
+          href={cardHref}
+          className="absolute inset-0 z-10 rounded-2xl pointer-events-none"
+          aria-label="card-link"
+        />
         {cardContent}
       </div>
     )
@@ -247,25 +258,5 @@ export function UnifiedCard({
     >
       {cardContent}
     </div>
-  )
-}
-
-// Separate client component for the card link overlay
-function CardLink({ href, onClick }: { href: string; onClick?: (e: React.MouseEvent) => void }) {
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    onClick?.(e)
-    if (!e.defaultPrevented) {
-      loadingManager.register(LOADING_KEYS.ROUTE_TRANSITION, 'route')
-      window.location.href = href
-    }
-  }
-
-  return (
-    <a
-      href={href}
-      onClick={handleClick}
-      className="absolute inset-0 z-10 rounded-2xl"
-      aria-label="card-link"
-    />
   )
 }

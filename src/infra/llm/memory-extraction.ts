@@ -2,6 +2,8 @@
  * Memory Extraction Service
  * Extracts important information from conversations to store as long-term memory
  *
+ * @ai-summary Skips entirely if OPENAI_API_KEY is absent — no error, no extraction, no user-visible impact. Runs AFTER the chat response is sent, so it does not affect user latency. Uses CONCURRENCY_LIMIT=2 to avoid exhausting the MongoDB connection pool (pool size is 3). Deduplication is via cosine similarity at 0.9 threshold.
+ *
  * Key Features:
  * - AI-powered extraction of preferences, decisions, facts
  * - Server-side filtering for quality control

@@ -4,6 +4,7 @@
  *
  * @fileType utility
  * @domain ai
+ * @ai-summary Utility only — no error paths. randomSleep and exponentialSleep are the main entry points; plain sleep is used internally by retry logic. No-op for non-positive input.
  */
 
 /**

@@ -4,6 +4,8 @@
  * Ensures the MongoDB Atlas vector search index exists and is ready
  * before allowing memory retrieval operations.
  *
+ * @ai-summary enforceVectorIndexRequirement throws and refuses to start if the index is missing — this is fail-fast in production. isVectorIndexAvailable is the graceful counterpart (returns boolean, caches for 5 min). The index requires MongoDB Atlas M10+ cluster — standard MongoDB does not support vector search. Index name: memory_items_embedding_v1, dimensions: 1536, similarity: cosine.
+ *
  * Strategy: Fail fast in production if index is missing
  */
 

@@ -1,3 +1,10 @@
+/**
+ * @fileType utility
+ * @domain types
+ * @pattern content-model
+ * @ai-summary Core content-domain types mirroring Payload collections (Course, Lesson, Exercise, etc.). These are hand-written shapes used throughout the app — they drift from the generated Payload types over time. Keep them minimal; prefer importing generated types where Payload owns the schema.
+ */
+
 import type { ContentBlock } from './exercise'
 
 export type ContentLocale = 'en' | 'he'
@@ -126,6 +133,18 @@ export interface Lesson {
   contentStatusLabel?: string | null
   tenant?: string | Tenant | null
   meta?: Meta | null
+  prerequisites?: Array<string | Lesson> | null
+}
+
+/**
+ * Minimal lesson info needed to render a prerequisite row with a link.
+ */
+export interface LessonPrerequisite {
+  id: string
+  title: string
+  slug: string
+  chapterSlug: string
+  courseSlug: string
 }
 
 export interface Exercise {
@@ -146,6 +165,7 @@ export interface ContentPage {
   slug?: string | null
   content?: unknown
   layout?: unknown[] | null
+  body?: unknown
 }
 
 export interface FormulaSheet {

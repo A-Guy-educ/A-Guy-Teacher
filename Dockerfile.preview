@@ -2,12 +2,13 @@
 
 ARG BASE_IMAGE=node:22-alpine
 
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} AS base
 WORKDIR /app
 
 RUN corepack enable 2>/dev/null || true; \
     corepack prepare pnpm@10.17.0 --activate 2>/dev/null || npm i -g pnpm@10 2>/dev/null || true
 
+FROM base AS build
 COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
 RUN --mount=type=cache,id=kp-pnpm-store,target=/root/.local/share/pnpm/store \
     --mount=type=cache,id=kp-npm-cache,target=/root/.npm \
@@ -18,19 +19,31 @@ RUN --mount=type=cache,id=kp-pnpm-store,target=/root/.local/share/pnpm/store \
 
 COPY . ./
 RUN mkdir -p public
+RUN export BLOB_READ_WRITE_TOKEN= CDN_READ_WRITE_TOKEN= CRON_SECRET= DATABASE_URL= GEMINI_API_KEY= GITHUB_TOKEN= GOOGLE_CLIENT_ID= GOOGLE_CLIENT_SECRET= LOGIN_PASSWORD= MINIMAX_API_KEY= OPENAI_API_KEY= PAYLOAD_SECRET= PREVIEW_SECRET= VERCEL_ACCESS_TOKEN= VERCEL_OIDC_TOKEN= VERCEL_ORG_ID= VERCEL_PROJECT_ID= VERCEL_TOKEN=; \
+    if [ -f pnpm-lock.yaml ]; then pnpm build; else npm run build; fi
+RUN rm -rf .next/cache
+
+FROM base AS runner
+COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
+RUN --mount=type=cache,id=kp-pnpm-prod-store,target=/root/.local/share/pnpm/store \
+    --mount=type=cache,id=kp-npm-prod-cache,target=/root/.npm \
+    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile --prod --ignore-scripts; \
+    elif [ -f package-lock.json ]; then npm ci --omit=dev --ignore-scripts; \
+    elif [ -f yarn.lock ]; then yarn install --frozen-lockfile --production --ignore-scripts; \
+    else npm install --omit=dev --ignore-scripts; fi
+
+COPY . ./
+COPY --from=build /app/.next ./.next
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV password_login_enabled=true
+# App-level learning-route bypass is safe here because doorman owns public access.
 ENV KODY_PREVIEW_AUTH_BYPASS=true
 ENV PORT=8080
+ENV NEXT_INTERNAL_PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV NODE_OPTIONS="--max-old-space-size=7168"
 
-RUN --mount=type=cache,id=kp-next-cache,target=/app/.next/cache \
-    if [ -f pnpm-lock.yaml ]; then pnpm exec next build; \
-    else npx next build; \
-    fi
-
 EXPOSE 8080
-CMD ["sh", "-c", "if [ -f pnpm-lock.yaml ]; then pnpm exec next start -H 0.0.0.0 -p 8080; else npx next start -H 0.0.0.0 -p 8080; fi"]
+CMD ["sh", "-c", "if [ -f pnpm-lock.yaml ]; then pnpm exec next start -H 0.0.0.0 -p ${NEXT_INTERNAL_PORT:-3000} & else npx next start -H 0.0.0.0 -p ${NEXT_INTERNAL_PORT:-3000} & fi; exec node --experimental-strip-types doorman/doorman.ts"]

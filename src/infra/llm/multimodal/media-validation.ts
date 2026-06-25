@@ -3,6 +3,8 @@
  * Media Validation for Chat Messages
  * Validates media exists, belongs to tenant, not expired, valid type/size
  * Returns resolved paths for Gemini mapper (no extra DB lookups)
+ *
+ * @ai-summary Validates against the signed-in user's media (createdBy = userId) — not tenant isolation. This means students can only attach their own uploaded images. Blob-only media (Vercel Blob, no local file) is handled by fetching directly from the publicUrl with forwarded auth cookies. File size limit is 10MB; attachment limit is 5 per message.
  */
 import type { Payload } from '@/infra/types/backend'
 

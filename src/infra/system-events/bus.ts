@@ -1,5 +1,6 @@
 /**
- * System Event Bus
+ * @fileType service
+ * @ai-summary Singleton pub/sub bus. SSR guard: all methods are no-ops on the server — safe to call in universal code. Handler errors are isolated (one crashing handler does not stop others). Session ID is generated once per `sessionStorage` lifetime; if storage is unavailable a new ID is minted on every call.
  *
  * Client-side pub/sub event bus with schema validation, SSR guard, and error isolation.
  * Exports only `systemEventBus` - use this singleton for all event operations.

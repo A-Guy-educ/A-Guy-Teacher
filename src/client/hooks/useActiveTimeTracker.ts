@@ -4,6 +4,11 @@
  * Tracks user active time with heartbeat mechanism.
  * Pauses when user switches to a different browser tab.
  * Sends current lessonId for per-lesson time tracking.
+ *
+ * @fileType hook
+ * @domain analytics
+ * @pattern heartbeat
+ * @ai-summary Sends a heartbeat every 30 seconds while the tab is visible. Time spent in hidden tabs does NOT count — the streak can only advance when the user is actively looking at the page.
  */
 
 'use client'

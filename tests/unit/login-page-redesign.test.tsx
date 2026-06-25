@@ -35,7 +35,7 @@ describe('Login Page Redesign - i18n translations', () => {
     expect(login.headingBold).toBe('שלום,')
     expect(login.headingRest).toBe('מוכנים להצליח?')
     expect(login.quickLogin).toBe('כניסה מהירה')
-    expect(login.freeRegistration).toBe('הרשמה ללא עלות')
+    expect(login.loginFreeOfCharge).toBe('הכניסה למערכת - ללא תשלום')
     expect(login.secureAccess).toBe('גישה מהירה ומאובטחת.')
     expect(login.oneClickEntry).toBe('בלחיצה אחת אתם בפנים.')
     expect(login.needHelp).toBe('זקוקים לעזרה?')
@@ -46,7 +46,7 @@ describe('Login Page Redesign - i18n translations', () => {
     expect(login.headingBold).toBe('Hello,')
     expect(login.headingRest).toBe('Ready to Succeed?')
     expect(login.quickLogin).toBe('Quick Login')
-    expect(login.freeRegistration).toBe('Free Registration')
+    expect(login.loginFreeOfCharge).toBe('Login to the system — free of charge')
     expect(login.secureAccess).toBe('Fast and secure access.')
     expect(login.oneClickEntry).toBe("One click and you're in.")
     expect(login.needHelp).toBe('Need help?')
@@ -96,6 +96,35 @@ describe('LoginPageContent', () => {
   })
 })
 
+describe('LoginForm - brand.heroSubtitle rendering', () => {
+  const renderWithPasswordDisabled = (children: React.ReactNode) => {
+    return render(
+      <I18nProvider locale="he" messages={mergedHeMessages}>
+        <PasswordLoginProvider enabled={false}>{children}</PasswordLoginProvider>
+      </I18nProvider>,
+    )
+  }
+
+  it('renders brand.heroSubtitle text in Hebrew (not the translation key)', () => {
+    renderWithPasswordDisabled(<LoginForm />)
+
+    // Should render the Hebrew translation, NOT the key "auth.login.brand.heroSubtitle"
+    expect(screen.getByText('A-Guy המורה הפרטי שלכם')).toBeTruthy()
+  })
+
+  it('renders brand.heroSubtitle text in English', () => {
+    render(
+      <I18nProvider locale="en" messages={mergedEnMessages}>
+        <PasswordLoginProvider enabled={false}>
+          <LoginForm />
+        </PasswordLoginProvider>
+      </I18nProvider>,
+    )
+
+    expect(screen.getByText('A-Guy Your Personal Tutor')).toBeTruthy()
+  })
+})
+
 describe('LoginForm - Google only mode (password disabled)', () => {
   const renderWithPasswordDisabled = (children: React.ReactNode) => {
     return render(
@@ -117,18 +146,10 @@ describe('LoginForm - Google only mode (password disabled)', () => {
     expect(screen.getByRole('button', { name: /המשך עם Google/i })).toBeTruthy()
   })
 
-  it('renders "הרשמה ללא עלות" link to /signup', () => {
+  it('renders three-line subtitle in password disabled mode', () => {
     renderWithPasswordDisabled(<LoginForm />)
 
-    const link = screen.getByRole('link', { name: /הרשמה ללא עלות/i })
-    expect(link).toBeTruthy()
-    expect(link.getAttribute('href')).toBe('/signup')
-  })
-
-  it('renders card footer text', () => {
-    renderWithPasswordDisabled(<LoginForm />)
-
-    // The two footer texts are rendered in the same paragraph with whitespace between them
+    expect(screen.getByText(/הכניסה למערכת - ללא תשלום/)).toBeTruthy()
     expect(screen.getByText(/גישה מהירה ומאובטחת/)).toBeTruthy()
     expect(screen.getByText(/בלחיצה אחת אתם בפנים/)).toBeTruthy()
   })
@@ -163,10 +184,12 @@ describe('LoginForm - Password enabled mode', () => {
     expect(screen.getByRole('button', { name: /המשך עם Google/i })).toBeTruthy()
   })
 
-  it('renders "הרשמה ללא עלות" link when password is enabled', () => {
+  it('renders three-line subtitle when password is enabled', () => {
     renderWithPasswordEnabled(<LoginForm />)
 
-    expect(screen.getByRole('link', { name: /הרשמה ללא עלות/i })).toBeTruthy()
+    expect(screen.getByText(/הכניסה למערכת - ללא תשלום/)).toBeTruthy()
+    expect(screen.getByText(/גישה מהירה ומאובטחת/)).toBeTruthy()
+    expect(screen.getByText(/בלחיצה אחת אתם בפנים/)).toBeTruthy()
   })
 
   it('renders login button', () => {
@@ -179,22 +202,5 @@ describe('LoginForm - Password enabled mode', () => {
     renderWithPasswordEnabled(<LoginForm />)
 
     expect(screen.getByText('כניסה מהירה')).toBeTruthy()
-  })
-})
-
-describe('Functionality preservation', () => {
-  it('registration link opens /signup in same window', () => {
-    const { container } = render(
-      <I18nProvider locale="he" messages={mergedHeMessages}>
-        <PasswordLoginProvider enabled={false}>
-          <LoginForm />
-        </PasswordLoginProvider>
-      </I18nProvider>,
-    )
-
-    const link = container.querySelector('a[href="/signup"]')
-    expect(link).toBeTruthy()
-    // No target="_blank" means it opens in same window
-    expect(link?.getAttribute('target')).toBeNull()
   })
 })

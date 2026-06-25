@@ -19,6 +19,7 @@ const BodySchema = z.object({
   acknowledgment: z.string().optional(),
   conversationId: z.string().optional().nullable(),
   gradeLevel: z.string().trim().min(1),
+  locale: z.string().optional(),
 })
 
 function chunkText(text: string) {

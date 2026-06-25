@@ -2,6 +2,8 @@
  * Summary Generation Service
  * Compresses conversation history into concise summaries
  *
+ * @ai-summary Uses gpt-4o-mini (not the main chat model) for cost efficiency. Runs incrementally — if an existingSummary exists, the LLM receives it plus new messages and is asked to update rather than regenerate from scratch. Throw on failure — callers handle propagation. Prompt file has three-tier fallback: main path > default fallback > inline default.
+ *
  * Key Features:
  * - Uses cheaper model (gpt-4o-mini) for cost efficiency
  * - Preserves key decisions, preferences, and open loops

@@ -5,6 +5,7 @@
  * @fileType utility
  * @domain ai
  * @pattern retry
+ * @ai-summary Retries with exponential backoff and jitter. If maxRetries is exhausted, throws the LAST error wrapped by wrapError — the original error context is lost. Ensure wrapError preserves the cause chain for debugging.
  */
 
 export interface RetryOptions<E extends Error> {

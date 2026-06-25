@@ -1,7 +1,27 @@
+/**
+ * Animated spinner component with size variants
+ * Uses CSS animation for performance
+ *
+ * @fileType component
+ * @domain ui
+ * @pattern spinner
+ * @ai-summary Lightweight CSS-animated loading spinner — no JS state, no dependencies
+ */
+
 'use client'
 
+/**
+ * @ai-summary Animated SVG spinner with three size variants. Pure presentational —
+ * does not manage any loading state; compose with useLoadingState or useAsyncAction
+ * to control visibility.
+ */
 import { cn } from '@/infra/utils/ui'
 
+/**
+ * @fileType component
+ * @domain frontend
+ * @ai-summary Animated SVG spinner with three size variants; pure presentational, no loading state integration.
+ */
 interface SpinnerProps {
   size?: 'sm' | 'md' | 'lg'
   className?: string

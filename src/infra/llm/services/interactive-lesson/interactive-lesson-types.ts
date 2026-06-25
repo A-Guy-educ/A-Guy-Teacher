@@ -2,6 +2,8 @@
  * Types for the interactive lesson visualization feature.
  * Defines the structured step data that the LLM generates
  * and the player component consumes.
+ *
+ * @ai-summary The types here are consumed by both the generation pipeline (Gemini output) and the player component (GuidedExplanationRunner). audioBase64 is optional and generated server-side at lesson creation time — the player falls back to live cloud TTS when absent (for older cached lessons). geometry, graph, and numberLine are mutually exclusive rendering modes; geometry takes precedence if present.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
