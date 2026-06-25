@@ -1816,6 +1816,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #579: [i18n] משתמשים חדשים מקבלים אנגלית במקום עברית ([#580](https://github.com/A-Guy-educ/A-Guy-Web/pull/580)) — @kodyade[bot]
 - #577: [HTML Blocks] Math expressions in CMS html blocks not rendered by… ([#578](https://github.com/A-Guy-educ/A-Guy-Web/pull/578)) — @kodyade[bot]
 - #574: [UI] כפתור חזור — תרגום חסר + עיצוב לא אחיד ([#575](https://github.com/A-Guy-educ/A-Guy-Web/pull/575)) — @kodyade[bot]
 - #188: [P2] 404 page title is generic 'A-Guy | A-Guy' ([#569](https://github.com/A-Guy-educ/A-Guy-Web/pull/569)) — @kodyade[bot]
