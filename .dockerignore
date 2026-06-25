@@ -9,6 +9,9 @@ blob-report
 .turbo
 .vercel
 .kody/sandboxes
+.tasks
+.opencode
+.pnpm-store
 .env
 .env.*
 !.env.production.local
