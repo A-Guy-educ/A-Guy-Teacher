@@ -91,7 +91,7 @@
       "memoryMb": 2048,
       "ttlDays": 14,
       "builderCpus": 4,
-      "builderMemoryMb": 4096,
+      "builderMemoryMb": 8192,
       "idleSuspend": true,
       "healthCheck": false
     }
