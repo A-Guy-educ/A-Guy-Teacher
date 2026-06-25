@@ -6,6 +6,8 @@ import React from 'react'
 import { Button } from '@/ui/web/components/button'
 import { useTranslations } from '@/ui/web/providers/I18n'
 
+export const metadata = { title: '404' }
+
 export default function NotFound() {
   const t = useTranslations('common.notFound')
 
