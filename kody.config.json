@@ -79,7 +79,7 @@
         "every": "1d",
         "idPrefix": "web-release",
         "preferredRunTime": {
-          "time": "16:08",
+          "time": "10:00",
           "timezone": "Asia/Jerusalem"
         }
       }
