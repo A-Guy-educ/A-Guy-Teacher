@@ -1816,6 +1816,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #574: [UI] כפתור חזור — תרגום חסר + עיצוב לא אחיד ([#575](https://github.com/A-Guy-educ/A-Guy-Web/pull/575)) — @kodyade[bot]
 - #188: [P2] 404 page title is generic 'A-Guy | A-Guy' ([#569](https://github.com/A-Guy-educ/A-Guy-Web/pull/569)) — @kodyade[bot]
 - #570: [Start] RTL: אייקון Play מופיע לפני הטקסט במקום אחרי בעברית ([#571](https://github.com/A-Guy-educ/A-Guy-Web/pull/571)) — @kodyade[bot]
 - #566: [ContentPage] Expand content container to use available screen wi… ([#568](https://github.com/A-Guy-educ/A-Guy-Web/pull/568)) — @kodyade[bot]
