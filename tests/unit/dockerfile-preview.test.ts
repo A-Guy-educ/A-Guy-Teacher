@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -6,6 +6,7 @@ const dockerfile = readFileSync(resolve(process.cwd(), 'Dockerfile.preview'), 'u
 
 describe('Dockerfile.preview', () => {
   it('serves Fly previews through the Kody doorman gate', () => {
+    expect(existsSync(resolve(process.cwd(), 'doorman/doorman.ts'))).toBe(true)
     expect(dockerfile).toContain('COPY doorman/ ./doorman/')
     expect(dockerfile).toContain('ENV PORT=8080')
     expect(dockerfile).toContain('ENV NEXT_INTERNAL_PORT=3000')
