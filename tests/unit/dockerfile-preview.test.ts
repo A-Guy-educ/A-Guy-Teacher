@@ -26,6 +26,7 @@ describe('Dockerfile.preview', () => {
     expect(dockerfile).toContain('OPENAI_API_KEY=')
     expect(dockerfile).toContain('VERCEL_TOKEN=')
     expect(dockerfile).toContain('pnpm build')
+    expect(dockerfile).toContain('rm -rf .next/cache')
   })
 
   it('keeps preview Docker contexts small without dropping generated build env', () => {
