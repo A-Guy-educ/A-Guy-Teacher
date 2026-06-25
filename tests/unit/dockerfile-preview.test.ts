@@ -21,6 +21,13 @@ describe('Dockerfile.preview', () => {
     expect(dockerfile).not.toContain('next start -H 0.0.0.0 -p 8080')
   })
 
+  it('does not let runtime-only secrets affect the production build', () => {
+    expect(dockerfile).toContain('DATABASE_URL=')
+    expect(dockerfile).toContain('OPENAI_API_KEY=')
+    expect(dockerfile).toContain('VERCEL_TOKEN=')
+    expect(dockerfile).toContain('pnpm build')
+  })
+
   it('keeps preview Docker contexts small without dropping generated build env', () => {
     expect(dockerignore).toContain('.next')
     expect(dockerignore).toContain('node_modules')
