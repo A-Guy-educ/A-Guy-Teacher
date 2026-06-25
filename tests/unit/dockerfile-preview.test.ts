@@ -8,18 +8,16 @@ const dockerignore = readFileSync(resolve(process.cwd(), '.dockerignore'), 'utf8
 describe('Dockerfile.preview', () => {
   it('serves Fly previews through the Kody doorman gate', () => {
     expect(existsSync(resolve(process.cwd(), 'doorman/doorman.ts'))).toBe(true)
-    expect(dockerfile).toContain('COPY doorman/ ./doorman/')
+    expect(dockerfile).toContain('COPY . ./')
     expect(dockerfile).toContain('ENV PORT=8080')
     expect(dockerfile).toContain('ENV NEXT_INTERNAL_PORT=3000')
-    expect(dockerfile).toContain('ENV NODE_ENV=development')
+    expect(dockerfile).toContain('ENV NODE_ENV=production')
     expect(dockerfile).toContain('exec node --experimental-strip-types doorman/doorman.ts')
   })
 
   it('does not expose Next directly on the public preview port', () => {
-    expect(dockerfile).toContain('next dev')
+    expect(dockerfile).toContain('next start')
     expect(dockerfile).toContain('-p ${NEXT_INTERNAL_PORT:-3000}')
-    expect(dockerfile).not.toContain('next build')
-    expect(dockerfile).not.toContain('next start')
     expect(dockerfile).not.toContain('next start -H 0.0.0.0 -p 8080')
   })
 

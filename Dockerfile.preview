@@ -2,12 +2,13 @@
 
 ARG BASE_IMAGE=node:22-alpine
 
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} AS base
 WORKDIR /app
 
 RUN corepack enable 2>/dev/null || true; \
     corepack prepare pnpm@10.17.0 --activate 2>/dev/null || npm i -g pnpm@10 2>/dev/null || true
 
+FROM base AS build
 COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
 RUN --mount=type=cache,id=kp-pnpm-store,target=/root/.local/share/pnpm/store \
     --mount=type=cache,id=kp-npm-cache,target=/root/.npm \
@@ -18,10 +19,22 @@ RUN --mount=type=cache,id=kp-pnpm-store,target=/root/.local/share/pnpm/store \
 
 COPY . ./
 RUN mkdir -p public
-COPY doorman/ ./doorman/
+RUN if [ -f pnpm-lock.yaml ]; then pnpm build; else npm run build; fi
+
+FROM base AS runner
+COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
+RUN --mount=type=cache,id=kp-pnpm-prod-store,target=/root/.local/share/pnpm/store \
+    --mount=type=cache,id=kp-npm-prod-cache,target=/root/.npm \
+    if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile --prod --ignore-scripts; \
+    elif [ -f package-lock.json ]; then npm ci --omit=dev --ignore-scripts; \
+    elif [ -f yarn.lock ]; then yarn install --frozen-lockfile --production --ignore-scripts; \
+    else npm install --omit=dev --ignore-scripts; fi
+
+COPY . ./
+COPY --from=build /app/.next ./.next
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 ENV password_login_enabled=true
 # App-level learning-route bypass is safe here because doorman owns public access.
 ENV KODY_PREVIEW_AUTH_BYPASS=true
@@ -31,4 +44,4 @@ ENV HOSTNAME=0.0.0.0
 ENV NODE_OPTIONS="--max-old-space-size=7168"
 
 EXPOSE 8080
-CMD ["sh", "-c", "if [ -f pnpm-lock.yaml ]; then pnpm exec next dev -H 0.0.0.0 -p ${NEXT_INTERNAL_PORT:-3000} & else npx next dev -H 0.0.0.0 -p ${NEXT_INTERNAL_PORT:-3000} & fi; exec node --experimental-strip-types doorman/doorman.ts"]
+CMD ["sh", "-c", "if [ -f pnpm-lock.yaml ]; then pnpm exec next start -H 0.0.0.0 -p ${NEXT_INTERNAL_PORT:-3000} & else npx next start -H 0.0.0.0 -p ${NEXT_INTERNAL_PORT:-3000} & fi; exec node --experimental-strip-types doorman/doorman.ts"]
