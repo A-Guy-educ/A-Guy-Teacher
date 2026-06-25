@@ -43,15 +43,15 @@ describe('Middleware - Locale Routing', () => {
   })
 
   describe('Primary domain locale detection', () => {
-    it('should use Accept-Language header when no cookie exists', () => {
+    it('should use defaultLocale "he" for new users when no cookie exists', () => {
       const request = createRequest('example.com', '/', 'he-IL,he;q=0.9,en;q=0.8')
       const response = middleware(request)
 
       expect(response.headers.get('x-locale')).toBe('he')
     })
 
-    it('should default to "he" when Accept-Language is not supported', () => {
-      const request = createRequest('example.com', '/', 'fr-FR,fr;q=0.9')
+    it('should use defaultLocale "he" even when Accept-Language suggests English', () => {
+      const request = createRequest('example.com', '/', 'en-US,en;q=0.9')
       const response = middleware(request)
 
       expect(response.headers.get('x-locale')).toBe('he')
@@ -70,11 +70,13 @@ describe('Middleware - Locale Routing', () => {
       expect(response.headers.get('x-locale')).toBe('he')
     })
 
-    it('should set cookie when using Accept-Language', () => {
+    it('should not set cookie for new users on primary domain even with Accept-Language', () => {
       const request = createRequest('example.com', '/', 'he-IL,he;q=0.9')
       const response = middleware(request)
 
-      expect(response.cookies.get('NEXT_LOCALE')?.value).toBe('he')
+      // New users default to Hebrew but don't get a cookie set automatically
+      expect(response.headers.get('x-locale')).toBe('he')
+      expect(response.cookies.get('NEXT_LOCALE')).toBeUndefined()
     })
   })
 

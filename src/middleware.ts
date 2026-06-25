@@ -114,19 +114,6 @@ export function middleware(request: NextRequest) {
 
     if (cookieLocale && locales.includes(cookieLocale)) {
       locale = cookieLocale
-    } else {
-      // Fallback to Accept-Language header
-      const acceptLanguage = request.headers.get('accept-language')
-      if (acceptLanguage) {
-        const preferredLocale = acceptLanguage.split(',')[0]?.split('-')[0]?.toLowerCase() as
-          | Locale
-          | undefined
-
-        if (preferredLocale && locales.includes(preferredLocale)) {
-          locale = preferredLocale
-          shouldSetCookie = true
-        }
-      }
     }
   }
 
