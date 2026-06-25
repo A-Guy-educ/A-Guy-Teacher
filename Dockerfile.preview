@@ -18,12 +18,15 @@ RUN --mount=type=cache,id=kp-pnpm-store,target=/root/.local/share/pnpm/store \
 
 COPY . ./
 RUN mkdir -p public
+COPY doorman/ ./doorman/
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV password_login_enabled=true
+# App-level learning-route bypass is safe here because doorman owns public access.
 ENV KODY_PREVIEW_AUTH_BYPASS=true
 ENV PORT=8080
+ENV NEXT_INTERNAL_PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV NODE_OPTIONS="--max-old-space-size=7168"
 
@@ -33,4 +36,4 @@ RUN --mount=type=cache,id=kp-next-cache,target=/app/.next/cache \
     fi
 
 EXPOSE 8080
-CMD ["sh", "-c", "if [ -f pnpm-lock.yaml ]; then pnpm exec next start -H 0.0.0.0 -p 8080; else npx next start -H 0.0.0.0 -p 8080; fi"]
+CMD ["sh", "-c", "if [ -f pnpm-lock.yaml ]; then pnpm exec next start -H 0.0.0.0 -p ${NEXT_INTERNAL_PORT:-3000} & else npx next start -H 0.0.0.0 -p ${NEXT_INTERNAL_PORT:-3000} & fi; exec node --experimental-strip-types doorman/doorman.ts"]
