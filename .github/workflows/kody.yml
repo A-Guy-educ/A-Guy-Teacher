@@ -58,13 +58,13 @@ on:
     # the release-merge path (kody ignores it; release self-manages).
     types: [opened, synchronize, closed]
   schedule:
-    # Wakes off-cycle every 15 minutes; kody fans out to whichever scheduled executables
+    # Wakes every 30 minutes; kody fans out to whichever scheduled executables
     # (mission-scheduler, memorize, watch-stale-prs, …) match this tick.
     #
     # `memorize` writes to `.kody/vault/` and opens a daily PR. If your
     # `.gitignore` ignores `.kody/*`, add `!.kody/vault/` and `!.kody/vault/**`
     # so memorize's pages are tracked.
-    - cron: '8,23,38,53 * * * *'
+    - cron: '*/15 * * * *'
 
 jobs:
   run:
