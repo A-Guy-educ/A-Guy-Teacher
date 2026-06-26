@@ -62,7 +62,8 @@
       "vercel-production-deploy"
     ],
     "activeAgents": [
-      "cto"
+      "cto",
+      "qa"
     ],
     "activeExecutables": [
       "release-prepare",
