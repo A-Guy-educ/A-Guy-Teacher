@@ -54,6 +54,5 @@
       }
     ]
   },
-  "action": "classify",
-  "capabilityKind": "act"
+  "action": "classify"
 }

@@ -70,6 +70,5 @@
     ],
     "postflight": []
   },
-  "action": "feature",
-  "capabilityKind": "act"
+  "action": "feature"
 }

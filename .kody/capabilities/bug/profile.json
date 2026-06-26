@@ -65,6 +65,5 @@
     ],
     "postflight": []
   },
-  "action": "bug",
-  "capabilityKind": "act"
+  "action": "bug"
 }
