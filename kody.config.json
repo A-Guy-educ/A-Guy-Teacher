@@ -59,10 +59,12 @@
       "capability-call",
       "release-prepare",
       "release-merge",
-      "vercel-production-deploy"
+      "vercel-production-deploy",
+      "bug"
     ],
     "activeAgents": [
-      "cto"
+      "cto",
+      "kody"
     ],
     "activeExecutables": [
       "release-prepare",
