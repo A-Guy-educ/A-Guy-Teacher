@@ -1,6 +1,6 @@
-# Classify agentAction
+# Classify executable
 
-Read the issue, determine its type, and dispatch to the correct agentAction.
+Read the issue, determine its type, and dispatch to the correct executable.
 
 ## How to classify
 
@@ -15,12 +15,12 @@ Read the issue title, body, and labels. Classify into one of:
 ## How to dispatch
 
 After classifying, post a comment on the issue with the dispatch command:
-- `@kody chore` → runs chore agentAction
-- `@kody fix` → runs fix agentAction (for bugs)
-- `@kody feature` → runs feature agentAction
-- `@kody enhancement` → runs enhancement agentAction
-- `@kody refactor` → runs refactor agentAction
-- `@kody documentation` → runs documentation agentAction
+- `@kody chore` → runs chore executable
+- `@kody fix` → runs fix executable (for bugs)
+- `@kody feature` → runs feature executable
+- `@kody enhancement` → runs enhancement executable
+- `@kody refactor` → runs refactor executable
+- `@kody documentation` → runs documentation executable
 
 Use the GitHub comment tool to post: `body: "@kody <type>"`
 Where `<type>` is the classified type.
@@ -30,7 +30,7 @@ Where `<type>` is the classified type.
 Post the comment, then end with:
 ```
 DONE
-COMMIT_MSG: chore(agentActions): classify issue #<number> as <type>
+COMMIT_MSG: chore(executables): classify issue #<number> as <type>
 PR_SUMMARY:
 - Classified issue #<number> as **[type]**
 - Dispatched via @kody <type>

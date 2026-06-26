@@ -1,7 +1,7 @@
 {
   "name": "classify",
   "role": "primitive",
-  "describe": "Classifies issues and dispatches to the right agentAction",
+  "describe": "Classifies issues and dispatches to the right executable",
   "inputs": [
     {
       "name": "issue",
@@ -53,5 +53,7 @@
         "script": "postAgentComment"
       }
     ]
-  }
+  },
+  "action": "classify",
+  "capabilityKind": "act"
 }

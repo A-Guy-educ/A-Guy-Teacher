@@ -54,12 +54,9 @@
       "MEMBER"
     ]
   },
-  "agentActions": {
-    "default": "run"
-  },
   "company": {
-    "activeAgentResponsibilities": [
-      "agent-responsibility-call",
+    "activeCapabilities": [
+      "capability-call",
       "release-prepare",
       "release-merge",
       "vercel-production-deploy"
@@ -67,7 +64,7 @@
     "activeAgents": [
       "cto"
     ],
-    "activeAgentActions": [
+    "activeExecutables": [
       "release-prepare",
       "release-merge",
       "vercel-production-deploy"
