@@ -31,6 +31,8 @@
     "versionFiles": [
       "package.json"
     ],
+    "productionUrl": "https://www.aguy.co.il",
+    "smokeCommand": "pnpm tsx scripts/smoke-web-api.ts",
     "e2eCommand": "npx tsx scripts/release-e2e-gate.ts",
     "timeoutMs": 1800000
   },
@@ -59,17 +61,13 @@
       "capability-call",
       "release-prepare",
       "release-merge",
+      "release-promote",
       "vercel-production-deploy",
       "bug"
     ],
     "activeAgents": [
       "cto",
       "kody"
-    ],
-    "activeExecutables": [
-      "release-prepare",
-      "release-merge",
-      "vercel-production-deploy"
     ],
     "activeGoals": [
       "daily-web-release-loop"
