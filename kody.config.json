@@ -63,7 +63,8 @@
       "release-merge",
       "release-promote",
       "vercel-production-deploy",
-      "bug"
+      "bug",
+      "chore"
     ],
     "activeAgents": [
       "cto",
