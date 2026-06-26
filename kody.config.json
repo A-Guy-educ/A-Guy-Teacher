@@ -21,7 +21,8 @@
     "path": "A-Guy-Web"
   },
   "agent": {
-    "model": "minimax/MiniMax-M2.7-highspeed"
+    "model": "minimax/MiniMax-M2.7-highspeed",
+    "reasoningEffort": "high"
   },
   "qa": {
     "fallbackUrl": "https://dev.aguy.co.il"
