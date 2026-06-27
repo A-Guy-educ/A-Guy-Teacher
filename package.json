@@ -139,7 +139,7 @@
     "katex": "^0.16.27",
     "lucide-react": "^0.562.0",
     "mathjs": "^13.2.3",
-    "mathlive": "^0.108.3",
+    "mathlive": "^0.110.0",
     "mongodb": "^6.12.0",
     "nanoid": "^5.0.0",
     "next": "15.5.9",
