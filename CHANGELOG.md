@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #589: Remove redundant `undefined` from SERVER_URL fallback chain in ne… ([#590](https://github.com/A-Guy-educ/A-Guy-Web/pull/590)) — @kodyade[bot]
 - chore: promote dev to production v0.26.2 ([#585](https://github.com/A-Guy-educ/A-Guy-Web/pull/585)) — @aguyaharonyair
 - chore: release v0.26.2 ([#584](https://github.com/A-Guy-educ/A-Guy-Web/pull/584)) — @kodyade[bot]
 - #576: Auto-wrap math expressions in HtmlBlock with $...$ before KaTeX r… ([#581](https://github.com/A-Guy-educ/A-Guy-Web/pull/581)) — @kodyade[bot]
