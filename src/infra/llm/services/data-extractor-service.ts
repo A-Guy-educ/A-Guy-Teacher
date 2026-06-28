@@ -1,11 +1,7 @@
 /**
- * Data extraction service using AI models
- * Extracts structured data from images (questions, options, answers)
+ * Structured exercise extraction from images (Genkit multimodal)
  *
- * @ai-summary Migrated to Genkit — call createGenkitUnifiedAdapter via dynamic import to prevent server-only code from being bundled into the client. PDF is passed directly to Gemini (native support); images are pre-optimized via sharp (max 2048px). JSON responses are stripped of markdown fences before parsing. Throws on JSON parse failure — callers must handle gracefully.
- *
- * Migrated to Genkit unified adapter for LLM operations.
- * Uses dynamic imports to prevent Node.js-only modules from being bundled into client code.
+ * @ai-summary Uses Genkit's multimodal adapter. Dynamic imports prevent Node.js-only modules from being bundled into client code. v3 (`extractFromImageV3`) handles multi-part exercises with diagram detection; v1 (`extractFromImage`) handles simple single-question images. PDF is passed directly to Gemini (native support); images are pre-optimized via sharp (max 2048px). JSON responses are stripped of markdown fences before parsing. Throws on JSON parse failure — callers must handle gracefully.
  */
 import type { Payload } from '@/infra/types/backend'
 import type { AIModel, AIModelKey } from '../models'

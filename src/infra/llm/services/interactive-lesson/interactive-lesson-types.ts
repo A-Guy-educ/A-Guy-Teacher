@@ -1,9 +1,7 @@
 /**
- * Types for the interactive lesson visualization feature.
- * Defines the structured step data that the LLM generates
- * and the player component consumes.
+ * Interactive lesson visualization types (geometry, graph, number-line scenes)
  *
- * @ai-summary The types here are consumed by both the generation pipeline (Gemini output) and the player component (GuidedExplanationRunner). audioBase64 is optional and generated server-side at lesson creation time — the player falls back to live cloud TTS when absent (for older cached lessons). geometry, graph, and numberLine are mutually exclusive rendering modes; geometry takes precedence if present.
+ * @ai-summary Defines the structured step data the LLM generates and the player renders. Three scene types: `geometry` (SVG from points/segments), `graph` (coordinate plane with plotted functions), `numberLine` (intervals/marks on ℝ). The converter drops scenes the LLM didn't populate. audioBase64 is optional and generated server-side at lesson creation — the player falls back to live cloud TTS when absent (older cached lessons). geometry, graph, and numberLine are mutually exclusive rendering modes; geometry takes precedence if present.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────

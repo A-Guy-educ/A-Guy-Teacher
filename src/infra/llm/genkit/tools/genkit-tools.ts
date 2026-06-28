@@ -1,6 +1,7 @@
 /**
- * Genkit Tools Module
- * Provides tool calling abstraction for Genkit with MCP integration
+ * MCP → Genkit tool mapping
+ *
+ * @ai-summary Maps MCP tool definitions to Genkit-compatible tool specs. Input schemas are passed through as `properties` objects — complex nested schemas are truncated to top-level field names for readability.
  *
  * @fileType module
  * @domain ai

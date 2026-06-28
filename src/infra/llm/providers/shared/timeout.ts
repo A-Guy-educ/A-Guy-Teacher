@@ -1,11 +1,11 @@
 /**
- * Timeout Utility
- * Race a promise against a timeout
+ * Promise.race against timeout
+ *
+ * @ai-summary `Promise.race` between an operation and a timeout with cleanup callback that always fires (via `clearTimeout`). If timeout wins, the operation keeps running in the background — it is NOT aborted. Use `createAbortSignal` if you need actual cancellation via AbortController.
  *
  * @fileType utility
  * @domain ai
  * @pattern timeout
- * @ai-summary Promise.race between the operation and a timeout. If timeout wins, the operation keeps running in the background — it is NOT aborted. Use createAbortSignal if you need actual cancellation via AbortController.
  */
 
 export interface TimeoutOptions {

@@ -1,12 +1,12 @@
 export const __genkit_exports__ = true
 /**
- * Unified Adapter
- * Provides UnifiedLLMProvider interface backed by Genkit
+ * Genkit-backed UnifiedLLMProvider
+ *
+ * @ai-summary The streaming implementation uses `ReadableStream.from()` to bridge Genkit's AsyncIterable to Node.js ReadableStream. This is required for Node.js 22 compatibility — direct iteration inside a `start()` callback throws a TypeError. Routes to `ai.generate()` (non-streaming) or `ai.generateStream()` (streaming). Error classification via `error-adapter.ts` maps Genkit errors to LLMError codes (auth → CONFIG_ERROR, rate limit → RATE_LIMIT_ERROR, timeout → TIMEOUT_ERROR, etc.). `raw` exposes the full Genkit GenerateResponse; `text` is the extracted string. Streaming returns `{ stream, response }` — the stream yields text chunks, response resolves to the final text. Tool calls from `ai.generate({ tools })` are extracted from `result.toolCalls` (Genkit format: `{ toolName, arguments }`) and mapped to UnifiedLLMProvider format (`{ name, args }`).
  *
  * @fileType adapter
  * @domain ai
  * @pattern abstraction, genkit, provider-abstraction
- * @ai-summary Routes to `ai.generate()` (non-streaming) or `ai.generateStream()` (streaming). Error classification via `error-adapter.ts` maps Genkit errors to LLMError codes (auth → CONFIG_ERROR, rate limit → RATE_LIMIT_ERROR, timeout → TIMEOUT_ERROR, etc.). `raw` exposes the full Genkit GenerateResponse; `text` is the extracted string. Streaming returns `{ stream, response }` — the stream yields text chunks, response resolves to the final text. Tool calls from `ai.generate({ tools })` are extracted from `result.toolCalls` (Genkit format: `{ toolName, arguments }`) and mapped to UnifiedLLMProvider format (`{ name, args }`).
  *
  * Maintains backward compatibility with existing UnifiedLLMProvider interface
  */

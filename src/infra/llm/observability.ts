@@ -1,5 +1,5 @@
 /**
- * Observability & Logging for Chat Context System
+ * Structured logging for context usage and feature flags
  *
  * Provides structured logging for:
  * - Context usage per model call

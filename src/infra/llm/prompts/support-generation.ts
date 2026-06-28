@@ -1,6 +1,5 @@
 /**
- * System prompt for generating educational support content (hints, guiding questions, full solutions)
- * Used by the EducationalSupportService to produce pedagogically sound scaffolding
+ * System prompt for support content generation (Hebrew hints, guiding questions, solutions)
  *
  * @ai-summary The "solution" field MUST be a guiding question directed at the student — NOT a direct answer. This is a hard pedagogical requirement. ALL THREE keys (hints, solution, fullSolution) are required; if any is missing the service retries. Default language is Hebrew. The prompt explicitly forbids skipping any field.
  *

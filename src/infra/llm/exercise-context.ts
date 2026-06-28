@@ -1,5 +1,5 @@
 /**
- * Exercise Context Formatting Utility
+ * Exercise content formatter for LLM prompts
  *
  * Formats exercise content into a readable message for the LLM.
  * - Strips solutions and correct answers (prevent leakage)

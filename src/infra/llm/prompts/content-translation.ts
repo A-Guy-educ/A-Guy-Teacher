@@ -1,5 +1,5 @@
 /**
- * System prompt for the Clone-and-Translate content translation service.
+ * System prompt for Clone-and-Translate block-level translation
  *
  * Translates educational content blocks between Hebrew and English while
  * preserving pedagogical logic, mathematical notation, and structural IDs.

@@ -1,9 +1,7 @@
 /**
- * Circuit Breaker for LLM API Calls
+ * Circuit breaker for LLM API calls
  *
- * Prevents cascading failures when an LLM provider goes down.
- * After N consecutive failures, the circuit opens and fails fast
- * for a cooldown period before allowing a single probe request.
+ * @ai-summary Opens after 5 consecutive failures (not rate-limit errors — those are skipped because counting them causes a cascade: one 429 trips the breaker, then every subsequent call fails instantly with CIRCUIT_OPEN even though Gemini is healthy). Cooldown is 60s.
  *
  * @fileType utility
  * @domain ai

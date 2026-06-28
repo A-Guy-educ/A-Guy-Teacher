@@ -1,11 +1,11 @@
 /**
- * Media Reader Utility
- * Common file reading logic for multimodal mappers
+ * Multi-strategy media file reader for multimodal LLM calls
+ *
+ * @ai-summary Three-tier fallback: filesystem (local dev) > Payload Local API (serverless with media on disk) > blob URL fetch (Vercel Blob only). If all three fail, returns null — callers must handle null gracefully. The 30s fetch timeout prevents slow media from blocking indefinitely.
  *
  * @fileType utility
  * @domain ai
  * @pattern data-transformation
- * @ai-summary Three-tier fallback: filesystem (local dev) > Payload Local API (serverless with media on disk) > blob URL fetch (Vercel Blob only). If all three fail, returns null — callers must handle null gracefully. The 30s fetch timeout means slow media won't block the whole request indefinitely.
  */
 import type { Payload } from '@/infra/types/backend'
 

@@ -1,8 +1,7 @@
 /**
- * Answer validation service using LLM for semantic equivalence
- * Server-side only — called as fallback when DB normalization fails
+ * LLM-based semantic answer validation (fallback when DB normalization fails)
  *
- * @ai-summary LLM is a last resort after DB-based normalization. If the LLM call fails, the service returns success: false with an error string — it does NOT throw. This means a failed LLM call looks identical to a failed answer from the student's perspective. The prompt instructs the LLM to accept equivalent forms (e.g., 3.14 ≈ π, x+x = 2*x).
+ * @ai-summary Server-side-only. Called as fallback when exact DB matching can't determine correctness. LLM is a last resort after DB-based normalization. If the LLM call fails, the service returns `success: false` with an error string — it does NOT throw. This means a failed LLM call looks identical to a failed answer from the student's perspective. The prompt instructs the LLM to accept equivalent forms (e.g., 3.14 ≈ π, x+x = 2*x). Uses GPT-4o-mini for cost efficiency.
  */
 import type { Payload } from '@/infra/types/backend'
 import type { AIModel, AIModelKey } from '../models'
