@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #559: Seed legal pages: terms, privacy, cancellation, AI statement ([#631](https://github.com/A-Guy-educ/A-Guy-Web/pull/631)) — @kodyade[bot]
 - #627: [CourseCard] Navigate to course page instead of home on click ([#630](https://github.com/A-Guy-educ/A-Guy-Web/pull/630)) — @kodyade[bot]
 - #257: Mobile learning UX — fullscreen exercises + embedded formulas/not… ([#628](https://github.com/A-Guy-educ/A-Guy-Web/pull/628)) — @kodyade[bot]
 - #626: Language switch on course pages shows 404 instead of graceful fal… ([#629](https://github.com/A-Guy-educ/A-Guy-Web/pull/629)) — @kodyade[bot]
