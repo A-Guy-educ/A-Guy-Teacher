@@ -21,7 +21,7 @@ export default async function Page({ params: paramsPromise }: Args) {
 
   const sanitizedPageNumber = Number(pageNumber)
 
-  if (!Number.isInteger(sanitizedPageNumber)) notFound()
+  if (!Number.isInteger(sanitizedPageNumber) || sanitizedPageNumber < 1) return notFound()
 
   const posts = await queryPublishedPosts({ limit: 12, page: sanitizedPageNumber })
 
