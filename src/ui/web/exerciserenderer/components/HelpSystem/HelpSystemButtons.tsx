@@ -35,7 +35,7 @@ export function HelpSystemButtons({
   solutionLabel,
 }: HelpSystemButtonsProps) {
   return (
-    <div className="flex flex-wrap gap-content-gap-xs.5">
+    <div className="flex flex-wrap gap-2">
       {/* Hint Button — always amber colored */}
       <motion.button
         type="button"
