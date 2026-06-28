@@ -96,6 +96,7 @@ export function LessonIntroPage({
   const description = plainText(lesson.description)
 
   const hasExerciseContent = exercises.some((exercise) => {
+    if (!exercise || typeof exercise !== 'object') return false
     if (Array.isArray(exercise.content)) return exercise.content.length > 0
     if (exercise.content && typeof exercise.content === 'object' && 'blocks' in exercise.content) {
       return (

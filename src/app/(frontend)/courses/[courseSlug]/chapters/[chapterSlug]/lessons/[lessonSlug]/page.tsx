@@ -56,18 +56,21 @@ function getContentPageBodyBlocks(body: unknown): unknown[] | null {
   return null
 }
 
-function hasBlocks(exercise: Exercise): boolean {
-  if (Array.isArray(exercise.content)) {
-    return exercise.content.length > 0
+function hasBlocks(exercise: unknown): boolean {
+  if (!exercise || typeof exercise !== 'object') return false
+
+  const ex = exercise as { content?: unknown }
+  if (Array.isArray(ex.content)) {
+    return ex.content.length > 0
   }
 
   if (
-    exercise.content &&
-    typeof exercise.content === 'object' &&
-    'blocks' in exercise.content &&
-    Array.isArray(exercise.content.blocks)
+    ex.content &&
+    typeof ex.content === 'object' &&
+    'blocks' in ex.content &&
+    Array.isArray((ex.content as { blocks?: unknown }).blocks)
   ) {
-    return exercise.content.blocks.length > 0
+    return (ex.content as { blocks: unknown[] }).blocks.length > 0
   }
 
   return false
@@ -122,7 +125,10 @@ async function getLessonProgress({
       .filter((record) => record.recordType === 'exercise' && record.status === 'completed')
       .map((record) => record.recordId),
   )
-  const completed = exercises.filter((exercise) => completedExerciseIds.has(exercise.id)).length
+  const completed = exercises.filter(
+    (exercise): exercise is Exercise =>
+      Boolean(exercise?.id) && completedExerciseIds.has(exercise.id),
+  ).length
   const lessonRecord = records.find(
     (record) => record.recordType === 'lesson' && record.recordId === lessonId,
   )
@@ -222,7 +228,12 @@ export default async function LessonPage({ params }: LessonPageProps) {
   }
 
   const [exercises, mediaFiles, formulaSheetResult] = await Promise.all([
-    queryExercisesByLesson({ lessonId: lesson.id }),
+    queryExercisesByLesson({ lessonId: lesson.id }).then((exercises) =>
+      (exercises ?? []).filter(
+        (ex): ex is Exercise =>
+          Boolean(ex) && typeof ex === 'object' && Boolean(ex.id) && Boolean(ex.slug),
+      ),
+    ),
     getMediaFiles(lesson.contentFiles),
     resolveFormulaSheet({
       lessonId: lesson.id,
