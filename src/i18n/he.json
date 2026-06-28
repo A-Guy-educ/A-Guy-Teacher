@@ -960,7 +960,15 @@
     "perYear": "לשנה",
     "includedItems": "מה כלול במוצר?",
     "items": {
-      "unnamed": "פריט ללא שם"
+      "unnamed": "פריט ללא שם",
+      "featureKeys": {
+        "live-sessions": "שיעורים פרטיים",
+        "download-resources": "משאבים להורדה",
+        "certificate": "תעודת סיום",
+        "priority-support": "תמיכה בעדיפות גבוהה",
+        "analytics": "לוח ניתוח נתונים",
+        "group-access": "גישה קבוצתית"
+      }
     },
     "buyButton": "רכוש עכשיו",
     "loginToBuy": "התחבר כדי לרכוש",

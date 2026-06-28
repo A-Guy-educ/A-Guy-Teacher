@@ -960,7 +960,15 @@
     "perYear": "per year",
     "includedItems": "What&apos;s Included",
     "items": {
-      "unnamed": "Unnamed item"
+      "unnamed": "Unnamed item",
+      "featureKeys": {
+        "live-sessions": "Live Sessions",
+        "download-resources": "Downloadable Resources",
+        "certificate": "Certificate",
+        "priority-support": "Priority Support",
+        "analytics": "Analytics Dashboard",
+        "group-access": "Group Access"
+      }
     },
     "buyButton": "Buy Now",
     "loginToBuy": "Log in to Buy",

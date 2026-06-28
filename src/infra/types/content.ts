@@ -184,6 +184,9 @@ export interface ProductItem {
   title?: string | null
   description?: string | null
   price?: number | null
+  type?: 'lesson' | 'feature' | null
+  featureKey?: string | null
+  lesson?: { title?: string | null } | null
 }
 
 export interface Product {

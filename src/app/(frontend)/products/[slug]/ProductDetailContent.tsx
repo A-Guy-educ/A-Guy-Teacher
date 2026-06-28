@@ -96,14 +96,23 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
             </h2>
             <ul className="space-y-2">
               {product.items.map((item, index) => {
-                const itemObj = item as { lesson?: { title?: string }; featureKey?: string }
+                const itemObj = item as {
+                  lesson?: { title?: string | null } | null
+                  featureKey?: string | null
+                }
+                const lessonTitle = itemObj.lesson?.title
+                const featureKey = itemObj.featureKey
+                const displayText =
+                  lessonTitle ??
+                  (featureKey ? t(`items.featureKeys.${featureKey}`) : null) ??
+                  t('items.unnamed')
                 return (
                   <li
                     key={index}
                     className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                    {itemObj.lesson?.title ?? itemObj.featureKey ?? t('items.unnamed')}
+                    {displayText}
                   </li>
                 )
               })}
