@@ -81,13 +81,14 @@ function stableSort(entries: Entry[]) {
 }
 
 function main() {
-  if (!isDir(COLLECTIONS_ROOT)) {
-    console.error(`Missing collections root: ${COLLECTIONS_ROOT}`)
-    process.exit(1)
-  }
-
   const files: string[] = []
-  findCollectionFiles(COLLECTIONS_ROOT, files)
+  if (isDir(COLLECTIONS_ROOT)) {
+    findCollectionFiles(COLLECTIONS_ROOT, files)
+  } else {
+    console.warn(
+      `Collections root not found: ${COLLECTIONS_ROOT} — writing empty collection-slug-map.json`,
+    )
+  }
 
   const entries: Entry[] = []
   for (const f of files) {
