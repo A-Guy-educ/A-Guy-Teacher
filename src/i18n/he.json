@@ -1014,5 +1014,11 @@
       "backToProduct": "נסה שוב",
       "browseProducts": "עיין בכל המוצרים"
     }
+  },
+  "legal": {
+    "termsOfService": "תנאי שימוש",
+    "privacyPolicy": "מדיניות פרטיות",
+    "cancellationRefund": "ביטולים והחזרים",
+    "aiUsageStatement": "שימוש בבינה מלאכותית"
   }
 }

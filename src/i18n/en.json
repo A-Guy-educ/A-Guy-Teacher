@@ -1014,5 +1014,11 @@
       "backToProduct": "Try Again",
       "browseProducts": "Browse All Products"
     }
+  },
+  "legal": {
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "cancellationRefund": "Cancellation & Refunds",
+    "aiUsageStatement": "AI Usage Statement"
   }
 }
