@@ -2,7 +2,7 @@
  * @fileType hook
  * @domain progress
  * @pattern progress-map
- * @ai-summary Batch-fetches progress for record IDs in a single `/api/progress` call. Anonymous users return empty maps without making a request.
+ * @ai-summary Per-grade progress batch-fetch from the Progress API — `gradeLevel` must be the content's grade bucket, not the user's onboarding grade; silently returns empty maps for unauthenticated users.
  *
  * Gotcha: When `gradeLevel` is not passed, the hook falls back to `getUserProfile()?.gradeLevel` from localStorage. That is the content grade bucket, not necessarily the user's onboarding grade.
  */

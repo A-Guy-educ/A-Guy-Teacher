@@ -2,7 +2,7 @@
  * @fileType hook
  * @domain search
  * @pattern course-search
- * @ai-summary Debounces the query at 300ms before hitting `/api/course-search`. Aborts in-flight requests on new keystrokes, so only the latest request's result is used. Returns `null` results while the query is shorter than 2 characters.
+ * @ai-summary Debounced course-scoped search via `/api/course-search` — cancels in-flight requests via `AbortController` when a new query arrives; requires `courseSlug` for scoped results, or returns global results if null.
  *
  * Gotcha: When `courseSlug` is provided, results are scoped to that course and the response has no `courses` collection. When `courseSlug` is `null`, search is global across all courses.
  */

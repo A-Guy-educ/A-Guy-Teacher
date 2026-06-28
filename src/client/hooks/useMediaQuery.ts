@@ -2,10 +2,12 @@
  * @fileType hook
  * @domain utility
  * @pattern media-query
- * @ai-summary Subscribes to a CSS media query and returns whether it matches. Returns `false` on the server and during hydration before the media query is evaluated.
+ * @ai-summary Responsive breakpoint hook — tracks `window.matchMedia` reactively; returns null on first render (SSR-safe), then the actual match state once the client hydrates.
  *
  * Gotcha: Initial render returns `null` (treated as `false`), then updates on the client after `window.matchMedia` runs. This can cause a hydration mismatch in SSR frameworks — wrap in a client-only boundary or accept the initial `false`.
  */
+
+'use client'
 
 import { useEffect, useState } from 'react'
 

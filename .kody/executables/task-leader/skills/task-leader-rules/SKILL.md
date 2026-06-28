@@ -1,0 +1,244 @@
+# Task Leader Rules
+
+## Operator-tunable knobs
+
+Read these from `.kody/duties/task-leader/profile.json`:
+
+- `readyPreviewCap` (default `15`) - max issues `status:ready-for-preview` before duty backs off.
+- `smallChangeMaxLines` (default `200`) - total lines changed for a normal PR to be small.
+- `smallChangeMaxFiles` (default `20`) - max changed files for a normal PR to be small.
+- `staleReviewHours` (default `4`) - hours PR can sit without both reviews approved before escalation.
+- `blockAutoMergeLabel` (default `status:needs-review`) - linked issue label that blocks auto-merge.
+- `releaseAutoMergeTitlePrefix` (default `chore(release):`) - required title prefix for release auto-merge lane.
+- `releaseAutoMergeBranchPrefix` (default `release/v`) - required head branch prefix for release auto-merge lane.
+- `releaseAutoMergeAllowedPaths` (default `package.json`, `pnpm-lock.yaml`, `CHANGELOG.md`) - exact changed files allowed for release auto-merge lane.
+- `releasePromotionTitlePrefix` (default `chore(release): promote`) - required title prefix for production promotion lane.
+- `dispatchComment` (default `@kody`) - bare token dispatches backlog issue.
+- `tripwirePaths` - paths whose presence in a normal PR diff disqualifies auto-merge.
+
+Default tripwire paths:
+
+- `db/`, `migrations/`, `prisma/`, `schema/`, `models/`
+- `.github/`, `Dockerfile`, `package.json`
+- `auth/`, `middleware/`
+
+## Step 1 - Queue cap check
+
+Count open issues label `status:ready-for-preview`:
+
+```sh
+gh issue list --state open --label status:ready-for-preview --json number --jq 'length'
+```
+
+If count >= `readyPreviewCap`, log "queue full, exiting" and stop. Do not run any other step this tick.
+
+## Step 2 - Request missing reviews
+
+For each open PR, check both verdicts:
+
+- Code review verdict:
+```sh
+gh pr view <N> --json reviewDecision -q .reviewDecision
+```
+Treat `APPROVED` code review as passing.
+
+- UI review verdict: treat a completed Kody UI review report/comment with PASS or CONCERNS as passing. No signal means missing.
+
+If a verdict is missing, dispatch the executable directly. Do not post `@kody review` or `@kody ui-review` comments; Kody bot comments are ignored by the dispatcher.
+
+- If code review missing and there is no recent in-flight `review` run for this PR:
+  `gh workflow run kody.yml -f executable=review -f issue_number=<N>`
+- If UI review missing and there is no recent in-flight `ui-review` run for this PR:
+  `gh workflow run kody.yml -f executable=ui-review -f issue_number=<N>`
+
+Before dispatching, check PR comments and recent workflow runs to avoid duplicates:
+
+```sh
+gh pr view <N> --comments --json comments --jq '.comments[].body'
+gh run list --workflow kody.yml --event workflow_dispatch --limit 50
+```
+
+## Step 3 - Request fixes for PR concerns
+
+For each open PR, check if either:
+
+- `reviewDecision` equals `CHANGES_REQUESTED`
+- The PR has unresolved review threads
+- Latest completed Kody review or UI-review comment says `## Verdict: CONCERNS`.
+  Read PR comments and treat comments from `kodyade[bot]` / `kodyade`
+  containing either `kody review started`, `## Verdict: PASS`, or
+  `## Verdict: CONCERNS` as the Kody review timeline. Only the latest
+  verdict after the latest matching `kody review started` comment counts.
+  A latest `## Verdict: CONCERNS` is a concern even when GitHub
+  `reviewDecision` is empty.
+
+Useful command:
+
+```sh
+gh api repos/A-Guy-educ/A-Guy-Web/issues/<N>/comments --paginate \
+  --jq '.[] | select(.user.login == "kodyade[bot]" or .user.login == "kodyade") | {created_at, body}'
+```
+
+If either true and no `@kody fix` comment was posted since the last review update, post:
+
+```sh
+gh pr comment <N> --body "@kody fix"
+```
+
+## Step 4 - Auto-merge safe PRs
+
+For each open PR, first check common merge gates:
+
+1. All required CI checks pass: `gh pr checks <N>`.
+2. PR's linked issue does not have label `blockAutoMergeLabel`.
+```sh
+gh pr view <N> --json closingIssuesReferences
+```
+For each referenced issue, check labels with `gh issue view <M> --json labels`.
+3. `reviewDecision` is not `CHANGES_REQUESTED`.
+4. PR has no unresolved review threads.
+5. Latest completed Kody review/UI-review verdict is not `CONCERNS`
+   using the Step 3 PR-comment scan.
+
+After common gates pass, use exactly one lane below.
+
+### Lane A - Normal Small PR
+
+All following must be true:
+
+1. Code review verdict is `APPROVED`.
+2. UI review verdict is `APPROVED` per Step 2.
+3. PR's diff is small:
+```sh
+gh pr view <N> --json additions,deletions,changedFiles
+```
+Total additions + deletions <= `smallChangeMaxLines`, and changedFiles <= `smallChangeMaxFiles`.
+4. PR's changed files do not touch any path in `tripwirePaths`:
+```sh
+gh pr view <N> --json files --jq '.files[].path'
+```
+For each file, check it does not start with any tripwire path.
+
+### Lane B - Release Version PR
+
+This lane exists only for PRs generated by the `release` duty. It may bypass code/UI review and small-change limits because changed files are constrained.
+
+All following must be true:
+
+1. PR title starts with `releaseAutoMergeTitlePrefix`:
+```sh
+gh pr view <N> --json title --jq .title
+```
+2. PR head branch starts with `releaseAutoMergeBranchPrefix`:
+```sh
+gh pr view <N> --json headRefName --jq .headRefName
+```
+3. PR body contains `Tracking-Issue: #`:
+```sh
+gh pr view <N> --json body --jq .body
+```
+4. PR is not a production promotion PR. Read `.kody/variables.json` `RELEASE_FLOW`; if `integrationBranch` differs from `productionBranch`, release auto-merge is allowed only when PR base branch equals `integrationBranch`, never when base branch equals `productionBranch`.
+5. Every changed file exactly matches an item in `releaseAutoMergeAllowedPaths`:
+```sh
+gh pr view <N> --json files --jq '.files[].path'
+```
+
+### Lane C - Release Promotion PR
+
+This lane exists only for the final production promotion PR created by the `release` duty. It may approve and merge because the release version PR already merged into the integration branch and this PR only promotes integration to production.
+
+All following must be true:
+
+1. Read `.kody/variables.json` `RELEASE_FLOW`; `integrationBranch` must differ from `productionBranch`.
+2. PR title starts `releasePromotionTitlePrefix`:
+```sh
+gh pr view <N> --json title --jq .title
+```
+3. PR head branch equals `integrationBranch` and base branch equals `productionBranch`:
+```sh
+gh pr view <N> --json headRefName,baseRefName
+```
+4. PR is not draft, mergeable, and has no changes requested or unresolved review threads.
+5. All required CI checks pass: `gh pr checks <N>`.
+6. The GitHub Release named in the PR title exists. Extract `vX.Y.Z` from the title and verify:
+```sh
+gh release view vX.Y.Z
+```
+
+If Lane C passes and `reviewDecision` is `REVIEW_REQUIRED`, approve it:
+
+```sh
+gh pr review <N> --approve --body "Approved by task-leader release promotion gate."
+```
+
+If GitHub rejects that approval because Kody is the PR author, retry once with the separate reviewer token from `TASK_LEAD_REVIEW_TOKEN`, falling back to `ALL_SECRETS.GH_PAT`:
+
+```sh
+TASK_LEAD_GH_TOKEN="$(node -e 'const s = JSON.parse(process.env.ALL_SECRETS || "{}"); process.stdout.write(process.env.TASK_LEAD_REVIEW_TOKEN || s.GH_PAT || "")')"
+test -n "$TASK_LEAD_GH_TOKEN"
+GH_TOKEN="$TASK_LEAD_GH_TOKEN" gh pr review <N> --approve --body "Approved by task-leader release promotion gate."
+```
+
+Do not print `TASK_LEAD_GH_TOKEN`. If `TASK_LEAD_REVIEW_TOKEN` and `GH_PAT` are missing or the retry fails, skip the merge and escalate to the operator with the exact approval error.
+
+Then merge it without deleting the integration branch:
+
+```sh
+gh pr merge <N> --merge --delete-branch=false
+```
+
+If Lane A or Lane B passes, run:
+
+```sh
+gh pr merge <N> --squash --delete-branch=false
+```
+
+If all lanes fail, skip PR and log why.
+
+## Step 5 - Dispatch next backlog task
+
+Re-count `status:ready-for-preview`. If still < `readyPreviewCap`:
+
+1. Find highest-priority open issue with no PR, label `status:verified`, without labels `status:needs-human`, `status:blocked`, or `status:ready-for-preview`:
+```sh
+gh issue list --state open --label status:verified --json number,title,labels --limit 100
+```
+2. Sort by priority label: P0 > P1 > P2 > P3, oldest first within same priority.
+3. Post dispatch comment on first match:
+```sh
+gh issue comment <N> --body "<dispatchComment>"
+```
+
+If no matching issue exists, log "no eligible backlog task".
+
+## Step 6 - Escalate stale PRs
+
+For each open PR, check if it has been open longer than `staleReviewHours` and does not have both reviews approved. If so, post comment mentioning operator(s):
+
+```sh
+gh pr comment <N> --body "<@operator1, @operator2> this PR been waiting for review for more than <staleReviewHours> hours."
+```
+
+Get operator list from `operators` field in `kody.config.json`.
+
+## Final output
+
+When invoked through the standalone `task-leader` executable, final message must use this exact format:
+
+```text
+DONE PR_SUMMARY:
+- step1: queue count = <N>
+- step2: reviews requested = <N>
+- step3: fixes requested = <N>
+- step4: merges = <N> (list PR numbers)
+- step5: dispatches = <N> (list issue numbers)
+- step6: escalations = <N> (list PR numbers)
+```
+
+If a step errors fatally, output:
+
+```text
+FAILED: <step name> - <error>
+```
+
+When invoked through scheduled `duty-tick`, obey the duty-tick output contract instead: call `submit_state` exactly once with `cursor: "idle"`, carried-forward `data`, and `done: false`.

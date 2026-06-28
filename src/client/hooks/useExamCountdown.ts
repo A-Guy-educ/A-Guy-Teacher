@@ -2,7 +2,7 @@
  * @fileType hook
  * @domain exam
  * @pattern countdown
- * @ai-summary Reads and writes exam dates from localStorage keyed by courseId. Dates are per-browser and per-device, so adding an exam on one device does not appear on another.
+ * @ai-summary Manages exam countdown state backed by localStorage — polls every 60 s to keep `daysUntil` accurate across page refreshes; dates are local-only and not synced to the server.
  *
  * Gotcha: The hook polls localStorage every 60 seconds, so `daysUntil` can be stale for up to 60 seconds after the user adds a new exam.
  */

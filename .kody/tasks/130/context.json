@@ -1,0 +1,17 @@
+{
+  "taskId": "130",
+  "taskType": "pr",
+  "target": "gh-27805101990-1-1",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Moved 'use client' after JSDoc block in useDebounce.ts and useMediaQuery.ts to match sibling hook pattern.",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/client/hooks/useDebounce.ts",
+    "src/client/hooks/useMediaQuery.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27830832353-1-1.jsonl",
+  "startedAt": "2026-06-19T00:00:00Z",
+  "finishedAt": "2026-06-19T00:05:00Z"
+}

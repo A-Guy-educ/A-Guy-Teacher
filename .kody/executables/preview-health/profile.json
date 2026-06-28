@@ -1,0 +1,45 @@
+{
+  "name": "preview-health",
+  "role": "watch",
+  "kind": "oneshot",
+  "describe": "Scheduled PR preview health check that dispatches safe preview repairs or posts inert recommendations.",
+  "inputs": [],
+  "claudeCode": {
+    "model": "inherit",
+    "permissionMode": "default",
+    "maxTurns": 20,
+    "maxTurnTimeoutSec": 1200,
+    "systemPromptAppend": null,
+    "cacheable": true,
+    "enableVerifyTool": false,
+    "tools": ["Bash"],
+    "hooks": ["block-git"],
+    "skills": [],
+    "commands": [],
+    "subagents": [],
+    "plugins": [],
+    "mcpServers": []
+  },
+  "cliTools": [
+    {
+      "name": "gh",
+      "install": {
+        "required": true,
+        "checkCommand": "command -v gh"
+      },
+      "verify": "gh auth status",
+      "usage": "Reads PR health, dispatches Kody workflows, and posts preview-health comments.",
+      "allowedUses": ["pr", "api", "workflow"]
+    }
+  ],
+  "inputArtifacts": [],
+  "outputArtifacts": [],
+  "scripts": {
+    "preflight": [
+      {
+        "script": "composePrompt"
+      }
+    ],
+    "postflight": []
+  }
+}

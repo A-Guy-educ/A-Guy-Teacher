@@ -1,0 +1,24 @@
+{
+  "taskId": "129",
+  "taskType": "issue",
+  "target": "src/client/hooks/",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Added README.md folder header and @ai-summary JSDoc headers to all 8 hook files in src/client/hooks/",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/client/hooks/README.md",
+    "src/client/hooks/useAccessGate.ts",
+    "src/client/hooks/useActiveTimeTracker.ts",
+    "src/client/hooks/useCourseSearch.ts",
+    "src/client/hooks/useCurrentUser.ts",
+    "src/client/hooks/useDebounce.ts",
+    "src/client/hooks/useExamCountdown.ts",
+    "src/client/hooks/useMediaQuery.ts",
+    "src/client/hooks/useProgressMap.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27316255117-1-1.jsonl",
+  "startedAt": "2026-06-11T00:00:00Z",
+  "finishedAt": "2026-06-11T00:10:00Z"
+}
