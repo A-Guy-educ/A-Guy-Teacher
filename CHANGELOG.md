@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #604: [Client Robustness] Prevent LessonPage crashes from malformed or … ([#612](https://github.com/A-Guy-educ/A-Guy-Web/pull/612)) — @kodyade[bot]
 - #600: [Content Pages] Math equations fail to render in Lexical content … ([#607](https://github.com/A-Guy-educ/A-Guy-Web/pull/607)) — @kodyade[bot]
 - #602: [I18n] Translate empty lesson placeholder text "No exercises in t… ([#605](https://github.com/A-Guy-educ/A-Guy-Web/pull/605)) — @kodyade[bot]
 - #591: [mathlive] Upgrade to v0.110.0 — XSS vulnerability fix included ([#592](https://github.com/A-Guy-educ/A-Guy-Web/pull/592)) — @kodyade[bot]
