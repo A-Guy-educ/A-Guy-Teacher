@@ -24,6 +24,7 @@ interface TeacherProfile {
 interface StartPageClientProps {
   courses: Course[]
   direction: Direction
+  isNewUser: boolean
 }
 
 const START_COPY = {
