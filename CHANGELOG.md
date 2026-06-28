@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #602: [I18n] Translate empty lesson placeholder text "No exercises in t… ([#605](https://github.com/A-Guy-educ/A-Guy-Web/pull/605)) — @kodyade[bot]
 - #591: [mathlive] Upgrade to v0.110.0 — XSS vulnerability fix included ([#592](https://github.com/A-Guy-educ/A-Guy-Web/pull/592)) — @kodyade[bot]
 - #589: Remove redundant `undefined` from SERVER_URL fallback chain in ne… ([#590](https://github.com/A-Guy-educ/A-Guy-Web/pull/590)) — @kodyade[bot]
 - chore: promote dev to production v0.26.2 ([#585](https://github.com/A-Guy-educ/A-Guy-Web/pull/585)) — @aguyaharonyair
