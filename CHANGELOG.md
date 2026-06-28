@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #609: [UI] כפתור "בדוק תשובה" - טקסט שחור על רקע כהה ([#618](https://github.com/A-Guy-educ/A-Guy-Web/pull/618)) — @kodyade[bot]
 - #606: [Bug] OAuth users can't log in after admin password reset ([#623](https://github.com/A-Guy-educ/A-Guy-Web/pull/623)) — @kodyade[bot]
 - #608: [/start] Skip welcome pane — open directly on wizard ([#619](https://github.com/A-Guy-educ/A-Guy-Web/pull/619)) — @kodyade[bot]
 - #603: [AI Command] Fix create-lesson schema to prevent page crashes ([#615](https://github.com/A-Guy-educ/A-Guy-Web/pull/615)) — @kodyade[bot]
