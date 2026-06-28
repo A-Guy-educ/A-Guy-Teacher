@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #610: [Start] Add "בחר מורה" step to wizard — select teacher profile be… ([#617](https://github.com/A-Guy-educ/A-Guy-Web/pull/617)) — @kodyade[bot]
 - #174: docs-drift: AI Services README — comprehensive update + duplicate footer removal ([#177](https://github.com/A-Guy-educ/A-Guy-Web/pull/177)) — @kodyade[bot]
 - #613: [Docs] Update exercises/README.md after PRs #34, #68, #163 ([#616](https://github.com/A-Guy-educ/A-Guy-Web/pull/616)) — @kodyade[bot]
 - #317: [Exercises] כפתור "שאלה מנחה" צמוד מדי לכפתור "רמז" ([#614](https://github.com/A-Guy-educ/A-Guy-Web/pull/614)) — @kodyade[bot]
