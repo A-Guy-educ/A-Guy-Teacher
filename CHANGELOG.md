@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #613: [Docs] Update exercises/README.md after PRs #34, #68, #163 ([#616](https://github.com/A-Guy-educ/A-Guy-Web/pull/616)) — @kodyade[bot]
 - #317: [Exercises] כפתור "שאלה מנחה" צמוד מדי לכפתור "רמז" ([#614](https://github.com/A-Guy-educ/A-Guy-Web/pull/614)) — @kodyade[bot]
 - #604: [Client Robustness] Prevent LessonPage crashes from malformed or … ([#612](https://github.com/A-Guy-educ/A-Guy-Web/pull/612)) — @kodyade[bot]
 - #600: [Content Pages] Math equations fail to render in Lexical content … ([#607](https://github.com/A-Guy-educ/A-Guy-Web/pull/607)) — @kodyade[bot]
