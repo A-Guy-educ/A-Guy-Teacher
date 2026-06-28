@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { BookOpen, ChevronLeft, FileText, Layers, RotateCcw, Sparkles } from 'lucide-react'
+import { BookOpen, ChevronLeft, FileText, Globe, Layers, RotateCcw, Sparkles } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
@@ -11,6 +11,7 @@ import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ChatInterface } from '@/ui/web/chat'
 import { BackButton } from '@/ui/web/components/BackButton'
 import { Button } from '@/ui/web/components/button'
+import { Card, CardContent } from '@/ui/web/components/card'
 import { Progress } from '@/ui/web/components/progress'
 import { useTranslations } from '@/ui/web/providers/I18n'
 
@@ -49,6 +50,7 @@ interface LessonIntroPageProps {
   nextLesson?: Pick<Lesson, 'title' | 'slug'> | null
   /** Populated prerequisite lessons with URL info */
   prerequisites?: LessonPrerequisite[]
+  isLocaleFallback?: boolean
 }
 
 function plainText(value?: string | null) {
@@ -78,8 +80,10 @@ export function LessonIntroPage({
   progress,
   nextLesson,
   prerequisites = [],
+  isLocaleFallback = false,
 }: LessonIntroPageProps) {
   const t = useTranslations('courses')
+  const tCommon = useTranslations('common.languageSwitcher')
   const searchParams = useSearchParams()
   const deepLinkedExerciseId = searchParams.get('exerciseId')
   const exerciseCount = exercises.length
@@ -202,6 +206,21 @@ export function LessonIntroPage({
         <div className="flex w-full justify-end">
           <BackButton href={backUrl} />
         </div>
+
+        {/* Locale fallback notice */}
+        {isLocaleFallback && (
+          <div className="mb-6">
+            <Card className="bg-warning/10 border-warning/30 animate-fade-in">
+              <CardContent className="p-card-padding flex flex-row items-start gap-content-gap-sm">
+                <div className="w-10 h-10 rounded-xl bg-warning/20 flex items-center justify-center shrink-0">
+                  <Globe className="w-5 h-5 text-warning" />
+                </div>
+                <p className="text-body-sm text-warning">{tCommon('fallbackNotice')}</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <section className="grid gap-content-gap-md md:flex-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-center">
           <div className="space-y-4 md:space-y-6">
             <div className="inline-flex items-center gap-content-gap-xs rounded-full border border-border bg-muted px-3 py-1.5 text-label uppercase tracking-wider text-muted-foreground md:px-4 md:py-2">

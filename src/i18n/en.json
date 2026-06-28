@@ -224,7 +224,8 @@
     "languageSwitcher": {
       "label": "Language",
       "english": "English",
-      "hebrew": "Hebrew"
+      "hebrew": "Hebrew",
+      "fallbackNotice": "This content is not available in English yet."
     },
     "mobileMenu": {
       "title": "Menu",

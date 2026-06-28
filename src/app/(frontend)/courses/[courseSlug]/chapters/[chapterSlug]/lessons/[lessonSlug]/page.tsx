@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { resolveAccessType } from '@/infra/auth/access-types'
 import { SystemParams } from '@/infra/config/system-params'
-import { queryCourseBySlug } from '@/server/repos/queries/courses'
+import { queryCourseBySlugWithFallback } from '@/server/repos/queries/courses'
 import { queryExercisesByLesson } from '@/server/repos/queries/exercises'
 import { resolveFormulaSheet } from '@/server/repos/queries/formula-sheets'
 import { queryLessonBySlug, queryLessonsByCourse } from '@/server/repos/queries/lessons'
@@ -156,8 +156,8 @@ async function getLessonData({
 }) {
   const locale = await getSystemLocale()
   const contentLocale = isValidContentLocale(locale) ? locale : undefined
-  const [course, lesson] = await Promise.all([
-    queryCourseBySlug({ slug: courseSlug, locale: contentLocale }),
+  const [{ course, isLocaleFallback }, lesson] = await Promise.all([
+    queryCourseBySlugWithFallback({ slug: courseSlug, locale: contentLocale }),
     queryLessonBySlug({ slug: lessonSlug }),
   ])
 
@@ -177,7 +177,7 @@ async function getLessonData({
 
   const blocks = await queryLessonBlocks({ lessonId: lesson.id })
 
-  return { contentLocale, course, chapter, lesson, blocks }
+  return { contentLocale, course, chapter, lesson, blocks, isLocaleFallback }
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
@@ -188,7 +188,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     notFound()
   }
 
-  const { contentLocale, course, lesson, blocks } = lessonData
+  const { contentLocale, course, lesson, blocks, isLocaleFallback } = lessonData
   const accessType = resolveAccessType(lesson.accessType, course.accessType)
   const [gatedDelayMs, gatedWarningMs] = await Promise.all([
     SystemParams.getGatedDelayMs(),
@@ -308,6 +308,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
         prerequisites={
           (lesson as Lesson & { prerequisites?: LessonPrerequisite[] }).prerequisites ?? []
         }
+        isLocaleFallback={isLocaleFallback}
       />
     </AccessGateProvider>
   )

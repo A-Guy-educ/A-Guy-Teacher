@@ -224,7 +224,8 @@
     "languageSwitcher": {
       "label": "שפה",
       "english": "אנגלית",
-      "hebrew": "עברית"
+      "hebrew": "עברית",
+      "fallbackNotice": "תוכן זה אינו זמין באנגלית עדיין."
     },
     "notFound": {
       "title": "404",

@@ -3,7 +3,7 @@ import '@/infra/config/server-init'
 import { notFound } from 'next/navigation'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { isValidContentLocale } from '@/infra/types/content'
-import { queryCourseBySlug } from '@/server/repos/queries/courses'
+import { queryCourseBySlugWithFallback } from '@/server/repos/queries/courses'
 import { queryChapterBySlug } from '@/server/repos/queries/chapters'
 import { queryLessonsByChapter } from '@/server/repos/queries/lessons'
 import { SystemParams } from '@/infra/config/system-params'
@@ -15,6 +15,7 @@ import { ChapterHeader } from '../../../_components/ChapterHeader'
 import { LessonsSectionTitle } from '../../../_components/LessonsSectionTitle'
 import { LessonCard } from '../../../_components/LessonCard'
 import { EmptyState } from '../../../_components/EmptyState'
+import { LocaleFallbackBanner } from '../../../_components/LocaleFallbackBanner'
 
 interface ChapterPageProps {
   params: Promise<{
@@ -28,8 +29,8 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
   const locale = await getSystemLocale()
   const contentLocale = isValidContentLocale(locale) ? locale : undefined
 
-  const [course, chapter] = await Promise.all([
-    queryCourseBySlug({ slug: courseSlug, locale: contentLocale }),
+  const [{ course, isLocaleFallback }, chapter] = await Promise.all([
+    queryCourseBySlugWithFallback({ slug: courseSlug, locale: contentLocale }),
     queryChapterBySlug({ slug: chapterSlug }),
   ])
 
@@ -83,6 +84,11 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
           />
         </div>
 
+        {/* Locale fallback notice */}
+        <div className="mb-6">
+          <LocaleFallbackBanner isLocaleFallback={isLocaleFallback} />
+        </div>
+
         {/* Chapter header with accent color bar */}
         <div className="relative pl-5 mb-10">
           <div className="absolute left-0 top-0 bottom-0 w-1 rounded-full bg-primary" />
@@ -121,8 +127,8 @@ export async function generateMetadata({ params }: ChapterPageProps) {
   const locale = await getSystemLocale()
   const contentLocale = isValidContentLocale(locale) ? locale : undefined
 
-  const [course, chapter] = await Promise.all([
-    queryCourseBySlug({ slug: courseSlug, locale: contentLocale }),
+  const [{ course }, chapter] = await Promise.all([
+    queryCourseBySlugWithFallback({ slug: courseSlug, locale: contentLocale }),
     queryChapterBySlug({ slug: chapterSlug }),
   ])
 
