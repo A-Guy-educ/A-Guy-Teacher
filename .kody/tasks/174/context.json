@@ -1,0 +1,14 @@
+{
+  "taskId": "174",
+  "taskType": "issue",
+  "target": "174",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Docs updated to reflect PR #158 changes: architecture diagram paths corrected from src/lib/ai to src/infra/llm, Interactive Lesson Service documented, model registry updated, import paths fixed throughout.",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": ["docs/ai-services/README.md"],
+  "sessionLog": ".kody/last-run.jsonl",
+  "startedAt": "2026-06-11T12:35:21Z",
+  "finishedAt": "2026-06-11T12:37:00Z"
+}

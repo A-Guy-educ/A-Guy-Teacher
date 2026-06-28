@@ -1,9 +1,9 @@
 # AI Services Architecture
 
 **Status**: ✅ Complete - Production Ready
-**Last Updated**: 2026-01-07
+**Last Updated**: 2026-06-11
 
-This document describes the AI services architecture built on Google Gemini, including the data extraction service, exercise chat service, and image optimization utilities.
+This document describes the AI services architecture built on Google Gemini and OpenAI-compatible providers, including data extraction, exercise chat, image optimization, interactive lesson generation, and lesson duplication services.
 
 ---
 
@@ -12,35 +12,45 @@ This document describes the AI services architecture built on Google Gemini, inc
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                   Application Layer                          │
-│  (Endpoints, Components, Admin UI)                          │
+│  (Endpoints, Components, Admin UI)                           │
 └────────────────┬────────────────────────────────────────────┘
                  │
                  ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    AI Services Layer                         │
-│  src/lib/ai/services/                                       │
-│                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌────────────┐ │
-│  │ Data Extractor  │  │ Exercise Chat   │  │   Image    │ │
-│  │    Service      │  │    Service      │  │ Optimizer  │ │
-│  └────────┬────────┘  └────────┬────────┘  └─────┬──────┘ │
+│  src/infra/llm/services/                                    │
+│                                                              │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌────────────┐│
+│  │ Data Extractor  │  │ Exercise Chat   │  │   Image    ││
+│  │    Service      │  │    Service      │  │ Optimizer  ││
+│  └────────┬────────┘  └────────┬────────┘  └─────┬──────┘│
 │           │                     │                  │        │
-└───────────┼─────────────────────┼──────────────────┼────────┘
+│  ┌────────┴─────────────────────┴──────────────────┴─────┐│
+│  │            Interactive Lesson Service                     ││
+│  │  (geometry extraction + proof steps + TTS audio)      ││
+│  └───────────────────────┬─────────────────────────────────┘│
+│                          │                                   │
+│  ┌───────────────────────┴───────────────────────────────┐│
+│  │        Lesson Duplication Variation Service                ││
+│  │       (LLM-based exercise variation by subject)          ││
+│  └──────────────────────────────────────────────────────────┘│
+│           │                     │                  │          │
+└───────────┼─────────────────────┼──────────────────┼──────────┘
             │                     │                  │
-            └──────────┬──────────┘                  │
-                       ▼                             │
-           ┌───────────────────────┐                 │
-           │  Gemini AI Provider   │◄────────────────┘
+            └──────────┬───────────┘                  │
+                       ▼                               │
+           ┌───────────────────────┐                  │
+           │  Gemini AI Provider   │◄─────────────────┘
            │  (Singleton Pattern)  │
-           │  src/lib/ai/          │
-           │  gemini-ai-provider   │
-           │  .server.ts           │
+           │  src/infra/llm/       │
+           │  providers/factory.ts │
            └───────────┬───────────┘
                        │
                        ▼
            ┌───────────────────────┐
            │   Google Gemini API   │
-           │  (gemini-2.0-flash)   │
+           │  (gemini-3.1-pro,   │
+           │   gemini-2.5-flash) │
            └───────────────────────┘
 ```
 
@@ -66,7 +76,7 @@ This document describes the AI services architecture built on Google Gemini, inc
 
 ```typescript
 // Extract exercise from image
-import { extractFromImage } from '@/lib/ai/services/data-extractor-service'
+import { extractFromImage } from '@/infra/llm/services/data-extractor-service'
 
 const result = await extractFromImage({
   imageBuffer: uploadedFile.buffer,
@@ -86,9 +96,11 @@ if (result.success) {
 
 | Service | Purpose | Model | Temp | Max Tokens |
 |---------|---------|-------|------|------------|
-| **[Data Extractor](#data-extractor-service)** | Extract structured exercise data from images | gemini-2.0-flash-001 | 0.2 | 8192 |
-| **[Exercise Chat](#exercise-chat-service)** | Conversational assistance for exercises | gemini-2.0-flash-001 | 0.7 | 2048 |
+| **[Data Extractor](#data-extractor-service)** | Extract structured exercise data from images | gemini-3.1-pro | 0.2 | 8192 |
+| **[Exercise Chat](#exercise-chat-service)** | Conversational assistance for exercises | gemini-3.1-flash-lite-preview | 0.7 | 2048 |
 | **[Image Optimizer](#image-optimizer-service)** | Optimize images for AI processing | N/A | N/A | N/A |
+| **[Interactive Lesson](#interactive-lesson-service)** | Generate interactive geometry proofs from images | gemini-2.5-flash | 0 | 98304 |
+| **[Lesson Duplication](#lesson-duplication-variation-service)** | LLM-based exercise variation by subject | gemini-3.1-pro-preview | 0.0–0.7 | 8192 |
 
 ---
 
@@ -101,11 +113,10 @@ if (result.success) {
 **Purpose**: Centralized Gemini client initialization with singleton pattern.
 
 ```typescript
-import { getGeminiClient } from '@/lib/ai/gemini-ai-provider.server'
+import { getGeminiClient } from '@/infra/llm/providers/factory'
 
 // ✅ CORRECT: Use singleton getter
 const client = getGeminiClient()
-const model = client.getGenerativeModel({ model: 'gemini-2.0-flash-001' })
 
 // ❌ WRONG: Don't create multiple clients
 const client1 = new GoogleGenerativeAI(apiKey)
@@ -137,7 +148,8 @@ try {
 **Purpose**: Centralized model selection and parameters for different AI tasks.
 
 ```typescript
-import { AI_MODELS } from '@/lib/ai/models'
+import { AI_MODELS, getProviderModelConfig } from '@/infra/llm/models'
+import { LLMProviderType } from '@/infra/llm/providers/factory'
 
 // ✅ CORRECT: Use predefined configurations
 const config = AI_MODELS.IMAGE_TO_EXERCISE
@@ -158,26 +170,36 @@ const model = client.getGenerativeModel({
 })
 ```
 
+**Provider-Aware Model Selection**:
+```typescript
+import { getProviderModelConfig, LLMProviderType } from '@/infra/llm/models'
+
+// Get model config for a specific provider
+const config = getProviderModelConfig(LLMProviderType.GEMINI, 'EXERCISE_CHAT')
+```
+
+**Runtime Overrides**: Set `LLM_MODEL_OVERRIDE_<MODEL_KEY>` environment variables to override models (e.g., `LLM_MODEL_OVERRIDE_EXERCISE_CHAT=gemini-1.5-pro`).
+
 **Available Configurations**:
 
-| Config Key | Model | Temperature | Use Case |
-|------------|-------|-------------|----------|
-| `IMAGE_TO_EXERCISE` | gemini-2.0-flash-001 | 0.2 | Deterministic JSON extraction |
-| `EXERCISE_CHAT` | gemini-2.0-flash-001 | 0.7 | Natural conversation |
+| Config Key | Model (Gemini) | Temperature | Use Case |
+|------------|----------------|-------------|----------|
+| `IMAGE_TO_EXERCISE` | gemini-3.1-pro | 0.2 | Deterministic JSON extraction |
+| `EXERCISE_CHAT` | gemini-3.1-flash-lite-preview | 0.7 | Natural conversation |
+| `PDF_TO_EXERCISE` | gemini-2.5-flash | 0.1 | Document extraction |
+| `ANSWER_VALIDATION` | gemini-3.1-pro | 0.2 | Answer checking |
+| `SUPPORT_GENERATION` | gemini-3.1-pro | 0.5 | Hint generation |
+| `CONTENT_TRANSLATION` | gemini-3.1-pro | 0.3 | Content translation |
+| `LESSON_DUPLICATION_VARIATION_CREATIVE` | gemini-3.1-pro-preview | 0.7 | Creative exercise variation |
+| `LESSON_DUPLICATION_VARIATION_DETERMINISTIC` | gemini-3.1-pro-preview | 0.0 | Deterministic exercise variation |
 
 **Adding New Models**:
 ```typescript
-// In src/lib/ai/models.ts
-export const AI_MODELS = {
-  // Existing models...
-
-  // Add new model
-  TEXT_TO_EXERCISE: {
-    name: 'gemini-2.0-flash-001',
-    temperature: 0.3,
-    maxOutputTokens: 4096,
-  },
-} as const
+// In src/infra/llm/models.ts
+// 1. Add key to AIModelKey type
+// 2. Add entry to MODEL_REGISTRY
+// 3. Add entries to PROVIDER_MODEL_NAMES for each provider
+// 4. Add to AI_MODELS for backward compatibility
 ```
 
 ---
@@ -222,7 +244,7 @@ async function extractFromImage(
 #### Usage Example
 
 ```typescript
-import { extractFromImage } from '@/lib/ai/services/data-extractor-service'
+import { extractFromImage } from '@/infra/llm/services/data-extractor-service'
 
 // Extract from uploaded image
 const result = await extractFromImage({
@@ -288,7 +310,7 @@ if (!result.success) {
     "explanation": "Paris has been the capital of France since 987 AD."
   },
   "metadata": {
-    "model": "gemini-2.0-flash-001",
+    "model": "gemini-3.1-pro",
     "processingTimeMs": 2341,
     "imageSizeBytes": 245678
   }
@@ -334,7 +356,7 @@ async function chatWithExerciseHelper(
 #### Usage Example
 
 ```typescript
-import { chatWithExerciseHelper } from '@/lib/ai/services/exercise-chat-service'
+import { chatWithExerciseHelper } from '@/infra/llm/services/exercise-chat-service'
 
 // Send user message
 const result = await chatWithExerciseHelper({
@@ -410,7 +432,7 @@ async function optimizeImageForAI(
 #### Usage Example
 
 ```typescript
-import { optimizeImageForAI } from '@/lib/ai/services/image-optimizer-service'
+import { optimizeImageForAI } from '@/infra/llm/services/image-optimizer-service'
 
 // ✅ CORRECT: Optimize before sending to AI
 const optimized = await optimizeImageForAI(uploadedFile.buffer)
@@ -448,6 +470,221 @@ console.log(optimized.sizeBytes) // ~1,200,000
 
 ---
 
+### Interactive Lesson Service
+
+**File**: [`src/infra/llm/services/interactive-lesson/interactive-lesson-generation-service.ts`](../../src/infra/llm/services/interactive-lesson/interactive-lesson-generation-service.ts)
+
+**Purpose**: Generate interactive geometry proofs from uploaded images. Takes an image of a geometry problem and produces structured geometry data + proof table steps rendered as SVG. Uses a two-pass approach: LLM extracts geometry + proof, the renderer draws SVG deterministically.
+
+**Key Exported Functions** (used by `src/app/api/agent/generate-interactive-lesson/route.ts`):
+
+```typescript
+import {
+  callGeminiResiliently,
+  GEMINI_CONFIG,
+  parseResponse,
+  prepareImage,
+  validateLesson,
+} from '@/infra/llm/services/interactive-lesson/interactive-lesson-generation-service'
+```
+
+| Function | Purpose |
+|----------|---------|
+| `callGeminiResiliently` | Calls Gemini with timeout/retry/circuit-breaker wrapper |
+| `callGeminiWithSchema` | Direct Gemini call with `responseSchema` constraint (Zod → OpenAPI 3.0) |
+| `parseResponse` | Parses JSON from Gemini response, handles LaTeX escape fixes |
+| `validateLesson` | Normalizes Gemini output to `InteractiveLesson` shape (handles field name variations) |
+| `prepareImage` | Runs Sharp on non-PDF inputs; passes through for PDFs |
+| `GEMINI_CONFIG` | Model config: `gemini-2.5-flash`, temp 0, 98K max tokens, 24K thinking budget |
+
+#### API
+
+```typescript
+interface InteractiveLessonInput {
+  imageBuffer: Buffer
+  mimeType: string
+  locale: 'he' | 'en'
+}
+
+interface InteractiveLessonResponse {
+  success: boolean
+  data?: InteractiveLesson
+  error?: string
+  metadata: {
+    model: string
+    processingTimeMs: number
+    imageSizeBytes: number
+  }
+  promptSource?: {
+    id: string
+    updatedAt: string
+  }
+}
+
+async function generateInteractiveLesson(
+  input: InteractiveLessonInput,
+  payload: Payload,
+): Promise<InteractiveLessonResponse>
+```
+
+#### Data Shapes
+
+```typescript
+// Geometry data extracted from image
+interface GeometryData {
+  points: GeoPoint[]      // { label, x, y }
+  segments: GeoSegment[]  // { from, to, style?, color? }
+  angles?: GeoAngle[]     // { points: [v, a, b], rightAngle? }
+  labels?: GeoLabel[]     // { text, x, y, fontSize? }
+  width: number
+  height: number
+}
+
+// Step in the proof
+interface InteractiveLessonStep {
+  id: number
+  title: string
+  claim: string           // e.g., "BC = CD"
+  reason: string          // e.g., "נתון" (given)
+  narration: string        // TTS narration text
+  explanation: string
+  durationSeconds: number
+  highlightSegments?: string[][]  // [[from, to], ...] — geometry
+  highlightPoints?: string[]      // point ids — geometry
+  highlightPlots?: string[]       // plot ids — graph scene
+  highlightMarkers?: string[]     // marker ids — graph scene
+  highlightMarks?: string[]       // mark ids — number-line scene
+  highlightIntervals?: string[] // interval ids — number-line scene
+  audioBase64?: string           // pre-baked TTS narration
+}
+
+// Full lesson
+interface InteractiveLesson {
+  title: string
+  locale: 'he' | 'en'
+  geometry: GeometryData
+  graph?: GraphData       // optional coordinate-plane scene
+  numberLine?: NumberLineData // optional number-line scene
+  steps: InteractiveLessonStep[]
+}
+```
+
+#### Route Integration
+
+The API route at `src/app/api/agent/generate-interactive-lesson/route.ts` uses the service helpers directly (bypassing the full `generateInteractiveLesson` because Payload is not available at that layer):
+
+```typescript
+const responseText = await callGeminiResiliently({
+  apiKey,
+  prompt,
+  attachmentData,
+  attachmentMimeType: mimeType,
+})
+if (!responseText) return null
+
+return { lesson: validateLesson(parseResponse(responseText), locale), sizeBytes }
+```
+
+**Key Features**:
+- ✅ `responseSchema` constraint forces Gemini to emit exact JSON shape
+- ✅ Tolerant `validateLesson` normalizes known Gemini field-name variations (`p1`/`p2` → `from`/`to`)
+- ✅ Circuit breaker + retry + timeout for reliability
+- ✅ TTS narration audio pre-baked per step (cached in lesson document)
+- ✅ Prompt loaded from admin Prompts collection (no hardcoded fallback)
+
+---
+
+### Lesson Duplication Variation Service
+
+**File**: [`src/infra/llm/services/lesson-duplication-variation-service.ts`](../../src/infra/llm/services/lesson-duplication-variation-service.ts)
+
+**Purpose**: Generate variations of exercises for practice using LLM. Supports three variation levels: Light (algebraic re-expression), Medium (semantic rewrite via LLM), Deep (full agentic rewrite). Subject-specific prompts (algebra, geometry, calculus, mixed).
+
+#### Variation Levels
+
+| Level | Purpose | Strategy |
+|-------|---------|----------|
+| Light | Pure algebraic re-expression (e.g., swap x→y) | algebraic-detector → script-strategy |
+| Medium | Semantic rewrite via LLM; two-pass fallback to light if LLM fails | llm-variation-service |
+| Deep | Full agentic rewrite with reasoning | llm-variation-service (deep model) |
+
+#### Subject Selection
+
+Valid subjects: `mixed`, `algebra`, `geometry`, `calculus`, `other`. Each subject has its own LLM prompts at `prompts/lesson-duplication/<subject>-<level>-agent-prompt.md`.
+
+#### API
+
+```typescript
+import { generateVariation } from '@/infra/llm/services/lesson-duplication-variation-service'
+
+type DuplicationSubject = 'algebra' | 'geometry' | 'calculus' | 'mixed' | 'other'
+
+interface GenerateVariationInput {
+  exercise: Exercise
+  level: 'light' | 'medium' | 'deep'
+  subject: DuplicationSubject
+}
+
+async function generateVariation(
+  input: GenerateVariationInput,
+  payload: Payload,
+): Promise<{ exercise: Exercise; tokensUsed: TokensUsed }>
+```
+
+#### Usage Example
+
+```typescript
+import { generateVariation } from '@/infra/llm/services/lesson-duplication-variation-service'
+
+// Generate a medium-level algebra variation of a single exercise
+const result = await generateVariation(
+  {
+    exercise: sourceExercise,
+    level: 'medium',
+    subject: 'algebra',
+  },
+  payload,
+)
+
+console.log(result.exercise.content.blocks) // AI-generated variation blocks
+console.log(result.tokensUsed) // { inputTokens: 1200, outputTokens: 800 }
+```
+
+#### Response Format
+
+```json
+{
+  "exercise": {
+    "id": "source-exercise-id",
+    "content": {
+      "blocks": [
+        {
+          "id": "block-1",
+          "type": "question_select",
+          "variant": "mcq",
+          "prompt": { "type": "rich_text", "format": "md-math-v1", "value": "What is $3+3$?", "mediaIds": [] },
+          "answer": {
+            "options": [
+              { "id": "a", "content": { "type": "rich_text", "format": "md-math-v1", "value": "5", "mediaIds": [] } },
+              { "id": "b", "content": { "type": "rich_text", "format": "md-math-v1", "value": "6", "mediaIds": [] } }
+            ],
+            "correctOptionIds": ["b"]
+          },
+          "solution": { "type": "rich_text", "format": "md-math-v1", "value": "3+3=6", "mediaIds": [] },
+          "fullSolution": { "type": "rich_text", "format": "md-math-v1", "value": "Step-by-step: ...", "mediaIds": [] }
+        }
+      ]
+    }
+  },
+  "tokensUsed": {
+    "inputTokens": 1200,
+    "outputTokens": 800
+  }
+}
+```
+
+---
+
 ## 🔧 Integration Patterns
 
 ### Pattern 1: Structured Output Extraction
@@ -455,9 +692,9 @@ console.log(optimized.sizeBytes) // ~1,200,000
 **Use Case**: Extract structured data from images (questions, answers, options)
 
 ```typescript
-import { getGeminiClient } from '@/lib/ai/gemini-ai-provider.server'
-import { AI_MODELS } from '@/lib/ai/models'
-import { optimizeImageForAI } from '@/lib/ai/services/image-optimizer-service'
+import { getGeminiClient } from '@/infra/llm/providers/factory'
+import { AI_MODELS } from '@/infra/llm/models'
+import { optimizeImageForAI } from '@/infra/llm/services/image-optimizer-service'
 
 async function extractData(imageBuffer: Buffer, mimeType: string) {
   // 1. Optimize image
@@ -507,8 +744,8 @@ async function extractData(imageBuffer: Buffer, mimeType: string) {
 **Use Case**: Maintain conversation context across multiple messages
 
 ```typescript
-import { getGeminiClient } from '@/lib/ai/gemini-ai-provider.server'
-import { AI_MODELS } from '@/lib/ai/models'
+import { getGeminiClient } from '@/infra/llm/providers/factory'
+import { AI_MODELS } from '@/infra/llm/models'
 
 async function chat(messages: Array<{ role: string; content: string }>) {
   const client = getGeminiClient()
@@ -541,10 +778,10 @@ async function chat(messages: Array<{ role: string; content: string }>) {
 **Use Case**: Add new AI-powered feature
 
 ```typescript
-// src/lib/ai/services/my-new-service.ts
-import { getGeminiClient } from '@/lib/ai/gemini-ai-provider.server'
-import { AI_MODELS } from '@/lib/ai/models'
-import { logger } from '@/utilities/logger/logger'
+// src/infra/llm/services/my-new-service.ts
+import { getGeminiClient } from '@/infra/llm/providers/factory'
+import { AI_MODELS } from '@/infra/llm/models'
+import { logger } from '@/infra/utils/logger/logger'
 
 export interface MyServiceInput {
   // Your input type
@@ -666,7 +903,7 @@ curl -X POST http://localhost:3000/api/exercises/import \
 #     "correctAnswer": 1
 #   },
 #   "metadata": {
-#     "model": "gemini-2.0-flash-001",
+#     "model": "gemini-3.1-pro",
 #     "processingTimeMs": 2341,
 #     "imageSizeBytes": 245678
 #   }
@@ -676,8 +913,8 @@ curl -X POST http://localhost:3000/api/exercises/import \
 ### Integration Testing
 
 ```typescript
-// tests/ai-services/data-extractor.test.ts
-import { extractFromImage } from '@/lib/ai/services/data-extractor-service'
+// tests/int/ai-services/data-extractor.test.ts
+import { extractFromImage } from '@/infra/llm/services/data-extractor-service'
 import fs from 'fs'
 
 describe('Data Extractor Service', () => {
@@ -692,7 +929,7 @@ describe('Data Extractor Service', () => {
     expect(result.success).toBe(true)
     expect(result.data.question).toBeDefined()
     expect(result.data.options.length).toBeGreaterThan(0)
-    expect(result.metadata.model).toBe('gemini-2.0-flash-001')
+    expect(result.metadata.model).toBe('gemini-3.1-pro')
   })
 
   it('should handle invalid images', async () => {
@@ -804,6 +1041,3 @@ describe('Data Extractor Service', () => {
 4. Upgrade Gemini API quota if needed
 
 ---
-
-**Last Updated**: 2026-01-07
-**Status**: ✅ Production Ready
