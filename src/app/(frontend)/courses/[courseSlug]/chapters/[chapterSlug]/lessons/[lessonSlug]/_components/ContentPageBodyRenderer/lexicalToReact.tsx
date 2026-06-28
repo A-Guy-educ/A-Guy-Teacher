@@ -73,7 +73,7 @@ function renderNode(node: LexicalNode | undefined): React.ReactNode {
     case 'math': {
       const latex = node.latex ?? node.text ?? ''
       if (!latex) return null
-      return <MathMarkdown content={latex} className="rich-text-content" />
+      return <MathMarkdown content={`$${latex}$`} className="rich-text-content" />
     }
 
     case 'root':
