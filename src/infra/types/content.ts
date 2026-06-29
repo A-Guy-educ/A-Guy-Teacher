@@ -233,6 +233,12 @@ export type ProductContentBlock =
  * populated doc has an `id` after `serializeDoc` runs, regardless of what
  * other fields the projection happened to include. Any narrower predicate
  * (e.g. checking 'title' / 'label') breaks if someone changes the projection.
+ *
+ * The check is intentionally structural rather than nominal. We trust this
+ * because the only producers of these objects today are `serializeDoc` (server
+ * side, inside this repo) and the storefront renderer (consumer only, never
+ * mutates). If a future caller ever feeds user-supplied JSON through this
+ * predicate, tighten the contract — until then, structural is fine.
  */
 export function isPopulatedCourseRef(value: unknown): value is ProductCourseRef {
   return !!value && typeof value === 'object' && 'id' in value

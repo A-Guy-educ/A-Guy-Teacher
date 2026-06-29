@@ -61,16 +61,17 @@ function ContentLine({ block, t }: ContentLineProps) {
     let display = label
     if (limit !== null) {
       // If admin's Payload schema ever grows beyond 'day' | 'lifetime' (e.g.
-      // adds 'week' / 'month') without a matching i18n key landing here, t()
-      // returns the raw key string ("items.periods.month") — which would
-      // leak through to the buyer-facing receipt. Detect that pass-through
-      // and fall back to the raw period word so we at least show something
-      // intelligible.
+      // adds 'week' / 'month') without a matching i18n key landing here, the
+      // i18n provider returns the namespace-PREFIXED key on miss (e.g.
+      // 'products.items.periods.month'), since useTranslations('products')
+      // prefixes every lookup. Compare against that prefixed form so the
+      // fallback to the raw period word actually fires in production.
       let periodLabel: string | null = null
       if (period) {
         const key = `items.periods.${period}`
         const translated = t(key)
-        periodLabel = translated === key ? period : translated
+        const missSentinel = `products.${key}`
+        periodLabel = translated === missSentinel ? period : translated
       }
       display = periodLabel ? `${limit} ${label} ${periodLabel}` : `${limit} ${label}`
     }

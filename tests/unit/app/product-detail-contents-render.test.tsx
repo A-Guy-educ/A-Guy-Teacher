@@ -25,9 +25,16 @@ vi.mock('@/app/(frontend)/products/[slug]/CouponInput', () => ({
   CouponInput: () => null,
 }))
 
-const t = (key: string) => key
+// Mirror the real I18n contract: useTranslations(ns) prefixes every key
+// with `${ns}.`, and the provider returns the FULL prefixed key on a miss
+// (see src/ui/web/providers/I18n/index.tsx). The previous stub returned the
+// unprefixed key, which hid a bug where the period-fallback safety net
+// compared against the wrong sentinel and never fired in production.
 vi.mock('@/ui/web/providers/I18n', () => ({
-  useTranslations: () => t,
+  useTranslations:
+    (namespace?: string) =>
+    (key: string): string =>
+      namespace ? `${namespace}.${key}` : key,
 }))
 
 import { ProductDetailContent } from '@/app/(frontend)/products/[slug]/ProductDetailContent'
