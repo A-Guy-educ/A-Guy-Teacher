@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #636: [Dark Mode] SectionHeader inverted description + KnowledgeAndFeat… ([#640](https://github.com/A-Guy-educ/A-Guy-Web/pull/640)) — @kodyade[bot]
 - #129: Doc coverage: src/client/hooks/ — Client-side React hooks (8 file… ([#130](https://github.com/A-Guy-educ/A-Guy-Web/pull/130)) — @kodyade[bot]
 - #261: Bug fixes — non-blocking for launch ([#632](https://github.com/A-Guy-educ/A-Guy-Web/pull/632)) — @kodyade[bot]
 - #559: Seed legal pages: terms, privacy, cancellation, AI statement ([#631](https://github.com/A-Guy-educ/A-Guy-Web/pull/631)) — @kodyade[bot]
