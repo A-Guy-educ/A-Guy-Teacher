@@ -339,7 +339,9 @@ function SectionHeader({
       <h2 className="mb-4 text-display-sm font-extrabold md:text-display-md">{title}</h2>
       <p
         className={
-          inverted ? 'text-heading-lg text-background/75' : 'text-heading-lg text-muted-foreground'
+          inverted
+            ? 'text-heading-lg text-background/75 dark:text-foreground'
+            : 'text-heading-lg text-muted-foreground'
         }
       >
         {description}
