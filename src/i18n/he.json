@@ -962,6 +962,10 @@
     "includedItems": "מה כלול במוצר?",
     "items": {
       "unnamed": "פריט ללא שם",
+      "periods": {
+        "day": "ליום",
+        "lifetime": "לכל החיים"
+      },
       "featureKeys": {
         "live-sessions": "שיעורים פרטיים",
         "download-resources": "משאבים להורדה",

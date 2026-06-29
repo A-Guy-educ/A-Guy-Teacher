@@ -3,7 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-import type { Product } from '@/infra/types/content'
+import type {
+  Product,
+  ProductContentBlock,
+  ProductCourseRef,
+  ProductFeatureRef,
+} from '@/infra/types/content'
 import { BuyButton } from './BuyButton'
 import { CouponInput } from './CouponInput'
 import { useTranslations } from '@/ui/web/providers/I18n'
@@ -20,6 +25,65 @@ function formatPrice(price: number, currency: string): string {
     maximumFractionDigits: 2,
   })
   return formatter.format(price)
+}
+
+function isPopulatedCourse(course: unknown): course is ProductCourseRef {
+  return !!course && typeof course === 'object' && 'id' in course
+}
+
+function isPopulatedFeature(feature: unknown): feature is ProductFeatureRef {
+  return !!feature && typeof feature === 'object' && 'id' in feature
+}
+
+interface ContentLineProps {
+  block: ProductContentBlock
+  index: number
+  t: ReturnType<typeof useTranslations>
+}
+
+function ContentLine({ block, index, t }: ContentLineProps) {
+  if (block.blockType === 'courseBlock') {
+    if (!isPopulatedCourse(block.course)) return null
+    const title = block.course.title ?? t('items.unnamed')
+    return (
+      <li
+        key={index}
+        className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+        {title}
+      </li>
+    )
+  }
+
+  if (block.blockType === 'featureBlock') {
+    if (!isPopulatedFeature(block.feature)) return null
+    // Silent features (e.g. background chat-limit) are intentionally hidden
+    // from the storefront — admin marks them isSilent=true so the buyer never
+    // sees the limit value before purchase.
+    if (block.feature.isSilent) return null
+    const label = block.feature.label ?? block.feature.key ?? t('items.unnamed')
+    const limit = block.limit ?? null
+    const period = block.period ?? null
+    // Boolean features have no limit / period → just show the label.
+    // Numeric features render as "{limit} {label} / {period}" when both are set.
+    let display = label
+    if (limit !== null) {
+      const periodLabel = period ? t(`items.periods.${period}`) : null
+      display = periodLabel ? `${limit} ${label} / ${periodLabel}` : `${limit} ${label}`
+    }
+    return (
+      <li
+        key={index}
+        className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+        {display}
+      </li>
+    )
+  }
+
+  return null
 }
 
 export function ProductDetailContent({ product }: ProductDetailContentProps) {
@@ -88,37 +152,34 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
           </div>
         </div>
 
-        {/* Product Items */}
-        {Array.isArray(product.items) && product.items.length > 0 && (
-          <div className="p-card-padding-lg border-b border-border/40">
-            <h2 className="text-heading-sm font-bold text-card-foreground mb-4">
-              {t('includedItems')}
-            </h2>
-            <ul className="space-y-2">
-              {product.items.map((item, index) => {
-                const itemObj = item as {
-                  lesson?: { title?: string | null } | null
-                  featureKey?: string | null
-                }
-                const lessonTitle = itemObj.lesson?.title
-                const featureKey = itemObj.featureKey
-                const displayText =
-                  lessonTitle ??
-                  (featureKey ? t(`items.featureKeys.${featureKey}`) : null) ??
-                  t('items.unnamed')
-                return (
-                  <li
-                    key={index}
-                    className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                    {displayText}
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
+        {/* Product Contents — courseBlock + non-silent featureBlock */}
+        {(() => {
+          const contents = Array.isArray(product.contents) ? product.contents : []
+          // Pre-filter so we don't render an empty "What's included" section
+          // when every featureBlock is silent and there are no courseBlocks.
+          const visible = contents.filter((block) => {
+            if (block.blockType === 'featureBlock') {
+              return isPopulatedFeature(block.feature) && !block.feature.isSilent
+            }
+            if (block.blockType === 'courseBlock') {
+              return isPopulatedCourse(block.course)
+            }
+            return false
+          })
+          if (visible.length === 0) return null
+          return (
+            <div className="p-card-padding-lg border-b border-border/40">
+              <h2 className="text-heading-sm font-bold text-card-foreground mb-4">
+                {t('includedItems')}
+              </h2>
+              <ul className="space-y-2">
+                {visible.map((block, index) => (
+                  <ContentLine key={index} block={block} index={index} t={t} />
+                ))}
+              </ul>
+            </div>
+          )
+        })()}
 
         {/* Actions: Coupon + Buy */}
         <div className="p-card-padding-lg">

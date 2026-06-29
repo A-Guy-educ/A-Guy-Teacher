@@ -189,6 +189,43 @@ export interface ProductItem {
   lesson?: { title?: string | null } | null
 }
 
+/**
+ * Lightweight populated shapes returned by the product query after expanding
+ * the `course` and `feature` relationships on the inline contents blocks.
+ * Kept narrow on purpose — the storefront only needs display fields.
+ */
+export interface ProductCourseRef {
+  id: string
+  title?: string | null
+  slug?: string | null
+}
+
+export interface ProductFeatureRef {
+  id: string
+  key?: string | null
+  label?: string | null
+  type?: 'numeric' | 'boolean' | string | null
+  isSilent?: boolean | null
+}
+
+/**
+ * New product composition shape (post-Task-A in admin). Replaces the legacy
+ * `items: ProductItem[]` field. Each block is either a courseBlock (grants
+ * access to a course) or a featureBlock (grants a feature entitlement).
+ */
+export type ProductContentBlock =
+  | {
+      blockType: 'courseBlock'
+      course: ProductCourseRef | string
+      lessonTypes?: Array<'learning' | 'practice' | 'exam'> | null
+    }
+  | {
+      blockType: 'featureBlock'
+      feature: ProductFeatureRef | string
+      limit?: number | null
+      period?: 'day' | 'lifetime' | null
+    }
+
 export interface Product {
   id: string
   title: string
@@ -200,7 +237,13 @@ export interface Product {
   currency?: string | null
   billingType?: string | null
   interval?: string | null
+  /**
+   * Legacy field — pre-Task-A schema used a flat ProductItems[] join. Newer
+   * products use `contents` instead. Storefront should prefer `contents` and
+   * only fall back to `items` if a legacy product hasn't been migrated yet.
+   */
   items?: Array<string | ProductItem> | null
+  contents?: ProductContentBlock[] | null
   meta?: Meta | null
 }
 

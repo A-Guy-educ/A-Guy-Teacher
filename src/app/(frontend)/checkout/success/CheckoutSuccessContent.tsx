@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { Card, CardContent } from '@/ui/web/components/card'
 import { Button } from '@/ui/web/components/button'
@@ -24,6 +27,21 @@ export function CheckoutSuccessContent({
   productName,
 }: CheckoutSuccessContentProps) {
   const t = useTranslations('checkout')
+  const router = useRouter()
+
+  // Invalidate the Next.js client router cache once the transaction has flipped
+  // to `succeeded`. Without this, the buyer's next navigation (e.g. clicking
+  // into the course they just bought) would serve a cached layout/page from
+  // before the enrollment was created — they'd see a "needs payment" gate that
+  // only clears after a hard reload. router.refresh() bumps the cache so the
+  // next server fetch is fresh.
+  const hasRefreshedRef = useRef(false)
+  useEffect(() => {
+    if (transaction?.status === 'succeeded' && !hasRefreshedRef.current) {
+      hasRefreshedRef.current = true
+      router.refresh()
+    }
+  }, [transaction?.status, router])
 
   if (!sessionId) {
     return (

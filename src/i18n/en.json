@@ -962,6 +962,10 @@
     "includedItems": "What&apos;s Included",
     "items": {
       "unnamed": "Unnamed item",
+      "periods": {
+        "day": "day",
+        "lifetime": "lifetime"
+      },
       "featureKeys": {
         "live-sessions": "Live Sessions",
         "download-resources": "Downloadable Resources",
