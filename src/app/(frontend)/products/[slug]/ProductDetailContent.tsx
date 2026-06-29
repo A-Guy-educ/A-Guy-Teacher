@@ -37,19 +37,15 @@ function isPopulatedFeature(feature: unknown): feature is ProductFeatureRef {
 
 interface ContentLineProps {
   block: ProductContentBlock
-  index: number
   t: ReturnType<typeof useTranslations>
 }
 
-function ContentLine({ block, index, t }: ContentLineProps) {
+function ContentLine({ block, t }: ContentLineProps) {
   if (block.blockType === 'courseBlock') {
     if (!isPopulatedCourse(block.course)) return null
     const title = block.course.title ?? t('items.unnamed')
     return (
-      <li
-        key={index}
-        className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground"
-      >
+      <li className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground">
         <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
         {title}
       </li>
@@ -66,17 +62,17 @@ function ContentLine({ block, index, t }: ContentLineProps) {
     const limit = block.limit ?? null
     const period = block.period ?? null
     // Boolean features have no limit / period → just show the label.
-    // Numeric features render as "{limit} {label} / {period}" when both are set.
+    // Numeric features render as "{limit} {label} {period}" where the period
+    // value carries its own preposition for the locale (EN: "per day", HE:
+    // "ליום"). Joining with a plain space keeps both renderings idiomatic
+    // and avoids the double-"per" problem the slash separator caused in HE.
     let display = label
     if (limit !== null) {
       const periodLabel = period ? t(`items.periods.${period}`) : null
-      display = periodLabel ? `${limit} ${label} / ${periodLabel}` : `${limit} ${label}`
+      display = periodLabel ? `${limit} ${label} ${periodLabel}` : `${limit} ${label}`
     }
     return (
-      <li
-        key={index}
-        className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground"
-      >
+      <li className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground">
         <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
         {display}
       </li>
@@ -84,6 +80,22 @@ function ContentLine({ block, index, t }: ContentLineProps) {
   }
 
   return null
+}
+
+/**
+ * Stable React key for a content block — uses the populated id when
+ * available so admin reorders don't cause DOM nodes to be reused across
+ * logically different blocks. Falls back to the position index only when
+ * the block hasn't been populated yet (e.g. mid-migration).
+ */
+function blockKey(block: ProductContentBlock, index: number): string {
+  if (block.blockType === 'courseBlock' && isPopulatedCourse(block.course)) {
+    return `course:${block.course.id}`
+  }
+  if (block.blockType === 'featureBlock' && isPopulatedFeature(block.feature)) {
+    return `feature:${block.feature.id}`
+  }
+  return `idx:${index}`
 }
 
 export function ProductDetailContent({ product }: ProductDetailContentProps) {
@@ -102,6 +114,21 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
 
   const [couponCode, setCouponCode] = useState<string>('')
   const [discountedAmount, setDiscountedAmount] = useState<number | null>(null)
+
+  // Pre-filter the contents blocks so the "What's included" section header
+  // isn't rendered when every featureBlock is silent and there are no
+  // courseBlocks. Computed here (not inline) so the JSX stays readable.
+  const visibleBlocks = (Array.isArray(product.contents) ? product.contents : []).filter(
+    (block) => {
+      if (block.blockType === 'featureBlock') {
+        return isPopulatedFeature(block.feature) && !block.feature.isSilent
+      }
+      if (block.blockType === 'courseBlock') {
+        return isPopulatedCourse(block.course)
+      }
+      return false
+    },
+  )
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-section-md">
@@ -153,33 +180,18 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
         </div>
 
         {/* Product Contents — courseBlock + non-silent featureBlock */}
-        {(() => {
-          const contents = Array.isArray(product.contents) ? product.contents : []
-          // Pre-filter so we don't render an empty "What's included" section
-          // when every featureBlock is silent and there are no courseBlocks.
-          const visible = contents.filter((block) => {
-            if (block.blockType === 'featureBlock') {
-              return isPopulatedFeature(block.feature) && !block.feature.isSilent
-            }
-            if (block.blockType === 'courseBlock') {
-              return isPopulatedCourse(block.course)
-            }
-            return false
-          })
-          if (visible.length === 0) return null
-          return (
-            <div className="p-card-padding-lg border-b border-border/40">
-              <h2 className="text-heading-sm font-bold text-card-foreground mb-4">
-                {t('includedItems')}
-              </h2>
-              <ul className="space-y-2">
-                {visible.map((block, index) => (
-                  <ContentLine key={index} block={block} index={index} t={t} />
-                ))}
-              </ul>
-            </div>
-          )
-        })()}
+        {visibleBlocks.length > 0 && (
+          <div className="p-card-padding-lg border-b border-border/40">
+            <h2 className="text-heading-sm font-bold text-card-foreground mb-4">
+              {t('includedItems')}
+            </h2>
+            <ul className="space-y-2">
+              {visibleBlocks.map((block, index) => (
+                <ContentLine key={blockKey(block, index)} block={block} t={t} />
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Actions: Coupon + Buy */}
         <div className="p-card-padding-lg">

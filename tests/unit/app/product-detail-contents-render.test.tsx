@@ -81,10 +81,11 @@ describe('ProductDetailContent — contents rendering', () => {
         ])}
       />,
     )
-    // i18n stub returns the key as-is, so the rendered period word is
-    // "items.periods.day" — the exact final glyph doesn't matter, the
-    // assertion is that limit + label + period are all on screen.
-    const node = screen.getByText(/5 AI questions \/ items\.periods\.day/)
+    // i18n stub returns the key as-is, so the rendered period token is
+    // "items.periods.day". Format is "{limit} {label} {period}" — a plain
+    // space separator, not a slash (avoids the EN/HE "double per" problem
+    // since the period value carries its own preposition for the locale).
+    const node = screen.getByText(/5 AI questions items\.periods\.day/)
     expect(node).toBeTruthy()
   })
 

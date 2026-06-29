@@ -37,13 +37,23 @@ async function populateContents(
 ): Promise<ProductContentBlock[] | null> {
   if (!contents || contents.length === 0) return contents ?? null
 
+  function isPopulatedCourseRef(value: unknown): value is ProductCourseRef {
+    return !!value && typeof value === 'object' && 'title' in value
+  }
+  function isPopulatedFeatureRef(value: unknown): value is ProductFeatureRef {
+    return !!value && typeof value === 'object' && ('label' in value || 'isSilent' in value)
+  }
+
+  // Collect bare ids only — if a block is already populated upstream, skip it
+  // both here (so we don't dispatch a wasted Mongo query) and below (so we
+  // don't overwrite a richer object with our narrow projection).
   const courseIds: ObjectId[] = []
   const featureIds: ObjectId[] = []
   for (const block of contents) {
-    if (block.blockType === 'courseBlock') {
+    if (block.blockType === 'courseBlock' && !isPopulatedCourseRef(block.course)) {
       const id = relationId(block.course)
       if (id && ObjectId.isValid(id)) courseIds.push(new ObjectId(id))
-    } else if (block.blockType === 'featureBlock') {
+    } else if (block.blockType === 'featureBlock' && !isPopulatedFeatureRef(block.feature)) {
       const id = relationId(block.feature)
       if (id && ObjectId.isValid(id)) featureIds.push(new ObjectId(id))
     }
@@ -90,11 +100,16 @@ async function populateContents(
 
   return contents.map((block) => {
     if (block.blockType === 'courseBlock') {
+      // Already populated upstream (e.g. a future hook or a depth>0 fetch)?
+      // Keep it as-is — overwriting with our narrow projection would strip
+      // any extra fields the caller put there.
+      if (isPopulatedCourseRef(block.course)) return block
       const id = relationId(block.course)
       const populated = id ? courseById.get(id) : null
       return populated ? { ...block, course: populated } : block
     }
     if (block.blockType === 'featureBlock') {
+      if (isPopulatedFeatureRef(block.feature)) return block
       const id = relationId(block.feature)
       const populated = id ? featureById.get(id) : null
       return populated ? { ...block, feature: populated } : block

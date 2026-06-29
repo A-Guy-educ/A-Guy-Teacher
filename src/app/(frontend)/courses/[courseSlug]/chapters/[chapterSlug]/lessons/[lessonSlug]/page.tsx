@@ -32,17 +32,14 @@ import { extractAllMediaIds } from '@/ui/web/exerciserenderer/utils/extractMedia
 import { ContentPageBodyRenderer } from './_components/ContentPageBodyRenderer'
 import { stripHtml } from '@/utils/strip-html'
 import { findUserProgress } from '@/server/web-api/progress'
-
-// Must render fresh per request: the entitlement check inside reads
-// `enrollments` from Mongo, and after a new PayPal-funded enrollment the buyer
-// is one click away from this page. A cached version from before the
-// enrollment was created would show "needs payment" until the cache evicted.
-export const dynamic = 'force-dynamic'
-
 import { LessonAnalytics } from './_components/LessonAnalytics'
 import { LessonIntroPage } from './_components/LessonIntroPage'
 import { queryLessonBlocks } from '@/server/repos/queries/lesson-blocks'
 
+// Must render fresh per request: the entitlement check (via checkPaidAccess)
+// reads `enrollments` from Mongo, and after a new PayPal-funded enrollment the
+// buyer is one click away from this page. A cached version from before the
+// enrollment was created would show "needs payment" until the cache evicted.
 export const dynamic = 'force-dynamic'
 
 interface LessonPageProps {

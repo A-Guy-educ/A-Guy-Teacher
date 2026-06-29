@@ -17,12 +17,6 @@ import { LessonCard } from '../../../_components/LessonCard'
 import { EmptyState } from '../../../_components/EmptyState'
 import { LocaleFallbackBanner } from '../../../_components/LocaleFallbackBanner'
 
-// Must render fresh per request: the entitlement check inside reads
-// `enrollments` from Mongo, and after a new PayPal-funded enrollment the buyer
-// is one click away from this page. A cached version from before the
-// enrollment was created would show "needs payment" until the cache evicted.
-export const dynamic = 'force-dynamic'
-
 interface ChapterPageProps {
   params: Promise<{
     courseSlug: string

@@ -35,6 +35,13 @@ export function CheckoutSuccessContent({
   // before the enrollment was created — they'd see a "needs payment" gate that
   // only clears after a hard reload. router.refresh() bumps the cache so the
   // next server fetch is fresh.
+  //
+  // Note: this latch is deliberately one-shot per mount via useRef. If a
+  // transaction ever toggles pending → succeeded → pending (e.g. a refund
+  // arriving while the buyer is still on this page), it will NOT refresh again.
+  // That's the intended behavior — the cache invalidation only matters for the
+  // initial succeeded transition before the buyer navigates into the course.
+  // Don't replace this with a state-based gate unless you want refresh loops.
   const hasRefreshedRef = useRef(false)
   useEffect(() => {
     if (transaction?.status === 'succeeded' && !hasRefreshedRef.current) {

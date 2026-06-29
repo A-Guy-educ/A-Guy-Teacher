@@ -963,7 +963,7 @@
     "items": {
       "unnamed": "Unnamed item",
       "periods": {
-        "day": "day",
+        "day": "per day",
         "lifetime": "lifetime"
       },
       "featureKeys": {
