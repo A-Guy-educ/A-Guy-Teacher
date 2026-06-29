@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-import type {
-  Product,
-  ProductContentBlock,
-  ProductCourseRef,
-  ProductFeatureRef,
+import {
+  isPopulatedCourseRef,
+  isPopulatedFeatureRef,
+  type Product,
+  type ProductContentBlock,
 } from '@/infra/types/content'
 import { BuyButton } from './BuyButton'
 import { CouponInput } from './CouponInput'
@@ -27,14 +27,6 @@ function formatPrice(price: number, currency: string): string {
   return formatter.format(price)
 }
 
-function isPopulatedCourse(course: unknown): course is ProductCourseRef {
-  return !!course && typeof course === 'object' && 'id' in course
-}
-
-function isPopulatedFeature(feature: unknown): feature is ProductFeatureRef {
-  return !!feature && typeof feature === 'object' && 'id' in feature
-}
-
 interface ContentLineProps {
   block: ProductContentBlock
   t: ReturnType<typeof useTranslations>
@@ -42,7 +34,7 @@ interface ContentLineProps {
 
 function ContentLine({ block, t }: ContentLineProps) {
   if (block.blockType === 'courseBlock') {
-    if (!isPopulatedCourse(block.course)) return null
+    if (!isPopulatedCourseRef(block.course)) return null
     const title = block.course.title ?? t('items.unnamed')
     return (
       <li className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground">
@@ -53,7 +45,7 @@ function ContentLine({ block, t }: ContentLineProps) {
   }
 
   if (block.blockType === 'featureBlock') {
-    if (!isPopulatedFeature(block.feature)) return null
+    if (!isPopulatedFeatureRef(block.feature)) return null
     // Silent features (e.g. background chat-limit) are intentionally hidden
     // from the storefront — admin marks them isSilent=true so the buyer never
     // sees the limit value before purchase.
@@ -68,7 +60,18 @@ function ContentLine({ block, t }: ContentLineProps) {
     // and avoids the double-"per" problem the slash separator caused in HE.
     let display = label
     if (limit !== null) {
-      const periodLabel = period ? t(`items.periods.${period}`) : null
+      // If admin's Payload schema ever grows beyond 'day' | 'lifetime' (e.g.
+      // adds 'week' / 'month') without a matching i18n key landing here, t()
+      // returns the raw key string ("items.periods.month") — which would
+      // leak through to the buyer-facing receipt. Detect that pass-through
+      // and fall back to the raw period word so we at least show something
+      // intelligible.
+      let periodLabel: string | null = null
+      if (period) {
+        const key = `items.periods.${period}`
+        const translated = t(key)
+        periodLabel = translated === key ? period : translated
+      }
       display = periodLabel ? `${limit} ${label} ${periodLabel}` : `${limit} ${label}`
     }
     return (
@@ -89,10 +92,10 @@ function ContentLine({ block, t }: ContentLineProps) {
  * the block hasn't been populated yet (e.g. mid-migration).
  */
 function blockKey(block: ProductContentBlock, index: number): string {
-  if (block.blockType === 'courseBlock' && isPopulatedCourse(block.course)) {
+  if (block.blockType === 'courseBlock' && isPopulatedCourseRef(block.course)) {
     return `course:${block.course.id}`
   }
-  if (block.blockType === 'featureBlock' && isPopulatedFeature(block.feature)) {
+  if (block.blockType === 'featureBlock' && isPopulatedFeatureRef(block.feature)) {
     return `feature:${block.feature.id}`
   }
   return `idx:${index}`
@@ -121,10 +124,10 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
   const visibleBlocks = (Array.isArray(product.contents) ? product.contents : []).filter(
     (block) => {
       if (block.blockType === 'featureBlock') {
-        return isPopulatedFeature(block.feature) && !block.feature.isSilent
+        return isPopulatedFeatureRef(block.feature) && !block.feature.isSilent
       }
       if (block.blockType === 'courseBlock') {
-        return isPopulatedCourse(block.course)
+        return isPopulatedCourseRef(block.course)
       }
       return false
     },

@@ -194,6 +194,35 @@ describe('queryProductBySlug — populated contents', () => {
     expect(block.course).toBe(COURSE_ID)
   })
 
+  it('treats a course populated with just { id, slug } as already-populated (no re-fetch, no overwrite)', async () => {
+    // Pins the unified "is populated" predicate: any object with an `id`
+    // counts as populated, regardless of which other fields the upstream
+    // projection happened to include. The server-side helper used to check
+    // for 'title' specifically — that would have re-fetched this block and
+    // potentially stripped fields the upstream caller intended to surface.
+    findOneSerializedMock.mockResolvedValueOnce({
+      id: PRODUCT_ID,
+      slug: 'narrow-projection',
+      title: 'Narrow Projection',
+      contents: [
+        {
+          blockType: 'courseBlock',
+          // No `title` — only id + slug, e.g. from a projection like { id, slug }
+          course: { id: COURSE_ID, slug: 'already' },
+        },
+      ],
+    })
+
+    const result = await queryProductBySlug({ slug: 'narrow-projection' })
+
+    const block = result?.contents?.[0]
+    if (block?.blockType !== 'courseBlock') throw new Error('wrong block type')
+    if (typeof block.course !== 'object') throw new Error('course should still be object')
+    // Slug should be preserved untouched; the populator must NOT have re-fetched.
+    expect(block.course.slug).toBe('already')
+    expect(coursesToArrayMock).not.toHaveBeenCalled()
+  })
+
   it('does NOT overwrite an already-populated course relation (preserves richer upstream shape)', async () => {
     // Simulates a future hooked write or a depth>0 fetch where the block
     // arrives with `course` already as a populated object. The narrow

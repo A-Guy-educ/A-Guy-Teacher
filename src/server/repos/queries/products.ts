@@ -2,11 +2,13 @@ import { ObjectId } from 'mongodb'
 import { cache } from 'react'
 
 import { getContentDb, relationId, serializeDoc } from '@/infra/db/content-db'
-import type {
-  Product,
-  ProductContentBlock,
-  ProductCourseRef,
-  ProductFeatureRef,
+import {
+  isPopulatedCourseRef,
+  isPopulatedFeatureRef,
+  type Product,
+  type ProductContentBlock,
+  type ProductCourseRef,
+  type ProductFeatureRef,
 } from '@/infra/types/content'
 import { findManySerialized, findOneSerialized } from '../mongo'
 
@@ -37,16 +39,11 @@ async function populateContents(
 ): Promise<ProductContentBlock[] | null> {
   if (!contents || contents.length === 0) return contents ?? null
 
-  function isPopulatedCourseRef(value: unknown): value is ProductCourseRef {
-    return !!value && typeof value === 'object' && 'title' in value
-  }
-  function isPopulatedFeatureRef(value: unknown): value is ProductFeatureRef {
-    return !!value && typeof value === 'object' && ('label' in value || 'isSilent' in value)
-  }
-
   // Collect bare ids only — if a block is already populated upstream, skip it
   // both here (so we don't dispatch a wasted Mongo query) and below (so we
-  // don't overwrite a richer object with our narrow projection).
+  // don't overwrite a richer object with our narrow projection). The
+  // "is populated" predicate is shared with the client renderer via
+  // src/infra/types/content.ts so they can never disagree.
   const courseIds: ObjectId[] = []
   const featureIds: ObjectId[] = []
   for (const block of contents) {

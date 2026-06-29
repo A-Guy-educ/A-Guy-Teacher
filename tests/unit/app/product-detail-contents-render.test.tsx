@@ -81,12 +81,42 @@ describe('ProductDetailContent — contents rendering', () => {
         ])}
       />,
     )
-    // i18n stub returns the key as-is, so the rendered period token is
-    // "items.periods.day". Format is "{limit} {label} {period}" — a plain
-    // space separator, not a slash (avoids the EN/HE "double per" problem
-    // since the period value carries its own preposition for the locale).
-    const node = screen.getByText(/5 AI questions items\.periods\.day/)
+    // The i18n stub returns the key as-is. The component's safety net
+    // detects that pass-through (translated === key → admin added a new
+    // period value without a matching i18n key) and falls back to the raw
+    // period word, so the rendered string is "5 AI questions day" — not
+    // "5 AI questions items.periods.day". Format is "{limit} {label}
+    // {period}" with a plain space separator; the period value carries
+    // its own preposition in real locales (EN: "per day", HE: "ליום").
+    const node = screen.getByText(/5 AI questions day/)
     expect(node).toBeTruthy()
+  })
+
+  it('falls back to the raw period word when admin uses a value with no matching i18n key (e.g. future "week"/"month")', async () => {
+    render(
+      <ProductDetailContent
+        product={buildProduct([
+          {
+            blockType: 'featureBlock',
+            feature: {
+              id: 'f-future',
+              key: 'reports',
+              label: 'Reports',
+              type: 'numeric',
+              isSilent: false,
+            },
+            limit: 3,
+            // Cast: TypeScript narrows period to 'day' | 'lifetime', but admin
+            // could grow the enum without web following — that's exactly what
+            // the fallback exists for.
+            period: 'month' as unknown as 'day',
+          },
+        ])}
+      />,
+    )
+    // Safety net should fall back to the raw word, NOT leak the i18n key.
+    expect(screen.getByText(/3 Reports month/)).toBeTruthy()
+    expect(screen.queryByText(/items\.periods\.month/)).toBeNull()
   })
 
   it('renders a boolean (no-limit) featureBlock as just the label', () => {

@@ -226,6 +226,22 @@ export type ProductContentBlock =
       period?: 'day' | 'lifetime' | null
     }
 
+/**
+ * Single source of truth for "is this relation populated?" — used by BOTH the
+ * server-side populator (skip re-fetching) and the client-side renderer
+ * (skip rendering bare-id blocks). Checks `'id' in value` because every
+ * populated doc has an `id` after `serializeDoc` runs, regardless of what
+ * other fields the projection happened to include. Any narrower predicate
+ * (e.g. checking 'title' / 'label') breaks if someone changes the projection.
+ */
+export function isPopulatedCourseRef(value: unknown): value is ProductCourseRef {
+  return !!value && typeof value === 'object' && 'id' in value
+}
+
+export function isPopulatedFeatureRef(value: unknown): value is ProductFeatureRef {
+  return !!value && typeof value === 'object' && 'id' in value
+}
+
 export interface Product {
   id: string
   title: string
@@ -239,8 +255,10 @@ export interface Product {
   interval?: string | null
   /**
    * Legacy field — pre-Task-A schema used a flat ProductItems[] join. Newer
-   * products use `contents` instead. Storefront should prefer `contents` and
-   * only fall back to `items` if a legacy product hasn't been migrated yet.
+   * products use `contents` instead, and the storefront no longer renders
+   * `items` anywhere. Field is kept here only to typecheck during the
+   * admin-side migration window; remove once admin confirms no products
+   * still have it populated.
    */
   items?: Array<string | ProductItem> | null
   contents?: ProductContentBlock[] | null
