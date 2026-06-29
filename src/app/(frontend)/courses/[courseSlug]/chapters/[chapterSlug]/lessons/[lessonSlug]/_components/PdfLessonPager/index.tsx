@@ -10,6 +10,8 @@ import { Media as MediaComponent } from '@/ui/web/media'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { BookOpen, ChevronLeft, ChevronRight, FileText, Loader2, Sparkles } from 'lucide-react'
 import { usePdfLessonPager } from './usePdfLessonPager'
+import { useState, useCallback } from 'react'
+import { cn } from '@/infra/utils/ui'
 
 interface PdfLessonPagerProps {
   validFiles: Media[]
@@ -66,24 +68,43 @@ export function PdfLessonPager({
     initialPageState,
   })
 
+  const [currentFileIndex, setCurrentFileIndex] = useState(0)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+
+  const hasMultipleFiles = validFiles.length > 1
+  const canGoFilePrev = currentFileIndex > 0
+  const canGoFileNext = currentFileIndex < validFiles.length - 1
+  const minSwipeDistance = 50
+
+  const handleFilePrev = useCallback(() => {
+    setCurrentFileIndex((prev) => Math.max(0, prev - 1))
+  }, [])
+
+  const handleFileNext = useCallback(() => {
+    setCurrentFileIndex((prev) => Math.min(validFiles.length - 1, prev + 1))
+  }, [validFiles.length])
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+    if (isLeftSwipe && canGoFileNext) handleFileNext()
+    if (isRightSwipe && canGoFilePrev) handleFilePrev()
+  }
+
   if (pageState.type === 'pdf') {
-    const primaryContent = (
-      <div className="w-full flex flex-col gap-content-gap">
-        {validFiles.map((file) => (
-          <div key={file.id} className="w-full h-[calc(100vh-120px)]">
-            <div className="border rounded-lg overflow-hidden bg-card shadow-card h-full">
-              <MediaComponent
-                resource={file}
-                className="w-full h-full"
-                htmlElement={null}
-                lessonId={lessonId}
-                courseId={courseSlug}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    )
+    const currentFile = validFiles[currentFileIndex]
 
     return (
       <ExerciseWorkspace
@@ -91,11 +112,40 @@ export function PdfLessonPager({
         backUrl={backUrl}
         primaryContent={
           <div className="h-full flex flex-col min-h-0">
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <div className="w-full p-card-padding-sm md:p-card-padding">{primaryContent}</div>
+            <div
+              className="flex-1 overflow-y-auto min-h-0"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
+              <div className="w-full p-card-padding-sm md:p-card-padding">
+                {currentFile && (
+                  <div className="w-full h-[calc(100vh-120px)]">
+                    <div className="border rounded-lg overflow-hidden bg-card shadow-card h-full flex flex-col">
+                      {hasMultipleFiles && (
+                        <div className="flex items-center justify-center gap-2 py-2 px-4 bg-muted/50 border-b border-border/50 text-body-sm text-muted-foreground shrink-0">
+                          <FileText className="w-4 h-4" />
+                          <span>
+                            {currentFileIndex + 1} / {validFiles.length}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-h-0">
+                        <MediaComponent
+                          resource={currentFile}
+                          className="w-full h-full"
+                          htmlElement={null}
+                          lessonId={lessonId}
+                          courseId={courseSlug}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="shrink-0 border-t border-border bg-card px-4 py-3">
+            <div className="shrink-0 border-t border-border bg-card/80 backdrop-blur-xl px-4 py-3">
               <div className="flex justify-between items-center">
                 <Button
                   variant="ghost"
@@ -106,6 +156,41 @@ export function PdfLessonPager({
                   <ChevronRight className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />
                   {t('exercisesPagerPrev')}
                 </Button>
+
+                {hasMultipleFiles && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleFilePrev}
+                      disabled={!canGoFilePrev}
+                      aria-label="Previous file"
+                      className={cn(
+                        'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                        !canGoFilePrev
+                          ? 'text-muted-foreground/40'
+                          : 'bg-muted text-foreground hover:bg-muted/80',
+                      )}
+                    >
+                      <ChevronRight className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />
+                    </button>
+                    <span className="text-body-xs text-muted-foreground min-w-[3ch] text-center">
+                      {currentFileIndex + 1}/{validFiles.length}
+                    </span>
+                    <button
+                      onClick={handleFileNext}
+                      disabled={!canGoFileNext}
+                      aria-label="Next file"
+                      className={cn(
+                        'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-normal cursor-pointer',
+                        !canGoFileNext
+                          ? 'text-muted-foreground/40'
+                          : 'bg-muted text-foreground hover:bg-muted/80',
+                      )}
+                    >
+                      <ChevronLeft className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />
+                    </button>
+                  </div>
+                )}
+
                 <Button
                   variant="default"
                   onClick={handleNext}
