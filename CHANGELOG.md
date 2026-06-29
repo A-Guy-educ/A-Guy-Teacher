@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #642: שיפור ניווט PDF — תצוגת קובץ בודד עם כפתורי עמודים ([#647](https://github.com/A-Guy-educ/A-Guy-Web/pull/647)) — @kodyade[bot]
 - #644: #643 ניווט PDF ב-LessonPager - כל קובץ כעמוד נפרד ([#645](https://github.com/A-Guy-educ/A-Guy-Web/pull/645)) — @kodyade[bot]
 - #637: [Dark Mode] טקסט כהה על רקע כהה ב-SectionHeader inverted ([#639](https://github.com/A-Guy-educ/A-Guy-Web/pull/639)) — @kodyade[bot]
 - #636: [Dark Mode] SectionHeader inverted description + KnowledgeAndFeat… ([#640](https://github.com/A-Guy-educ/A-Guy-Web/pull/640)) — @kodyade[bot]
