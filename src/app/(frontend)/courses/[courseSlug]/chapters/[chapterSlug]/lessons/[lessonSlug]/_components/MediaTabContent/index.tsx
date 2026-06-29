@@ -9,9 +9,10 @@
  * directly without the paging intro/outro of PdfLessonPager.
  *
  * When multiple files are present, shows one file at a time with prev/next navigation.
+ * Supports URL deep-linking via ?file=N query parameter (1-indexed).
  */
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import type { FormulaSheet, Media } from '@/infra/types/content'
 import { ChatInterface } from '@/ui/web/chat'
 import { Media as MediaComponent } from '@/ui/web/media'
@@ -45,6 +46,39 @@ export function MediaTabContent({
   const [currentFileIndex, setCurrentFileIndex] = useState(0)
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
+
+  // Deep-link detection: read ?file=N from URL on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const fileParam = params.get('file')
+    if (fileParam !== null) {
+      const fileIndex = parseInt(fileParam, 10) - 1
+      if (!isNaN(fileIndex) && fileIndex >= 0 && fileIndex < validFiles.length) {
+        setCurrentFileIndex(fileIndex)
+      }
+    }
+  }, [validFiles.length])
+
+  // Sync URL when currentFileIndex changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (validFiles.length <= 1) return
+
+    const params = new URLSearchParams(window.location.search)
+    const expectedFile = currentFileIndex + 1
+    const currentFile = params.get('file')
+
+    if (String(expectedFile) !== currentFile) {
+      if (expectedFile > 1) {
+        params.set('file', String(expectedFile))
+      } else {
+        params.delete('file')
+      }
+      const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`
+      window.history.replaceState(null, '', newUrl)
+    }
+  }, [currentFileIndex, validFiles.length])
 
   const hasMultipleFiles = validFiles.length > 1
   const canGoPrev = currentFileIndex > 0
