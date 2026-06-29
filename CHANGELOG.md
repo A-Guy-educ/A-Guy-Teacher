@@ -1819,6 +1819,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #649: [MediaTabContent] ניווט בתוך קבצי PDF ב-interactive mode ([#650](https://github.com/A-Guy-educ/A-Guy-Web/pull/650)) — @kodyade[bot]
 - #635: [Dark Mode] טקסט כהה על רקע כהה בסקציית features בדף הראשי ([#646](https://github.com/A-Guy-educ/A-Guy-Web/pull/646)) — @kodyade[bot]
 - #633: [Landing] Dark mode: text "ידע אנושי שהומר לטכנולוגיה" section ha… ([#648](https://github.com/A-Guy-educ/A-Guy-Web/pull/648)) — @kodyade[bot]
 - #642: שיפור ניווט PDF — תצוגת קובץ בודד עם כפתורי עמודים ([#647](https://github.com/A-Guy-educ/A-Guy-Web/pull/647)) — @kodyade[bot]
