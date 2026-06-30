@@ -1,8 +1,16 @@
 {
   "name": "vercel-production-deploy",
   "role": "primitive",
-  "describe": "Deploy main branch to Vercel Production.",
-  "inputs": [],
+  "describe": "Deploy the configured release branch to Vercel Production, verify the public production URL, and optionally run the configured smoke command.",
+  "inputs": [
+    {
+      "name": "goal",
+      "flag": "--goal",
+      "type": "string",
+      "required": false,
+      "describe": "Managed goal id to report production deployment evidence to."
+    }
+  ],
   "claudeCode": {
     "model": "inherit",
     "permissionMode": "default",
@@ -30,6 +38,9 @@
     ],
     "postflight": [
       {
+        "script": "applyCapabilityReports"
+      },
+      {
         "script": "appendCompanyActivity"
       }
     ]
@@ -40,5 +51,10 @@
       "VERCEL_PRODUCTION_DEPLOY_FAILED",
       "AGENT_NOT_RUN"
     ]
-  }
+  },
+  "action": "vercel-production-deploy",
+  "agent": "cto",
+  "mentions": [
+    "aguyaharonyair"
+  ]
 }

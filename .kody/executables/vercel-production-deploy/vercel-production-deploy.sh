@@ -2,9 +2,12 @@
 set -euo pipefail
 
 ORIGINAL_BRANCH=""
+goal_id="${KODY_ARG_GOAL:-}"
+failure_reported=0
 
 fail() {
   echo "FAILED: $1"
+  emit_goal_failure "$1" || true
   exit 1
 }
 
@@ -14,8 +17,67 @@ require_command() {
   fi
 }
 
+emit_goal_report() {
+  local evidence="$1"
+  shift
+  [[ -z "$goal_id" ]] && return 0
+  python3 - "$goal_id" "$evidence" "$@" <<'PY'
+import json
+import sys
+
+goal_id = sys.argv[1]
+evidence = sys.argv[2]
+facts = {}
+for pair in sys.argv[3:]:
+    key, value = pair.split("=", 1)
+    if value == "":
+        continue
+    facts[key] = int(value) if value.isdigit() else value
+
+print("KODY_CAPABILITY_REPORT=" + json.dumps({
+    "target": {"type": "goal", "id": goal_id},
+    "evidence": {evidence: True},
+    "facts": facts,
+}, separators=(",", ":")))
+print("KODY_CAPABILITY_RESULT=" + json.dumps({
+    "version": 1,
+    "status": "pass",
+    "summary": f"{evidence} reported",
+    "facts": facts,
+}, separators=(",", ":")))
+PY
+}
+
+emit_goal_failure() {
+  local summary="$1"
+  [[ -z "$goal_id" ]] && return 0
+  [[ "$failure_reported" = "1" ]] && return 0
+  failure_reported=1
+  command -v python3 >/dev/null 2>&1 || return 0
+  python3 - "$summary" <<'PY'
+import json
+import sys
+
+summary = sys.argv[1]
+print("KODY_CAPABILITY_RESULT=" + json.dumps({
+    "version": 1,
+    "status": "fail",
+    "summary": summary,
+    "facts": {},
+}, separators=(",", ":")))
+PY
+}
+
+on_error() {
+  local status="$1"
+  emit_goal_failure "Vercel production deploy failed with exit ${status}" || true
+}
+
+trap 'on_error "$?"' ERR
+
 require_command git
 require_command node
+require_command curl
 
 vercel_cmd=(vercel)
 if ! command -v vercel >/dev/null 2>&1; then
@@ -55,23 +117,25 @@ value_or_variable() {
   printf '%s' "$default_value"
 }
 
-SCOPE="$(value_or_variable "${VERCEL_SCOPE:-}" "VERCEL_SCOPE" "aguy")"
-DEPLOY_BRANCH="$(value_or_variable "${VERCEL_PRODUCTION_BRANCH:-}" "VERCEL_PRODUCTION_BRANCH" "main")"
+SCOPE="$(value_or_variable "${VERCEL_SCOPE:-}" "VERCEL_SCOPE")"
+DEPLOY_BRANCH="$(value_or_variable "${VERCEL_PRODUCTION_BRANCH:-}" "VERCEL_PRODUCTION_BRANCH" "${KODY_CFG_RELEASE_RELEASEBRANCH:-main}")"
 VERCEL_ORG_ID="$(value_or_variable "${VERCEL_ORG_ID:-}" "VERCEL_ORG_ID")"
 VERCEL_PROJECT_ID="$(value_or_variable "${VERCEL_PROJECT_ID:-}" "VERCEL_PROJECT_ID")"
+PRODUCTION_URL="$(value_or_variable "${PRODUCTION_URL:-}" "PRODUCTION_URL" "${KODY_CFG_RELEASE_PRODUCTIONURL:-}")"
+SMOKE_COMMAND="${KODY_CFG_RELEASE_SMOKECOMMAND:-}"
 export VERCEL_ORG_ID VERCEL_PROJECT_ID
 
 token="${VERCEL_ACCESS_TOKEN:-${VERCEL_TOKEN:-}}"
 if [ -z "$token" ]; then
-  fail "VERCEL_ACCESS_TOKEN is required"
+  fail "Kody secret VERCEL_ACCESS_TOKEN is required"
 fi
 
 if [ -z "$VERCEL_ORG_ID" ]; then
-  fail "VERCEL_ORG_ID is required"
+  fail "Kody secret VERCEL_ORG_ID is required"
 fi
 
 if [ -z "$VERCEL_PROJECT_ID" ]; then
-  fail "VERCEL_PROJECT_ID is required"
+  fail "Kody secret VERCEL_PROJECT_ID is required"
 fi
 
 ORIGINAL_BRANCH="$(git branch --show-current)"
@@ -97,10 +161,16 @@ fi
 git pull --ff-only origin "$DEPLOY_BRANCH"
 
 current_branch="$(git branch --show-current)"
-vercel_args=(--scope "$SCOPE" --token "$token")
+release_version="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync("package.json","utf8")); process.stdout.write(String(data.version || ""))')"
+vercel_args=(--token "$token")
+if [ -n "$SCOPE" ]; then
+  vercel_args=(--scope "$SCOPE" "${vercel_args[@]}")
+fi
 
 echo "Deploying ${current_branch} to Vercel production..."
-"${vercel_cmd[@]}" deploy --prod --yes --format=json "${vercel_args[@]}" | tee "$tmp_json"
+if ! "${vercel_cmd[@]}" deploy --prod --yes --format=json "${vercel_args[@]}" | tee "$tmp_json"; then
+  fail "Vercel production deploy command failed"
+fi
 
 deployment_url="$(
   # shellcheck disable=SC2016
@@ -114,9 +184,33 @@ deployment_url="$(
   ' "$tmp_json"
 )"
 
+curl -fsSL --max-time 30 "$deployment_url" >/dev/null || fail "Production deployment URL is not reachable: ${deployment_url}"
+
+if [ -n "$PRODUCTION_URL" ]; then
+  curl -fsSL --max-time 30 "$PRODUCTION_URL" >/dev/null || fail "Production URL is not reachable: ${PRODUCTION_URL}"
+fi
+
+smoke_status="skipped"
+if [ -n "$SMOKE_COMMAND" ]; then
+  smoke_status="failed"
+  export PRODUCTION_URL
+  if [ -n "$PRODUCTION_URL" ]; then
+    export SMOKE_BASE_URLS="${SMOKE_BASE_URLS:-$PRODUCTION_URL}"
+  fi
+  if timeout "$(( ${KODY_CFG_RELEASE_TIMEOUTMS:-600000} / 1000 ))" bash -c "$SMOKE_COMMAND"; then
+    smoke_status="passed"
+  else
+    fail "Production smoke command failed"
+  fi
+fi
+
+emit_goal_report "productionDeployed" "version=${release_version}" "productionDeploymentUrl=${deployment_url}" "productionBranch=${current_branch}" "productionUrl=${PRODUCTION_URL}" "smoke=${smoke_status}"
+
 cat <<RESULT
 DONE
 PR_SUMMARY:
-- Deployed ${current_branch} to Vercel production.
+- Deployed ${current_branch} (${release_version}) to Vercel production.
 - Production deployment URL: ${deployment_url}.
+${PRODUCTION_URL:+- Production URL: ${PRODUCTION_URL}.}
+${SMOKE_COMMAND:+- Smoke command: ${smoke_status}.}
 RESULT
