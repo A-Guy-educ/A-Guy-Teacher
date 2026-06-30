@@ -108,7 +108,7 @@ describe('CourseCard component', () => {
     expect(storedProfile.lastVisit).toBeTruthy()
 
     // Check navigation was called (second arg is optional navigation options)
-    expect(mockPush).toHaveBeenCalledWith('/', undefined)
+    expect(mockPush).toHaveBeenCalledWith('/courses/test-course', undefined)
   })
 
   it('preserves existing mood when updating localStorage', () => {
@@ -193,7 +193,7 @@ describe('CourseCard content status badges', () => {
     fireEvent.click(openButton)
 
     // Navigation should have been called
-    expect(mockPush).toHaveBeenCalledWith('/', undefined)
+    expect(mockPush).toHaveBeenCalledWith('/courses/test-course', undefined)
   })
 
   it('does not render badge when justAdded has expired date', () => {
@@ -227,5 +227,18 @@ describe('CourseCard content status badges', () => {
     renderWithI18n(futureCourse)
 
     expect(screen.getByText('New')).toBeTruthy()
+  })
+})
+
+describe('CourseCard slug guard', () => {
+  it('does not navigate when course.slug is missing', () => {
+    const courseWithoutSlug = { ...mockCourse, slug: undefined }
+    renderWithI18n(courseWithoutSlug)
+
+    const openButton = screen.getAllByRole('button', { name: enMessages.courses.openCourse })[0]
+    fireEvent.click(openButton)
+
+    // Navigation should NOT have been called
+    expect(mockPush).not.toHaveBeenCalled()
   })
 })

@@ -114,8 +114,8 @@ export function QuestionCard({
                   disabled={disabled || loading}
                   size="lg"
                   className={cn(
-                    'rounded-xl font-bold text-body-md',
-                    disabled && 'bg-success hover:bg-success/90 text-white',
+                    'rounded-xl font-bold text-body-md text-white',
+                    disabled && 'bg-success hover:bg-success/90',
                   )}
                 >
                   {loading ? (

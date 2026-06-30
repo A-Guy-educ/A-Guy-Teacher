@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.26.3 — 2026-06-30
+
+_No notable commits since the last release._
 ## v0.26.2 — 2026-06-25
 
 _No notable commits since the last release._
@@ -1819,6 +1822,40 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #654: [Routing/Duplication] Lesson page 404s due to raw spaces in slug … ([#655](https://github.com/A-Guy-educ/A-Guy-Web/pull/655)) — @kodyade[bot]
+- fix: Cache + product page issues after billing refactor ([#658](https://github.com/A-Guy-educ/A-Guy-Web/pull/658)) — @aguyshayb
+- chore: release v0.26.3 ([#660](https://github.com/A-Guy-educ/A-Guy-Web/pull/660)) — @kodyade[bot]
+- #649: [MediaTabContent] ניווט בתוך קבצי PDF ב-interactive mode ([#650](https://github.com/A-Guy-educ/A-Guy-Web/pull/650)) — @kodyade[bot]
+- #635: [Dark Mode] טקסט כהה על רקע כהה בסקציית features בדף הראשי ([#646](https://github.com/A-Guy-educ/A-Guy-Web/pull/646)) — @kodyade[bot]
+- #633: [Landing] Dark mode: text "ידע אנושי שהומר לטכנולוגיה" section ha… ([#648](https://github.com/A-Guy-educ/A-Guy-Web/pull/648)) — @kodyade[bot]
+- #642: שיפור ניווט PDF — תצוגת קובץ בודד עם כפתורי עמודים ([#647](https://github.com/A-Guy-educ/A-Guy-Web/pull/647)) — @kodyade[bot]
+- #644: #643 ניווט PDF ב-LessonPager - כל קובץ כעמוד נפרד ([#645](https://github.com/A-Guy-educ/A-Guy-Web/pull/645)) — @kodyade[bot]
+- #637: [Dark Mode] טקסט כהה על רקע כהה ב-SectionHeader inverted ([#639](https://github.com/A-Guy-educ/A-Guy-Web/pull/639)) — @kodyade[bot]
+- #636: [Dark Mode] SectionHeader inverted description + KnowledgeAndFeat… ([#640](https://github.com/A-Guy-educ/A-Guy-Web/pull/640)) — @kodyade[bot]
+- #129: Doc coverage: src/client/hooks/ — Client-side React hooks (8 file… ([#130](https://github.com/A-Guy-educ/A-Guy-Web/pull/130)) — @kodyade[bot]
+- #261: Bug fixes — non-blocking for launch ([#632](https://github.com/A-Guy-educ/A-Guy-Web/pull/632)) — @kodyade[bot]
+- #559: Seed legal pages: terms, privacy, cancellation, AI statement ([#631](https://github.com/A-Guy-educ/A-Guy-Web/pull/631)) — @kodyade[bot]
+- #627: [CourseCard] Navigate to course page instead of home on click ([#630](https://github.com/A-Guy-educ/A-Guy-Web/pull/630)) — @kodyade[bot]
+- #257: Mobile learning UX — fullscreen exercises + embedded formulas/not… ([#628](https://github.com/A-Guy-educ/A-Guy-Web/pull/628)) — @kodyade[bot]
+- #626: Language switch on course pages shows 404 instead of graceful fal… ([#629](https://github.com/A-Guy-educ/A-Guy-Web/pull/629)) — @kodyade[bot]
+- #560: seed-legal-pages.ts — script that creates 4 legal pages in CMS, u… ([#621](https://github.com/A-Guy-educ/A-Guy-Web/pull/621)) — @kodyade[bot]
+- #280: dev CI is red - Kody auto-fix ([#625](https://github.com/A-Guy-educ/A-Guy-Web/pull/625)) — @kodyade[bot]
+- #213: [P2] Posts pagination page crashes with 500 error ([#622](https://github.com/A-Guy-educ/A-Guy-Web/pull/622)) — @kodyade[bot]
+- #611: הצגת "בחירת מורה" רק למשתמשים חדשים ב-/start ([#620](https://github.com/A-Guy-educ/A-Guy-Web/pull/620)) — @kodyade[bot]
+- #609: [UI] כפתור "בדוק תשובה" - טקסט שחור על רקע כהה ([#618](https://github.com/A-Guy-educ/A-Guy-Web/pull/618)) — @kodyade[bot]
+- #606: [Bug] OAuth users can't log in after admin password reset ([#623](https://github.com/A-Guy-educ/A-Guy-Web/pull/623)) — @kodyade[bot]
+- #608: [/start] Skip welcome pane — open directly on wizard ([#619](https://github.com/A-Guy-educ/A-Guy-Web/pull/619)) — @kodyade[bot]
+- #603: [AI Command] Fix create-lesson schema to prevent page crashes ([#615](https://github.com/A-Guy-educ/A-Guy-Web/pull/615)) — @kodyade[bot]
+- #610: [Start] Add "בחר מורה" step to wizard — select teacher profile be… ([#617](https://github.com/A-Guy-educ/A-Guy-Web/pull/617)) — @kodyade[bot]
+- #174: docs-drift: AI Services README — comprehensive update + duplicate footer removal ([#177](https://github.com/A-Guy-educ/A-Guy-Web/pull/177)) — @kodyade[bot]
+- #613: [Docs] Update exercises/README.md after PRs #34, #68, #163 ([#616](https://github.com/A-Guy-educ/A-Guy-Web/pull/616)) — @kodyade[bot]
+- #317: [Exercises] כפתור "שאלה מנחה" צמוד מדי לכפתור "רמז" ([#614](https://github.com/A-Guy-educ/A-Guy-Web/pull/614)) — @kodyade[bot]
+- #604: [Client Robustness] Prevent LessonPage crashes from malformed or … ([#612](https://github.com/A-Guy-educ/A-Guy-Web/pull/612)) — @kodyade[bot]
+- #600: [Content Pages] Math equations fail to render in Lexical content … ([#607](https://github.com/A-Guy-educ/A-Guy-Web/pull/607)) — @kodyade[bot]
+- #602: [I18n] Translate empty lesson placeholder text "No exercises in t… ([#605](https://github.com/A-Guy-educ/A-Guy-Web/pull/605)) — @kodyade[bot]
+- #591: [mathlive] Upgrade to v0.110.0 — XSS vulnerability fix included ([#592](https://github.com/A-Guy-educ/A-Guy-Web/pull/592)) — @kodyade[bot]
+- #589: Remove redundant `undefined` from SERVER_URL fallback chain in ne… ([#590](https://github.com/A-Guy-educ/A-Guy-Web/pull/590)) — @kodyade[bot]
+- chore: promote dev to production v0.26.2 ([#585](https://github.com/A-Guy-educ/A-Guy-Web/pull/585)) — @aguyaharonyair
 - chore: release v0.26.2 ([#584](https://github.com/A-Guy-educ/A-Guy-Web/pull/584)) — @kodyade[bot]
 - #576: Auto-wrap math expressions in HtmlBlock with $...$ before KaTeX r… ([#581](https://github.com/A-Guy-educ/A-Guy-Web/pull/581)) — @kodyade[bot]
 - #579: [i18n] משתמשים חדשים מקבלים אנגלית במקום עברית ([#580](https://github.com/A-Guy-educ/A-Guy-Web/pull/580)) — @kodyade[bot]

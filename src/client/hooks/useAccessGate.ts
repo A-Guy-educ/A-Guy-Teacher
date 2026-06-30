@@ -2,7 +2,7 @@
  * @fileType hook
  * @domain access-control
  * @pattern access-gate
- * @ai-summary Timed access gate for anonymous users on gated content — shows a warning, then locks after GATED_DELAY_MS. Timer state is persisted in localStorage by courseSlug and pauses while the warning modal is visible.
+ * @ai-summary Enforces timed course access gates — gate timer survives page refresh via localStorage, shows warning/gated modals after elapsed anonymous time, pauses the timer while the warning modal is visible to prevent lock-out race conditions.
  *
  * Gotcha: Full-page OAuth reload clears stale timers on mount, but SPA navigation between gated pages in the same session does not clear the timer unless the user logs in.
  */

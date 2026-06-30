@@ -1,7 +1,10 @@
 /**
- * Output schemas for the lesson-duplication variation pipeline.
+ * Zod schemas documenting the intended output shapes for lesson duplication
  *
- * @ai-summary These schemas are NOT wired to Gemini's responseSchema — both passes use text-mode parsing with post-hoc safeParse validation. Gemini's responseSchema collapses nested object arrays into literal string arrays (issue #1748). If Genkit/Gemini structured-output support improves, pass 1 can opt back in by re-adding outputSchema. sanitizeAiBlocks + payload.create's strict Zod validation are the actual enforcement.
+ * @ai-summary These schemas are NOT wired to Gemini's responseSchema — both passes use text-mode parsing with post-hoc safeParse validation. Gemini's responseSchema misrenders nested object arrays as string arrays (issue #1748). If Genkit/Gemini structured-output support improves, pass 1 can opt back in by re-adding outputSchema. sanitizeAiBlocks + payload.create's strict Zod validation are the actual enforcement.
+ *
+ * @fileType schema
+ * @domain ai
  *
  * Status (2026-05-13):
  *  - `SolutionDerivationOutputSchema` (pass 2): POST-HOC VALIDATION ONLY.
@@ -19,18 +22,8 @@
  *    Genkit / Gemini structured-output support for nested object schemas
  *    improves, the variation service can opt back in by re-adding the
  *    `outputSchema: LessonVariationOutputSchema` argument to pass 1.
- *
- * Design notes:
- *  - Gemini's responseSchema implementation does not handle large discriminated
- *    unions, `.strict()` envelopes, or `additionalProperties: true` well.
- *    `ContentSchema` (the canonical Zod definition at
- *    src/server/payload/collections/Exercises/schemas.ts) is too rich to use
- *    directly. The pass-1 schema below is a deliberately relaxed shape that
- *    only constrains envelope + per-block `id`/`type`; block objects use
- *    `.passthrough()` so per-type fields survive.
- *  - `sanitizeAiBlocks` + `payload.create`'s strict Zod validation remain the
- *    canonical enforcement for pass-1 output.
  */
+
 import { z } from 'zod'
 
 // ─────────────────────────────────────────────────────────────────────────────

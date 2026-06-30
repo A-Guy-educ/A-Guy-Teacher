@@ -81,7 +81,14 @@ export const queryLessonsByChapter = cache(async ({ chapterId }: { chapterId: st
 })
 
 export const queryLessonBySlug = cache(async ({ slug }: { slug: string }) => {
-  const lesson = await findOneSerialized<Lesson>('lessons', visibleContentFilter({ slug }))
+  // Decode URL-encoded characters (e.g., %20 → space) before querying MongoDB
+  // so that encoded URLs like /lessons/item-mmq4tz7a-059190%20-%20Copy
+  // correctly match the stored slug item-mmq4tz7a-059190 - Copy
+  const decodedSlug = decodeURIComponent(slug)
+  const lesson = await findOneSerialized<Lesson>(
+    'lessons',
+    visibleContentFilter({ slug: decodedSlug }),
+  )
   return lesson ? populateLesson(lesson) : null
 })
 

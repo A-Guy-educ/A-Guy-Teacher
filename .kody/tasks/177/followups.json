@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Add INTERACTIVE_LESSON key to AIModelKey and AI_MODELS",
+    "body": "Add INTERACTIVE_LESSON to AIModelKey type in src/infra/llm/models.ts, add a corresponding entry to MODEL_REGISTRY and PROVIDER_MODEL_NAMES, and add it to the AI_MODELS convenience export. Then add it to the Model Configuration Table in docs/ai-services/README.md.",
+    "rationale": "The Service Registry documents Interactive Lesson with gemini-2.5-flash, but the Model Configuration Table has no entry for it. The interactive-lesson-generation-service.ts already hardcodes GEMINI_CONFIG.modelName = 'gemini-2.5-flash' and never reads from AI_MODELS — but adding the key would make the registry consistent.",
+    "priority": "low"
+  },
+  {
+    "title": "Resolve VARIATION_MODEL_VERSION hardcode vs models.ts gemini-2.5-pro mismatch",
+    "body": "The lesson-duplication-variation-service.ts hardcodes VARIATION_MODEL_VERSION = 'gemini-3.1-pro-preview' at line 40, but models.ts:155-157 has LESSON_DUPLICATION_VARIATION* keys mapping to 'gemini-2.5-pro'. Either (a) update models.ts to 'gemini-3.1-pro-preview' and refactor the service to read from AI_MODELS, or (b) accept the hardcode as intentional and update models.ts comments to note it.",
+    "rationale": "The registry values are misleading — the service runtime uses gemini-3.1-pro-preview but models.ts says gemini-2.5-pro. This is a pre-existing architectural issue surfaced by the docs drift work.",
+    "priority": "medium"
+  }
+]

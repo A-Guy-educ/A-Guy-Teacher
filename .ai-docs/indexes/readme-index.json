@@ -28,14 +28,6 @@
       "wordCount": 184
     },
     {
-      "path": ".kody/README.md",
-      "title": "Untitled",
-      "sections": [],
-      "relativeUrl": ".kody/README.md",
-      "category": ".kody",
-      "wordCount": 5
-    },
-    {
       "path": "docs/a-guy/README.md",
       "title": "A-Guy Documentation",
       "sections": ["Files"],
@@ -119,7 +111,7 @@
       ],
       "relativeUrl": "ai-services/README.md",
       "category": "ai-services",
-      "wordCount": 1379
+      "wordCount": 1834
     },
     {
       "path": "docs/block-rendering/README.md",
@@ -243,6 +235,7 @@
         "Architecture",
         "Data Model",
         "Quick Start",
+        "Lesson Entry Point (#34, #68)",
         "Implementation Details",
         "Supported Question Block Types",
         "Content Block Types",
@@ -255,7 +248,7 @@
       ],
       "relativeUrl": "exercises/README.md",
       "category": "exercises",
-      "wordCount": 996
+      "wordCount": 1185
     },
     {
       "path": "docs/features/chat-context/README.md",
@@ -494,15 +487,17 @@
       "path": "src/infra/loading/README.md",
       "title": "Loading State Manager",
       "sections": [
-        "Entry Point",
         "Architecture",
         "Core Concepts",
+        "Usage Patterns",
+        "Loading Types",
         "Gotchas",
+        "Entry Point",
         "Related Documentation"
       ],
       "relativeUrl": "src/infra/loading/README.md",
       "category": "src/infra",
-      "wordCount": 170
+      "wordCount": 400
     },
     {
       "path": "src/infra/README.md",
@@ -556,6 +551,14 @@
       "relativeUrl": "src/server/repos/README.md",
       "category": "src/server",
       "wordCount": 39
+    },
+    {
+      "path": "src/server/utils/README.md",
+      "title": "Server Utilities",
+      "sections": ["Utilities", "Entry Point", "Gotchas"],
+      "relativeUrl": "src/server/utils/README.md",
+      "category": "src/server",
+      "wordCount": 229
     },
     {
       "path": "src/ui/web/README.md",
@@ -626,12 +629,11 @@
     }
   ],
   "metadata": {
-    "generatedAt": "2026-06-17T20:51:58.781Z",
+    "generatedAt": "2026-06-28T12:45:51.748Z",
     "totalReadmes": 40,
     "categories": {
       ".agents": 1,
       ".claude": 1,
-      ".kody": 1,
       "root": 1,
       "README.md": 1,
       "a-guy": 1,
@@ -655,7 +657,7 @@
       "src/brands": 1,
       "src/client": 2,
       "src/infra": 4,
-      "src/server": 3,
+      "src/server": 4,
       "src/ui": 2,
       "tests": 1
     }

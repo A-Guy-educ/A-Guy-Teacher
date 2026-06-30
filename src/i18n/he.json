@@ -224,7 +224,8 @@
     "languageSwitcher": {
       "label": "שפה",
       "english": "אנגלית",
-      "hebrew": "עברית"
+      "hebrew": "עברית",
+      "fallbackNotice": "תוכן זה אינו זמין באנגלית עדיין."
     },
     "notFound": {
       "title": "404",
@@ -366,7 +367,7 @@
         "description": "טרם ביצעת רכישות. עיין במוצרים שלנו כדי להתחיל.",
         "cta": "עיין במוצרים"
       },
-      "backToPurchases": "חזרה לרכישות",
+      "backToPurchases": "חזור לרכישות",
       "purchasedOn": "נרכש ב",
       "amount": "סכום",
       "provider": "ספק",
@@ -400,9 +401,9 @@
     "liveContent": "תוכן חדש מתווסף באופן קבוע",
     "featuredTitle": "קורסים מומלצים",
     "featuredDescription": "קורסים שנבחרו בקפידה כדי לעזור לך במסע הלמידה שלך.",
-    "backToCourses": "חזרה לקורסים",
-    "backToChapter": "חזרה לפרק",
-    "back": "חזרה",
+    "backToCourses": "חזור לקורסים",
+    "backToChapter": "חזור לפרק",
+    "back": "חזור",
     "openCourse": "פתח קורס",
     "viewChapter": "צפה בפרק",
     "viewLesson": "צפה בשיעור",
@@ -434,7 +435,7 @@
     "trueFalseBadge": "נכון/לא נכון",
     "freeResponseBadge": "תשובה חופשית",
     "notFound": "לא נמצא",
-    "backToLesson": "חזרה לשיעור",
+    "backToLesson": "חזור לשיעור",
     "exerciseTitle": "תרגיל",
     "submitAnswer": "שלח תשובה",
     "checkAnswer": "בדוק תשובה",
@@ -548,7 +549,7 @@
     "lessonSummaryCorrectAnswers": "תשובות נכונות",
     "lessonSummaryScore": "ציון",
     "lessonSummaryNextLesson": "המשך לשיעור הבא",
-    "lessonSummaryBackToCourse": "חזרה לקורס",
+    "lessonSummaryBackToCourse": "חזור לקורס",
     "lessonSummaryRetry": "נסה שוב",
     "pdfLessonPagerIntroDescriptionPart1": "השיעור מכיל",
     "pdfLessonPagerIntroDescriptionPart2": "מסמכים. בואו נתחיל!",
@@ -627,7 +628,7 @@
       "generationFailedFallback": "אפשר עדיין לשאול על התמונה הזו בצ׳אט — המורה רואה את אותה תמונה.",
       "tryAgain": "נסה שוב",
       "askInChatHint": "או פשוט שאל בצ׳אט",
-      "backToUpload": "חזרה לתרגיל",
+      "backToUpload": "חזור לתרגיל",
       "resumeLesson": "המשך סרטון",
       "startOver": "התחל מחדש",
       "player": {
@@ -820,7 +821,7 @@
     }
   },
   "shop": {
-    "backToLearning": "חזרה ללמידה",
+    "backToLearning": "חזור ללמידה",
     "title": "חנות הקורסים",
     "subtitle": "בחרו את המסלול שמתאים לכם והתקדמו להצלחה במתמטיקה.",
     "membershipPlans": "מסלולי הצטרפות",
@@ -960,7 +961,19 @@
     "perYear": "לשנה",
     "includedItems": "מה כלול במוצר?",
     "items": {
-      "unnamed": "פריט ללא שם"
+      "unnamed": "פריט ללא שם",
+      "periods": {
+        "day": "ליום",
+        "lifetime": "לכל החיים"
+      },
+      "featureKeys": {
+        "live-sessions": "שיעורים פרטיים",
+        "download-resources": "משאבים להורדה",
+        "certificate": "תעודת סיום",
+        "priority-support": "תמיכה בעדיפות גבוהה",
+        "analytics": "לוח ניתוח נתונים",
+        "group-access": "גישה קבוצתית"
+      }
     },
     "buyButton": "רכוש עכשיו",
     "loginToBuy": "התחבר כדי לרכוש",
@@ -1005,5 +1018,11 @@
       "backToProduct": "נסה שוב",
       "browseProducts": "עיין בכל המוצרים"
     }
+  },
+  "legal": {
+    "termsOfService": "תנאי שימוש",
+    "privacyPolicy": "מדיניות פרטיות",
+    "cancellationRefund": "ביטולים והחזרים",
+    "aiUsageStatement": "שימוש בבינה מלאכותית"
   }
 }

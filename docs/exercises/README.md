@@ -48,7 +48,7 @@ The Exercises collection provides a minimal foundation for creating and managing
 │          Lesson Entry Page (LessonIntroPage)              │
 │  src/app/(frontend)/courses/.../LessonIntroPage/        │
 │                                                          │
-│  - Unified entry for all lesson types (#30, #67)        │
+│  - Unified entry for all lesson types (#34, #68)        │
 │  - Displays lesson title, description, content counts   │
 │  - Routes to DualModeLessonView or ExerciseWorkspace    │
 │  - Deep-link support via ?exerciseId= search param      │
@@ -131,9 +131,9 @@ Follow the complete manual verification guide:
 
 ---
 
-## Lesson Entry Point (#30, #67)
+## Lesson Entry Point (#34, #68)
 
-All lesson types (exercises, PDF, blocks-only) now route through `LessonIntroPage` as the unified entry point. Previously, PDF lessons bypassed `LessonIntroPage` and went directly to `PdfLessonPager` (#67 fix).
+All lesson types (exercises, PDF, blocks-only) now route through `LessonIntroPage` as the unified entry point. Previously, PDF lessons bypassed `LessonIntroPage` and went directly to `PdfLessonPager` (#68 fix).
 
 ### Routing Logic
 

@@ -2,8 +2,10 @@
  * @fileType hook
  * @domain utility
  * @pattern debounce
- * @ai-summary Delays propagating a value until it has stopped changing for `delay` ms. Used to avoid excessive API calls or re-renders on rapid input.
+ * @ai-summary Delays propagating a value by `delay` ms — delays the returned value until the input stops changing for the specified duration.
  */
+
+'use client'
 
 import { useState, useEffect } from 'react'
 

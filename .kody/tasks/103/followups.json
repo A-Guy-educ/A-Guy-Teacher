@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Pre-existing lint warnings block verify gate",
+    "body": "The verify tool reports lint failure (exit code 1) due to pre-existing warnings in files unrelated to src/infra/llm/: src/server/services/entitlement_check.ts (@ts-nocheck), src/server/services/exercise-conversion/v3/transform.ts (@ts-nocheck), src/server/services/lesson-context-conversion/create-exercises-from-extraction.ts (@ts-nocheck), src/server/services/lesson-duplication/source-exercises.ts (@ts-nocheck), and several UI component files with `any` types or design token issues. These are not introduced by the doc-coverage work and should be addressed separately.",
+    "rationale": "The verify gate uses lint as a quality gate; pre-existing warnings cause false failures that mask legitimate issues.",
+    "priority": "low"
+  },
+  {
+    "title": "Open PR for doc-coverage branch",
+    "body": "Branch 103-doc-coverage-srcinfrallm-aillm-infrastructure-laye has all @ai-summary headers added and typecheck passes. The PR has not yet been opened — run `gh pr create` against the dev branch once the lint gate is resolved or acknowledged.",
+    "rationale": "The task required opening a PR; git status shows the branch is checked out but no PR has been created yet.",
+    "priority": "high"
+  }
+]

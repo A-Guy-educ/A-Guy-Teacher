@@ -1,0 +1,82 @@
+{
+  "name": "auto-fix-ci",
+  "role": "watch",
+  "kind": "oneshot",
+  "describe": "Scan open PRs with settled failing CI and dispatch fix-ci comments.",
+  "inputs": [
+    {
+      "name": "duty",
+      "flag": "--duty",
+      "type": "string",
+      "required": true,
+      "describe": "Scheduled duty slug whose sidecar state is loaded and updated."
+    }
+  ],
+  "claudeCode": {
+    "model": "inherit",
+    "permissionMode": "default",
+    "maxTurns": 0,
+    "systemPromptAppend": null,
+    "cacheable": true,
+    "enableVerifyTool": false,
+    "tools": [],
+    "hooks": [],
+    "skills": [],
+    "commands": [],
+    "subagents": [],
+    "plugins": [],
+    "mcpServers": []
+  },
+  "cliTools": [
+    {
+      "name": "gh",
+      "install": {
+        "required": true,
+        "checkCommand": "command -v gh"
+      },
+      "verify": "gh auth status",
+      "usage": "Reads PRs and posts fix-ci or stuck comments.",
+      "allowedUses": [
+        "pr"
+      ]
+    },
+    {
+      "name": "jq",
+      "install": {
+        "required": true,
+        "checkCommand": "command -v jq"
+      },
+      "verify": "jq --version",
+      "usage": "Filters PR JSON and builds next-state JSON.",
+      "allowedUses": [
+        "json"
+      ]
+    }
+  ],
+  "inputArtifacts": [],
+  "outputArtifacts": [],
+  "scripts": {
+    "preflight": [
+      {
+        "script": "runScheduledExecutableTick",
+        "with": {
+          "jobsDir": ".kody/duties",
+          "slugArg": "duty",
+          "shell": "tick.sh",
+          "fenceLabel": "kody-job-next-state"
+        }
+      }
+    ],
+    "postflight": [
+      {
+        "script": "writeJobStateFile",
+        "with": {
+          "jobsDir": ".kody/duties"
+        }
+      },
+      {
+        "script": "appendCompanyActivity"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "taskId": "222",
+  "taskType": "pr",
+  "target": "103",
+  "outcome": "success",
+  "exitCode": 0,
+  "reason": "Applied style fix round: removed blank line between @ai-summary and @fileType in chat-message-role.ts (matching models.ts pattern); added @fileType/@domain to context-policy.ts (matching sibling files config-resolver.ts and models.ts). verify passes.",
+  "prUrl": null,
+  "runUrl": null,
+  "filesTouched": [
+    "src/infra/llm/chat-message-role.ts",
+    "src/infra/llm/context-policy.ts"
+  ],
+  "sessionLog": ".kody/sessions/gh-27868431262-1-1.jsonl",
+  "startedAt": "2026-06-20T00:00:00.000Z",
+  "finishedAt": "2026-06-20T00:00:00.000Z"
+}

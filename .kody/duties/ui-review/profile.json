@@ -1,0 +1,9 @@
+{
+  "name": "ui-review",
+  "describe": "UI Review",
+  "action": "ui-review",
+  "executable": "ui-review",
+  "every": "manual",
+  "staff": "kody",
+  "runner": "kody"
+}

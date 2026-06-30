@@ -1,0 +1,71 @@
+{
+  "name": "redispatch",
+  "role": "watch",
+  "kind": "oneshot",
+  "describe": "Detect stalled running Kody issues and plan or post resume actions.",
+  "inputs": [
+    {
+      "name": "duty",
+      "flag": "--duty",
+      "type": "string",
+      "required": true,
+      "describe": "Scheduled duty slug whose sidecar state is loaded and updated."
+    }
+  ],
+  "claudeCode": {
+    "model": "inherit",
+    "permissionMode": "default",
+    "maxTurns": 0,
+    "systemPromptAppend": null,
+    "cacheable": true,
+    "enableVerifyTool": false,
+    "tools": [],
+    "hooks": [],
+    "skills": [],
+    "commands": [],
+    "subagents": [],
+    "plugins": [],
+    "mcpServers": []
+  },
+  "cliTools": [
+    {
+      "name": "gh",
+      "install": {
+        "required": true,
+        "checkCommand": "command -v gh"
+      },
+      "verify": "gh auth status",
+      "usage": "Reads issues, comments, workflow runs, and posts resume/stuck comments when live.",
+      "allowedUses": [
+        "issue",
+        "api"
+      ]
+    }
+  ],
+  "inputArtifacts": [],
+  "outputArtifacts": [],
+  "scripts": {
+    "preflight": [
+      {
+        "script": "runScheduledExecutableTick",
+        "with": {
+          "jobsDir": ".kody/duties",
+          "slugArg": "duty",
+          "shell": "tick.sh",
+          "fenceLabel": "kody-job-next-state"
+        }
+      }
+    ],
+    "postflight": [
+      {
+        "script": "writeJobStateFile",
+        "with": {
+          "jobsDir": ".kody/duties"
+        }
+      },
+      {
+        "script": "appendCompanyActivity"
+      }
+    ]
+  }
+}

@@ -184,6 +184,72 @@ export interface ProductItem {
   title?: string | null
   description?: string | null
   price?: number | null
+  type?: 'lesson' | 'feature' | null
+  featureKey?: string | null
+  lesson?: { title?: string | null } | null
+}
+
+/**
+ * Lightweight populated shapes returned by the product query after expanding
+ * the `course` and `feature` relationships on the inline contents blocks.
+ * Kept narrow on purpose — the storefront only needs display fields.
+ */
+export interface ProductCourseRef {
+  id: string
+  title?: string | null
+  slug?: string | null
+}
+
+export interface ProductFeatureRef {
+  id: string
+  key?: string | null
+  label?: string | null
+  type?: 'numeric' | 'boolean' | string | null
+  isSilent?: boolean | null
+}
+
+/**
+ * New product composition shape (post-Task-A in admin). Replaces the legacy
+ * `items: ProductItem[]` field. Each block is either a courseBlock (grants
+ * access to a course) or a featureBlock (grants a feature entitlement).
+ */
+export type ProductContentBlock =
+  | {
+      blockType: 'courseBlock'
+      course: ProductCourseRef | string
+      lessonTypes?: Array<'learning' | 'practice' | 'exam'> | null
+    }
+  | {
+      blockType: 'featureBlock'
+      feature: ProductFeatureRef | string
+      limit?: number | null
+      period?: 'day' | 'lifetime' | null
+    }
+
+/**
+ * Single source of truth for "is this relation populated?" — used by BOTH the
+ * server-side populator (skip re-fetching) and the client-side renderer
+ * (skip rendering bare-id blocks). Checks `'id' in value` because every
+ * populated doc has an `id` after `serializeDoc` runs, regardless of what
+ * other fields the projection happened to include. Any narrower predicate
+ * (e.g. checking 'title' / 'label') breaks if someone changes the projection.
+ *
+ * The check is intentionally structural rather than nominal. We trust this
+ * because the only producers of these objects today are `serializeDoc` (server
+ * side, inside this repo) and the storefront renderer (consumer only, never
+ * mutates). If a future caller ever feeds user-supplied JSON through this
+ * predicate, tighten the contract — until then, structural is fine.
+ */
+export function isPopulatedCourseRef(value: unknown): value is ProductCourseRef {
+  // Tighter than `'id' in value` — also requires the id to actually be a
+  // string. Pure structural-key checks would let `{ id: null }` through and
+  // make the type narrowing unsound. Cheap defensive guard for the day this
+  // predicate is pointed at JSON we don't fully control.
+  return !!value && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'string'
+}
+
+export function isPopulatedFeatureRef(value: unknown): value is ProductFeatureRef {
+  return !!value && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'string'
 }
 
 export interface Product {
@@ -197,7 +263,22 @@ export interface Product {
   currency?: string | null
   billingType?: string | null
   interval?: string | null
+  /**
+   * Legacy field — pre-Task-A schema used a flat ProductItems[] join. Newer
+   * products use `contents` instead, and the storefront no longer RENDERS
+   * `items` anywhere.
+   *
+   * Caveat: still read by `src/app/api/payments/checkout/route.ts` via
+   * `resolveProductItems(product.items)` to compute
+   * `transaction.metadata.{itemIds,featureKeys}`. That metadata is
+   * informational only — admin's webhook handler grants entitlements by
+   * walking `product.contents` directly, not by reading the metadata — so
+   * the field being empty on new-shape products doesn't break enrollment.
+   * But the call site exists. Migrate it to `contents` (or just drop the
+   * metadata fields entirely) before removing `items` here.
+   */
   items?: Array<string | ProductItem> | null
+  contents?: ProductContentBlock[] | null
   meta?: Meta | null
 }
 

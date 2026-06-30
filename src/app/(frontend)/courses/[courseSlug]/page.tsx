@@ -3,7 +3,7 @@ import '@/infra/config/server-init'
 import { notFound } from 'next/navigation'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { isValidContentLocale } from '@/infra/types/content'
-import { queryCourseBySlug } from '@/server/repos/queries/courses'
+import { queryCourseBySlugWithFallback } from '@/server/repos/queries/courses'
 import { queryChaptersByCourse } from '@/server/repos/queries/chapters'
 import { queryLessonsByCourse } from '@/server/repos/queries/lessons'
 import { SystemParams } from '@/infra/config/system-params'
@@ -30,7 +30,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const { courseSlug } = await params
   const locale = await getSystemLocale()
   const contentLocale = isValidContentLocale(locale) ? locale : undefined
-  const course = await queryCourseBySlug({ slug: courseSlug, locale: contentLocale })
+  const { course, isLocaleFallback } = await queryCourseBySlugWithFallback({
+    slug: courseSlug,
+    locale: contentLocale,
+  })
 
   if (!course) {
     notFound()
@@ -104,6 +107,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
         lessons={lessons}
         courseSlug={courseSlug}
         lessonProgressMap={lessonProgressMap}
+        isLocaleFallback={isLocaleFallback}
       />
     </AccessGateProvider>
   )
@@ -165,7 +169,10 @@ export async function generateMetadata({ params }: CoursePageProps) {
   const { courseSlug } = await params
   const locale = await getSystemLocale()
   const contentLocale = isValidContentLocale(locale) ? locale : undefined
-  const course = await queryCourseBySlug({ slug: courseSlug, locale: contentLocale })
+  const { course } = await queryCourseBySlugWithFallback({
+    slug: courseSlug,
+    locale: contentLocale,
+  })
 
   if (!course) {
     return { title: 'Course Not Found' }

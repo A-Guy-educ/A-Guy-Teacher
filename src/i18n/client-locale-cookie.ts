@@ -13,7 +13,10 @@ export function buildClientLocaleCookie(locale: Locale, isCrossSiteEmbed: boolea
     return [...baseCookie, 'SameSite=Lax'].join('; ')
   }
 
-  return [...baseCookie, 'SameSite=None', 'Secure', 'Partitioned'].join('; ')
+  // Note: Partitioned is omitted because it has inconsistent browser support in cross-origin
+  // iframe contexts (e.g., Vercel preview dashboards). SameSite=None; Secure allows the cookie
+  // to work across cross-origin iframe embeds without Partitioned.
+  return [...baseCookie, 'SameSite=None', 'Secure'].join('; ')
 }
 
 export function isCrossOriginIframe(): boolean {

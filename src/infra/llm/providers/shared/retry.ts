@@ -1,11 +1,11 @@
 /**
- * Retry Utility with Exponential Backoff
- * Provides robust retry logic for LLM API calls
+ * Exponential backoff retry with jitter
+ *
+ * @ai-summary Retries transient failures with exponential delay and 10% jitter. The `isRetryable` predicate gates which errors trigger retry — callers must supply it. If maxRetries is exhausted, throws the LAST error wrapped by wrapError — the original error context is lost. Ensure wrapError preserves the cause chain for debugging.
  *
  * @fileType utility
  * @domain ai
  * @pattern retry
- * @ai-summary Retries with exponential backoff and jitter. If maxRetries is exhausted, throws the LAST error wrapped by wrapError — the original error context is lost. Ensure wrapError preserves the cause chain for debugging.
  */
 
 export interface RetryOptions<E extends Error> {

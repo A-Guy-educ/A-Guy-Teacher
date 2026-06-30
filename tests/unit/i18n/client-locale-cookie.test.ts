@@ -8,9 +8,9 @@ describe('buildClientLocaleCookie', () => {
     )
   })
 
-  it('uses a partitioned cookie inside embedded previews', () => {
+  it('uses a cross-site cookie inside embedded previews', () => {
     expect(buildClientLocaleCookie('he', true)).toBe(
-      'NEXT_LOCALE=he; path=/; max-age=31536000; SameSite=None; Secure; Partitioned',
+      'NEXT_LOCALE=he; path=/; max-age=31536000; SameSite=None; Secure',
     )
   })
 })

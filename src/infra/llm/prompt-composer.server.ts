@@ -1,10 +1,11 @@
 /**
- * Composes final system instructions for AI chat
+ * Final system instruction composer
+ *
+ * @ai-summary Composes 11 sections in fixed order. IMAGE_HANDLING_INSTRUCTIONS are injected only when `hasImageAttached=true` (the default) — omitting them when there's no image is critical because Gemini falls back to "please upload an image" even in text-only chats with full context. Exercise content is budget-truncated: 400 chars per exercise, 4000 chars total for the exercises section.
  *
  * @fileType ai-utility
  * @domain chat
  * @pattern server-only
- * @ai-summary IMAGE_HANDLING_INSTRUCTIONS are appended ONLY when hasImageAttached=true (the default). Omitting them when there's no image is critical — when these rules are present without an image, Gemini falls back to "please upload an image" even in text-only chats with full context. Exercise content is budget-truncated: 400 chars per exercise, 4000 chars total for the exercises section.
  */
 
 export const SYSTEM_PROMPT_SEPARATOR = '\n\n---\n\n'

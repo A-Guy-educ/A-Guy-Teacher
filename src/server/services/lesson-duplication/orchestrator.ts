@@ -36,6 +36,7 @@ import {
   SEMANTIC_FAILURE_CODE,
 } from '@/server/services/lesson-duplication/validators/semantic'
 import { RouterStrategy } from '@/server/services/lesson-duplication/strategies/router'
+import { formatDuplicateSlug } from '@/server/payload/fields/formatSlug'
 
 // Concurrency of 1 = process exercises sequentially. Each exercise hits the
 // LLM twice (creative + deterministic). Gemini's per-minute quota is easily
@@ -340,11 +341,17 @@ async function createOutputLesson(
   void _ignoreTranslatedFrom
   void _ignoreCreatedBy
   const base = (rest.title as string) ?? 'Lesson'
+  const newTitle = `${base} - Variation (${level})`
+  // Generate a URL-safe slug by stripping " - Copy" suffixes and normalizing spaces.
+  // Prevents 404s caused by raw spaces in slugs (e.g., "item-mmq4tz7a-059190 - Copy").
+  const sourceSlug = (sourceData.slug as string | undefined) ?? ''
+  const newSlug = formatDuplicateSlug(sourceSlug, newTitle)
   const newLesson = await payload.create({
     collection: 'lessons',
     data: {
       ...rest,
-      title: `${base} - Variation (${level})`,
+      title: newTitle,
+      slug: newSlug,
       status: 'draft', // never publish a duplicate by default
     } as never,
     overrideAccess: true,

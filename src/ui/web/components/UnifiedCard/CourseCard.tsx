@@ -65,6 +65,8 @@ export function CourseCard({ course, isOwned = false }: CourseCardProps) {
   }, [isOwned, course.courseLabel])
 
   const handleCourseSelect = () => {
+    if (!course.slug) return
+
     if (isSoon) {
       toast.info(t('contentLocked'))
       return
@@ -86,7 +88,7 @@ export function CourseCard({ course, isOwned = false }: CourseCardProps) {
       course_title: course.title,
     })
 
-    router.push('/')
+    router.push(`/courses/${course.slug}`)
   }
 
   return (

@@ -1,0 +1,10 @@
+[
+  {
+    "type": "lesson",
+    "name": "edit-old-string-must-replace-entire-comment-block",
+    "hook": "Edit tool: old_string must include full orphaned comment text",
+    "body": "When replacing a JSDoc block header with the Edit tool, the `old_string` must include the ENTIRE old comment block — all orphaned ` *` continuation lines up to and including the closing `*/`. If `old_string` only matches the opening lines, the remaining body text stays in the file as orphaned ` *` lines after the new `*/`, causing cascading TS1161 \"Unterminated regular expression literal\" errors across all subsequent files in the compilation order.\n\n**Why:** The TypeScript parser treats ` *` at column 1 as the start of a regex literal, not a comment. An orphaned ` *` line breaks the parser for the rest of the file (and sometimes subsequent files).\n\n**How to apply:** When using Edit to replace a JSDoc header, always include the full old comment text in `old_string` — or better yet, replace the entire old block with `new_string` that contains only the new header.",
+    "why": "The Edit tool's `old_string` only replaced the first N lines of a JSDoc block, leaving orphaned comment body text that TypeScript parsed as code, breaking typecheck for multiple files.",
+    "confidence": 0.95
+  }
+]

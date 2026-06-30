@@ -21,10 +21,40 @@ vi.mock('@/ui/web/providers/I18n', () => ({
   useTranslations: () => t,
 }))
 
+const refreshMock = vi.fn()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: refreshMock, push: vi.fn(), replace: vi.fn() }),
+}))
+
 import { CheckoutSuccessContent } from '@/app/(frontend)/checkout/success/CheckoutSuccessContent'
 
 describe('CheckoutSuccessContent', () => {
-  afterEach(() => cleanup())
+  afterEach(() => {
+    cleanup()
+    refreshMock.mockClear()
+  })
+
+  it('calls router.refresh() once when status flips to succeeded — invalidates client cache so the next nav into the bought course is fresh', () => {
+    render(
+      <CheckoutSuccessContent
+        sessionId="ORDER_X"
+        transaction={{ id: 'tx1', status: 'succeeded' }}
+        productName="Course X"
+      />,
+    )
+    expect(refreshMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('does NOT call router.refresh() when the status is still pending', () => {
+    render(
+      <CheckoutSuccessContent
+        sessionId="ORDER_X"
+        transaction={{ id: 'tx1', status: 'pending' }}
+        productName=""
+      />,
+    )
+    expect(refreshMock).not.toHaveBeenCalled()
+  })
 
   it('renders "missingSession" when sessionId is not provided', () => {
     render(<CheckoutSuccessContent sessionId={undefined} transaction={null} productName="" />)

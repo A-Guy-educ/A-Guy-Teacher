@@ -14,6 +14,7 @@ import { CourseTabs, TAB_COLORS, type CourseTab } from '../CourseTabs'
 import { ExamReminderBubble } from '../ExamReminderBubble'
 import { ExamsTab } from '../ExamsTab'
 import { LessonListTab } from '../LessonListTab'
+import { LocaleFallbackBanner } from '../../../_components/LocaleFallbackBanner'
 
 interface CoursePageContentProps {
   course: Course
@@ -21,6 +22,7 @@ interface CoursePageContentProps {
   lessons: Lesson[]
   courseSlug: string
   lessonProgressMap?: Record<string, LessonProgress>
+  isLocaleFallback?: boolean
 }
 
 const tabContentVariants = {
@@ -35,6 +37,7 @@ export function CoursePageContent({
   lessons,
   courseSlug,
   lessonProgressMap = {},
+  isLocaleFallback = false,
 }: CoursePageContentProps) {
   const t = useTranslations('coursePage')
   const [activeTab, setActiveTab] = useState<CourseTab>('learn')
@@ -46,6 +49,13 @@ export function CoursePageContent({
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       <CourseAnalytics courseId={course.id} courseTitle={course.title} />
       <CourseTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Locale fallback notice */}
+      {isLocaleFallback && (
+        <div className="container mx-auto px-6 pt-section-sm max-w-5xl">
+          <LocaleFallbackBanner isLocaleFallback={isLocaleFallback} />
+        </div>
+      )}
 
       {/* Course title area with gradient accent */}
       <div className="w-full py-section-sm px-6 relative overflow-hidden">

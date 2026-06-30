@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { resolveAccessType } from '@/infra/auth/access-types'
 import { SystemParams } from '@/infra/config/system-params'
-import { queryCourseBySlug } from '@/server/repos/queries/courses'
+import { queryCourseBySlugWithFallback } from '@/server/repos/queries/courses'
 import { queryExercisesByLesson } from '@/server/repos/queries/exercises'
 import { resolveFormulaSheet } from '@/server/repos/queries/formula-sheets'
 import { queryLessonBySlug, queryLessonsByCourse } from '@/server/repos/queries/lessons'
@@ -32,11 +32,14 @@ import { extractAllMediaIds } from '@/ui/web/exerciserenderer/utils/extractMedia
 import { ContentPageBodyRenderer } from './_components/ContentPageBodyRenderer'
 import { stripHtml } from '@/utils/strip-html'
 import { findUserProgress } from '@/server/web-api/progress'
-
 import { LessonAnalytics } from './_components/LessonAnalytics'
 import { LessonIntroPage } from './_components/LessonIntroPage'
 import { queryLessonBlocks } from '@/server/repos/queries/lesson-blocks'
 
+// Must render fresh per request: the entitlement check (via checkPaidAccess)
+// reads `enrollments` from Mongo, and after a new PayPal-funded enrollment the
+// buyer is one click away from this page. A cached version from before the
+// enrollment was created would show "needs payment" until the cache evicted.
 export const dynamic = 'force-dynamic'
 
 interface LessonPageProps {
@@ -56,18 +59,21 @@ function getContentPageBodyBlocks(body: unknown): unknown[] | null {
   return null
 }
 
-function hasBlocks(exercise: Exercise): boolean {
-  if (Array.isArray(exercise.content)) {
-    return exercise.content.length > 0
+function hasBlocks(exercise: unknown): boolean {
+  if (!exercise || typeof exercise !== 'object') return false
+
+  const ex = exercise as { content?: unknown }
+  if (Array.isArray(ex.content)) {
+    return ex.content.length > 0
   }
 
   if (
-    exercise.content &&
-    typeof exercise.content === 'object' &&
-    'blocks' in exercise.content &&
-    Array.isArray(exercise.content.blocks)
+    ex.content &&
+    typeof ex.content === 'object' &&
+    'blocks' in ex.content &&
+    Array.isArray((ex.content as { blocks?: unknown }).blocks)
   ) {
-    return exercise.content.blocks.length > 0
+    return (ex.content as { blocks: unknown[] }).blocks.length > 0
   }
 
   return false
@@ -122,7 +128,10 @@ async function getLessonProgress({
       .filter((record) => record.recordType === 'exercise' && record.status === 'completed')
       .map((record) => record.recordId),
   )
-  const completed = exercises.filter((exercise) => completedExerciseIds.has(exercise.id)).length
+  const completed = exercises.filter(
+    (exercise): exercise is Exercise =>
+      Boolean(exercise?.id) && completedExerciseIds.has(exercise.id),
+  ).length
   const lessonRecord = records.find(
     (record) => record.recordType === 'lesson' && record.recordId === lessonId,
   )
@@ -150,8 +159,8 @@ async function getLessonData({
 }) {
   const locale = await getSystemLocale()
   const contentLocale = isValidContentLocale(locale) ? locale : undefined
-  const [course, lesson] = await Promise.all([
-    queryCourseBySlug({ slug: courseSlug, locale: contentLocale }),
+  const [{ course, isLocaleFallback }, lesson] = await Promise.all([
+    queryCourseBySlugWithFallback({ slug: courseSlug, locale: contentLocale }),
     queryLessonBySlug({ slug: lessonSlug }),
   ])
 
@@ -171,7 +180,7 @@ async function getLessonData({
 
   const blocks = await queryLessonBlocks({ lessonId: lesson.id })
 
-  return { contentLocale, course, chapter, lesson, blocks }
+  return { contentLocale, course, chapter, lesson, blocks, isLocaleFallback }
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
@@ -182,7 +191,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     notFound()
   }
 
-  const { contentLocale, course, lesson, blocks } = lessonData
+  const { contentLocale, course, lesson, blocks, isLocaleFallback } = lessonData
   const accessType = resolveAccessType(lesson.accessType, course.accessType)
   const [gatedDelayMs, gatedWarningMs] = await Promise.all([
     SystemParams.getGatedDelayMs(),
@@ -222,7 +231,12 @@ export default async function LessonPage({ params }: LessonPageProps) {
   }
 
   const [exercises, mediaFiles, formulaSheetResult] = await Promise.all([
-    queryExercisesByLesson({ lessonId: lesson.id }),
+    queryExercisesByLesson({ lessonId: lesson.id }).then((exercises) =>
+      (exercises ?? []).filter(
+        (ex): ex is Exercise =>
+          Boolean(ex) && typeof ex === 'object' && Boolean(ex.id) && Boolean(ex.slug),
+      ),
+    ),
     getMediaFiles(lesson.contentFiles),
     resolveFormulaSheet({
       lessonId: lesson.id,
@@ -297,6 +311,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
         prerequisites={
           (lesson as Lesson & { prerequisites?: LessonPrerequisite[] }).prerequisites ?? []
         }
+        isLocaleFallback={isLocaleFallback}
       />
     </AccessGateProvider>
   )

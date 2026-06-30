@@ -1,8 +1,10 @@
 /**
- * Embeddings Service
- * Generates vector embeddings using OpenAI's text-embedding-3-small model
+ * OpenAI text-embedding-3-small embeddings
  *
- * @ai-summary Output is always exactly 1536 dimensions — if the Atlas vector index definition changes this number, embeddings will fail silently at storage time or fail loudly at query time. cosineSimilarity() requires equal-length vectors and throws on mismatch.
+ * @ai-summary Output is always exactly 1536 dimensions — if the Atlas vector index definition changes this number, embeddings will fail silently at storage time or fail loudly at query time. cosineSimilarity() requires equal-length vectors and throws on mismatch. Generates 1536-dimension vectors. Dimension is validated against a constant guardrail — mismatch throws rather than returning a wrong-sized vector to callers.
+ *
+ * @fileType service
+ * @domain ai
  *
  * Key Features:
  * - 1536 dimensions (matches Atlas vector index)

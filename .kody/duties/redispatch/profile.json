@@ -1,0 +1,8 @@
+{
+  "name": "redispatch",
+  "describe": "Redispatch stalled Kody work",
+  "action": "redispatch",
+  "executable": "redispatch",
+  "every": "30m",
+  "staff": "kody"
+}

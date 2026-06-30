@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * Regression test for issue #332: Disable Ask button on /study route.
+ * Regression test for issue #595: Enable Ask button on /study route.
  *
- * On the /study page, the Ask button should be visually grayed out and non-interactive.
- * Students should not be able to navigate to /ask from within a study session.
+ * On the /study page, the Ask button should be fully enabled and interactive.
+ * Students should be able to navigate to /ask from within a study session.
  *
  * @tags @navigation @regression
  */
@@ -15,7 +15,7 @@ test.describe('NavigationBar Ask Button', () => {
     await page.evaluate(() => localStorage.clear())
   })
 
-  test('Ask button should be disabled on /study route', async ({ page }) => {
+  test('Ask button should be enabled on /study route', async ({ page }) => {
     await page.goto('/study')
     await page.waitForLoadState('domcontentloaded')
 
@@ -25,14 +25,27 @@ test.describe('NavigationBar Ask Button', () => {
     // Verify button exists
     await expect(askButton).toBeVisible()
 
-    // Verify disabled attribute is present
-    await expect(askButton).toBeDisabled()
+    // Verify button is enabled (not disabled)
+    await expect(askButton).toBeEnabled()
 
-    // Verify cursor-not-allowed class is applied
-    await expect(askButton).toHaveClass(/cursor-not-allowed/)
+    // Verify no cursor-not-allowed class
+    await expect(askButton).not.toHaveClass(/cursor-not-allowed/)
 
-    // Verify opacity-50 class is applied
-    await expect(askButton).toHaveClass(/opacity-50/)
+    // Verify no opacity-50 class
+    await expect(askButton).not.toHaveClass(/opacity-50/)
+  })
+
+  test('Ask button should navigate from /study to /ask', async ({ page }) => {
+    await page.goto('/study')
+    await page.waitForLoadState('domcontentloaded')
+
+    const askButton = page.locator('button').filter({ hasText: /ask/i }).first()
+
+    // Click the enabled ask button
+    await askButton.click()
+
+    // Verify we navigated to /ask
+    await expect(page).toHaveURL(/\/ask/)
   })
 
   test('Ask button should be enabled on other routes', async ({ page }) => {
@@ -57,18 +70,5 @@ test.describe('NavigationBar Ask Button', () => {
 
     await expect(askButton).toBeVisible()
     await expect(askButton).toBeEnabled()
-  })
-
-  test('Ask button should not navigate on /study route', async ({ page }) => {
-    await page.goto('/study')
-    await page.waitForLoadState('domcontentloaded')
-
-    const askButton = page.locator('button').filter({ hasText: /ask/i }).first()
-
-    // Click the disabled ask button
-    await askButton.click()
-
-    // Verify we stayed on /study
-    await expect(page).toHaveURL(/\/study/)
   })
 })

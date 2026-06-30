@@ -39,20 +39,15 @@ export function NavigationBar() {
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href
             const Icon = item.icon
-            const isAskDisabled = pathname === '/study' && item.key === 'ask'
 
             return (
               <button
                 key={item.key}
-                onClick={
-                  isAskDisabled ? undefined : () => router.push(item.href, { scroll: false })
-                }
-                disabled={isAskDisabled}
+                onClick={() => router.push(item.href, { scroll: false })}
                 className={cn(
                   'relative z-10 flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 min-h-[48px] text-body-sm rounded-xl transition-all duration-fast font-semibold',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   isActive ? '' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-                  isAskDisabled && 'cursor-not-allowed opacity-50',
                 )}
               >
                 {isActive && (

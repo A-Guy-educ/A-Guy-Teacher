@@ -96,7 +96,7 @@ export function LessonPager({
     courseSlug,
     chapterSlug,
     lessonSlug,
-    hasPdfFiles: (validFiles?.length ?? 0) > 0,
+    validFiles,
   })
 
   const [showConfetti, setShowConfetti] = useState(false)
@@ -383,6 +383,10 @@ export function LessonPager({
 
   // Render PDF viewer page
   if (pageState.type === 'pdf' && validFiles && validFiles.length > 0) {
+    const currentPdfFileIndex = pageState.currentPdfFileIndex ?? 0
+    const currentPdfFile = validFiles[currentPdfFileIndex]
+    const hasMultipleFiles = validFiles.length > 1
+
     return (
       <ExerciseWorkspace
         exerciseTitle={lessonTitle}
@@ -395,22 +399,25 @@ export function LessonPager({
 
             <div className="flex-1 overflow-y-auto min-h-0 pb-4">
               <div className="w-full h-full flex flex-col min-h-0">
-                {validFiles.map((file, index) => (
-                  <div key={file.id} className="w-full flex-1 min-h-0">
-                    {index > 0 && (
-                      <div className="h-0.5 my-8 flex-shrink-0 bg-gradient-to-r from-transparent via-border to-transparent" />
-                    )}
-                    <div className="border rounded-lg overflow-hidden bg-card shadow-card h-full">
-                      <MediaComponent
-                        resource={file}
-                        className="w-full h-full"
-                        htmlElement={null}
-                        lessonId={lessonId}
-                        courseId={courseSlug}
-                      />
-                    </div>
+                {hasMultipleFiles && (
+                  <div className="flex items-center justify-center gap-2 py-3 text-body-sm text-muted-foreground">
+                    <FileText className="w-4 h-4" />
+                    <span>
+                      {currentPdfFileIndex + 1} / {validFiles.length}
+                    </span>
                   </div>
-                ))}
+                )}
+                <div className="w-full flex-1 min-h-0">
+                  <div className="border rounded-lg overflow-hidden bg-card shadow-card h-full">
+                    <MediaComponent
+                      resource={currentPdfFile}
+                      className="w-full h-full"
+                      htmlElement={null}
+                      lessonId={lessonId}
+                      courseId={courseSlug}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "rev": 4,
+  "cursor": "idle",
+  "data": {
+    "lastFiredAt": "2026-06-24T15:07:27.757Z",
+    "lastOutcome": "completed",
+    "lastDurationMs": 16955
+  },
+  "done": false
+}

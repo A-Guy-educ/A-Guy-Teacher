@@ -5,6 +5,7 @@ import { Redirects } from '@/ui/web/Redirects'
 import { generateMeta } from '@/infra/utils/generateMeta'
 import { queryAllPageSlugs, queryPageBySlug } from '@/server/repos/queries/pages'
 import { RenderHero } from '@/ui/web/heros/RenderHero'
+import { RenderLayout } from '@/ui/web/layout-blocks/RenderLayout'
 import PageClient from './page.client'
 
 export async function generateStaticParams() {
@@ -53,13 +54,14 @@ export default async function Page({ params: paramsPromise }: Args) {
     return <Redirects url={url} />
   }
 
-  const { hero } = page
+  const { hero, layout } = page
 
   return (
     <article className="pt-section-md pb-section-lg">
       <PageClient />
       <Redirects disableNotFound url={url} />
       {hero ? <RenderHero {...hero} /> : null}
+      {layout && layout.length > 0 ? <RenderLayout blocks={layout} /> : null}
     </article>
   )
 }

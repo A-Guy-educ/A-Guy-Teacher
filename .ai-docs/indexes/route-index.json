@@ -14,12 +14,6 @@
     },
     {
       "routePath": "/",
-      "filePath": "src/app/(payload)/layout.tsx",
-      "kind": "layout",
-      "segmentGroup": "(payload)"
-    },
-    {
-      "routePath": "/",
       "filePath": "src/app/(frontend)/not-found.tsx",
       "kind": "not-found",
       "segmentGroup": "(frontend)"
@@ -49,28 +43,16 @@
       "segmentGroup": "(frontend)"
     },
     {
-      "routePath": "/admin/:[...segments]",
-      "filePath": "src/app/(payload)/admin/[[...segments]]/not-found.tsx",
-      "kind": "not-found",
-      "segmentGroup": "(payload)"
+      "routePath": "/account/purchases",
+      "filePath": "src/app/(frontend)/account/purchases/page.tsx",
+      "kind": "page",
+      "segmentGroup": "(frontend)"
     },
     {
-      "routePath": "/admin/:[...segments]",
-      "filePath": "src/app/(payload)/admin/[[...segments]]/page.tsx",
+      "routePath": "/account/purchases/:transactionId",
+      "filePath": "src/app/(frontend)/account/purchases/[transactionId]/page.tsx",
       "kind": "page",
-      "segmentGroup": "(payload)"
-    },
-    {
-      "routePath": "/admin/chat",
-      "filePath": "src/app/(payload)/admin/chat/page.tsx",
-      "kind": "page",
-      "segmentGroup": "(payload)"
-    },
-    {
-      "routePath": "/admin/pdf-conversion",
-      "filePath": "src/app/(payload)/admin/pdf-conversion/page.tsx",
-      "kind": "page",
-      "segmentGroup": "(payload)"
+      "segmentGroup": "(frontend)"
     },
     {
       "routePath": "/api-status",
@@ -85,10 +67,28 @@
       "segmentGroup": "(frontend)"
     },
     {
-      "routePath": "/api/:...slug",
-      "filePath": "src/app/(payload)/api/[...slug]/route.ts",
+      "routePath": "/api/account/transactions/:id",
+      "filePath": "src/app/api/account/transactions/[id]/route.ts",
       "kind": "route",
-      "segmentGroup": "(payload)"
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/admin/dashboard-metrics",
+      "filePath": "src/app/api/admin/dashboard-metrics/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/admin/recent-transactions",
+      "filePath": "src/app/api/admin/recent-transactions/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/admin/transactions/:id/refund",
+      "filePath": "src/app/api/admin/transactions/[id]/refund/route.ts",
+      "kind": "route",
+      "segmentGroup": null
     },
     {
       "routePath": "/api/agent/chat-quota",
@@ -99,6 +99,12 @@
     {
       "routePath": "/api/agent/chat",
       "filePath": "src/app/api/agent/chat/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/agent/chat/debug-prompt",
+      "filePath": "src/app/api/agent/chat/debug-prompt/route.ts",
       "kind": "route",
       "segmentGroup": null
     },
@@ -115,6 +121,18 @@
       "segmentGroup": null
     },
     {
+      "routePath": "/api/agent/generate-interactive-lesson",
+      "filePath": "src/app/api/agent/generate-interactive-lesson/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/agent/learning-chat",
+      "filePath": "src/app/api/agent/learning-chat/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
       "routePath": "/api/agent/message/persist",
       "filePath": "src/app/api/agent/message/persist/route.ts",
       "kind": "route",
@@ -123,6 +141,12 @@
     {
       "routePath": "/api/agent/reset-chat",
       "filePath": "src/app/api/agent/reset-chat/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/auth/logout",
+      "filePath": "src/app/api/auth/logout/route.ts",
       "kind": "route",
       "segmentGroup": null
     },
@@ -169,6 +193,12 @@
       "segmentGroup": null
     },
     {
+      "routePath": "/api/courses",
+      "filePath": "src/app/api/courses/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
       "routePath": "/api/cron/chat-asset-expiry",
       "filePath": "src/app/api/cron/chat-asset-expiry/route.ts",
       "kind": "route",
@@ -183,6 +213,12 @@
     {
       "routePath": "/api/cron/media-expiry",
       "filePath": "src/app/api/cron/media-expiry/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/cron/process-duplications",
+      "filePath": "src/app/api/cron/process-duplications/route.ts",
       "kind": "route",
       "segmentGroup": null
     },
@@ -219,6 +255,12 @@
     {
       "routePath": "/api/exercises/:id/blocks/:blockId",
       "filePath": "src/app/api/exercises/[id]/blocks/[blockId]/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/exercises/convert-latex-block",
+      "filePath": "src/app/api/exercises/convert-latex-block/route.ts",
       "kind": "route",
       "segmentGroup": null
     },
@@ -289,18 +331,6 @@
       "segmentGroup": null
     },
     {
-      "routePath": "/api/graphql-playground",
-      "filePath": "src/app/(payload)/api/graphql-playground/route.ts",
-      "kind": "route",
-      "segmentGroup": "(payload)"
-    },
-    {
-      "routePath": "/api/graphql",
-      "filePath": "src/app/(payload)/api/graphql/route.ts",
-      "kind": "route",
-      "segmentGroup": "(payload)"
-    },
-    {
       "routePath": "/api/health",
       "filePath": "src/app/api/health/route.ts",
       "kind": "route",
@@ -313,14 +343,86 @@
       "segmentGroup": null
     },
     {
+      "routePath": "/api/lesson-duplications/:id/process-now",
+      "filePath": "src/app/api/lesson-duplications/[id]/process-now/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/lesson-duplications/:id/record",
+      "filePath": "src/app/api/lesson-duplications/[id]/record/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/lesson-duplications/:id/resolve",
+      "filePath": "src/app/api/lesson-duplications/[id]/resolve/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/lesson-duplications/:id/retry-exercise",
+      "filePath": "src/app/api/lesson-duplications/[id]/retry-exercise/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/lessons/:id/duplicate-variation",
+      "filePath": "src/app/api/lessons/[id]/duplicate-variation/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/lessons/:id/export",
+      "filePath": "src/app/api/lessons/[id]/export/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/lessons/:id/suggested-subject",
+      "filePath": "src/app/api/lessons/[id]/suggested-subject/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/lessons/context-extraction",
+      "filePath": "src/app/api/lessons/context-extraction/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
       "routePath": "/api/lessons/convert-context",
       "filePath": "src/app/api/lessons/convert-context/route.ts",
       "kind": "route",
       "segmentGroup": null
     },
     {
+      "routePath": "/api/lessons/convert-full-latex",
+      "filePath": "src/app/api/lessons/convert-full-latex/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/lessons/convert-full-media",
+      "filePath": "src/app/api/lessons/convert-full-media/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
       "routePath": "/api/lessons/create-context-exercises",
       "filePath": "src/app/api/lessons/create-context-exercises/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/media",
+      "filePath": "src/app/api/media/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/media/file/:filename",
+      "filePath": "src/app/api/media/file/[filename]/route.ts",
       "kind": "route",
       "segmentGroup": null
     },
@@ -333,6 +435,12 @@
     {
       "routePath": "/api/oauth/google/callback",
       "filePath": "src/app/api/oauth/google/callback/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/payments/checkout",
+      "filePath": "src/app/api/payments/checkout/route.ts",
       "kind": "route",
       "segmentGroup": null
     },
@@ -403,10 +511,40 @@
       "segmentGroup": null
     },
     {
+      "routePath": "/api/tts/synthesize",
+      "filePath": "src/app/api/tts/synthesize/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
       "routePath": "/api/user-settings",
       "filePath": "src/app/api/user-settings/route.ts",
       "kind": "route",
       "segmentGroup": null
+    },
+    {
+      "routePath": "/api/users/me",
+      "filePath": "src/app/api/users/me/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/webhooks/paypal",
+      "filePath": "src/app/api/webhooks/paypal/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/api/webhooks/stripe",
+      "filePath": "src/app/api/webhooks/stripe/route.ts",
+      "kind": "route",
+      "segmentGroup": null
+    },
+    {
+      "routePath": "/apple-icon.png",
+      "filePath": "src/app/(frontend)/apple-icon.png/route.ts",
+      "kind": "route",
+      "segmentGroup": "(frontend)"
     },
     {
       "routePath": "/ask",
@@ -417,6 +555,18 @@
     {
       "routePath": "/ask",
       "filePath": "src/app/(frontend)/ask/page.tsx",
+      "kind": "page",
+      "segmentGroup": "(frontend)"
+    },
+    {
+      "routePath": "/checkout/cancel",
+      "filePath": "src/app/(frontend)/checkout/cancel/page.tsx",
+      "kind": "page",
+      "segmentGroup": "(frontend)"
+    },
+    {
+      "routePath": "/checkout/success",
+      "filePath": "src/app/(frontend)/checkout/success/page.tsx",
       "kind": "page",
       "segmentGroup": "(frontend)"
     },
@@ -487,6 +637,24 @@
       "segmentGroup": "(frontend)"
     },
     {
+      "routePath": "/favicon.ico",
+      "filePath": "src/app/(frontend)/favicon.ico/route.ts",
+      "kind": "route",
+      "segmentGroup": "(frontend)"
+    },
+    {
+      "routePath": "/favicon.svg",
+      "filePath": "src/app/(frontend)/favicon.svg/route.ts",
+      "kind": "route",
+      "segmentGroup": "(frontend)"
+    },
+    {
+      "routePath": "/home",
+      "filePath": "src/app/(frontend)/home/page.tsx",
+      "kind": "page",
+      "segmentGroup": "(frontend)"
+    },
+    {
       "routePath": "/login",
       "filePath": "src/app/(frontend)/login/loading.tsx",
       "kind": "loading",
@@ -496,6 +664,12 @@
       "routePath": "/login",
       "filePath": "src/app/(frontend)/login/page.tsx",
       "kind": "page",
+      "segmentGroup": "(frontend)"
+    },
+    {
+      "routePath": "/manifest.webmanifest",
+      "filePath": "src/app/(frontend)/manifest.webmanifest/route.ts",
+      "kind": "route",
       "segmentGroup": "(frontend)"
     },
     {
@@ -573,6 +747,18 @@
     {
       "routePath": "/practice",
       "filePath": "src/app/(frontend)/practice/page.tsx",
+      "kind": "page",
+      "segmentGroup": "(frontend)"
+    },
+    {
+      "routePath": "/products",
+      "filePath": "src/app/(frontend)/products/page.tsx",
+      "kind": "page",
+      "segmentGroup": "(frontend)"
+    },
+    {
+      "routePath": "/products/:slug",
+      "filePath": "src/app/(frontend)/products/[slug]/page.tsx",
       "kind": "page",
       "segmentGroup": "(frontend)"
     },
@@ -656,7 +842,7 @@
     }
   ],
   "metadata": {
-    "generatedAt": "2026-04-15T09:51:04.850Z",
-    "totalRoutes": 109
+    "generatedAt": "2026-06-28T12:45:52.630Z",
+    "totalRoutes": 140
   }
 }

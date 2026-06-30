@@ -1,0 +1,8 @@
+{
+  "name": "auto-resolve",
+  "describe": "Auto resolve merge conflicts",
+  "action": "auto-resolve",
+  "executable": "auto-resolve",
+  "every": "15m",
+  "staff": "kody"
+}

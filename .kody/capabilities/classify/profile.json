@@ -1,0 +1,7 @@
+{
+  "name": "classify",
+  "describe": "classify",
+  "action": "classify",
+  "agent": "kody",
+  "implementation": "feature"
+}

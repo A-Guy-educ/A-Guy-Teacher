@@ -21,7 +21,8 @@
     "path": "A-Guy-Web"
   },
   "agent": {
-    "model": "minimax/MiniMax-M2.7-highspeed"
+    "model": "minimax/MiniMax-M2.7-highspeed",
+    "reasoningEffort": "high"
   },
   "qa": {
     "fallbackUrl": "https://dev.aguy.co.il"
@@ -31,6 +32,8 @@
     "versionFiles": [
       "package.json"
     ],
+    "productionUrl": "https://www.aguy.co.il",
+    "smokeCommand": "pnpm tsx scripts/smoke-web-api.ts",
     "e2eCommand": "npx tsx scripts/release-e2e-gate.ts",
     "timeoutMs": 1800000
   },
@@ -54,23 +57,18 @@
       "MEMBER"
     ]
   },
-  "agentActions": {
-    "default": "run"
-  },
   "company": {
-    "activeAgentResponsibilities": [
-      "agent-responsibility-call",
+    "activeCapabilities": [
+      "capability-call",
       "release-prepare",
       "release-merge",
-      "vercel-production-deploy"
+      "release-promote",
+      "vercel-production-deploy",
+      "bug"
     ],
     "activeAgents": [
-      "cto"
-    ],
-    "activeAgentActions": [
-      "release-prepare",
-      "release-merge",
-      "vercel-production-deploy"
+      "cto",
+      "kody"
     ],
     "activeGoals": [
       "daily-web-release-loop"

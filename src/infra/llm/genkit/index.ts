@@ -1,6 +1,7 @@
 /**
- * Genkit LLM Integration
- * Unified interface for Genkit-based LLM operations
+ * Genkit LLM integration
+ *
+ * @ai-summary Entry point for Genkit-based LLM operations. Exposes `createGenkitUnifiedAdapter` which is the runtime adapter — all chat/completion calls go through it.
  *
  * @fileType index
  * @domain ai
