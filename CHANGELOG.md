@@ -1822,6 +1822,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Cache + product page issues after billing refactor ([#658](https://github.com/A-Guy-educ/A-Guy-Web/pull/658)) — @aguyshayb
 - chore: release v0.26.3 ([#660](https://github.com/A-Guy-educ/A-Guy-Web/pull/660)) — @kodyade[bot]
 - #649: [MediaTabContent] ניווט בתוך קבצי PDF ב-interactive mode ([#650](https://github.com/A-Guy-educ/A-Guy-Web/pull/650)) — @kodyade[bot]
 - #635: [Dark Mode] טקסט כהה על רקע כהה בסקציית features בדף הראשי ([#646](https://github.com/A-Guy-educ/A-Guy-Web/pull/646)) — @kodyade[bot]
