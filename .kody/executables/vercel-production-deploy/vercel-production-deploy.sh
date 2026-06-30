@@ -139,6 +139,7 @@ if [ -z "$VERCEL_PROJECT_ID" ]; then
 fi
 
 tmp_json="$(mktemp)"
+workspace_root="$(pwd)"
 cleanup() {
   rm -f "$tmp_json"
   if [ -n "$deploy_worktree" ]; then
@@ -189,7 +190,7 @@ if [ -n "$SMOKE_COMMAND" ]; then
   if [ -n "$PRODUCTION_URL" ]; then
     export SMOKE_BASE_URLS="${SMOKE_BASE_URLS:-$PRODUCTION_URL}"
   fi
-  if timeout "$(( ${KODY_CFG_RELEASE_TIMEOUTMS:-600000} / 1000 ))" bash -c "$SMOKE_COMMAND"; then
+  if (cd "$workspace_root" && timeout "$(( ${KODY_CFG_RELEASE_TIMEOUTMS:-600000} / 1000 ))" bash -c "$SMOKE_COMMAND"); then
     smoke_status="passed"
   else
     fail "Production smoke command failed"
