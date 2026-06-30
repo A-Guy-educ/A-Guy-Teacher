@@ -72,7 +72,8 @@
       "kody"
     ],
     "activeGoals": [
-      "daily-web-release-loop"
+      "daily-web-release-loop",
+      "ai-agency-health"
     ]
   },
   "fly": {
