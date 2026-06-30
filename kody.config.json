@@ -61,11 +61,24 @@
   "company": {
     "activeCapabilities": [
       "capability-call",
+      "classify",
+      "research",
+      "plan",
+      "feature",
+      "bug",
+      "chore",
+      "spec",
+      "review",
+      "fix",
+      "fix-ci",
+      "sync",
+      "resolve",
+      "merge",
+      "revert",
       "release-prepare",
       "release-merge",
       "release-promote",
-      "vercel-production-deploy",
-      "bug"
+      "vercel-production-deploy"
     ],
     "activeAgents": [
       "cto",
