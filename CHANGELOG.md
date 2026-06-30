@@ -1822,6 +1822,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Pin paid-access reads to primary so post-purchase gate clears immediately ([#664](https://github.com/A-Guy-educ/A-Guy-Web/pull/664)) — @aguyshayb
 - #662: [Refactor] Resolve PR #468 conflicts in LessonIntroPage back navi… ([#663](https://github.com/A-Guy-educ/A-Guy-Web/pull/663)) — @kodyade[bot]
 - promote: dev -> main (v0.26.3) ([#661](https://github.com/A-Guy-educ/A-Guy-Web/pull/661)) — @kodyade[bot]
 - #654: [Routing/Duplication] Lesson page 404s due to raw spaces in slug … ([#655](https://github.com/A-Guy-educ/A-Guy-Web/pull/655)) — @kodyade[bot]
