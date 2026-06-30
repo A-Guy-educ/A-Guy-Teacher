@@ -1024,5 +1024,77 @@
     "privacyPolicy": "Privacy Policy",
     "cancellationRefund": "Cancellation & Refunds",
     "aiUsageStatement": "AI Usage Statement"
+  },
+  "prep7": {
+    "hero": {
+      "title": "This time! To arrive prepared",
+      "subtitle": "Complete preparation for 7th grade mathematics with personalized learning, practice exercises, and full support.",
+      "registerCta": "Register for course",
+      "trialCta": "Trial and purchase"
+    },
+    "whoIsAguy": {
+      "title": "Who is Aguy?",
+      "description": "Aguy is your personal digital math teacher, built on 20+ years of teaching experience. The platform provides personalized learning that adapts to your pace, identifies gaps, and ensures you arrive to 7th grade fully prepared.",
+      "stats": {
+        "experience": {
+          "value": "20+",
+          "label": "years of experience"
+        },
+        "students": {
+          "value": "10K+",
+          "label": "students taught"
+        }
+      }
+    },
+    "courseFeatures": {
+      "title": "What does the course include?",
+      "description": "Everything you need to succeed in 7th grade mathematics.",
+      "items": {
+        "lessons": {
+          "title": "50 lesson plans",
+          "description": "Precise and accurate lessons covering all 7th grade topics."
+        },
+        "practice": {
+          "title": "30 practice lessons",
+          "description": "Extensive practice to sharpen your skills."
+        },
+        "exams": {
+          "title": "10 simulation exams",
+          "description": "Real exam conditions to test your knowledge."
+        },
+        "support": {
+          "title": "Full support",
+          "description": "AI tutor available for every lesson."
+        }
+      }
+    },
+    "benefits": {
+      "title": "Early bird offer!",
+      "description": "Sign up now and receive 100₪ off the course price.",
+      "discount": "100₪ off",
+      "deadline": "Offer valid until July 20",
+      "cta": "Register for course"
+    },
+    "bonuses": {
+      "title": "Free bonuses",
+      "description": "Even more reasons to join our community.",
+      "items": {
+        "whatsapp": {
+          "title": "WhatsApp group",
+          "description": "Direct connection for questions and updates."
+        },
+        "sessions": {
+          "title": "Open sessions",
+          "description": "Live sessions with the teacher."
+        },
+        "boost": {
+          "title": "Live boost sessions",
+          "description": "Intensive sessions before exams."
+        }
+      }
+    },
+    "footer": {
+      "copyright": "© 2024 Aguy. All rights reserved."
+    }
   }
 }
