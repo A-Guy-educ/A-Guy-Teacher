@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ORIGINAL_BRANCH=""
+deploy_worktree=""
 goal_id="${KODY_ARG_GOAL:-}"
 failure_reported=0
 
@@ -138,29 +138,21 @@ if [ -z "$VERCEL_PROJECT_ID" ]; then
   fail "Kody secret VERCEL_PROJECT_ID is required"
 fi
 
-ORIGINAL_BRANCH="$(git branch --show-current)"
-
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  fail "Working tree has tracked changes. Commit or stash before switching to '${DEPLOY_BRANCH}'."
-fi
-
 tmp_json="$(mktemp)"
 cleanup() {
   rm -f "$tmp_json"
-  if [ -n "$ORIGINAL_BRANCH" ] && [ "$ORIGINAL_BRANCH" != "$(git branch --show-current)" ]; then
-    git checkout "$ORIGINAL_BRANCH" >/dev/null 2>&1 || true
+  if [ -n "$deploy_worktree" ]; then
+    git worktree remove --force "$deploy_worktree" >/dev/null 2>&1 || true
   fi
 }
 trap cleanup EXIT
 
 git fetch origin "$DEPLOY_BRANCH"
-if [ "$ORIGINAL_BRANCH" != "$DEPLOY_BRANCH" ]; then
-  echo "Switching from ${ORIGINAL_BRANCH} to ${DEPLOY_BRANCH}..."
-  git checkout "$DEPLOY_BRANCH"
-fi
-git pull --ff-only origin "$DEPLOY_BRANCH"
+deploy_worktree="$(mktemp -d)"
+git worktree add --detach "$deploy_worktree" "origin/${DEPLOY_BRANCH}"
+cd "$deploy_worktree"
 
-current_branch="$(git branch --show-current)"
+current_branch="$DEPLOY_BRANCH"
 release_version="$(node -e 'const fs=require("fs"); const data=JSON.parse(fs.readFileSync("package.json","utf8")); process.stdout.write(String(data.version || ""))')"
 vercel_args=(--token "$token")
 if [ -n "$SCOPE" ]; then
