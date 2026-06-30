@@ -10,7 +10,7 @@
  * @pattern paid-entitlement
  * @ai-summary Grants access to admin users unconditionally — callers must handle `requiresEntitlement: false` for admins separately (e.g., skip rendering a purchase button but allow access).
  */
-import { ObjectId, type Document } from 'mongodb'
+import { ObjectId, ReadPreference, type Document } from 'mongodb'
 
 import { getContentDb, relationId } from '@/infra/db/content-db'
 import { idCandidates } from '@/server/web-api/progress'
@@ -20,6 +20,14 @@ interface PaidAccessResult {
   requiresEntitlement: boolean
   isAuthenticated: boolean
 }
+
+// Force reads off the PRIMARY for the gate decision. If the cluster's default
+// readPreference routes to a secondary (or if DATABASE_URL sets it that way),
+// a brand-new enrollment written by the admin webhook may not have replicated
+// yet — so the buyer would see the paywall for a few refreshes after a
+// successful purchase, even though the row already exists. Reading from the
+// primary guarantees read-your-writes for this critical check.
+const READ_FROM_PRIMARY = { readPreference: ReadPreference.PRIMARY }
 
 export async function checkPaidAccess(courseId: string): Promise<PaidAccessResult> {
   const { user } = await getAuthenticatedUserServer()
@@ -32,18 +40,27 @@ export async function checkPaidAccess(courseId: string): Promise<PaidAccessResul
   const userIds = idCandidates(user.id)
   const courseIds = idCandidates(courseId)
   const [entitlement, enrollment, userDoc] = await Promise.all([
-    db.collection('user-entitlements').findOne({
-      user: { $in: userIds },
-      course: { $in: courseIds },
-    }),
-    db.collection('enrollments').findOne({
-      user: { $in: userIds },
-      course: { $in: courseIds },
-      status: { $ne: 'cancelled' },
-    }),
+    db.collection('user-entitlements').findOne(
+      {
+        user: { $in: userIds },
+        course: { $in: courseIds },
+      },
+      READ_FROM_PRIMARY,
+    ),
+    db.collection('enrollments').findOne(
+      {
+        user: { $in: userIds },
+        course: { $in: courseIds },
+        status: { $ne: 'cancelled' },
+      },
+      READ_FROM_PRIMARY,
+    ),
     db
       .collection('users')
-      .findOne({ _id: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id } as Document),
+      .findOne(
+        { _id: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id } as Document,
+        READ_FROM_PRIMARY,
+      ),
   ])
   const legacy = Array.isArray(userDoc?.courseEntitlements)
     ? userDoc.courseEntitlements.some((entry: unknown) => {
