@@ -71,6 +71,10 @@
       "review",
       "fix",
       "fix-ci",
+      "ci-health",
+      "dev-ci-health",
+      "pr-health-triage",
+      "redispatch",
       "sync",
       "resolve",
       "merge",
@@ -86,7 +90,9 @@
     ],
     "activeGoals": [
       "daily-web-release-loop",
-      "ai-agency-health"
+      "ai-agency-health",
+      "ci-health",
+      "prs-stay-mergeable"
     ]
   },
   "fly": {
