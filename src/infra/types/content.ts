@@ -241,11 +241,15 @@ export type ProductContentBlock =
  * predicate, tighten the contract — until then, structural is fine.
  */
 export function isPopulatedCourseRef(value: unknown): value is ProductCourseRef {
-  return !!value && typeof value === 'object' && 'id' in value
+  // Tighter than `'id' in value` — also requires the id to actually be a
+  // string. Pure structural-key checks would let `{ id: null }` through and
+  // make the type narrowing unsound. Cheap defensive guard for the day this
+  // predicate is pointed at JSON we don't fully control.
+  return !!value && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'string'
 }
 
 export function isPopulatedFeatureRef(value: unknown): value is ProductFeatureRef {
-  return !!value && typeof value === 'object' && 'id' in value
+  return !!value && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'string'
 }
 
 export interface Product {
@@ -261,10 +265,17 @@ export interface Product {
   interval?: string | null
   /**
    * Legacy field — pre-Task-A schema used a flat ProductItems[] join. Newer
-   * products use `contents` instead, and the storefront no longer renders
-   * `items` anywhere. Field is kept here only to typecheck during the
-   * admin-side migration window; remove once admin confirms no products
-   * still have it populated.
+   * products use `contents` instead, and the storefront no longer RENDERS
+   * `items` anywhere.
+   *
+   * Caveat: still read by `src/app/api/payments/checkout/route.ts` via
+   * `resolveProductItems(product.items)` to compute
+   * `transaction.metadata.{itemIds,featureKeys}`. That metadata is
+   * informational only — admin's webhook handler grants entitlements by
+   * walking `product.contents` directly, not by reading the metadata — so
+   * the field being empty on new-shape products doesn't break enrollment.
+   * But the call site exists. Migrate it to `contents` (or just drop the
+   * metadata fields entirely) before removing `items` here.
    */
   items?: Array<string | ProductItem> | null
   contents?: ProductContentBlock[] | null

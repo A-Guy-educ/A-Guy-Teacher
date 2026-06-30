@@ -191,7 +191,30 @@ describe('ProductDetailContent — contents rendering', () => {
         ])}
       />,
     )
-    // The heading translation key the section would have rendered.
-    expect(screen.queryByText('includedItems')).toBeNull()
+    // The stub mocks useTranslations(ns) to return `${ns}.${key}` (mirrors
+    // the real namespace contract), so the section header — when rendered
+    // — contains the literal text 'products.includedItems'. Assert against
+    // that prefixed form, not the bare 'includedItems' which would never
+    // appear regardless of whether the section rendered and pass vacuously.
+    expect(screen.queryByText('products.includedItems')).toBeNull()
+  })
+
+  it('RENDERS the "What\'s included" section header when at least one block is visible (positive control)', () => {
+    // Counterpart to the above: locks down that the previous test isn't
+    // just passing because the heading text never appears under the new
+    // namespace stub. With a single non-silent block, the header must
+    // appear — both as a sanity check and as a regression guard against
+    // future stub/namespace drift.
+    render(
+      <ProductDetailContent
+        product={buildProduct([
+          {
+            blockType: 'courseBlock',
+            course: { id: 'c-visible', title: 'Visible Course', slug: 'visible' },
+          },
+        ])}
+      />,
+    )
+    expect(screen.queryByText('products.includedItems')).not.toBeNull()
   })
 })
