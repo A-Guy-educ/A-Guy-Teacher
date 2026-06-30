@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.26.4 — 2026-06-30
+
+_No notable commits since the last release._
 ## v0.26.3 — 2026-06-30
 
 _No notable commits since the last release._
@@ -1822,6 +1825,11 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #656: Build /prep7 landing page for Grade 7 Prep course ([#657](https://github.com/A-Guy-educ/A-Guy-Web/pull/657)) — @kodyade[bot]
+- chore: release v0.26.4 ([#666](https://github.com/A-Guy-educ/A-Guy-Web/pull/666)) — @kodyade[bot]
+- fix: Pin paid-access reads to primary so post-purchase gate clears immediately ([#664](https://github.com/A-Guy-educ/A-Guy-Web/pull/664)) — @aguyshayb
+- #662: [Refactor] Resolve PR #468 conflicts in LessonIntroPage back navi… ([#663](https://github.com/A-Guy-educ/A-Guy-Web/pull/663)) — @kodyade[bot]
+- promote: dev -> main (v0.26.3) ([#661](https://github.com/A-Guy-educ/A-Guy-Web/pull/661)) — @kodyade[bot]
 - #654: [Routing/Duplication] Lesson page 404s due to raw spaces in slug … ([#655](https://github.com/A-Guy-educ/A-Guy-Web/pull/655)) — @kodyade[bot]
 - fix: Cache + product page issues after billing refactor ([#658](https://github.com/A-Guy-educ/A-Guy-Web/pull/658)) — @aguyshayb
 - chore: release v0.26.3 ([#660](https://github.com/A-Guy-educ/A-Guy-Web/pull/660)) — @kodyade[bot]

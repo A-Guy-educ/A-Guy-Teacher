@@ -1,9 +1,14 @@
-import { ObjectId, type Document } from 'mongodb'
+import { ObjectId, ReadPreference, type Document } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { getContentDb, relationId } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
 import { idCandidates } from '@/server/web-api/progress'
+
+// Same reasoning as src/server/utils/check-paid-access.ts — pin reads to the
+// primary so the entitlement check sees freshly written enrollments instead of
+// a lagging secondary.
+const READ_FROM_PRIMARY = { readPreference: ReadPreference.PRIMARY }
 
 export async function GET(request: NextRequest) {
   const user = await getWebUser(request.headers)
@@ -18,18 +23,27 @@ export async function GET(request: NextRequest) {
   const userIds = idCandidates(user.id)
   const courseIds = idCandidates(courseId)
   const [entitlement, enrollment, userDoc] = await Promise.all([
-    db.collection('user-entitlements').findOne({
-      user: { $in: userIds },
-      course: { $in: courseIds },
-    }),
-    db.collection('enrollments').findOne({
-      user: { $in: userIds },
-      course: { $in: courseIds },
-      status: { $ne: 'cancelled' },
-    }),
+    db.collection('user-entitlements').findOne(
+      {
+        user: { $in: userIds },
+        course: { $in: courseIds },
+      },
+      READ_FROM_PRIMARY,
+    ),
+    db.collection('enrollments').findOne(
+      {
+        user: { $in: userIds },
+        course: { $in: courseIds },
+        status: { $ne: 'cancelled' },
+      },
+      READ_FROM_PRIMARY,
+    ),
     db
       .collection('users')
-      .findOne({ _id: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id } as Document),
+      .findOne(
+        { _id: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id } as Document,
+        READ_FROM_PRIMARY,
+      ),
   ])
 
   const legacy = Array.isArray(userDoc?.courseEntitlements)
