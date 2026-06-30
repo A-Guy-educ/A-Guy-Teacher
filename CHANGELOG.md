@@ -1822,6 +1822,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- promote: dev -> main (v0.26.3) ([#661](https://github.com/A-Guy-educ/A-Guy-Web/pull/661)) — @kodyade[bot]
 - #654: [Routing/Duplication] Lesson page 404s due to raw spaces in slug … ([#655](https://github.com/A-Guy-educ/A-Guy-Web/pull/655)) — @kodyade[bot]
 - fix: Cache + product page issues after billing refactor ([#658](https://github.com/A-Guy-educ/A-Guy-Web/pull/658)) — @aguyshayb
 - chore: release v0.26.3 ([#660](https://github.com/A-Guy-educ/A-Guy-Web/pull/660)) — @kodyade[bot]
