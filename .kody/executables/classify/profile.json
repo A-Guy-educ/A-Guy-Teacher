@@ -1,32 +1,33 @@
 {
   "name": "classify",
   "role": "primitive",
-  "describe": "Classifies issues and dispatches to the right executable",
+  "describe": "Classify an issue into one of {feature, bug, spec, chore} and dispatch the matching sub-orchestrator. Label-first fast path; LLM fallback when labels don't decide.",
   "inputs": [
     {
       "name": "issue",
       "flag": "--issue",
       "type": "int",
       "required": true,
-      "describe": "GitHub issue number to work on."
+      "describe": "GitHub issue number to classify."
+    },
+    {
+      "name": "base",
+      "flag": "--base",
+      "type": "string",
+      "required": false,
+      "describe": "Optional base branch override forwarded by goal-tick's stacked-PR dispatch. dispatchClassified re-emits this on the `@kody <classification>` comment so the downstream container/run keeps the stacked base."
     }
   ],
   "claudeCode": {
     "model": "inherit",
-    "permissionMode": "acceptEdits",
+    "permissionMode": "default",
     "maxTurns": null,
-    "maxTurnTimeoutSec": 1200,
+    "maxThinkingTokens": null,
     "systemPromptAppend": null,
     "cacheable": true,
-    "enableVerifyTool": false,
-    "verifyAttempts": 4,
     "tools": [
       "Read",
-      "Write",
-      "Edit",
-      "Bash",
-      "Grep",
-      "Glob"
+      "Bash"
     ],
     "hooks": [],
     "skills": [],
@@ -39,19 +40,33 @@
   "scripts": {
     "preflight": [
       {
-        "script": "loadIssueContext"
+        "script": "setLifecycleLabel",
+        "with": {
+          "label": "kody:classifying",
+          "color": "0e8a16",
+          "description": "kody: classifying the issue"
+        }
       },
-      {
-        "script": "composePrompt"
-      }
+      { "script": "loadIssueContext" },
+      { "script": "loadTaskState" },
+      { "script": "classifyByLabel" },
+      { "script": "loadConventions" },
+      { "script": "composePrompt" }
     ],
     "postflight": [
-      {
-        "script": "parseAgentResult"
-      },
-      {
-        "script": "postAgentComment"
-      }
+      { "script": "parseAgentResult" },
+      { "script": "recordClassification" },
+      { "script": "writeRunSummary" },
+      { "script": "dispatchClassified" }
+    ]
+  },
+  "output": {
+    "actionTypes": [
+      "CLASSIFIED_AS_FEATURE",
+      "CLASSIFIED_AS_BUG",
+      "CLASSIFIED_AS_SPEC",
+      "CLASSIFIED_AS_CHORE",
+      "CLASSIFY_FAILED"
     ]
   }
 }
