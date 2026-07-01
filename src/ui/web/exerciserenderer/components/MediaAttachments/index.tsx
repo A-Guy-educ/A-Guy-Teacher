@@ -15,6 +15,10 @@ function isImageType(media: Media): boolean {
   return media.type === 'image' || media.type === 'svg'
 }
 
+function isSvgMedia(media: Media): boolean {
+  return media.type === 'svg' || media.mimeType === 'image/svg+xml'
+}
+
 function isVideoType(media: Media): boolean {
   return media.type === 'video'
 }
@@ -95,7 +99,10 @@ function MediaItem({ media }: { media: Media }) {
       <img
         src={src}
         alt={media.alt || ''}
-        className="w-full h-auto max-h-96 max-w-full object-contain"
+        className={cn(
+          'w-full h-auto max-h-96 max-w-full object-contain',
+          isSvgMedia(media) && 'dark:invert',
+        )}
       />
     )
   }

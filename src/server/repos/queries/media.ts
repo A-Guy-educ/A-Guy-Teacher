@@ -1,12 +1,20 @@
 import { cache } from 'react'
 
+import { inferMediaType } from '@/infra/media/inferMediaType'
 import type { Media } from '@/infra/types/content'
 import { findManySerialized, objectIdFromString } from '../mongo'
 
 function normalizeMedia(media: Media): Media {
   return {
     ...media,
-    mediaType: media.mediaType || (media.type as Media['mediaType']),
+    mediaType:
+      media.mediaType ||
+      (media.type as Media['mediaType']) ||
+      inferMediaType(media.mimeType, media.filename),
+    type:
+      media.type ||
+      (media.mediaType as string | null | undefined) ||
+      inferMediaType(media.mimeType, media.filename),
     url: media.url || (media.filename ? `/api/media/file/${media.filename}` : undefined),
   }
 }

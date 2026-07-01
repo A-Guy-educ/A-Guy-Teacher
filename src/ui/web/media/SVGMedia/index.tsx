@@ -23,13 +23,13 @@ export const SVGMedia: React.FC<MediaProps> = (props) => {
     const altText = alt || altFromResource || 'SVG image'
 
     return (
-      <div className={cn('svg-media', className)}>
+      <div className={cn('svg-media flex items-center justify-center', className)}>
         <Image
           src={svgUrl}
           alt={altText}
           width={width || 800}
           height={height || 600}
-          className={cn('max-w-full h-auto', imgClassName)}
+          className={cn('max-w-full h-auto dark:invert', imgClassName)}
           unoptimized
         />
       </div>
