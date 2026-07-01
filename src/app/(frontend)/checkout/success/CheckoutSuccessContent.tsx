@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { Card, CardContent } from '@/ui/web/components/card'
 import { Button } from '@/ui/web/components/button'
@@ -87,9 +88,11 @@ export function CheckoutSuccessContent({
   // screen in a "granting access…" state until the row lands closes that race.
   //
   // Bounded at ENTITLEMENT_POLL_TIMEOUT_MS so a genuine webhook failure
-  // doesn't trap the buyer — after that we reveal the button anyway (and if
-  // access is still missing, the gate on the course page will explain what
-  // happened).
+  // doesn't trap the buyer — after that we reveal the button anyway. The
+  // course page they land on will still render its paid-content modal in that
+  // failure case (same "purchase required" copy as any other lack-of-access),
+  // which is not a purchase-specific narrative — this is the known gap, do
+  // NOT re-tighten to keep the buyer trapped here.
   //
   // Uses chained setTimeout instead of setInterval so we (a) never overlap
   // in-flight requests when Mongo hits >3s, and (b) naturally stop scheduling
@@ -102,8 +105,13 @@ export function CheckoutSuccessContent({
   const [pollTimedOut, setPollTimedOut] = useState(false)
   const shouldPollEntitlement =
     transaction?.status === 'succeeded' && !!firstCourse && !hasEntitlement && !pollTimedOut
+  // Pin to the primitive id so the effect doesn't re-fire (and reset the 45s
+  // timeout budget) when router.refresh() hands us a new `firstCourse` object
+  // with the same identity. slug is captured via ref for the same reason.
+  const firstCourseId = firstCourse?.id
+  const firstCourseSlug = firstCourse?.slug
   useEffect(() => {
-    if (!shouldPollEntitlement || !firstCourse) return
+    if (!shouldPollEntitlement || !firstCourseId) return
     let cancelled = false
     let timeoutId: number | undefined
     const startedAt = Date.now()
@@ -111,15 +119,28 @@ export function CheckoutSuccessContent({
     async function poll() {
       if (cancelled) return
       try {
-        const res = await fetch(`/api/entitlements/check?courseId=${firstCourse!.id}`, {
-          cache: 'no-store',
-        })
+        const res = await fetch(
+          `/api/entitlements/check?courseId=${encodeURIComponent(firstCourseId!)}`,
+          { cache: 'no-store' },
+        )
         if (cancelled) return
         if (res.ok) {
           const data: { hasAccess?: boolean } = await res.json()
           if (cancelled) return
           if (data.hasAccess) {
             setHasEntitlement(true)
+            // Fire analytics AFTER the poll confirms the enrollment row is
+            // actually written server-side — this is the moment the buyer
+            // materially gained access. Was previously emitted at coupon-redeem
+            // in the modal (now removed); the paid path is the buy-flow analog
+            // and coupons still emit from within their own success handlers if
+            // reintroduced. Server-side (redeem API) can't reach the browser
+            // event bus, so the client is the right seam.
+            systemEventBus.emit(SYSTEM_EVENTS.ACCESS_GRANTED, {
+              access_type: 'paid' as const,
+              course_id: firstCourseId!,
+              course_slug: firstCourseSlug,
+            })
             return
           }
         }
@@ -139,7 +160,7 @@ export function CheckoutSuccessContent({
       cancelled = true
       if (timeoutId !== undefined) window.clearTimeout(timeoutId)
     }
-  }, [shouldPollEntitlement, firstCourse])
+  }, [shouldPollEntitlement, firstCourseId, firstCourseSlug])
 
   if (!sessionId) {
     return (
@@ -208,7 +229,7 @@ export function CheckoutSuccessContent({
 
   if (isConfirmed) {
     const waitingForAccess = !!firstCourse && !hasEntitlement && !pollTimedOut
-    const courseHref = firstCourse ? `/courses/${firstCourse.slug}` : '/'
+    const courseHref = firstCourse ? `/courses/${encodeURIComponent(firstCourse.slug)}` : '/'
     const goToCourseLabel = firstCourse
       ? t('success.goToCourse').replace('{course}', firstCourse.title)
       : t('success.goHome')

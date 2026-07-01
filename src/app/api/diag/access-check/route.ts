@@ -1,20 +1,25 @@
 /**
  * Diagnostic endpoint for the paid-access gate.
  *
- * Given a `?slug=<courseSlug>` and an authenticated session, dumps EXACTLY
- * what web sees from Mongo so we can figure out why the "requires entitlement"
- * gate keeps firing even after admin shows an active enrollment. Compares
- * the three entitlement sources checkPaidAccess reads, plus a full list of
- * the caller's OWN enrollments (so a wrong-course-id bug on the webhook
- * side is obvious). Reads the caller's own data only — do NOT add
- * cross-user queries here, that's how you leak enrollments for other
- * students on the same course.
+ * Given a `?slug=<courseSlug>` and an admin session, dumps EXACTLY what web
+ * sees from Mongo so we can figure out why the "requires entitlement" gate
+ * keeps firing even after admin shows an active enrollment. Compares the
+ * three entitlement sources checkPaidAccess reads, plus a full list of the
+ * caller's OWN enrollments (so a wrong-course-id bug on the webhook side is
+ * obvious). Reads the caller's own data only — do NOT add cross-user
+ * queries here, that's how you leak enrollments for other students on the
+ * same course.
  *
- * TODO: This is a temporary debugging surface for the post-purchase
- * gate investigation. Remove once we're satisfied the buyer-side race is
- * closed and no new "still see the paywall" reports come in. Track under
- * whichever issue supersedes this — do NOT let this route go stale in the
- * codebase.
+ * Admin-gated (mirrors /api/entitlements/check) and 404s in production
+ * builds so this can never be a persistent per-user debug surface if the
+ * cleanup below slips. To investigate a specific student's case, an admin
+ * can impersonate or the student can be walked through /api/entitlements/check
+ * (which returns just the boolean).
+ *
+ * TODO: This is a temporary debugging surface for the post-purchase gate
+ * investigation. Remove once we're satisfied the buyer-side race is closed
+ * and no new "still see the paywall" reports come in. Track under whichever
+ * issue supersedes this — do NOT let this route go stale in the codebase.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId, ReadPreference, type Document } from 'mongodb'
@@ -28,9 +33,25 @@ export const dynamic = 'force-dynamic'
 const READ_FROM_PRIMARY = { readPreference: ReadPreference.PRIMARY }
 
 export async function GET(request: NextRequest) {
+  // Belt-and-suspenders expiration guard: this endpoint is off on the prod
+  // Vercel target so the "someone forgot to delete this" failure mode stays
+  // bounded. Preview / dev deploys still see it (VERCEL_ENV=preview), so
+  // dev.aguy.co.il investigations don't break. Admin-only gating below is
+  // still the real active guard — this just makes the prod exposure zero.
+  if (process.env.VERCEL_ENV === 'production') {
+    return NextResponse.json({ error: 'not found' }, { status: 404 })
+  }
+
   const user = await getWebUser(request.headers)
   if (!user?.id) {
     return NextResponse.json({ error: 'not authenticated' }, { status: 401 })
+  }
+  // Admin-gate to match /api/entitlements/check. Serialized entitlement /
+  // enrollment docs carry tenant IDs, grantMethod, timestamps — more surface
+  // than any normal user page. If we need to debug a specific student, an
+  // admin runs this on their behalf.
+  if (user.role !== 'admin' && !user.roles?.includes('admin')) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
 
   const slug = request.nextUrl.searchParams.get('slug')
