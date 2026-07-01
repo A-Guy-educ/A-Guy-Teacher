@@ -1825,6 +1825,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #651: [Exercises] Optimizing SVG diagram support in explanations & Dark… ([#675](https://github.com/A-Guy-educ/A-Guy-Web/pull/675)) — @kodyade[bot]
 - promote: dev -> main (v0.26.4) ([#667](https://github.com/A-Guy-educ/A-Guy-Web/pull/667)) — @kodyade[bot]
 - #656: Build /prep7 landing page for Grade 7 Prep course ([#657](https://github.com/A-Guy-educ/A-Guy-Web/pull/657)) — @kodyade[bot]
 - chore: release v0.26.4 ([#666](https://github.com/A-Guy-educ/A-Guy-Web/pull/666)) — @kodyade[bot]
