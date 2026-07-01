@@ -1825,6 +1825,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #670: [Accessibility] Broken contrast (black text on dark backgrounds) … ([#681](https://github.com/A-Guy-educ/A-Guy-Web/pull/681)) — @kodyade[bot]
 - #652: [Exercises] תמיכה מיטבית בשרטוטי SVG ודיאגרמות במצב כהה (Dark Mod… ([#679](https://github.com/A-Guy-educ/A-Guy-Web/pull/679)) — @kodyade[bot]
 - fix: Separate course page access from lesson access ([#683](https://github.com/A-Guy-educ/A-Guy-Web/pull/683)) — @aguyshayb
 - Diag/access check endpoint ([#672](https://github.com/A-Guy-educ/A-Guy-Web/pull/672)) — @aguyshayb
