@@ -141,7 +141,9 @@ async function resolveFirstCourseFromProduct(
     const slug = typeof courseDoc?.slug === 'string' ? courseDoc.slug : null
     const title = typeof courseDoc?.title === 'string' ? courseDoc.title : null
     if (slug && title) return { id: courseId, slug, title }
-    return null
+    // Deleted / renamed / malformed courseBlock — skip and try the next one.
+    // The buyer should still get deep-linked into a valid course if the
+    // product bundles more than one and only one is broken.
   }
   return null
 }

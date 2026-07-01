@@ -36,10 +36,15 @@ interface CheckoutSuccessContentProps {
 // leave the buyer staring at a spinner — they get the manual refresh button
 // as an escape hatch. Pending-state auto-refresh is a coarser 5s: it re-runs
 // the server component to re-read `transaction.status`, so a shorter interval
-// would waste request budget without helping.
+// would waste request budget without helping. Pending is capped at 5 minutes
+// wall-clock so a genuinely stuck payment (ACH hold, bank review, dead
+// webhook during a sale) doesn't pile up unbounded refreshes for however
+// long the buyer leaves the tab open. After the cap they still have the
+// manual refresh button.
 const ENTITLEMENT_POLL_INTERVAL_MS = 3000
 const ENTITLEMENT_POLL_TIMEOUT_MS = 45000
 const PENDING_STATUS_REFRESH_INTERVAL_MS = 5000
+const PENDING_STATUS_REFRESH_MAX_MS = 5 * 60 * 1000
 
 export function CheckoutSuccessContent({
   sessionId,
@@ -74,10 +79,19 @@ export function CheckoutSuccessContent({
   // Auto-refresh the pending state every ~5s so buyers don't have to sit and
   // press the manual refresh button waiting for the webhook. Only wires up in
   // the pending state; other statuses either terminate here (confirmed / failed)
-  // or drive the entitlement polling below.
+  // or drive the entitlement polling below. Bounded at 5 minutes so an
+  // indefinitely stuck payment (bank hold, webhook outage during a busy sale)
+  // can't pile up refreshes for hours on an abandoned tab.
   useEffect(() => {
     if (transaction?.status !== 'pending') return
-    const id = window.setInterval(() => router.refresh(), PENDING_STATUS_REFRESH_INTERVAL_MS)
+    const startedAt = Date.now()
+    const id = window.setInterval(() => {
+      if (Date.now() - startedAt >= PENDING_STATUS_REFRESH_MAX_MS) {
+        window.clearInterval(id)
+        return
+      }
+      router.refresh()
+    }, PENDING_STATUS_REFRESH_INTERVAL_MS)
     return () => window.clearInterval(id)
   }, [transaction?.status, router])
 

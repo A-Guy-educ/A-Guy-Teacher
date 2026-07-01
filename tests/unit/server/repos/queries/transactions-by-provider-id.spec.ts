@@ -52,6 +52,8 @@ describe('queryTransactionByProviderId', () => {
         _id: new ObjectId(TX_ID_HEX),
         providerTransactionId: ORDER_ID,
         status: 'succeeded',
+        // No `contents` on productDoc → resolveFirstCourseFromProduct
+        // short-circuits, so firstCourse is null. Covered in its own test.
         productDoc: { name: 'Test Product', slug: 'test' },
       },
     ])
@@ -63,6 +65,7 @@ describe('queryTransactionByProviderId', () => {
       id: TX_ID_HEX,
       status: 'succeeded',
       productName: 'Test Product',
+      firstCourse: null,
     })
   })
 
@@ -109,6 +112,6 @@ describe('queryTransactionByProviderId', () => {
     const { queryTransactionByProviderId } = await import('@/server/repos/queries/transactions')
     const result = await queryTransactionByProviderId(ORDER_ID)
 
-    expect(Object.keys(result ?? {})).toEqual(['id', 'status', 'productName'])
+    expect(Object.keys(result ?? {})).toEqual(['id', 'status', 'productName', 'firstCourse'])
   })
 })
