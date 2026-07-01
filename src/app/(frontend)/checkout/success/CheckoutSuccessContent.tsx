@@ -90,40 +90,54 @@ export function CheckoutSuccessContent({
   // doesn't trap the buyer — after that we reveal the button anyway (and if
   // access is still missing, the gate on the course page will explain what
   // happened).
+  //
+  // Uses chained setTimeout instead of setInterval so we (a) never overlap
+  // in-flight requests when Mongo hits >3s, and (b) naturally stop scheduling
+  // once we've resolved (hasAccess=true) or timed out — no orphaned interval
+  // continuing to hammer the API after we've given up. `pollTimedOut` also
+  // participates in shouldPollEntitlement below as belt-and-suspenders: the
+  // effect will bail immediately on re-render even before the pending
+  // in-flight request settles.
   const [hasEntitlement, setHasEntitlement] = useState(false)
   const [pollTimedOut, setPollTimedOut] = useState(false)
   const shouldPollEntitlement =
-    transaction?.status === 'succeeded' && !!firstCourse && !hasEntitlement
+    transaction?.status === 'succeeded' && !!firstCourse && !hasEntitlement && !pollTimedOut
   useEffect(() => {
     if (!shouldPollEntitlement || !firstCourse) return
     let cancelled = false
+    let timeoutId: number | undefined
     const startedAt = Date.now()
 
     async function poll() {
+      if (cancelled) return
       try {
         const res = await fetch(`/api/entitlements/check?courseId=${firstCourse!.id}`, {
           cache: 'no-store',
         })
-        if (!res.ok) return
-        const data: { hasAccess?: boolean } = await res.json()
         if (cancelled) return
-        if (data.hasAccess) {
-          setHasEntitlement(true)
-          return
+        if (res.ok) {
+          const data: { hasAccess?: boolean } = await res.json()
+          if (cancelled) return
+          if (data.hasAccess) {
+            setHasEntitlement(true)
+            return
+          }
         }
       } catch {
-        // Network hiccup — swallow and let the interval retry.
+        // Network hiccup — swallow and let the next scheduled tick retry.
       }
-      if (Date.now() - startedAt >= ENTITLEMENT_POLL_TIMEOUT_MS && !cancelled) {
+      if (cancelled) return
+      if (Date.now() - startedAt >= ENTITLEMENT_POLL_TIMEOUT_MS) {
         setPollTimedOut(true)
+        return
       }
+      timeoutId = window.setTimeout(poll, ENTITLEMENT_POLL_INTERVAL_MS)
     }
 
     void poll()
-    const intervalId = window.setInterval(poll, ENTITLEMENT_POLL_INTERVAL_MS)
     return () => {
       cancelled = true
-      window.clearInterval(intervalId)
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId)
     }
   }, [shouldPollEntitlement, firstCourse])
 

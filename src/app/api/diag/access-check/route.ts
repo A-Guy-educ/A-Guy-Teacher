@@ -5,14 +5,16 @@
  * what web sees from Mongo so we can figure out why the "requires entitlement"
  * gate keeps firing even after admin shows an active enrollment. Compares
  * the three entitlement sources checkPaidAccess reads, plus a full list of
- * the caller's enrollments (so a wrong-course-id bug on the webhook side is
- * obvious). Also does a "raw" find with no id-shape expansion, so we can
- * see whether admin stored `user`/`course` as string vs ObjectId vs
- * populated-object.
+ * the caller's OWN enrollments (so a wrong-course-id bug on the webhook
+ * side is obvious). Reads the caller's own data only — do NOT add
+ * cross-user queries here, that's how you leak enrollments for other
+ * students on the same course.
  *
- * Only returns the caller's own data (session-scoped). Not gated behind an
- * env flag — the surface is small and the data is already visible to the
- * user in question in other places.
+ * TODO: This is a temporary debugging surface for the post-purchase
+ * gate investigation. Remove once we're satisfied the buyer-side race is
+ * closed and no new "still see the paywall" reports come in. Track under
+ * whichever issue supersedes this — do NOT let this route go stale in the
+ * codebase.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId, ReadPreference, type Document } from 'mongodb'
@@ -49,44 +51,34 @@ export async function GET(request: NextRequest) {
   const userIds = idCandidates(user.id)
   const courseIds = idCandidates(courseId)
 
-  const [entitlement, enrollment, userDoc, allUserEnrollments, allEnrollmentsForCourse] =
-    await Promise.all([
-      db.collection('user-entitlements').findOne(
-        {
-          user: { $in: userIds },
-          course: { $in: courseIds },
-        },
+  const [entitlement, enrollment, userDoc, allUserEnrollments] = await Promise.all([
+    db.collection('user-entitlements').findOne(
+      {
+        user: { $in: userIds },
+        course: { $in: courseIds },
+      },
+      READ_FROM_PRIMARY,
+    ),
+    db.collection('enrollments').findOne(
+      {
+        user: { $in: userIds },
+        course: { $in: courseIds },
+        status: { $ne: 'cancelled' },
+      },
+      READ_FROM_PRIMARY,
+    ),
+    db
+      .collection('users')
+      .findOne(
+        { _id: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id } as Document,
         READ_FROM_PRIMARY,
       ),
-      db.collection('enrollments').findOne(
-        {
-          user: { $in: userIds },
-          course: { $in: courseIds },
-          status: { $ne: 'cancelled' },
-        },
-        READ_FROM_PRIMARY,
-      ),
-      db
-        .collection('users')
-        .findOne(
-          { _id: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id } as Document,
-          READ_FROM_PRIMARY,
-        ),
-      db
-        .collection('enrollments')
-        .find({ user: { $in: userIds } }, READ_FROM_PRIMARY)
-        .limit(50)
-        .toArray(),
-      // Same course, any user — narrow to id/user/status so we don't leak PII.
-      db
-        .collection('enrollments')
-        .find(
-          { course: { $in: courseIds } },
-          { projection: { user: 1, status: 1, grantMethod: 1, enrolledAt: 1 }, ...READ_FROM_PRIMARY },
-        )
-        .limit(20)
-        .toArray(),
-    ])
+    db
+      .collection('enrollments')
+      .find({ user: { $in: userIds } }, READ_FROM_PRIMARY)
+      .limit(50)
+      .toArray(),
+  ])
 
   const legacy = Array.isArray(userDoc?.courseEntitlements)
     ? userDoc.courseEntitlements
@@ -117,7 +109,11 @@ export async function GET(request: NextRequest) {
       enrollment: enrollment ? serializeDoc(enrollment) : null,
       legacyCourseEntitlements: legacy,
     },
-    wouldRequireEntitlement: !(entitlement || enrollment || legacy.some((e) => e.matchesQueryCourse)),
+    wouldRequireEntitlement: !(
+      entitlement ||
+      enrollment ||
+      legacy.some((e) => e.matchesQueryCourse)
+    ),
     diagnostics: {
       allEnrollmentsForCallingUser: allUserEnrollments.map((doc) => ({
         id: relationId(doc._id),
@@ -125,14 +121,6 @@ export async function GET(request: NextRequest) {
         userRaw: doc.user,
         course: relationId(doc.course),
         courseRaw: doc.course,
-        status: doc.status,
-        grantMethod: doc.grantMethod,
-        enrolledAt: doc.enrolledAt,
-      })),
-      allEnrollmentsForCourseSampled: allEnrollmentsForCourse.map((doc) => ({
-        id: relationId(doc._id),
-        user: relationId(doc.user),
-        userRaw: doc.user,
         status: doc.status,
         grantMethod: doc.grantMethod,
         enrolledAt: doc.enrolledAt,

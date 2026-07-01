@@ -138,12 +138,7 @@ export function AccessGateProvider({
 
       {/* Paid content modal */}
       {showPaidModal && (
-        <PaidContentModal
-          isAuthenticated={isAuthenticated}
-          pathname={pathname}
-          courseSlug={courseSlug}
-          t={t}
-        />
+        <PaidContentModal isAuthenticated={isAuthenticated} pathname={pathname} t={t} />
       )}
 
       {isBlocked ? (
@@ -176,7 +171,6 @@ function PaidContentModal({
 }: {
   isAuthenticated?: boolean
   pathname: string
-  courseSlug: string
   t: (key: string) => string
 }) {
   return (

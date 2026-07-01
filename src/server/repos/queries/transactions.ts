@@ -89,10 +89,14 @@ export const queryTransactionByProviderId = cache(
     if (!doc) return null
 
     const product = doc.productDoc ?? null
-    const firstCourse = await resolveFirstCourseFromProduct(product)
+    const status = doc.status ?? 'pending'
+    // Only the confirmed-purchase branch on the success page consumes
+    // firstCourse (to render "Go to {course}" + drive the entitlement poll).
+    // Skip the second Mongo hop for pending / failed / refunded rows.
+    const firstCourse = status === 'succeeded' ? await resolveFirstCourseFromProduct(product) : null
     return {
       id: doc._id.toString(),
-      status: doc.status ?? 'pending',
+      status,
       productName: product?.name ?? product?.title ?? null,
       firstCourse,
     }

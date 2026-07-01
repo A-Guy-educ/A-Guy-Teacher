@@ -670,18 +670,7 @@
     "paidTitle": "תוכן פרימיום",
     "paidNotLoggedIn": "יש להתחבר כדי לגשת לתוכן זה.",
     "paidNoEntitlement": "הגישה לקורס זה דורשת רכישה. עברו לחנות כדי להירשם.",
-    "goToStore": "לחנות",
-    "codePlaceholder": "הזן קוד גישה",
-    "codeSubmit": "מימוש קוד",
-    "codeSubmitting": "ממש...",
-    "codeInvalid": "קוד גישה לא תקין.",
-    "codeInactive": "קוד זה אינו פעיל יותר.",
-    "codeExpired": "פג תוקף הקוד.",
-    "codeExhausted": "קוד זה הגיע למגבלת השימוש שלו.",
-    "codeAlreadyUsed": "כבר יש לך גישה לקורס זה.",
-    "codeError": "משהו השתבש. נסה שוב.",
-    "codeSuccessTitle": "איזה כיף שנרשמת!",
-    "codeSuccessMessage": "חודש מתנה עלינו!"
+    "goToStore": "לחנות"
   },
   "study": {
     "loading": "טוען...",
