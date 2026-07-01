@@ -79,8 +79,12 @@
       "vercel-production-deploy"
     ],
     "activeAgents": [
+      "ceo",
       "cto",
-      "kody"
+      "kody",
+      "repo-brain",
+      "tech-writer",
+      "ux-designer"
     ],
     "activeGoals": [
       "daily-web-release-loop",
