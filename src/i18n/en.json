@@ -275,6 +275,12 @@
         "collision": "An account with this email already exists. Please log in with your password or contact support."
       }
     },
+    "onboardingComplete": {
+      "title": "Great!",
+      "description": "I prepared the system just for you. A short (free) sign-up and we start learning.",
+      "primaryCta": "Quick sign-in with Google",
+      "reassurance": "No cost, no credit card required."
+    },
     "login": {
       "subtitle": "Sign in to continue learning",
       "headingBold": "Hello,",

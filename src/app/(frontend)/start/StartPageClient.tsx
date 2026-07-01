@@ -3,9 +3,11 @@
 import { Bot } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { useCurrentUser } from '@/client/hooks/useCurrentUser'
 import { setUserProfile } from '@/client/state/localStorage/userProfile'
 import type { Course } from '@/infra/types/content'
 import { cn } from '@/infra/utils/ui'
+import { OnboardingCompleteLoginModal } from '@/ui/web/auth/OnboardingCompleteLoginModal'
 import { LanguageSwitcher } from '@/ui/web/LanguageSwitcher'
 import { useLocale } from '@/ui/web/providers/I18n'
 import { ThemeSelector } from '@/ui/web/providers/Theme/ThemeSelector'
@@ -124,7 +126,9 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
   const [teacherProfiles, setTeacherProfiles] = useState<TeacherProfile[]>([])
   const [selectedTeacherProfile, setSelectedTeacherProfile] = useState<TeacherProfile | null>(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
   const runIdRef = useRef(0)
+  const { user, isLoading: isAuthLoading } = useCurrentUser()
 
   useEffect(() => {
     document.body.classList.add('landing-page')
@@ -292,12 +296,20 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
       playTone(580, 120)
       await typeText(copy.selected, 50)
       await sleep(900)
+
+      const isAnonymous = !user && !isAuthLoading
+      if (isAnonymous) {
+        setPane('redirecting')
+        setShowLoginModal(true)
+        return
+      }
+
       setPane('redirecting')
       window.setTimeout(() => {
         window.location.assign(getCourseHref(course))
       }, 800)
     },
-    [copy.selected, playTone, selectedMood, sleep, typeText],
+    [copy.selected, isAuthLoading, playTone, selectedMood, sleep, typeText, user],
   )
 
   return (
@@ -337,6 +349,11 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
 
         <StartFooter activeIndex={paneToIndex(pane)} copy={copy} />
       </div>
+
+      <OnboardingCompleteLoginModal
+        isOpen={showLoginModal}
+        returnTo={selectedCourse ? getCourseHref(selectedCourse) : '/courses'}
+      />
     </main>
   )
 }
