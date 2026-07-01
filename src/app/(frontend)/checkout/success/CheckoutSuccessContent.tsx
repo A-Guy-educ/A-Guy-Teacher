@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useTranslations } from '@/ui/web/providers/I18n'
@@ -15,16 +15,36 @@ interface TransactionData {
   status: TransactionStatus
 }
 
+interface FirstCourse {
+  id: string
+  slug: string
+  title: string
+}
+
 interface CheckoutSuccessContentProps {
   sessionId?: string
   transaction: TransactionData | null
   productName: string
+  firstCourse?: FirstCourse | null
 }
+
+// Poll cadence for the two "waiting for admin webhook" states.
+// PayPal typically fires the CAPTURE.COMPLETED webhook 5–20s after redirect;
+// 3s keeps latency-to-unlock tight without hammering Mongo. We stop after
+// ~45s so a genuine webhook failure (misconfigured URL, admin down) doesn't
+// leave the buyer staring at a spinner — they get the manual refresh button
+// as an escape hatch. Pending-state auto-refresh is a coarser 5s: it re-runs
+// the server component to re-read `transaction.status`, so a shorter interval
+// would waste request budget without helping.
+const ENTITLEMENT_POLL_INTERVAL_MS = 3000
+const ENTITLEMENT_POLL_TIMEOUT_MS = 45000
+const PENDING_STATUS_REFRESH_INTERVAL_MS = 5000
 
 export function CheckoutSuccessContent({
   sessionId,
   transaction,
   productName,
+  firstCourse,
 }: CheckoutSuccessContentProps) {
   const t = useTranslations('checkout')
   const router = useRouter()
@@ -49,6 +69,63 @@ export function CheckoutSuccessContent({
       router.refresh()
     }
   }, [transaction?.status, router])
+
+  // Auto-refresh the pending state every ~5s so buyers don't have to sit and
+  // press the manual refresh button waiting for the webhook. Only wires up in
+  // the pending state; other statuses either terminate here (confirmed / failed)
+  // or drive the entitlement polling below.
+  useEffect(() => {
+    if (transaction?.status !== 'pending') return
+    const id = window.setInterval(() => router.refresh(), PENDING_STATUS_REFRESH_INTERVAL_MS)
+    return () => window.clearInterval(id)
+  }, [transaction?.status, router])
+
+  // Once the transaction is confirmed, poll /api/entitlements/check for the
+  // first course the product grants until we see hasAccess=true. The gap
+  // between "payment succeeded" and "enrollment row written" is the whole
+  // reason the buyer used to hit the paid modal after purchase; holding this
+  // screen in a "granting access…" state until the row lands closes that race.
+  //
+  // Bounded at ENTITLEMENT_POLL_TIMEOUT_MS so a genuine webhook failure
+  // doesn't trap the buyer — after that we reveal the button anyway (and if
+  // access is still missing, the gate on the course page will explain what
+  // happened).
+  const [hasEntitlement, setHasEntitlement] = useState(false)
+  const [pollTimedOut, setPollTimedOut] = useState(false)
+  const shouldPollEntitlement =
+    transaction?.status === 'succeeded' && !!firstCourse && !hasEntitlement
+  useEffect(() => {
+    if (!shouldPollEntitlement || !firstCourse) return
+    let cancelled = false
+    const startedAt = Date.now()
+
+    async function poll() {
+      try {
+        const res = await fetch(`/api/entitlements/check?courseId=${firstCourse!.id}`, {
+          cache: 'no-store',
+        })
+        if (!res.ok) return
+        const data: { hasAccess?: boolean } = await res.json()
+        if (cancelled) return
+        if (data.hasAccess) {
+          setHasEntitlement(true)
+          return
+        }
+      } catch {
+        // Network hiccup — swallow and let the interval retry.
+      }
+      if (Date.now() - startedAt >= ENTITLEMENT_POLL_TIMEOUT_MS && !cancelled) {
+        setPollTimedOut(true)
+      }
+    }
+
+    void poll()
+    const intervalId = window.setInterval(poll, ENTITLEMENT_POLL_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      window.clearInterval(intervalId)
+    }
+  }, [shouldPollEntitlement, firstCourse])
 
   if (!sessionId) {
     return (
@@ -116,6 +193,12 @@ export function CheckoutSuccessContent({
   }
 
   if (isConfirmed) {
+    const waitingForAccess = !!firstCourse && !hasEntitlement && !pollTimedOut
+    const courseHref = firstCourse ? `/courses/${firstCourse.slug}` : '/'
+    const goToCourseLabel = firstCourse
+      ? t('success.goToCourse').replace('{course}', firstCourse.title)
+      : t('success.goHome')
+
     return (
       <Card className="max-w-md mx-auto shadow-elevation-3 border border-border/60">
         <CardContent className="p-card-padding-lg text-center">
@@ -131,9 +214,21 @@ export function CheckoutSuccessContent({
               {t('success.productLabel').replace('{product}', productName)}
             </p>
           )}
-          <Button onClick={() => (window.location.href = '/')} className="w-full">
-            {t('success.goHome')}
-          </Button>
+          {waitingForAccess ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>{t('success.grantingAccess')}</span>
+              </div>
+              <Button disabled className="w-full">
+                {goToCourseLabel}
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={() => (window.location.href = courseHref)} className="w-full">
+              {goToCourseLabel}
+            </Button>
+          )}
         </CardContent>
       </Card>
     )

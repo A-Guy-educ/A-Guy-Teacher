@@ -669,7 +669,8 @@
     "browseCourses": "Browse Courses",
     "paidTitle": "Premium Content",
     "paidNotLoggedIn": "Please sign in to access this content.",
-    "paidNoEntitlement": "This content requires a purchase. Enter an access code below or contact your administrator.",
+    "paidNoEntitlement": "Access to this course requires a purchase. Head to the store to enroll.",
+    "goToStore": "Go to Store",
     "codePlaceholder": "Enter access code",
     "codeSubmit": "Redeem Code",
     "codeSubmitting": "Redeeming...",
@@ -1009,7 +1010,9 @@
       "paymentFailed": "Payment Failed",
       "paymentFailedDescription": "Your payment could not be processed. Please try again or contact support.",
       "backToProducts": "Browse Products",
-      "goHome": "Go to Home"
+      "goHome": "Go to Home",
+      "goToCourse": "Go to {course}",
+      "grantingAccess": "Granting access…"
     },
     "cancel": {
       "title": "Payment Cancelled",
