@@ -3,6 +3,7 @@
 import React from 'react'
 import { cn } from '@/infra/utils/ui'
 import { getMediaUrl } from '@/infra/utils/getMediaUrl'
+import { darkInvertIfSvg, isSvgMedia } from '@/ui/web/shared/MathMarkdown/isSvgMedia'
 import type { Media } from '@/infra/types/content'
 import { useMediaMap } from '../../context/MediaMapContext'
 
@@ -13,10 +14,6 @@ interface MediaAttachmentsProps {
 
 function isImageType(media: Media): boolean {
   return media.type === 'image' || media.type === 'svg'
-}
-
-function isSvgMedia(media: Media): boolean {
-  return media.type === 'svg' || media.mimeType === 'image/svg+xml'
 }
 
 function isVideoType(media: Media): boolean {
@@ -94,15 +91,14 @@ function MediaItem({ media }: { media: Media }) {
   }
 
   if (isImageType(media)) {
+    const isSvg = isSvgMedia(media)
     return (
       /* eslint-disable-next-line @next/next/no-img-element */
       <img
         src={src}
         alt={media.alt || ''}
-        className={cn(
-          'w-full h-auto max-h-96 max-w-full object-contain',
-          isSvgMedia(media) && 'dark:invert',
-        )}
+        loading="lazy"
+        className={cn('w-full h-auto max-h-96 max-w-full object-contain', darkInvertIfSvg(isSvg))}
       />
     )
   }
