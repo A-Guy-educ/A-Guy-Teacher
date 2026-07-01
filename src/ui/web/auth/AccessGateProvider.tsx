@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAccessGate } from '@/client/hooks/useAccessGate'
 import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
 import type { AccessType } from '@/server/constants/access-types'
@@ -14,7 +14,7 @@ import {
 import { Button } from '@/ui/web/components/button'
 import { GoogleLoginButton } from '@/ui/web/auth/GoogleLoginButton'
 import { useTranslations } from '@/ui/web/providers/I18n'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 import { AuthGateModal } from './AuthGateModal'
 
@@ -138,12 +138,7 @@ export function AccessGateProvider({
 
       {/* Paid content modal */}
       {showPaidModal && (
-        <PaidContentModal
-          isAuthenticated={isAuthenticated}
-          pathname={pathname}
-          courseSlug={courseSlug}
-          t={t}
-        />
+        <PaidContentModal isAuthenticated={isAuthenticated} pathname={pathname} t={t} />
       )}
 
       {isBlocked ? (
@@ -161,93 +156,26 @@ export function AccessGateProvider({
   )
 }
 
-/** Sub-component: paid content modal with access code input */
+/**
+ * Paid-content modal shown when the buyer lands on a paid course without an
+ * active entitlement. Anonymous visitors get a Google sign-in prompt; signed-in
+ * visitors get pushed straight to the storefront to purchase — the coupon-code
+ * flow was removed from this surface because it created friction for the 99%
+ * case (people who want to buy, not redeem a code) and the redeem endpoint is
+ * still callable programmatically for the edge cases that need it.
+ */
 function PaidContentModal({
   isAuthenticated,
   pathname,
-  courseSlug,
   t,
 }: {
   isAuthenticated?: boolean
   pathname: string
-  courseSlug: string
   t: (key: string) => string
 }) {
-  const router = useRouter()
-  const [code, setCode] = useState('')
-  const [error, setError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
-
-  const handleDismiss = () => {
-    // Navigate to the course catalogue
-    router.push('/courses')
-  }
-
-  const handleRedeem = async () => {
-    const trimmed = code.trim()
-    if (!trimmed) return
-
-    setError('')
-    setIsSubmitting(true)
-
-    try {
-      const res = await fetch('/api/entitlements/redeem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: trimmed }),
-      })
-
-      const data = await res.json()
-
-      if (data.success) {
-        // Emit ACCESS_GRANTED event so analytics tracks the entitlement
-        systemEventBus.emit(SYSTEM_EVENTS.ACCESS_GRANTED, {
-          access_type: 'coupon' as const,
-          coupon_code: trimmed,
-          course_id: data.courseId,
-          course_slug: courseSlug,
-        })
-
-        setShowSuccess(true)
-        setTimeout(() => {
-          window.location.reload()
-        }, 2000)
-        return
-      }
-
-      const errorMessages: Record<string, string> = {
-        invalid_code: t('codeInvalid'),
-        code_inactive: t('codeInactive'),
-        code_expired: t('codeExpired'),
-        code_exhausted: t('codeExhausted'),
-        already_entitled: t('codeAlreadyUsed'),
-      }
-
-      setError(errorMessages[data.error] || t('codeError'))
-    } catch {
-      setError(t('codeError'))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  if (showSuccess) {
-    return (
-      <Dialog open={true}>
-        <DialogContent allowDismiss={false} className="sm:max-w-md">
-          <DialogHeader className="text-center sm:text-center">
-            <DialogTitle className="text-heading-xl">{t('codeSuccessTitle')}</DialogTitle>
-            <DialogDescription className="mt-2">{t('codeSuccessMessage')}</DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && handleDismiss()}>
-      <DialogContent allowDismiss={true} className="sm:max-w-md">
+    <Dialog open={true}>
+      <DialogContent allowDismiss={false} className="sm:max-w-md">
         <DialogHeader className="text-center sm:text-center">
           <DialogTitle className="text-heading-xl">{t('paidTitle')}</DialogTitle>
           <DialogDescription className="mt-2">
@@ -255,35 +183,12 @@ function PaidContentModal({
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4 flex flex-col items-center gap-content-gap">
-          {!isAuthenticated && <GoogleLoginButton returnTo={pathname} className="w-full" />}
-          {isAuthenticated && (
-            <div className="w-full space-y-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => {
-                    setCode(e.target.value)
-                    setError('')
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleRedeem()
-                  }}
-                  placeholder={t('codePlaceholder')}
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-body-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  dir="ltr"
-                  disabled={isSubmitting}
-                />
-              </div>
-              {error && <p className="text-body-sm text-error">{error}</p>}
-              <Button
-                onClick={handleRedeem}
-                disabled={!code.trim() || isSubmitting}
-                className="w-full"
-              >
-                {isSubmitting ? t('codeSubmitting') : t('codeSubmit')}
-              </Button>
-            </div>
+          {!isAuthenticated ? (
+            <GoogleLoginButton returnTo={pathname} className="w-full" />
+          ) : (
+            <Button onClick={() => (window.location.href = '/products')} className="w-full">
+              {t('goToStore')}
+            </Button>
           )}
         </div>
       </DialogContent>

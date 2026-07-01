@@ -669,18 +669,8 @@
     "browseCourses": "עיון בקורסים",
     "paidTitle": "תוכן פרימיום",
     "paidNotLoggedIn": "יש להתחבר כדי לגשת לתוכן זה.",
-    "paidNoEntitlement": "תוכן זה דורש רכישה. הזן קוד גישה למטה או פנה למנהל המערכת.",
-    "codePlaceholder": "הזן קוד גישה",
-    "codeSubmit": "מימוש קוד",
-    "codeSubmitting": "ממש...",
-    "codeInvalid": "קוד גישה לא תקין.",
-    "codeInactive": "קוד זה אינו פעיל יותר.",
-    "codeExpired": "פג תוקף הקוד.",
-    "codeExhausted": "קוד זה הגיע למגבלת השימוש שלו.",
-    "codeAlreadyUsed": "כבר יש לך גישה לקורס זה.",
-    "codeError": "משהו השתבש. נסה שוב.",
-    "codeSuccessTitle": "איזה כיף שנרשמת!",
-    "codeSuccessMessage": "חודש מתנה עלינו!"
+    "paidNoEntitlement": "הגישה לקורס זה דורשת רכישה. עברו לחנות כדי להירשם.",
+    "goToStore": "לחנות"
   },
   "study": {
     "loading": "טוען...",
@@ -1009,7 +999,9 @@
       "paymentFailed": "התשלום נכשל",
       "paymentFailedDescription": "לא ניתן היה לעבד את התשלום. אנא נסה שוב או צור קשר עם התמיכה.",
       "backToProducts": "עיין במוצרים",
-      "goHome": "לעמוד הבית"
+      "goHome": "לעמוד הבית",
+      "goToCourse": "מעבר ל{course}",
+      "grantingAccess": "מגדיר גישה…"
     },
     "cancel": {
       "title": "התשלום בוטל",
