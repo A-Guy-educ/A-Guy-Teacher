@@ -39,10 +39,10 @@ export default async function CoursePage({ params }: CoursePageProps) {
     notFound()
   }
 
-  const pageAccess = course.pageAccessType ?? 'free'
-  const lessonAccess = course.accessType ?? 'free'
-  // If either the page or lesson access is paid, gate the course page
-  const courseAccessType = pageAccess === 'paid' || lessonAccess === 'paid' ? 'paid' : pageAccess
+  // Course page gate reflects `pageAccessType` only. `accessType` is the
+  // lesson-level default and must not gate the page — it applies inside lessons
+  // via resolveAccessType(lesson.accessType, course.accessType).
+  const courseAccessType = course.pageAccessType ?? 'free'
   const [gatedDelayMs, gatedWarningMs] = await Promise.all([
     SystemParams.getGatedDelayMs(),
     SystemParams.getGatedWarningMs(),
