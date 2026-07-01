@@ -174,10 +174,10 @@ function CourseFeatures({ t }: { t: (key: string) => string }) {
                 <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-foreground/10 text-success dark:bg-background/10">
                   <Icon className="h-7 w-7" aria-hidden />
                 </div>
-                <h4 className="mb-2 text-heading-xl font-bold text-foreground dark:text-foreground">
+                <h4 className="mb-2 text-heading-xl font-bold text-background dark:text-foreground">
                   {t(`courseFeatures.items.${key}.title`)}
                 </h4>
-                <p className="text-foreground/70 dark:text-foreground">
+                <p className="text-background/70 dark:text-foreground">
                   {t(`courseFeatures.items.${key}.description`)}
                 </p>
               </div>

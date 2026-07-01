@@ -192,10 +192,10 @@ function KnowledgeAndFeatures({ t }: { t: (key: string) => string }) {
             <p className="mb-3 text-body-sm font-bold uppercase text-success">
               {t('hero.previewBadge')}
             </p>
-            <h2 className="mb-6 text-display-sm font-extrabold md:text-display-md text-foreground dark:text-foreground">
+            <h2 className="mb-6 text-display-sm font-extrabold md:text-display-md text-background dark:text-foreground">
               {t('story.title')}
             </h2>
-            <p className="text-heading-lg leading-relaxed text-foreground/75 dark:text-foreground">
+            <p className="text-heading-lg leading-relaxed text-background/75 dark:text-foreground">
               {t('story.description')}
             </p>
           </div>
@@ -210,10 +210,10 @@ function KnowledgeAndFeatures({ t }: { t: (key: string) => string }) {
                     : 'rounded-2xl border border-foreground/10 bg-foreground/10 p-card-padding-sm backdrop-blur dark:border-background/10 dark:bg-background/10'
                 }
               >
-                <p className="text-display-sm font-black text-foreground dark:text-foreground">
+                <p className="text-display-sm font-black text-background dark:text-foreground">
                   {t(`story.stats.${key}.value`)}
                 </p>
-                <p className="text-body-sm font-semibold text-foreground/70 dark:text-foreground">
+                <p className="text-body-sm font-semibold text-background/70 dark:text-foreground">
                   {t(`story.stats.${key}.label`)}
                 </p>
               </div>
@@ -240,10 +240,10 @@ function KnowledgeAndFeatures({ t }: { t: (key: string) => string }) {
                   <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-foreground/10 text-success dark:bg-background/10">
                     <Icon className="h-7 w-7" aria-hidden />
                   </div>
-                  <h4 className="mb-2 text-heading-xl font-bold text-foreground dark:text-foreground">
+                  <h4 className="mb-2 text-heading-xl font-bold text-background dark:text-foreground">
                     {t(`features.items.${key}.title`)}
                   </h4>
-                  <p className="text-foreground/70 dark:text-foreground">
+                  <p className="text-background/70 dark:text-foreground">
                     {t(`features.items.${key}.description`)}
                   </p>
                 </div>
