@@ -1828,6 +1828,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- promote: dev -> main (v0.26.5) ([#700](https://github.com/A-Guy-educ/A-Guy-Web/pull/700)) — @kodyade[bot]
 - #673: Login required to browse /courses; only the wizard is for anonymo… ([#684](https://github.com/A-Guy-educ/A-Guy-Web/pull/684)) — @kodyade[bot]
 - chore: release v0.26.5 ([#698](https://github.com/A-Guy-educ/A-Guy-Web/pull/698)) — @kodyade[bot]
 - #676: Content page body — restore HTML rendering for HtmlBlock and add … ([#678](https://github.com/A-Guy-educ/A-Guy-Web/pull/678)) — @kodyade[bot]
