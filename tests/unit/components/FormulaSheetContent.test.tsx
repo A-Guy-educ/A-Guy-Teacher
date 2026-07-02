@@ -96,6 +96,23 @@ describe('FormulaSheetContent', () => {
       expect(container.innerHTML).toContain('a² + b² = c²')
     })
 
+    it('renders math inside HTML blocks as KaTeX', () => {
+      const sheet = makeSheet({
+        contentType: 'blocks',
+        bodyBlocks: [
+          {
+            blockType: 'html',
+            html: '<p>$x^2+4x$</p>',
+            id: 'block-1',
+            blockName: null,
+          },
+        ],
+      })
+      const { container } = render(<FormulaSheetContent sheet={sheet} />)
+      expect(container.querySelector('.katex')).not.toBeNull()
+      expect(container.textContent).not.toContain('$x^2+4x$')
+    })
+
     it('renders multiple HTML blocks', () => {
       const sheet = makeSheet({
         contentType: 'blocks',

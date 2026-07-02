@@ -5,9 +5,9 @@ import type { GeometrySpecV1, AxisSpecV1 } from '@/infra/contracts'
 import { cn } from '@/infra/utils/ui'
 import { AxisRenderer, type DisplaySize } from '@/ui/web/exerciserenderer/blocks/AxisRenderer'
 import { GeometryRenderer } from '@/ui/web/exerciserenderer/blocks/GeometryRenderer'
+import { AdminHtmlWithMath } from '@/ui/web/shared/AdminHtmlWithMath'
 
 import { LexicalToReact } from './lexicalToReact'
-import { MathMarkdown } from '@/ui/web/shared/MathMarkdown'
 
 type BodyBlock = Record<string, unknown> & { id?: string; blockType?: string }
 
@@ -21,9 +21,11 @@ function parseJson<T>(value: unknown, fallback: T): T {
 }
 
 function HtmlBlock({ html }: { html: string }) {
-  if (!html?.trim()) return null
   return (
-    <MathMarkdown content={html} className="prose dark:prose-invert max-w-none rich-text-content" />
+    <AdminHtmlWithMath
+      html={html}
+      className="prose dark:prose-invert max-w-none rich-text-content"
+    />
   )
 }
 

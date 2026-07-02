@@ -12,6 +12,7 @@
 import Image from 'next/image'
 import type { FormulaSheet } from '@/infra/types/content'
 import { useTranslations } from '@/ui/web/providers/I18n'
+import { AdminHtmlWithMath } from '@/ui/web/shared/AdminHtmlWithMath'
 import { PDFEmbed } from '../../courses/PDFViewer/PDFEmbed'
 
 export interface FormulaSheetContentProps {
@@ -19,12 +20,29 @@ export interface FormulaSheetContentProps {
   sheet: FormulaSheet
 }
 
+interface FormulaSheetMedia {
+  url?: string
+  mimeType?: string
+  alt?: string
+  width?: number
+  height?: number
+  filename?: string
+}
+
+function isFormulaSheetMedia(value: unknown): value is FormulaSheetMedia {
+  return value !== null && typeof value === 'object' && 'url' in value
+}
+
+function blockKey(block: Record<string, unknown>, index: number) {
+  return typeof block.id === 'string' || typeof block.id === 'number' ? block.id : index
+}
+
 /**
  * Render the content of a formula sheet based on its content type.
  *
  * This is a CLIENT component that avoids importing RenderBlocks or RichText
  * (which transitively pull in payload.config.ts → Node.js binary modules).
- * Instead, it renders HTML blocks directly via dangerouslySetInnerHTML.
+ * Instead, it renders trusted admin HTML blocks directly.
  */
 export function FormulaSheetContent({ sheet }: FormulaSheetContentProps) {
   const { contentType, pdfFile, bodyBlocks } = sheet
@@ -49,21 +67,21 @@ export function FormulaSheetContent({ sheet }: FormulaSheetContentProps) {
 
       return (
         <div className="formula-sheet-blocks space-y-4">
-          {(bodyBlocks as any[]).map((block, index) => {
-            if (block.blockType === 'html' && 'html' in block) {
+          {bodyBlocks.map((block, index) => {
+            if (block.blockType === 'html' && typeof block.html === 'string') {
               return (
-                <div
-                  key={block.id ?? index}
+                <AdminHtmlWithMath
+                  key={blockKey(block, index)}
+                  html={block.html}
                   className="rich-text-content"
-                  dangerouslySetInnerHTML={{ __html: block.html }}
                 />
               )
             }
             if (block.blockType === 'mediaBlock' && 'media' in block) {
-              const media = typeof block.media === 'string' ? null : block.media
+              const media = isFormulaSheetMedia(block.media) ? block.media : null
               if (media?.url) {
                 return (
-                  <div key={block.id ?? index} className="rounded-lg overflow-hidden">
+                  <div key={blockKey(block, index)} className="rounded-lg overflow-hidden">
                     {media.mimeType?.startsWith('image/') ? (
                       <Image
                         src={media.url}
@@ -85,7 +103,7 @@ export function FormulaSheetContent({ sheet }: FormulaSheetContentProps) {
             // For content blocks, try to extract rich text
             if (block.blockType === 'content' && 'columns' in block) {
               return (
-                <div key={block.id ?? index} className="prose dark:prose-invert max-w-none">
+                <div key={blockKey(block, index)} className="prose dark:prose-invert max-w-none">
                   {/* Content blocks have complex structure - skip for now */}
                 </div>
               )
