@@ -1828,6 +1828,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.26.5 ([#698](https://github.com/A-Guy-educ/A-Guy-Web/pull/698)) — @kodyade[bot]
 - #676: Content page body — restore HTML rendering for HtmlBlock and add … ([#678](https://github.com/A-Guy-educ/A-Guy-Web/pull/678)) — @kodyade[bot]
 - #674: Show Google login popup after onboarding wizard completes ([#686](https://github.com/A-Guy-educ/A-Guy-Web/pull/686)) — @kodyade[bot]
 - #670: [Accessibility] Broken contrast (black text on dark backgrounds) … ([#681](https://github.com/A-Guy-educ/A-Guy-Web/pull/681)) — @kodyade[bot]
