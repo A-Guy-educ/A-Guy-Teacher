@@ -7,7 +7,6 @@ import { queryCourseBySlugWithFallback } from '@/server/repos/queries/courses'
 import { queryChapterBySlug } from '@/server/repos/queries/chapters'
 import { queryLessonsByChapter } from '@/server/repos/queries/lessons'
 import { SystemParams } from '@/infra/config/system-params'
-import { isAuthenticatedServer } from '@/server/utils/access-gate-server'
 import { AccessGateProvider } from '@/ui/web/auth/AccessGateProvider'
 import { stripHtml } from '@/utils/strip-html'
 import { ChapterPageBreadcrumb } from '../../../_components/ChapterPageBreadcrumb'
@@ -50,20 +49,6 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
     SystemParams.getGatedDelayMs(),
     SystemParams.getGatedWarningMs(),
   ])
-
-  // Server-side block: for mandatory mode, don't render content for unauthenticated users
-  if (courseAccessType === 'mandatory' && !(await isAuthenticatedServer())) {
-    return (
-      <AccessGateProvider
-        accessType={courseAccessType}
-        courseSlug={courseSlug}
-        gatedDelayMs={gatedDelayMs}
-        gatedWarningMs={gatedWarningMs}
-      >
-        <div className="min-h-screen" />
-      </AccessGateProvider>
-    )
-  }
 
   const lessons = await queryLessonsByChapter({ chapterId: chapter.id })
 

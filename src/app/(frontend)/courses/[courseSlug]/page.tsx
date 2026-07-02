@@ -7,10 +7,7 @@ import { queryCourseBySlugWithFallback } from '@/server/repos/queries/courses'
 import { queryChaptersByCourse } from '@/server/repos/queries/chapters'
 import { queryLessonsByCourse } from '@/server/repos/queries/lessons'
 import { SystemParams } from '@/infra/config/system-params'
-import {
-  getAuthenticatedUserServer,
-  isAuthenticatedServer,
-} from '@/server/utils/access-gate-server'
+import { getAuthenticatedUserServer } from '@/server/utils/access-gate-server'
 import { checkPaidAccess } from '@/server/utils/check-paid-access'
 import { AccessGateProvider } from '@/ui/web/auth/AccessGateProvider'
 import { stripHtml } from '@/utils/strip-html'
@@ -47,19 +44,6 @@ export default async function CoursePage({ params }: CoursePageProps) {
     SystemParams.getGatedDelayMs(),
     SystemParams.getGatedWarningMs(),
   ])
-
-  if (courseAccessType === 'mandatory' && !(await isAuthenticatedServer())) {
-    return (
-      <AccessGateProvider
-        accessType={courseAccessType}
-        courseSlug={courseSlug}
-        gatedDelayMs={gatedDelayMs}
-        gatedWarningMs={gatedWarningMs}
-      >
-        <div className="min-h-screen" />
-      </AccessGateProvider>
-    )
-  }
 
   // Server-side block: for paid mode, check entitlement
   if (courseAccessType === 'paid') {

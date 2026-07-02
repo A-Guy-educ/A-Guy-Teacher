@@ -1,16 +1,23 @@
+import { redirect } from 'next/navigation'
+
 import { getDirection } from '@/i18n/config'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { isValidContentLocale } from '@/infra/types/content'
 import { pageMetadata } from '@/infra/seo/pageMetadata'
 import { queryPublishedCourses } from '@/server/repos/queries/courses'
+import { isAuthenticatedServer } from '@/server/utils/access-gate-server'
 import { CourseCardGrid } from './_components/CourseCardGrid'
 import { EmptyState } from './_components/EmptyState'
 import { CourseShopHeader } from './_components/CourseShopHeader'
 
 // Revalidate every 60 seconds — courses rarely change
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function CoursesPage() {
+  if (!(await isAuthenticatedServer())) {
+    redirect('/start')
+  }
+
   const locale = await getSystemLocale()
   const contentLocale = isValidContentLocale(locale) ? locale : undefined
   const courses = await queryPublishedCourses(contentLocale)
