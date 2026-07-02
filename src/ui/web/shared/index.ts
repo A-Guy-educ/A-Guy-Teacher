@@ -37,6 +37,8 @@ export type { ErrorStateProps } from './EmptyState/ErrorState'
 // Markdown
 export { MathMarkdown } from './MathMarkdown'
 export type { MathMarkdownProps } from './MathMarkdown'
+export { AdminHtmlWithMath } from './AdminHtmlWithMath'
+export type { AdminHtmlWithMathProps } from './AdminHtmlWithMath'
 
 // Math Input
 export { MathField, MathFieldToolbar, FormulaComposer } from './MathInput'

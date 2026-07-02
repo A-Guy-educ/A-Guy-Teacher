@@ -97,14 +97,5 @@ latex_examples/
 .kody/qa-reports/
 .playwright-mcp/
 
-# Kody runtime/state now lives in configured kody-state repo, but authored
-# model assets remain tracked as code.
-.kody/*
-!.kody/agents/
-!.kody/agents/**
-!.kody/capabilities/
-!.kody/capabilities/**
-!.kody/executables/
-!.kody/executables/**
-!.kody/todos/
-!.kody/todos/**
+# Kody runtime/state and authored model assets live in configured kody-state repo.
+.kody/

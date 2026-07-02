@@ -74,6 +74,27 @@ describe('MediaAttachments', () => {
     expect(img.tagName).toBe('IMG')
   })
 
+  // Repro for issue #651: SVG media should invert in dark mode so black
+  // outlines (math/line-art) remain visible on dark backgrounds.
+  it('issue #651: applies dark mode inversion to svg type media', () => {
+    const media = createMedia({
+      id: 'svg-dark',
+      type: 'svg',
+      url: '/media/diagram.svg',
+      alt: 'A dark-mode-friendly diagram',
+      mimeType: 'image/svg+xml',
+    })
+
+    renderWithMediaMap(<MediaAttachments mediaIds={['svg-dark']} />, { 'svg-dark': media })
+
+    const img = screen.getByAltText('A dark-mode-friendly diagram')
+    expect(img).toBeTruthy()
+    expect(img.tagName).toBe('IMG')
+    // Expected after fix: SVG <img> elements get a dark mode inversion filter
+    // (e.g. `dark:invert`) so black line-art/formulas are visible on dark backgrounds.
+    expect(img.className).toMatch(/dark:invert/)
+  })
+
   it('renders a video element for video type media', () => {
     const media = createMedia({
       id: 'vid1',

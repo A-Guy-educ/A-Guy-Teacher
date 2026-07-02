@@ -11,6 +11,7 @@ import React from 'react'
 
 import { LexicalToReact } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/_components/ContentPageBodyRenderer/lexicalToReact'
 import { cn } from '@/infra/utils/ui'
+import { AdminHtmlWithMath } from '@/ui/web/shared/AdminHtmlWithMath'
 
 type BodyBlock = Record<string, unknown> & { id?: string; blockType?: string }
 
@@ -24,11 +25,10 @@ function parseJson<T>(value: unknown, fallback: T): T {
 }
 
 function HtmlBlock({ html }: { html: string }) {
-  if (!html) return null
   return (
-    <div
+    <AdminHtmlWithMath
+      html={html}
       className="prose dark:prose-invert max-w-none rich-text-content"
-      dangerouslySetInnerHTML={{ __html: html }}
     />
   )
 }

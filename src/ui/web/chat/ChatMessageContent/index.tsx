@@ -3,6 +3,7 @@
 import { cn } from '@/infra/utils/ui'
 import type { Components } from 'react-markdown'
 import { MathMarkdown } from '@/ui/web/shared/MathMarkdown'
+import { SvgAwareImage } from '@/ui/web/shared/MathMarkdown/svgAwareImage'
 import { normalizeLatexDelimiters } from './normalize-latex'
 
 interface ChatMessageContentProps {
@@ -50,6 +51,7 @@ const chatMarkdownComponents: Components = {
       {children}
     </a>
   ),
+  img: SvgAwareImage,
   code: ({ children }) => (
     <code className="bg-muted px-1.5 py-0.5 rounded text-body-sm font-mono">{children}</code>
   ),

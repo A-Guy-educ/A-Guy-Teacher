@@ -1,13 +1,20 @@
-import { ObjectId, type Document } from 'mongodb'
+import { ObjectId, ReadPreference, type Document } from 'mongodb'
 import { cache } from 'react'
 
-import { getContentDb } from '@/infra/db/content-db'
+import { getContentDb, relationId } from '@/infra/db/content-db'
 import type { TransactionWithProduct } from '@/app/(frontend)/account/purchases/PurchasesPageContent'
 
 export interface CheckoutSuccessTransaction {
   id: string
   status: TransactionWithProduct['status']
   productName: string | null
+  /**
+   * First course granted by the purchased product's `contents` blocks — used by
+   * the success page to poll for the entitlement and, once granted, deep-link
+   * the buyer straight into that course. Null when the product has no course
+   * grants (feature-only bundles) or the join couldn't resolve one.
+   */
+  firstCourse: { id: string; slug: string; title: string } | null
 }
 
 interface TransactionDoc extends Document {
@@ -22,7 +29,12 @@ interface TransactionDoc extends Document {
   refundedAmount?: number
   refundedAt?: Date | string
   metadata?: { appliedCoupon?: { code?: string } | null } | null
-  productDoc?: { name?: string; title?: string; slug?: string } | null
+  productDoc?: {
+    name?: string
+    title?: string
+    slug?: string
+    contents?: Array<{ blockType?: string; course?: unknown }> | null
+  } | null
 }
 
 function toIsoString(value: unknown, fallback: string): string {
@@ -77,13 +89,64 @@ export const queryTransactionByProviderId = cache(
     if (!doc) return null
 
     const product = doc.productDoc ?? null
+    const status = doc.status ?? 'pending'
+    // Only the confirmed-purchase branch on the success page consumes
+    // firstCourse (to render "Go to {course}" + drive the entitlement poll).
+    // Skip the second Mongo hop for pending / failed / refunded rows.
+    const firstCourse = status === 'succeeded' ? await resolveFirstCourseFromProduct(product) : null
     return {
       id: doc._id.toString(),
-      status: doc.status ?? 'pending',
+      status,
       productName: product?.name ?? product?.title ?? null,
+      firstCourse,
     }
   },
 )
+
+// Walk product.contents to find the first courseBlock, then fetch that course's
+// display fields. Kept as a second round-trip instead of a second $lookup so we
+// don't have to coerce a mixed-type contents array through the aggregation
+// grammar. Uses read-from-primary because the success page hits this immediately
+// after a paid checkout — on a lagging secondary the product could still look
+// like it has no course grants and we'd fall back to "Go home" incorrectly.
+async function resolveFirstCourseFromProduct(
+  product: TransactionDoc['productDoc'],
+): Promise<CheckoutSuccessTransaction['firstCourse']> {
+  const contents = product?.contents
+  if (!Array.isArray(contents)) return null
+  for (const block of contents) {
+    if (block?.blockType !== 'courseBlock') continue
+    const courseId = relationId(block.course)
+    if (!courseId) continue
+    if (typeof block.course === 'object' && block.course !== null) {
+      const populated = block.course as { id?: unknown; slug?: unknown; title?: unknown }
+      if (
+        typeof populated.slug === 'string' &&
+        typeof populated.title === 'string' &&
+        populated.slug &&
+        populated.title
+      ) {
+        return { id: courseId, slug: populated.slug, title: populated.title }
+      }
+    }
+    const db = await getContentDb()
+    const courseDoc = ObjectId.isValid(courseId)
+      ? await db
+          .collection('courses')
+          .findOne(
+            { _id: new ObjectId(courseId) },
+            { projection: { slug: 1, title: 1 }, readPreference: ReadPreference.PRIMARY },
+          )
+      : null
+    const slug = typeof courseDoc?.slug === 'string' ? courseDoc.slug : null
+    const title = typeof courseDoc?.title === 'string' ? courseDoc.title : null
+    if (slug && title) return { id: courseId, slug, title }
+    // Deleted / renamed / malformed courseBlock — skip and try the next one.
+    // The buyer should still get deep-linked into a valid course if the
+    // product bundles more than one and only one is broken.
+  }
+  return null
+}
 
 export const queryUserTransactions = cache(
   async (userId: string): Promise<TransactionWithProduct[]> => {

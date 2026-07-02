@@ -58,6 +58,12 @@ export interface MathMarkdownProps {
  * <MathMarkdown content="This is ::red{important} and ::blue{informational}" />
  */
 export function MathMarkdown({ content, className, components }: MathMarkdownProps) {
+  // SECURITY: this component does NOT pass a custom `urlTransform` to ReactMarkdown.
+  // Safety against `javascript:`, `data:text/html`, and other dangerous URL schemes
+  // therefore relies on react-markdown's built-in default. Custom `<img>` overrides
+  // (e.g. `SvgAwareImage`) inherit that guarantee via the `src` prop they receive —
+  // do not bypass it by re-rendering `src` directly through `dangerouslySetInnerHTML`.
+  // If we ever loosen this, pass `urlTransform={(url) => /^(https?:|\/)/.test(url) ? url : ''}`.
   return (
     <div className={cn(className)}>
       <ReactMarkdown

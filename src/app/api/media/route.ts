@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { VercelBlobAdapter } from '@/infra/blob/vercel-blob-adapter'
 import { getContentDb, serializeDoc } from '@/infra/db/content-db'
+import { inferMediaType } from '@/infra/media/inferMediaType'
 import {
   getOrCreateGuestId,
   getWebUser,
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
   const now = new Date()
   const result = await db.collection('media').insertOne({
     filename,
+    type: inferMediaType(file.type, filename),
     mimeType: file.type || 'application/octet-stream',
     filesize: file.size,
     url: blob.url,

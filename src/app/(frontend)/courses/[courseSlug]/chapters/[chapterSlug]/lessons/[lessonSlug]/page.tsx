@@ -11,10 +11,7 @@ import { resolveFormulaSheet } from '@/server/repos/queries/formula-sheets'
 import { queryLessonBySlug, queryLessonsByCourse } from '@/server/repos/queries/lessons'
 import { queryMediaByIds } from '@/server/repos/queries/media'
 import { relationId } from '@/server/repos/mongo'
-import {
-  getAuthenticatedUserServer,
-  isAuthenticatedServer,
-} from '@/server/utils/access-gate-server'
+import { getAuthenticatedUserServer } from '@/server/utils/access-gate-server'
 import { checkPaidAccess } from '@/server/utils/check-paid-access'
 import type {
   Chapter,
@@ -197,19 +194,6 @@ export default async function LessonPage({ params }: LessonPageProps) {
     SystemParams.getGatedDelayMs(),
     SystemParams.getGatedWarningMs(),
   ])
-
-  if (accessType === 'mandatory' && !(await isAuthenticatedServer())) {
-    return (
-      <AccessGateProvider
-        accessType={accessType}
-        courseSlug={courseSlug}
-        gatedDelayMs={gatedDelayMs}
-        gatedWarningMs={gatedWarningMs}
-      >
-        <div className="min-h-screen" />
-      </AccessGateProvider>
-    )
-  }
 
   if (accessType === 'paid') {
     const { requiresEntitlement, isAuthenticated } = await checkPaidAccess(course.id)

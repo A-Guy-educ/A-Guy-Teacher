@@ -275,6 +275,12 @@
         "collision": "An account with this email already exists. Please log in with your password or contact support."
       }
     },
+    "onboardingComplete": {
+      "title": "Great!",
+      "description": "I prepared the system just for you. A short (free) sign-up and we start learning.",
+      "primaryCta": "Quick sign-in with Google",
+      "reassurance": "No cost, no credit card required."
+    },
     "login": {
       "subtitle": "Sign in to continue learning",
       "headingBold": "Hello,",
@@ -669,18 +675,8 @@
     "browseCourses": "Browse Courses",
     "paidTitle": "Premium Content",
     "paidNotLoggedIn": "Please sign in to access this content.",
-    "paidNoEntitlement": "This content requires a purchase. Enter an access code below or contact your administrator.",
-    "codePlaceholder": "Enter access code",
-    "codeSubmit": "Redeem Code",
-    "codeSubmitting": "Redeeming...",
-    "codeInvalid": "Invalid access code.",
-    "codeInactive": "This code is no longer active.",
-    "codeExpired": "This code has expired.",
-    "codeExhausted": "This code has reached its usage limit.",
-    "codeAlreadyUsed": "You already have access to this course.",
-    "codeError": "Something went wrong. Please try again.",
-    "codeSuccessTitle": "Welcome aboard!",
-    "codeSuccessMessage": "How exciting that you signed up! A free month on us."
+    "paidNoEntitlement": "Access to this course requires a purchase. Head to the store to enroll.",
+    "goToStore": "Go to Store"
   },
   "study": {
     "loading": "Loading...",
@@ -1009,7 +1005,9 @@
       "paymentFailed": "Payment Failed",
       "paymentFailedDescription": "Your payment could not be processed. Please try again or contact support.",
       "backToProducts": "Browse Products",
-      "goHome": "Go to Home"
+      "goHome": "Go to Home",
+      "goToCourse": "Go to {course}",
+      "grantingAccess": "Granting access…"
     },
     "cancel": {
       "title": "Payment Cancelled",
@@ -1026,70 +1024,67 @@
     "aiUsageStatement": "AI Usage Statement"
   },
   "prep7": {
-    "hero": {
-      "title": "This time! To arrive prepared",
-      "subtitle": "Complete preparation for 7th grade mathematics with personalized learning, practice exercises, and full support.",
-      "registerCta": "Register for course",
-      "trialCta": "Trial and purchase"
+    "brand": {
+      "taglinePrimary": "Personalized",
+      "taglineSecondary": "private teacher"
     },
-    "whoIsAguy": {
+    "hero": {
+      "titleStart": "This time!",
+      "titleHighlight": "arrive prepared",
+      "newLabel": "New!",
+      "subtitle": "7th-grade preparation course - tailored to each student",
+      "purchaseCta": "Purchase",
+      "trialCta": "Free trial"
+    },
+    "story": {
       "title": "Who is Aguy?",
-      "description": "Aguy is your personal digital math teacher, built on 20+ years of teaching experience. The platform provides personalized learning that adapts to your pace, identifies gaps, and ensures you arrive to 7th grade fully prepared.",
-      "stats": {
-        "experience": {
-          "value": "20+",
-          "label": "years of experience"
-        },
-        "students": {
-          "value": "10K+",
-          "label": "students taught"
-        }
-      }
+      "videoTitle": "Aguy background video",
+      "descriptionPrefix": "Built from more than",
+      "experience": "20 years",
+      "descriptionSuffix": " of experience, tens of thousands of student sessions, and years of research into personalized learning, Aguy is a smart platform tailored to every student and built to encourage independent, effective learning."
     },
     "courseFeatures": {
       "title": "What does the course include?",
-      "description": "Everything you need to succeed in 7th grade mathematics.",
+      "description": "A gradual path from foundations to challenge exercises.",
+      "previewVideoTitle": "Aguy course system preview",
       "items": {
         "lessons": {
-          "title": "50 lesson plans",
-          "description": "Precise and accurate lessons covering all 7th grade topics."
+          "title": "50 precise lesson plans",
+          "description": "Focused learning lessons with guiding questions for deep understanding."
         },
         "practice": {
           "title": "30 practice lessons",
-          "description": "Extensive practice to sharpen your skills."
+          "description": "Practical, intensive practice that helps students absorb every topic."
         },
         "exams": {
           "title": "10 simulation exams",
-          "description": "Real exam conditions to test your knowledge."
+          "description": "Tests that simulate middle-school exams so students arrive with confidence."
         },
         "support": {
-          "title": "Full support",
-          "description": "AI tutor available for every lesson."
+          "title": "Full support in every lesson",
+          "description": "A close AI teacher aligned with the curriculum and guiding the student step by step."
         }
       }
     },
-    "benefits": {
-      "title": "Early bird offer!",
-      "description": "Sign up now and receive 100₪ off the course price.",
-      "discount": "100₪ off",
-      "deadline": "Offer valid until July 20",
-      "cta": "Register for course"
-    },
-    "bonuses": {
-      "title": "Free bonuses",
-      "description": "Even more reasons to join our community.",
-      "items": {
+    "offer": {
+      "title": "Benefits and discounts",
+      "description": "Join now and secure the best possible start for middle school.",
+      "badge": "Early registration offer",
+      "priceLabel": "Special discount for registrants",
+      "priceAmount": "100",
+      "priceCurrency": "₪",
+      "priceSuffix": "off",
+      "deadline": "Valid for registration until 20.7 only.",
+      "purchaseCta": "Go to purchase",
+      "bonusesTitle": "Free bonuses for registrants:",
+      "bonuses": {
         "whatsapp": {
-          "title": "WhatsApp group",
-          "description": "Direct connection for questions and updates."
+          "title": "Available WhatsApp group for questions",
+          "description": "Close guidance and full support for every question that comes up at home."
         },
         "sessions": {
-          "title": "Open sessions",
-          "description": "Live sessions with the teacher."
-        },
-        "boost": {
-          "title": "Live boost sessions",
-          "description": "Intensive sessions before exams."
+          "title": "Open sessions with a teacher",
+          "description": "Live reinforcement sessions for deeper learning and extra practice."
         }
       }
     },

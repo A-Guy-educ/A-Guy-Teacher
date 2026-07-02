@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { MathMarkdown } from '@/ui/web/shared/MathMarkdown'
+import { renderTextWithMath } from '@/infra/utils/renderAdminHtmlWithMath'
 
 interface LexicalNode {
   type: string
@@ -22,7 +22,12 @@ const FMT_UNDERLINE = 8
 const FMT_CODE = 16
 
 function applyTextFormats(text: string, format = 0): React.ReactNode {
-  let node: React.ReactNode = text
+  let node: React.ReactNode =
+    format & FMT_CODE ? (
+      text
+    ) : (
+      <span dangerouslySetInnerHTML={{ __html: renderTextWithMath(text) }} />
+    )
   if (format & FMT_CODE) node = <code>{node}</code>
   if (format & FMT_STRIKETHROUGH) node = <s>{node}</s>
   if (format & FMT_UNDERLINE) node = <u>{node}</u>
@@ -73,7 +78,7 @@ function renderNode(node: LexicalNode | undefined): React.ReactNode {
     case 'math': {
       const latex = node.latex ?? node.text ?? ''
       if (!latex) return null
-      return <MathMarkdown content={`$${latex}$`} className="rich-text-content" />
+      return <span dangerouslySetInnerHTML={{ __html: renderTextWithMath(`$${latex}$`) }} />
     }
 
     case 'root':
