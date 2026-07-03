@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 
 import type { Exercise } from '@/infra/types/content'
 import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
@@ -68,17 +68,20 @@ export function useExercisesPager({
   gradeLevel,
   initialExerciseIndex = 0,
 }: UseExercisesPagerProps) {
-  // Use blocks if provided, otherwise build from exercises
-  const rawBlocks: ResolvedLessonBlock[] =
-    blocks ?? exercises.map((e) => ({ type: 'exercise', data: e }))
+  // Partition: content pages first (preserving relative order), then exercises (preserving relative order).
+  // Memoized so downstream effect deps (URL sync, syncUrl callback) don't churn every render — a
+  // fresh reference on each render was causing the URL-sync useEffect to fire in a loop and revert
+  // state set by handleNext/handlePrev/handleJumpToExercise.
+  const resolvedBlocks = useMemo<ResolvedLessonBlock[]>(() => {
+    const rawBlocks: ResolvedLessonBlock[] =
+      blocks ?? exercises.map((e) => ({ type: 'exercise', data: e }))
+    const contentPageBlocks = rawBlocks.filter((b) => b.type === 'contentPage')
+    const exerciseBlocks = rawBlocks.filter((b) => b.type === 'exercise')
+    return [...contentPageBlocks, ...exerciseBlocks]
+  }, [blocks, exercises])
 
-  // Partition: content pages first (preserving relative order), then exercises (preserving relative order)
-  const contentPageBlocks = rawBlocks.filter((b) => b.type === 'contentPage')
-  const exerciseBlocks = rawBlocks.filter((b) => b.type === 'exercise')
-  const resolvedBlocks: ResolvedLessonBlock[] = [...contentPageBlocks, ...exerciseBlocks]
-
-  const totalExercises = exerciseBlocks.length
-  const totalContentPages = contentPageBlocks.length
+  const totalExercises = resolvedBlocks.filter((b) => b.type === 'exercise').length
+  const totalContentPages = resolvedBlocks.filter((b) => b.type === 'contentPage').length
   const totalPages = resolvedBlocks.length + 1 // blocks + outro
 
   const [pageState, setPageState] = useState<PageState>(() => {
