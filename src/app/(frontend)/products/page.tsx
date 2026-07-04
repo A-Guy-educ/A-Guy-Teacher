@@ -37,11 +37,11 @@ export default async function ProductsPage() {
     <div className="min-h-screen text-card-foreground antialiased" dir={getDirection(locale)}>
       <ProductsHeader />
 
-      <div className="max-w-7xl mx-auto px-6 py-20">
+      <div className="max-w-6xl mx-auto px-6 py-section-md">
         {!hasAny ? (
           <EmptyProducts />
         ) : (
-          <div className="flex flex-col gap-section-sm">
+          <div className="flex flex-col gap-section-xs">
             {activeProducts.length > 0 ? (
               <section aria-labelledby="products-featured-title">
                 <ProductsSectionTitle translationKey="featuredSectionTitle" />

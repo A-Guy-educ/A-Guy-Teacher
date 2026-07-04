@@ -15,7 +15,7 @@ interface ProductCardGridProps {
 
 export function ProductCardGrid({ products, disabled = false }: ProductCardGridProps) {
   return (
-    <StaggerGrid className="grid gap-content-gap-xl md:grid-cols-2 lg:grid-cols-3">
+    <StaggerGrid className="grid gap-content-gap md:grid-cols-2 lg:grid-cols-3">
       {products.map((product) => (
         <StaggerItem key={product.id}>
           <ProductCard product={product} disabled={disabled} />

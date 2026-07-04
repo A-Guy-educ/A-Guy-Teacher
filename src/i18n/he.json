@@ -948,8 +948,18 @@
     }
   },
   "products": {
-    "catalogTitle": "מוצרים",
-    "catalogDescription": "עיין במוצרים הזמינים שלנו והתחל ללמוד עוד היום.",
+    "catalogTitle": "בחרו מסלול לימוד",
+    "catalogDescription": "גישה מלאה לשיעורים, תרגול וליווי אישי במתמטיקה במקום אחד.",
+    "highlights": {
+      "lessons": "שיעורים מסודרים",
+      "practice": "תרגול ומשוב",
+      "support": "מורה דיגיטלי"
+    },
+    "planBullets": {
+      "lessons": "שיעורים",
+      "practice": "תרגול",
+      "support": "עזרה אישית"
+    },
     "featuredSectionTitle": "זמין כעת",
     "soonSectionTitle": "בקרוב",
     "buyNowButton": "לרכישה מיידית",
