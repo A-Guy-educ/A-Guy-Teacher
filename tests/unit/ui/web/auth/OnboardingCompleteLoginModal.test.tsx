@@ -4,12 +4,17 @@
  *
  * Verifies the post-onboarding Google sign-in popup:
  * - Renders the i18n copy from `auth.onboardingComplete.*` (title, description, reassurance)
- * - Renders the Google button with the custom label and `returnTo` prop wired through
+ * - Renders the Google button as a native anchor whose `href` points at
+ *   `/api/oauth/google?returnTo=...` so iOS Safari's WebKit engine can navigate
+ *   even when the button is rendered inside a non-dismissible Radix Dialog portal.
+ *   This lock-in prevents a regression to JS `onClick` + `window.location.href`,
+ *   which iOS Safari intermittently drops when paired with React state updates
+ *   inside modal layers.
  * - Is non-dismissible (no close button rendered, Radix dismissals blocked)
  * - Renders both Hebrew and English locale copy correctly
  */
-import { fireEvent, render } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { render } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { OnboardingCompleteLoginModal } from '@/ui/web/auth/OnboardingCompleteLoginModal'
 import { I18nProvider } from '@/ui/web/providers/I18n'
@@ -35,14 +40,6 @@ function renderModal(
 }
 
 describe('OnboardingCompleteLoginModal', () => {
-  beforeEach(() => {
-    // jsdom doesn't track real navigation; stub location.href setter
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: { href: '' },
-    })
-  })
-
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -64,14 +61,33 @@ describe('OnboardingCompleteLoginModal', () => {
     expect(getByText('ההרשמה לא כרוכה בעלות או בהזנת אשראי.')).toBeDefined()
   })
 
-  it('navigates to /api/oauth/google with returnTo when the Google button is clicked', () => {
+  it('renders the Google control as a native anchor with the OAuth href (iOS Safari contract)', () => {
     const { getByText } = renderModal('en', enMessagesAny, true, '/courses/geometry')
 
-    const button = getByText('Quick sign-in with Google').closest('button')
-    expect(button).toBeDefined()
-    fireEvent.click(button!)
+    const anchor = getByText('Quick sign-in with Google').closest('a')
+    expect(anchor).not.toBeNull()
+    expect(anchor?.tagName).toBe('A')
+    expect(anchor?.getAttribute('href')).toBe('/api/oauth/google?returnTo=%2Fcourses%2Fgeometry')
+  })
 
-    expect(window.location.href).toBe('/api/oauth/google?returnTo=%2Fcourses%2Fgeometry')
+  it('does not render the Google control as a <button> (prevents iOS WebKit regression)', () => {
+    const { queryByText } = renderModal('en', enMessagesAny)
+
+    // The original implementation used <button onClick> + window.location.href,
+    // which iOS Safari dropped inside Radix Dialog portals. The anchor below is
+    // the only supported rendering — a regression here means navigation is back
+    // to JS-only and the iOS bug will return.
+    const button = queryByText('Quick sign-in with Google')?.closest('button')
+    expect(button).toBeNull()
+  })
+
+  it('URL-encodes the returnTo path segment in the anchor href', () => {
+    const { getByText } = renderModal('en', enMessagesAny, true, '/courses/algebra/quadratic')
+
+    const anchor = getByText('Quick sign-in with Google').closest('a')
+    expect(anchor?.getAttribute('href')).toBe(
+      '/api/oauth/google?returnTo=%2Fcourses%2Falgebra%2Fquadratic',
+    )
   })
 
   it('does not render any visible content when closed', () => {

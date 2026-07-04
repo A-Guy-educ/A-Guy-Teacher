@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { cn } from '@/infra/utils/ui'
 
@@ -17,26 +16,18 @@ interface GoogleLoginButtonProps {
 
 export function GoogleLoginButton({ returnTo = '/', className, label }: GoogleLoginButtonProps) {
   const t = useTranslations('auth.oauth')
-  const [isNavigating, setIsNavigating] = useState(false)
-
-  const handleGoogleLogin = () => {
-    setIsNavigating(true)
-    // Use window.location.href to ensure a full page navigation
-    // This avoids CORS issues that occur with fetch/prefetch via Link
-    window.location.href = `/api/oauth/google?returnTo=${encodeURIComponent(returnTo)}`
-  }
+  const href = `/api/oauth/google?returnTo=${encodeURIComponent(returnTo)}`
 
   return (
-    <button
+    <a
+      href={href}
       className={cn(
-        'inline-flex items-center justify-center rounded text-body-sm font-medium',
-        'bg-card text-card-foreground border border-border',
+        'inline-flex items-center justify-center rounded text-body-sm font-medium no-underline',
+        'bg-card text-card-foreground border border-border cursor-pointer',
         'transition-all duration-fast hover:scale-[1.03] hover:shadow-card hover:bg-muted',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        isNavigating && 'opacity-disabled pointer-events-none',
         className,
       )}
-      onClick={handleGoogleLogin}
     >
       <svg
         className="me-2 h-5 w-5"
@@ -63,6 +54,6 @@ export function GoogleLoginButton({ returnTo = '/', className, label }: GoogleLo
         />
       </svg>
       {label ?? t('continueWithGoogle')}
-    </button>
+    </a>
   )
 }
