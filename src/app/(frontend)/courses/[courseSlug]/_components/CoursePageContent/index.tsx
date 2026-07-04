@@ -12,7 +12,6 @@ import { AskTab } from '../AskTab'
 import { CourseAnalytics } from '../CourseAnalytics'
 import { CourseTabs, TAB_COLORS, type CourseTab } from '../CourseTabs'
 import { ExamReminderBubble } from '../ExamReminderBubble'
-import { ExamsTab } from '../ExamsTab'
 import { LessonListTab } from '../LessonListTab'
 import { LocaleFallbackBanner } from '../../../_components/LocaleFallbackBanner'
 
@@ -85,7 +84,7 @@ export function CoursePageContent({
             exit="exit"
             transition={{ duration: 0.2, ease: 'easeInOut' }}
           >
-            {(activeTab === 'learn' || activeTab === 'practice') && (
+            {(activeTab === 'learn' || activeTab === 'practice' || activeTab === 'exams') && (
               <LessonListTab
                 lessons={lessons}
                 chapters={chapters}
@@ -93,14 +92,13 @@ export function CoursePageContent({
                 gradeLevel={course.courseLabel || ''}
                 tabColor={TAB_COLORS[activeTab]}
                 lessonProgressMap={lessonProgressMap}
-                lessonType={activeTab === 'learn' ? 'learning' : activeTab}
+                lessonType={
+                  activeTab === 'learn' ? 'learning' : activeTab === 'exams' ? 'exam' : 'practice'
+                }
               />
             )}
             {activeTab === 'ask' && (
               <AskTab courseId={course.id} accentColor={TAB_COLORS[activeTab].stroke} />
-            )}
-            {activeTab === 'exams' && (
-              <ExamsTab courseId={course.id} accentColor={TAB_COLORS[activeTab].stroke} />
             )}
           </motion.div>
         </AnimatePresence>
