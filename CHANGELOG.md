@@ -1831,6 +1831,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #721: dev CI is red — Kody auto-fix ([#723](https://github.com/A-Guy-educ/A-Guy-Web/pull/723)) — @kodyade[bot]
 - promote: dev -> main (v0.26.6) ([#713](https://github.com/A-Guy-educ/A-Guy-Web/pull/713)) — @kodyade[bot]
 - chore: release v0.26.6 ([#709](https://github.com/A-Guy-educ/A-Guy-Web/pull/709)) — @kodyade[bot]
 - fix(lesson-pager): Memoize resolvedBlocks to stop URL sync render loop ([#712](https://github.com/A-Guy-educ/A-Guy-Web/pull/712)) — @aguyshayb
