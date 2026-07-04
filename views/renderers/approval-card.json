@@ -1,0 +1,37 @@
+{
+  "purpose": "approval-card",
+  "description": "Renders a structured approval card with a title, an optional body, and a list of action buttons. Used when the agent asks the user to approve, edit, cancel, or continue before taking the next step. Clicking an action posts that action's response as the user's next message.",
+  "data": {
+    "type": "object",
+    "required": ["title", "actions"],
+    "properties": {
+      "title": { "type": "string", "description": "Card heading shown at the top." },
+      "body": {
+        "type": "string",
+        "description": "Optional supporting text shown under the title. Markdown is NOT rendered."
+      },
+      "actions": {
+        "type": "array",
+        "minItems": 1,
+        "description": "List of action buttons.",
+        "items": {
+          "type": "object",
+          "required": ["id", "label", "response"],
+          "properties": {
+            "id": { "type": "string", "description": "Stable identifier for the action." },
+            "label": { "type": "string", "description": "Visible button text." },
+            "response": {
+              "type": "string",
+              "description": "Text that will be posted as the user's next message when this action is clicked."
+            },
+            "variant": {
+              "type": "string",
+              "enum": ["primary", "secondary", "danger"],
+              "description": "Visual variant for the button. Defaults to primary."
+            }
+          }
+        }
+      }
+    }
+  }
+}

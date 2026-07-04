@@ -901,6 +901,7 @@ export function useNotebookChat({
     contextKey,
     setInputValue,
     handleSubmit,
+    sendMessage,
     handleQuickAction,
     handleReset,
     openFilePicker,

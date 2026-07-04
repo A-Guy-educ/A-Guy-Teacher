@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ChatErrorSurface } from '../ChatErrorSurface'
-import { ChatMessageContent } from '../ChatMessageContent'
+import { ChatMessageView } from '../ChatMessageView'
 import { ChatQuotaBar } from '../ChatQuotaBar'
 import { TTSButton } from '../TTSButton'
 import { useChatQuota } from '../hooks/useChatQuota'
@@ -146,6 +146,7 @@ export function ChatInterface({
     contextKey,
     setInputValue,
     handleSubmit,
+    sendMessage,
     handleQuickAction,
     handleReset,
     // Direct-to-Blob uploads
@@ -397,6 +398,24 @@ export function ChatInterface({
 
   const showChatViewOverlay = showMathTools && !isChatInputFocused && inputValue.includes('$')
 
+  /**
+   * Post a renderer choice (selection, multi-select, approval action) as the
+   * user's next message. Mirrors Kody chat: clicking a renderer control is
+   * equivalent to typing the answer. We seed the visible input so the new
+   * user bubble matches what was clicked, then send through the same hook
+   * pipeline as a typed message (streaming / sync / persistence).
+   */
+  const handleViewChoice = useCallback(
+    (text: string) => {
+      if (!text.trim()) return
+      setInputValue(text)
+      setIsChatInputFocused(false)
+      onChatInteraction?.()
+      sendMessage(text)
+    },
+    [sendMessage, onChatInteraction],
+  )
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Header with optional reset button and teacher profile badge */}
@@ -528,7 +547,11 @@ export function ChatInterface({
                     </div>
                   </div>
                 )}
-                <ChatMessageContent content={msg.content} />
+                <ChatMessageView
+                  content={msg.content}
+                  onChoice={handleViewChoice}
+                  disabled={isLoading}
+                />
                 {isAssistant && (
                   <TTSButton
                     isPlaying={isCurrentlyPlaying}
