@@ -1930,7 +1930,7 @@ _No notable commits since the last release._
 - fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb
 - fix(lesson): Render content page body via dedicated blockType-based renderer ([#352](https://github.com/A-Guy-educ/A-Guy-Web/pull/352)) — @aguyshayb
 - fix(lesson): Pre-render content page bodies and pass to lesson pager ([#351](https://github.com/A-Guy-educ/A-Guy-Web/pull/351)) — @aguyshayb
-- feat(lesson): render contentPageRef blocks in lesson pager ([#315](https://github.com/A-Guy-educ/A-Guy-Web/pull/315)) — @kodyade[bot]
+- feat(lesson): render contentPageRef blocks in lesson pager ([#315](https://github.com/A-Guy-educ/A-Guy-Web/pull/315)) — @kodyade[bot] · 🔄 QA (#735)
 - #309: Add prerequisite-lessons list to the lesson start page ([#313](https://github.com/A-Guy-educ/A-Guy-Web/pull/313)) — @kodyade[bot] · ⚠️ QA 2026-07-03 (#714)
 - #310: Add jump-to-exercise number input between prev/next arrows ([#314](https://github.com/A-Guy-educ/A-Guy-Web/pull/314)) — @kodyade[bot] · ⚠️ QA 2026-07-02 (#704)
 - #308: Remove free-registration button from /login, prepend free-of-char… ([#312](https://github.com/A-Guy-educ/A-Guy-Web/pull/312)) — @kodyade[bot] · ⚠️ QA 2026-07-01 (#687)
