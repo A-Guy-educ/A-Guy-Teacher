@@ -1,35 +1,52 @@
 {
+  "slug": "multi-select-list",
+  "name": "Multi-select list",
   "purpose": "multi-select-list",
-  "description": "Renders a multi-choice list. The user selects zero or more items; the chosen set of labels is posted as the user's next message (comma-separated). Use when the agent asks the user to pick multiple options.",
+  "description": "Multi-choice list of selectable items.",
+  "rule": "Use this purpose when Kody asks the user to choose multiple, several, a few, one or more, or zero or more items from a list.",
   "data": {
-    "type": "object",
-    "required": ["title", "items"],
-    "properties": {
-      "title": { "type": "string", "description": "Card heading shown at the top." },
-      "body": {
-        "type": "string",
-        "description": "Optional supporting text shown under the title. Markdown is NOT rendered."
-      },
-      "items": {
-        "type": "array",
-        "minItems": 1,
-        "description": "List of selectable items.",
-        "items": {
-          "type": "object",
-          "required": ["id", "label"],
-          "properties": {
-            "id": { "type": "string", "description": "Stable identifier for the item." },
-            "label": {
-              "type": "string",
-              "description": "Visible item text — also part of the post when the item is chosen."
-            },
-            "description": {
-              "type": "string",
-              "description": "Optional secondary line shown below the label."
-            }
-          }
-        }
-      }
+    "title": {
+      "type": "text",
+      "description": "Card heading shown at the top."
+    },
+    "body": {
+      "type": "text",
+      "optional": true,
+      "description": "Optional supporting text shown under the title."
+    },
+    "items": {
+      "type": "selection",
+      "description": "List of selectable items."
     }
+  },
+  "type": "layout",
+  "ui": {
+    "type": "stack",
+    "children": [
+      {
+        "type": "text",
+        "variant": "title",
+        "value": "$title"
+      },
+      {
+        "type": "text",
+        "value": "$body"
+      },
+      {
+        "type": "list",
+        "for": "$items",
+        "as": "item",
+        "item": {
+          "type": "checkbox",
+          "name": "selected",
+          "value": "$item.id",
+          "label": "$item.label"
+        }
+      },
+      {
+        "type": "submit",
+        "label": "Confirm"
+      }
+    ]
   }
 }

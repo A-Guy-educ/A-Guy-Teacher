@@ -1,35 +1,47 @@
 {
+  "slug": "selection-list",
+  "name": "Selection list",
   "purpose": "selection-list",
-  "description": "Renders a single-choice list of selectable items. The user picks exactly one item; the chosen item's id and label are posted as the user's next message. Use when the agent asks the user to choose one option from a list.",
+  "description": "Single-choice list of selectable items.",
+  "rule": "Use this purpose when Kody asks the user to choose exactly one item from a list.",
   "data": {
-    "type": "object",
-    "required": ["title", "items"],
-    "properties": {
-      "title": { "type": "string", "description": "Card heading shown at the top." },
-      "body": {
-        "type": "string",
-        "description": "Optional supporting text shown under the title. Markdown is NOT rendered."
+    "title": {
+      "type": "text",
+      "description": "Card heading shown at the top."
+    },
+    "body": {
+      "type": "text",
+      "optional": true,
+      "description": "Optional supporting text shown under the title."
+    },
+    "items": {
+      "type": "selection",
+      "description": "List of selectable items."
+    }
+  },
+  "type": "layout",
+  "ui": {
+    "type": "stack",
+    "children": [
+      {
+        "type": "text",
+        "variant": "title",
+        "value": "$title"
       },
-      "items": {
-        "type": "array",
-        "minItems": 1,
-        "description": "List of selectable items.",
-        "items": {
-          "type": "object",
-          "required": ["id", "label"],
-          "properties": {
-            "id": { "type": "string", "description": "Stable identifier for the item." },
-            "label": {
-              "type": "string",
-              "description": "Visible item text — also posted as the user's next message when the item is chosen."
-            },
-            "description": {
-              "type": "string",
-              "description": "Optional secondary line shown below the label."
-            }
-          }
+      {
+        "type": "text",
+        "value": "$body"
+      },
+      {
+        "type": "list",
+        "for": "$items",
+        "as": "item",
+        "item": {
+          "type": "button",
+          "label": "$item.label",
+          "action": "$item"
         }
       }
-    }
+    ]
   }
 }
