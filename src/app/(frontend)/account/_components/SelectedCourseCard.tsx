@@ -88,7 +88,7 @@ export function SelectedCourseCard() {
 
   const handleRemoveSelection = () => {
     clearUserProfile()
-    router.replace('/')
+    router.replace('/courses')
   }
 
   const handleRetry = () => {
