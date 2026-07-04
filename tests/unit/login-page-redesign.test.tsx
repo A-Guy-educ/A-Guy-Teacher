@@ -140,10 +140,12 @@ describe('LoginForm - Google only mode (password disabled)', () => {
     expect(screen.getByText('כניסה מהירה')).toBeTruthy()
   })
 
-  it('renders Google SSO button', () => {
+  it('renders Google SSO link', () => {
     renderWithPasswordDisabled(<LoginForm />)
 
-    expect(screen.getByRole('button', { name: /המשך עם Google/i })).toBeTruthy()
+    // GoogleLoginButton is a native <a href> — required for iOS Safari navigation
+    // inside Radix Dialog portals (issue #730).
+    expect(screen.getByRole('link', { name: /המשך עם Google/i })).toBeTruthy()
   })
 
   it('renders three-line subtitle in password disabled mode', () => {
@@ -178,10 +180,12 @@ describe('LoginForm - Password enabled mode', () => {
     expect(screen.getByLabelText(/סיסמה/)).toBeTruthy()
   })
 
-  it('renders Google SSO button when password is enabled', () => {
+  it('renders Google SSO link when password is enabled', () => {
     renderWithPasswordEnabled(<LoginForm />)
 
-    expect(screen.getByRole('button', { name: /המשך עם Google/i })).toBeTruthy()
+    // GoogleLoginButton is a native <a href> — required for iOS Safari navigation
+    // inside Radix Dialog portals (issue #730).
+    expect(screen.getByRole('link', { name: /המשך עם Google/i })).toBeTruthy()
   })
 
   it('renders three-line subtitle when password is enabled', () => {

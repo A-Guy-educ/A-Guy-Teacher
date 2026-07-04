@@ -19,12 +19,43 @@ function normalizeProduct(product: Product): Product {
   }
 }
 
+/**
+ * Filter for "active" storefront products — drives the big featured-card
+ * section on /products. A product is active when:
+ *   - status === 'active' (new, post-#718 shape), OR
+ *   - status is unset/null AND isActive !== false (backward-compat with
+ *     pre-#718 data where only isActive existed)
+ *
+ * The { $in: [true, null] } trick matches both `true` and missing fields,
+ * since Mongo treats missing as null for `equals`/`in` comparisons.
+ */
+const activeProductFilter = {
+  isActive: { $ne: false },
+  status: { $in: ['active', null] },
+}
+
+/**
+ * Filter for "soon" / "free" / inactive products — drives the compact
+ * disabled-button grid on /products. Catches status='soon', status='free',
+ * AND any product flagged isActive=false regardless of status.
+ */
+const soonProductFilter = {
+  $or: [{ status: { $in: ['soon', 'free'] } }, { isActive: false }],
+}
+
 export const queryActiveProducts = cache(async (): Promise<Product[]> => {
-  const products = await findManySerialized<Product>(
-    'products',
-    { isActive: true },
-    { sort: { createdAt: 1 }, limit: 100 },
-  )
+  const products = await findManySerialized<Product>('products', activeProductFilter, {
+    sort: { createdAt: 1 },
+    limit: 100,
+  })
+  return products.map(normalizeProduct)
+})
+
+export const querySoonProducts = cache(async (): Promise<Product[]> => {
+  const products = await findManySerialized<Product>('products', soonProductFilter, {
+    sort: { createdAt: 1 },
+    limit: 100,
+  })
   return products.map(normalizeProduct)
 })
 

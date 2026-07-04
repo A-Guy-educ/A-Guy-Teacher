@@ -950,6 +950,11 @@
   "products": {
     "catalogTitle": "מוצרים",
     "catalogDescription": "עיין במוצרים הזמינים שלנו והתחל ללמוד עוד היום.",
+    "featuredSectionTitle": "זמין כעת",
+    "soonSectionTitle": "בקרוב",
+    "buyNowButton": "לרכישה מיידית",
+    "soonButton": "בקרוב",
+    "freeLabel": "חינם",
     "noProducts": "אין מוצרים זמינים כרגע.",
     "oneTimeLabel": "רכישה חד-פעמית",
     "subscriptionLabel": "מנוי",

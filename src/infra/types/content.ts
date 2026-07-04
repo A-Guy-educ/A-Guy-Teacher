@@ -252,6 +252,19 @@ export function isPopulatedFeatureRef(value: unknown): value is ProductFeatureRe
   return !!value && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'string'
 }
 
+/**
+ * Storefront classification. Drives the split between the big featured cards
+ * (Section 1) and the disabled "בקרוב" compact grid (Section 2) on /products.
+ *
+ * - 'active' → buyable now, featured card with "לרכישה מיידית" CTA
+ * - 'soon'   → not yet available, compact grid with disabled "בקרוב" button
+ * - 'free'   → free product; same compact-grid treatment as soon
+ * - null/missing with isActive=false → also treated as soon
+ */
+export type ProductStatus = 'active' | 'soon' | 'free' | null
+
+export const ACTIVE_PRODUCT_STATUS: ProductStatus = 'active'
+
 export interface Product {
   id: string
   title: string
@@ -259,6 +272,12 @@ export interface Product {
   slug?: string | null
   description?: string | null
   isActive?: boolean | null
+  /**
+   * Storefront status. See ProductStatus. When null and isActive is true, the
+   * storefront treats the product as 'active' (backward compatible with
+   * pre-#718 data where only isActive existed).
+   */
+  status?: ProductStatus
   price?: number | null
   currency?: string | null
   billingType?: string | null

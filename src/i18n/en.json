@@ -950,6 +950,11 @@
   "products": {
     "catalogTitle": "Products",
     "catalogDescription": "Browse our available products and start learning today.",
+    "featuredSectionTitle": "Available now",
+    "soonSectionTitle": "Coming soon",
+    "buyNowButton": "Buy now",
+    "soonButton": "Coming soon",
+    "freeLabel": "Free",
     "noProducts": "No products available at this time.",
     "oneTimeLabel": "One-time purchase",
     "subscriptionLabel": "Subscription",
