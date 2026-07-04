@@ -1834,6 +1834,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.26.7 ([#732](https://github.com/A-Guy-educ/A-Guy-Web/pull/732)) — @kodyade[bot]
 - #718: /products page — split into big active card + soon grid, status f… ([#720](https://github.com/A-Guy-educ/A-Guy-Web/pull/720)) — @kodyade[bot]
 - #721: dev CI is red — Kody auto-fix ([#723](https://github.com/A-Guy-educ/A-Guy-Web/pull/723)) — @kodyade[bot]
 - promote: dev -> main (v0.26.6) ([#713](https://github.com/A-Guy-educ/A-Guy-Web/pull/713)) — @kodyade[bot]
