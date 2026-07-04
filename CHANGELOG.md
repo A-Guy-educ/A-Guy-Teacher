@@ -1834,6 +1834,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #743: dev CI is red — Kody auto-fix ([#744](https://github.com/A-Guy-educ/A-Guy-Web/pull/744)) — @kodyade[bot]
 - #725: [Courses] Exams tab doesn't show exam lesson cards ([#726](https://github.com/A-Guy-educ/A-Guy-Web/pull/726)) — @kodyade[bot]
 - #737: [Aguy Chat] Bring Kody-style rich views (approval / selection-lis… ([#739](https://github.com/A-Guy-educ/A-Guy-Web/pull/739)) — @kodyade[bot]
 - #740: dev CI is red — Kody auto-fix ([#741](https://github.com/A-Guy-educ/A-Guy-Web/pull/741)) — @kodyade[bot]
