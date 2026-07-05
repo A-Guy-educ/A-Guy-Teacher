@@ -1,0 +1,64 @@
+{
+  "slug": "approval-card",
+  "name": "Approval card",
+  "purpose": "approval-card",
+  "description": "Structured approval card with a title, optional body, and action buttons.",
+  "rule": "Use this purpose when Kody asks the user to approve, edit, cancel, continue, or confirm before taking the next step.",
+  "data": {
+    "title": {
+      "type": "text",
+      "description": "Card heading shown at the top."
+    },
+    "body": {
+      "type": "text",
+      "optional": true,
+      "description": "Optional supporting text shown under the title."
+    },
+    "actions": {
+      "type": "actions",
+      "optional": true,
+      "description": "List of action buttons."
+    }
+  },
+  "defaults": {
+    "actions": [
+      {
+        "id": "approve",
+        "label": "Approve",
+        "response": "approve",
+        "variant": "primary"
+      },
+      {
+        "id": "cancel",
+        "label": "Cancel",
+        "response": "cancel",
+        "variant": "secondary"
+      }
+    ]
+  },
+  "type": "layout",
+  "ui": {
+    "type": "stack",
+    "children": [
+      {
+        "type": "text",
+        "variant": "title",
+        "value": "$title"
+      },
+      {
+        "type": "text",
+        "value": "$body"
+      },
+      {
+        "type": "row",
+        "for": "$actions",
+        "as": "action",
+        "item": {
+          "type": "button",
+          "label": "$action.label",
+          "action": "$action"
+        }
+      }
+    ]
+  }
+}

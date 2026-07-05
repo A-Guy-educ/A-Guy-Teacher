@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 import type { Product } from '@/infra/types/content'
 import { useTranslations } from '@/ui/web/providers/I18n'
-import { ShoppingBag } from 'lucide-react'
+import { BookOpen, Check, ShoppingBag } from 'lucide-react'
 
 const BILLING_TYPE_COLORS: Record<string, string> = {
   one_time: 'hsl(142 71% 45%)',
@@ -40,22 +40,26 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
   const priceLabel = formatPrice(price, currency)
   const billingLabel = billingType === 'subscription' ? t('subscriptionLabel') : t('oneTimeLabel')
   const detailHref = product.slug ? `/products/${product.slug}` : '/products'
+  const bullets = ['lessons', 'practice', 'support'] as const
 
   return (
     <article
       dir="inherit"
-      className="relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-card transition-all duration-normal hover:shadow-card-hover"
+      className="relative overflow-hidden rounded-lg border border-border bg-card shadow-elevation-1 transition-all duration-normal hover:-translate-y-0.5 hover:shadow-card-hover"
     >
-      {/* Accent bar */}
       <span
         aria-hidden
         className="absolute inset-y-0 start-0 w-1.5"
         style={{ backgroundColor: accentColor }}
       />
 
-      <div className="flex flex-col gap-content-gap p-card-padding-lg ps-8 md:flex-row md:items-center md:justify-between">
+      <div className="grid gap-content-gap p-card-padding ps-8 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-stretch">
         <div className="flex-1 min-w-0">
-          <h2 className="text-heading-lg font-black text-card-foreground">
+          <span className="inline-flex items-center gap-content-gap-xs rounded-full bg-success/10 px-3 py-1 text-label font-bold text-success">
+            <BookOpen className="h-3 w-3" aria-hidden />
+            {t('featuredSectionTitle')}
+          </span>
+          <h2 className="mt-3 text-heading-lg font-black text-card-foreground">
             {product.name ?? product.title ?? 'Product'}
           </h2>
           <p className="text-body-md text-muted-foreground mt-2">{billingLabel}</p>
@@ -65,18 +69,29 @@ export function FeaturedProductCard({ product }: FeaturedProductCardProps) {
             </p>
           ) : null}
 
-          <div className="mt-5 flex items-baseline gap-2">
+          <div className="mt-5 grid gap-content-gap-xs sm:grid-cols-3">
+            {bullets.map((bullet) => (
+              <div
+                key={bullet}
+                className="flex items-center gap-content-gap-xs rounded-lg border border-border bg-background px-3 py-2 text-body-sm font-bold text-foreground"
+              >
+                <Check className="h-4 w-4 shrink-0 text-success" aria-hidden />
+                {t(`planBullets.${bullet}`)}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col justify-between gap-content-gap-sm rounded-lg border border-border bg-background p-card-padding-sm">
+          <div className="flex items-baseline gap-content-gap-xs">
             <span className="text-display-sm font-black text-foreground">{priceLabel}</span>
             {billingType === 'subscription' ? (
               <span className="text-body-sm text-muted-foreground">{t('perMonth')}</span>
             ) : null}
           </div>
-        </div>
-
-        <div className="shrink-0">
           <Link
             href={detailHref}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-primary px-6 py-3 text-body-md font-bold text-primary-foreground transition-all duration-normal hover:bg-primary/90 hover:shadow-elevation-1 hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex min-h-11 items-center justify-center gap-content-gap-xs whitespace-nowrap rounded-lg bg-primary px-6 py-3 text-body-md font-bold text-primary-foreground transition-all duration-normal hover:bg-primary/90 hover:shadow-elevation-1 active:scale-[0.98]"
           >
             <ShoppingBag className="w-5 h-5" aria-hidden />
             {t('buyNowButton')}

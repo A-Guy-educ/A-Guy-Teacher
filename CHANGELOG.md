@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.26.8 — 2026-07-05
+
+_No notable commits since the last release._
 ## v0.26.7 — 2026-07-04
 
 _No notable commits since the last release._
@@ -1834,6 +1837,13 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.26.8 ([#750](https://github.com/A-Guy-educ/A-Guy-Web/pull/750)) — @kodyade[bot]
+- #728: [Account] Removing selected course redirects to landing instead o… ([#731](https://github.com/A-Guy-educ/A-Guy-Web/pull/731)) — @kodyade[bot]
+- #743: dev CI is red — Kody auto-fix ([#744](https://github.com/A-Guy-educ/A-Guy-Web/pull/744)) — @kodyade[bot]
+- #725: [Courses] Exams tab doesn't show exam lesson cards ([#726](https://github.com/A-Guy-educ/A-Guy-Web/pull/726)) — @kodyade[bot]
+- #737: [Aguy Chat] Bring Kody-style rich views (approval / selection-lis… ([#739](https://github.com/A-Guy-educ/A-Guy-Web/pull/739)) — @kodyade[bot]
+- #740: dev CI is red — Kody auto-fix ([#741](https://github.com/A-Guy-educ/A-Guy-Web/pull/741)) — @kodyade[bot]
+- promote: dev -> main (v0.26.7) ([#738](https://github.com/A-Guy-educ/A-Guy-Web/pull/738)) — @kodyade[bot]
 - #730: [Onboarding] Google login button inside non-dismissible popup doe… ([#734](https://github.com/A-Guy-educ/A-Guy-Web/pull/734)) — @kodyade[bot]
 - chore: release v0.26.7 ([#732](https://github.com/A-Guy-educ/A-Guy-Web/pull/732)) — @kodyade[bot]
 - #718: /products page — split into big active card + soon grid, status f… ([#720](https://github.com/A-Guy-educ/A-Guy-Web/pull/720)) — @kodyade[bot]
@@ -1932,10 +1942,10 @@ _No notable commits since the last release._
 - #331: [LessonIntroPage] Add back button to lesson lobby screen ([#336](https://github.com/A-Guy-educ/A-Guy-Web/pull/336)) — @kodyade[bot]
 - #356: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#358](https://github.com/A-Guy-educ/A-Guy-Web/pull/358)) — @kodyade[bot]
 - #372: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#375](https://github.com/A-Guy-educ/A-Guy-Web/pull/375)) — @kodyade[bot]
-- fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb
+- fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb · 🔄 QA (#747)
 - fix(lesson): Render content page body via dedicated blockType-based renderer ([#352](https://github.com/A-Guy-educ/A-Guy-Web/pull/352)) — @aguyshayb
 - fix(lesson): Pre-render content page bodies and pass to lesson pager ([#351](https://github.com/A-Guy-educ/A-Guy-Web/pull/351)) — @aguyshayb
-- feat(lesson): render contentPageRef blocks in lesson pager ([#315](https://github.com/A-Guy-educ/A-Guy-Web/pull/315)) — @kodyade[bot] · 🔄 QA (#735)
+- feat(lesson): render contentPageRef blocks in lesson pager ([#315](https://github.com/A-Guy-educ/A-Guy-Web/pull/315)) — @kodyade[bot] · ⚠️ QA 2026-07-04 (#735)
 - #309: Add prerequisite-lessons list to the lesson start page ([#313](https://github.com/A-Guy-educ/A-Guy-Web/pull/313)) — @kodyade[bot] · ⚠️ QA 2026-07-03 (#714)
 - #310: Add jump-to-exercise number input between prev/next arrows ([#314](https://github.com/A-Guy-educ/A-Guy-Web/pull/314)) — @kodyade[bot] · ⚠️ QA 2026-07-02 (#704)
 - #308: Remove free-registration button from /login, prepend free-of-char… ([#312](https://github.com/A-Guy-educ/A-Guy-Web/pull/312)) — @kodyade[bot] · ⚠️ QA 2026-07-01 (#687)

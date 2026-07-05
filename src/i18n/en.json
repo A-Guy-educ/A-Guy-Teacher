@@ -948,8 +948,18 @@
     }
   },
   "products": {
-    "catalogTitle": "Products",
-    "catalogDescription": "Browse our available products and start learning today.",
+    "catalogTitle": "Choose a learning plan",
+    "catalogDescription": "Full access to lessons, practice, and personal math guidance in one place.",
+    "highlights": {
+      "lessons": "Structured lessons",
+      "practice": "Practice and feedback",
+      "support": "Digital teacher"
+    },
+    "planBullets": {
+      "lessons": "Lessons",
+      "practice": "Practice",
+      "support": "Personal help"
+    },
     "featuredSectionTitle": "Available now",
     "soonSectionTitle": "Coming soon",
     "buyNowButton": "Buy now",

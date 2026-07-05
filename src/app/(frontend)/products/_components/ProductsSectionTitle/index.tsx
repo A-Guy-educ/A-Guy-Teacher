@@ -13,5 +13,10 @@ interface ProductsSectionTitleProps {
 
 export function ProductsSectionTitle({ translationKey }: ProductsSectionTitleProps) {
   const t = useTranslations('products')
-  return <h2 className="text-heading-xl font-bold mb-6">{t(translationKey)}</h2>
+  return (
+    <h2 className="mb-5 flex items-center gap-content-gap-xs text-heading-md font-extrabold text-foreground">
+      <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />
+      {t(translationKey)}
+    </h2>
+  )
 }

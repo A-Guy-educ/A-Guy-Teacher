@@ -46,7 +46,7 @@ vi.mock('@/infra/utils/getURL', () => ({
 
 // Now import the component after mocks
 import { SelectedCourseCard } from '@/app/(frontend)/account/_components/SelectedCourseCard'
-import { getUserProfile } from '@/client/state/localStorage/userProfile'
+import { clearUserProfile, getUserProfile } from '@/client/state/localStorage/userProfile'
 import { I18nProvider } from '@/ui/web/providers/I18n'
 import enMessages from '../../../src/i18n/en.json'
 
@@ -54,6 +54,7 @@ import enMessages from '../../../src/i18n/en.json'
 import type { Course } from '@/infra/types/content'
 
 const mockGetUserProfile = getUserProfile as ReturnType<typeof vi.fn>
+const mockClearUserProfile = clearUserProfile as ReturnType<typeof vi.fn>
 
 const renderWithI18n = () => {
   return render(
@@ -303,6 +304,61 @@ describe('SelectedCourseCard AbortController', () => {
         },
         { timeout: 1000 },
       )
+    })
+  })
+
+  describe('handleRemoveSelection redirect', () => {
+    it('clears the user profile and redirects to /courses when "Remove Selection" is clicked', async () => {
+      const mockCourse: Course = {
+        id: 'course-1',
+        slug: 'grade-8',
+        title: 'Grade 8 Mathematics',
+        courseLabel: '8',
+        description: 'Math curriculum for 8th grade',
+        status: 'published',
+        isActive: true,
+        order: 1,
+        tenant: 'tenant-1',
+        locale: 'he',
+        categories: [],
+        pageAccessType: 'free',
+        accessType: 'free',
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+        contentStatus: 'none' as const,
+        contentStatusVisible: true,
+      }
+
+      const successFetch = vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ docs: [mockCourse] }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        ),
+      )
+      vi.stubGlobal('fetch', successFetch)
+
+      mockGetUserProfile.mockReturnValue({
+        gradeLevel: '8',
+        courseId: 'course-1',
+        lastVisit: '2024-01-01T00:00:00.000Z',
+      })
+
+      renderWithI18n()
+
+      // Wait for the Remove Selection button to appear
+      const removeButton = await waitFor(
+        () => screen.getByRole('button', { name: 'Remove Selection' }),
+        { timeout: 2000 },
+      )
+
+      removeButton.click()
+
+      // Must clear stored profile and route to the courses store, not the landing page
+      expect(mockClearUserProfile).toHaveBeenCalledTimes(1)
+      expect(mockRouterReplace).toHaveBeenCalledWith('/courses')
+      expect(mockRouterReplace).not.toHaveBeenCalledWith('/')
     })
   })
 

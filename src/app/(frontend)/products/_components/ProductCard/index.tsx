@@ -48,14 +48,14 @@ export function ProductCard({ product, disabled = false }: ProductCardProps) {
     return (
       <div
         className={cn(
-          'group relative rounded-2xl border border-border/60 bg-card shadow-card overflow-hidden',
-          'transition-all duration-normal opacity-70',
+          'group relative overflow-hidden rounded-lg border border-border bg-card shadow-elevation-1',
+          'transition-all duration-normal opacity-muted',
         )}
         style={{ borderTopWidth: '4px', borderTopColor: accentColor }}
       >
         <div className="p-card-padding flex flex-col gap-content-gap">
           <div className="flex items-start justify-between gap-content-gap-xs">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+            <span className="rounded-full bg-muted px-2.5 py-1 text-label font-bold uppercase tracking-wider text-muted-foreground">
               {priceLabel}
             </span>
           </div>
@@ -72,7 +72,7 @@ export function ProductCard({ product, disabled = false }: ProductCardProps) {
               type="button"
               disabled
               aria-disabled="true"
-              className="w-full min-h-[44px] rounded-xl text-body-sm font-bold px-6 py-2.5 bg-muted text-muted-foreground cursor-not-allowed"
+              className="min-h-[44px] w-full cursor-not-allowed rounded-lg bg-muted px-6 py-2.5 text-body-sm font-bold text-muted-foreground"
             >
               {t('soonButton')}
             </button>

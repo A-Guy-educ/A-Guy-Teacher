@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import type { Chapter, Lesson } from '@/infra/types/content'
-import { getEffectiveLessonType } from '@/server/constants/lesson-types'
+import { getEffectiveLessonType, type LessonType } from '@/server/constants/lesson-types'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { useProgressMap } from '@/client/hooks/useProgressMap'
 import { StaggerGrid, StaggerItem } from '@/ui/web/components/motion'
@@ -17,7 +17,7 @@ interface LessonListTabProps {
   gradeLevel: string
   tabColor?: { text: string; stroke: string }
   lessonProgressMap?: Record<string, LessonProgress>
-  lessonType: 'learning' | 'practice'
+  lessonType: LessonType
 }
 
 export function LessonListTab({
@@ -88,6 +88,7 @@ export function LessonListTab({
                 chapterSlug={chapterSlug}
                 tabColor={tabColor}
                 progress={lessonProgressMap[lesson.id]?.percent ?? progressMap[lesson.id] ?? 0}
+                lessonType={lessonType}
               />
             </StaggerItem>
           )
