@@ -1943,7 +1943,7 @@ _No notable commits since the last release._
 - #331: [LessonIntroPage] Add back button to lesson lobby screen ([#336](https://github.com/A-Guy-educ/A-Guy-Web/pull/336)) — @kodyade[bot]
 - #356: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#358](https://github.com/A-Guy-educ/A-Guy-Web/pull/358)) — @kodyade[bot]
 - #372: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#375](https://github.com/A-Guy-educ/A-Guy-Web/pull/375)) — @kodyade[bot]
-- fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb · 🔄 QA (#747)
+- fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb · ⚠️ QA 2026-07-05 (#747)
 - fix(lesson): Render content page body via dedicated blockType-based renderer ([#352](https://github.com/A-Guy-educ/A-Guy-Web/pull/352)) — @aguyshayb
 - fix(lesson): Pre-render content page bodies and pass to lesson pager ([#351](https://github.com/A-Guy-educ/A-Guy-Web/pull/351)) — @aguyshayb
 - feat(lesson): render contentPageRef blocks in lesson pager ([#315](https://github.com/A-Guy-educ/A-Guy-Web/pull/315)) — @kodyade[bot] · ⚠️ QA 2026-07-04 (#735)
