@@ -1840,6 +1840,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.26.9 ([#762](https://github.com/A-Guy-educ/A-Guy-Web/pull/762)) — @kodyade[bot]
 - hotfix: Capture PayPal orders from /checkout/success return handler ([#761](https://github.com/A-Guy-educ/A-Guy-Web/pull/761)) — @aguyshayb
 - promote: dev -> main (v0.26.8) ([#751](https://github.com/A-Guy-educ/A-Guy-Web/pull/751)) — @kodyade[bot]
 - chore: release v0.26.8 ([#750](https://github.com/A-Guy-educ/A-Guy-Web/pull/750)) — @kodyade[bot]
