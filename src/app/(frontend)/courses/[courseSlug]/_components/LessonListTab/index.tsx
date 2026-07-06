@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Chapter, Lesson } from '@/infra/types/content'
 import { getEffectiveLessonType, type LessonType } from '@/server/constants/lesson-types'
 import { useTranslations } from '@/ui/web/providers/I18n'
@@ -13,6 +13,12 @@ interface LessonListTabProps {
   lessons: Lesson[]
   chapters: Chapter[]
   courseSlug: string
+  /** Course ID used to look up paid-entitlement. When omitted, no entitlement check runs. */
+  courseId?: string
+  /** Parent course's lesson-level accessType. Resolved against each lesson to decide the lock. */
+  courseAccessType?: string | null
+  /** Pre-resolved entitlement flag (e.g. server-side). Wins over the client fetch when provided. */
+  hasPaidAccess?: boolean
   /** Grade bucket of the course these lessons belong to — used to read progress for the right grade. */
   gradeLevel: string
   tabColor?: { text: string; stroke: string }
@@ -24,6 +30,9 @@ export function LessonListTab({
   lessons,
   chapters,
   courseSlug,
+  courseId,
+  courseAccessType,
+  hasPaidAccess: hasPaidAccessProp,
   gradeLevel,
   tabColor,
   lessonProgressMap = {},
@@ -38,6 +47,33 @@ export function LessonListTab({
     recordIds: lessonIds,
     gradeLevel,
   })
+
+  const [hasPaidAccessClient, setHasPaidAccessClient] = useState<boolean | undefined>(undefined)
+  useEffect(() => {
+    // Skip when the parent already resolved entitlement (server) or when we
+    // don't have a courseId to look up. The course page is gated server-side
+    // for paid courses, so by the time we render here the user already has
+    // access — but we still verify in case the page-level gate is loose.
+    if (hasPaidAccessProp !== undefined) return
+    if (!courseId) return
+    let cancelled = false
+    fetch(`/api/entitlements/check?courseId=${encodeURIComponent(courseId)}`, {
+      cache: 'no-store',
+    })
+      .then(async (res) => {
+        if (!res.ok) return
+        const data = (await res.json()) as { hasAccess?: boolean }
+        if (!cancelled) setHasPaidAccessClient(Boolean(data.hasAccess))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [courseId, hasPaidAccessProp])
+
+  // Default to true so we never accidentally lock someone whose entitlement
+  // state we don't yet know — the visual hint is a downgrade, not a hard block.
+  const hasPaidAccess = hasPaidAccessProp ?? hasPaidAccessClient ?? true
 
   if (filteredLessons.length === 0) {
     return null
@@ -89,6 +125,8 @@ export function LessonListTab({
                 tabColor={tabColor}
                 progress={lessonProgressMap[lesson.id]?.percent ?? progressMap[lesson.id] ?? 0}
                 lessonType={lessonType}
+                courseAccessType={courseAccessType}
+                hasPaidAccess={hasPaidAccess}
               />
             </StaggerItem>
           )

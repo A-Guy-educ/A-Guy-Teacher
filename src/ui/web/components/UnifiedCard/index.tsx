@@ -5,7 +5,7 @@ import { LOADING_KEYS } from '@/infra/loading/keys'
 import { cn } from '@/infra/utils/ui'
 import { ContentStatusBadge } from '@/ui/web/shared/ContentStatusBadge'
 import { ProgressCircle } from '@/ui/web/shared/ProgressCircle'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Lock } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface UnifiedCardProps {
@@ -50,6 +50,10 @@ export interface UnifiedCardProps {
   cardOnClick?: (e: React.MouseEvent) => void
   /** Additional className for the label badge (e.g. 'text-[11.5px]' for 15% larger exam label) */
   labelBadgeClassName?: string
+  /** When true, the card renders at reduced opacity with a Lock icon — visual hint only, the card stays clickable */
+  locked?: boolean
+  /** Lock badge accessible label */
+  lockedLabel?: string
 }
 
 export function UnifiedCard({
@@ -75,8 +79,11 @@ export function UnifiedCard({
   cardHref,
   cardOnClick,
   labelBadgeClassName,
+  locked,
+  lockedLabel,
 }: UnifiedCardProps) {
   const isSoon = contentStatus === 'soon'
+  const isLocked = Boolean(locked)
   const color = accentColor ?? 'hsl(var(--primary))'
   const showProgress = progress !== undefined
   const showDivider = buttonLabel || buttonHref || children
@@ -96,7 +103,7 @@ export function UnifiedCard({
     'group relative rounded-2xl border border-border/60 bg-card shadow-card overflow-hidden',
     'transition-all duration-normal will-change-transform',
     !isSoon && 'hover:border-border/80 hover:shadow-card-hover active:scale-[0.98]',
-    isSoon && 'opacity-60',
+    (isSoon || isLocked) && 'opacity-60',
     className,
   )
 
@@ -145,9 +152,21 @@ export function UnifiedCard({
         {/* Title + description + subtitle */}
         <div className="flex items-start gap-content-gap">
           <div className="flex-1 min-w-0">
-            <h3 className="text-heading-md font-bold text-card-foreground leading-snug mb-1">
-              {title}
-            </h3>
+            <div className="flex items-center gap-content-gap-xs mb-1">
+              <h3 className="text-heading-md font-bold text-card-foreground leading-snug">
+                {title}
+              </h3>
+              {isLocked && (
+                <span
+                  className="inline-flex items-center justify-center bg-warning/10 text-warning border border-warning/20 rounded-full w-6 h-6 shrink-0"
+                  aria-label={lockedLabel}
+                  title={lockedLabel}
+                  data-testid="unified-card-lock"
+                >
+                  <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+                </span>
+              )}
+            </div>
             {description && (
               <p className="text-body-sm text-muted-foreground line-clamp-2 [&_p]:m-0">
                 {description}

@@ -6,6 +6,7 @@ import type { Lesson } from '@/infra/types/content'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { UnifiedCard } from '@/ui/web/components/UnifiedCard'
 import type { LessonType } from '@/server/constants/lesson-types'
+import { resolveAccessType } from '@/infra/auth/access-types'
 import { toast } from 'sonner'
 
 interface CourseLessonCardProps {
@@ -17,6 +18,10 @@ interface CourseLessonCardProps {
   progress?: number
   /** Lesson type — 'exam' switches label from "Lesson" to "Exam" with larger font */
   lessonType?: LessonType
+  /** Parent course's lesson-level access type. Used with the lesson's own accessType to resolve the effective tier. */
+  courseAccessType?: string | null
+  /** True when the current user already has entitlement for the parent course (admin → true). */
+  hasPaidAccess?: boolean
 }
 
 export function CourseLessonCard({
@@ -27,6 +32,8 @@ export function CourseLessonCard({
   tabColor,
   progress = 0,
   lessonType,
+  courseAccessType,
+  hasPaidAccess = true,
 }: CourseLessonCardProps) {
   const tc = useTranslations('courses')
   const t = useTranslations('coursePage')
@@ -40,6 +47,9 @@ export function CourseLessonCard({
   // Disable link if chapterSlug is missing to avoid malformed URLs like /chapters//lessons/
   const isLinkDisabled = isSoon || !chapterSlug
   const accentColor = isSoon ? 'hsl(var(--border))' : (tabColor?.stroke ?? 'hsl(var(--primary))')
+
+  const effectiveAccessType = resolveAccessType(lesson.accessType, courseAccessType)
+  const isLocked = effectiveAccessType === 'paid' && !hasPaidAccess
 
   const subtitle =
     progress >= 100 ? t('lessonCompleted') : progress > 0 ? t('statusInProgress') : t('notStarted')
@@ -78,6 +88,8 @@ export function CourseLessonCard({
       subtitle={subtitle}
       cardHref={isLinkDisabled ? '#' : href}
       cardOnClick={handleClick}
+      locked={isLocked}
+      lockedLabel={tc('lockedAriaLabel')}
     />
   )
 }

@@ -167,4 +167,147 @@ describe('CourseLessonCard component', () => {
       expect(screen.getByText('Test Lesson')).toBeTruthy()
     })
   })
+
+  describe('paid-access lock', () => {
+    it('shows lock icon when course is paid, lesson inherits, and user has no entitlement', () => {
+      const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <CourseLessonCard
+            lesson={inheritLesson}
+            index={1}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.getByTestId('unified-card-lock')).toBeTruthy()
+    })
+
+    it('does not show lock icon when user already has paid entitlement', () => {
+      const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <CourseLessonCard
+            lesson={inheritLesson}
+            index={1}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={true}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+    })
+
+    it('does not show lock icon when course is free', () => {
+      const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <CourseLessonCard
+            lesson={inheritLesson}
+            index={1}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="free"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+    })
+
+    it('does not show lock icon when lesson is explicitly free even if course is paid', () => {
+      const freeLesson = { ...mockLesson, accessType: 'free' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <CourseLessonCard
+            lesson={freeLesson}
+            index={1}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+    })
+
+    it('does not show lock icon when lesson is explicitly gated even if course is paid', () => {
+      const gatedLesson = { ...mockLesson, accessType: 'gated' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <CourseLessonCard
+            lesson={gatedLesson}
+            index={1}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+    })
+
+    it('does not show lock icon when lesson is explicitly mandatory even if course is paid', () => {
+      const mandatoryLesson = { ...mockLesson, accessType: 'mandatory' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <CourseLessonCard
+            lesson={mandatoryLesson}
+            index={1}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+    })
+
+    it('shows lock icon when lesson is explicitly paid even without courseAccessType', () => {
+      const paidLesson = { ...mockLesson, accessType: 'paid' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <CourseLessonCard
+            lesson={paidLesson}
+            index={1}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.getByTestId('unified-card-lock')).toBeTruthy()
+    })
+
+    it('keeps the card clickable when locked (visual hint only)', () => {
+      const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <CourseLessonCard
+            lesson={inheritLesson}
+            index={1}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      // The link should NOT have its href collapsed to '#' the way the "soon"
+      // state collapses it; the user can still click through to the paywall.
+      const link = screen.getByRole('link')
+      expect(link.getAttribute('href')).toBe(
+        '/courses/test-course/chapters/test-chapter/lessons/test-lesson',
+      )
+      expect(toast.info).not.toHaveBeenCalled()
+    })
+  })
 })

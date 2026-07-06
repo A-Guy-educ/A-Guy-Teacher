@@ -418,6 +418,7 @@
     "chapter": "פרק",
     "lesson": "שיעור",
     "exam": "בחינה",
+    "lockedAriaLabel": "נדרש רכישה כדי לגשת",
     "exercise": "תרגיל",
     "noCourses": "אין קורסים זמינים כרגע.",
     "noChapters": "אין פרקים זמינים לקורס זה.",

@@ -89,6 +89,8 @@ export function CoursePageContent({
                 lessons={lessons}
                 chapters={chapters}
                 courseSlug={courseSlug}
+                courseId={course.id}
+                courseAccessType={course.accessType}
                 gradeLevel={course.courseLabel || ''}
                 tabColor={TAB_COLORS[activeTab]}
                 lessonProgressMap={lessonProgressMap}
