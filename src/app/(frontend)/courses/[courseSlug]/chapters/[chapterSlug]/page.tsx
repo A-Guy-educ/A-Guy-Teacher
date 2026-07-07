@@ -8,6 +8,7 @@ import { queryChapterBySlug } from '@/server/repos/queries/chapters'
 import { queryLessonsByChapter } from '@/server/repos/queries/lessons'
 import { SystemParams } from '@/infra/config/system-params'
 import { AccessGateProvider } from '@/ui/web/auth/AccessGateProvider'
+import { checkPaidAccess } from '@/server/utils/check-paid-access'
 import { stripHtml } from '@/utils/strip-html'
 import { ChapterPageBreadcrumb } from '../../../_components/ChapterPageBreadcrumb'
 import { ChapterHeader } from '../../../_components/ChapterHeader'
@@ -51,6 +52,11 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
   ])
 
   const lessons = await queryLessonsByChapter({ chapterId: chapter.id })
+
+  // Compute entitlement once for the whole chapter so every LessonCard can
+  // decide its lock state without an extra round-trip.
+  const { requiresEntitlement } = await checkPaidAccess(course.id)
+  const hasPaidAccess = !requiresEntitlement
 
   return (
     <AccessGateProvider
@@ -97,6 +103,8 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
                   lesson={lesson}
                   courseSlug={courseSlug}
                   chapterSlug={chapterSlug}
+                  courseAccessType={course.accessType}
+                  hasPaidAccess={hasPaidAccess}
                 />
               ))}
             </div>

@@ -418,6 +418,8 @@
     "chapter": "פרק",
     "lesson": "שיעור",
     "exam": "בחינה",
+    "lockedPurchaseCta": "לרכישת הקורס המלא",
+    "lockedPurchaseHint": "זמין ברכישת הקורס המלא • לחצו לרכישה",
     "exercise": "תרגיל",
     "noCourses": "אין קורסים זמינים כרגע.",
     "noChapters": "אין פרקים זמינים לקורס זה.",

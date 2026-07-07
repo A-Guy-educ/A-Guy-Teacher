@@ -6,15 +6,26 @@ import { SafeHtml } from '@/ui/web/SafeHtml'
 import type { Lesson } from '@/infra/types/content'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { UnifiedCard } from '@/ui/web/components/UnifiedCard'
+import { resolveAccessType } from '@/infra/auth/access-types'
 import { toast } from 'sonner'
 
 interface LessonCardProps {
   lesson: Lesson
   courseSlug: string
   chapterSlug?: string
+  /** Parent course's lesson-level access type. Used with the lesson's own accessType to resolve the effective tier. */
+  courseAccessType?: string | null
+  /** True when the current user already has entitlement for the parent course (admin → true). */
+  hasPaidAccess?: boolean
 }
 
-export function LessonCard({ lesson, courseSlug, chapterSlug }: LessonCardProps) {
+export function LessonCard({
+  lesson,
+  courseSlug,
+  chapterSlug,
+  courseAccessType,
+  hasPaidAccess = true,
+}: LessonCardProps) {
   const t = useTranslations('courses')
 
   if (!lesson.slug) return null
@@ -27,6 +38,9 @@ export function LessonCard({ lesson, courseSlug, chapterSlug }: LessonCardProps)
 
   const href = `/courses/${courseSlug}/chapters/${effectiveChapterSlug}/lessons/${lesson.slug}`
   const isSoon = lesson.contentStatus === 'soon'
+
+  const effectiveAccessType = resolveAccessType(lesson.accessType, courseAccessType)
+  const isLocked = effectiveAccessType === 'paid' && !hasPaidAccess
 
   const handleClick = () => {
     if (isSoon) {
@@ -61,6 +75,9 @@ export function LessonCard({ lesson, courseSlug, chapterSlug }: LessonCardProps)
       buttonLabel={t('viewLesson')}
       onButtonClick={handleClick}
       buttonClassName={isSoon ? 'bg-muted text-muted-foreground cursor-not-allowed' : undefined}
+      locked={isLocked}
+      lockedPurchaseLabel={t('lockedPurchaseCta')}
+      lockedHint={t('lockedPurchaseHint')}
     />
   )
 }
