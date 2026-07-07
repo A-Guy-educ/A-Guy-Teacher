@@ -48,7 +48,7 @@ describe('queryPurchaseHrefForCourse (#770)', () => {
     expect(slug).toBe('grade-7-standalone')
   })
 
-  it('passes the documented filter shape — active, status active-or-null, courseBlock grant on the course', async () => {
+  it('passes the documented filter shape — reuse activeProductFilter, match both ObjectId and string course ref', async () => {
     findOneMock.mockResolvedValueOnce({ slug: 's', price: 1 })
 
     await queryPurchaseHrefForCourse({ courseId: COURSE_ID })
@@ -56,21 +56,24 @@ describe('queryPurchaseHrefForCourse (#770)', () => {
     expect(findOneMock).toHaveBeenCalledTimes(1)
     const [filter, options] = findOneMock.mock.calls[0]
 
-    expect(filter.isActive).toBe(true)
+    // Must reuse the file-level activeProductFilter constant — NOT hand-roll a
+    // stricter `isActive: true` that drops pre-#718 products where isActive is
+    // missing/null.
+    expect(filter.isActive).toEqual({ $ne: false })
     expect(filter.status).toEqual({ $in: ['active', null] })
     // Must restrict to courseBlock entries that grant THIS course — not any
-    // featureBlock or unrelated courseBlock.
-    expect(filter.contents).toEqual({
-      $elemMatch: {
-        blockType: 'courseBlock',
-        course: expect.any(ObjectId),
-      },
+    // featureBlock or unrelated courseBlock. Course ref can be stored as either
+    // ObjectId or plain string depending on how the product was created, so we
+    // match both (same reason populateContents above uses relationId()).
+    const elemMatch = (filter.contents as { $elemMatch: { blockType: string; course: unknown } })
+      .$elemMatch
+    expect(elemMatch.blockType).toBe('courseBlock')
+    expect(elemMatch.course).toEqual({
+      $in: expect.arrayContaining([expect.any(ObjectId), COURSE_ID]),
     })
-    expect(
-      (filter.contents as { $elemMatch: { course: ObjectId } }).$elemMatch.course.equals(
-        new ObjectId(COURSE_ID),
-      ),
-    ).toBe(true)
+    const inList = (elemMatch.course as { $in: unknown[] }).$in
+    const objectIdEntry = inList.find((v): v is ObjectId => v instanceof ObjectId)
+    expect(objectIdEntry?.equals(new ObjectId(COURSE_ID))).toBe(true)
 
     // Cheapest active product wins (multi-product tiebreaker per issue spec).
     expect(options).toEqual({

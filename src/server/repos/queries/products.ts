@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb'
 import { cache } from 'react'
 
 import { getContentDb, relationId, serializeDoc } from '@/infra/db/content-db'
+import { logger } from '@/infra/utils/logger/logger'
 import {
   isPopulatedCourseRef,
   isPopulatedFeatureRef,
@@ -194,12 +195,15 @@ export const queryPurchaseHrefForCourse = cache(
       const db = await getContentDb()
       const product = await db.collection('products').findOne(
         {
-          isActive: true,
-          status: { $in: ['active', null] },
+          ...activeProductFilter,
           contents: {
             $elemMatch: {
               blockType: 'courseBlock',
-              course: new ObjectId(courseId),
+              // `block.course` can be stored as either ObjectId or plain string
+              // depending on how the product was created — populateContents above
+              // normalizes via relationId() for the same reason. Match both so a
+              // string-stored ref isn't silently missed.
+              course: { $in: [new ObjectId(courseId), courseId] },
             },
           },
         },
@@ -212,8 +216,14 @@ export const queryPurchaseHrefForCourse = cache(
       if (!product) return null
       const slug = (product as { slug?: unknown }).slug
       return typeof slug === 'string' && slug.length > 0 ? slug : null
-    } catch {
-      // Lookup must never block the click — fall back to /products at the caller.
+    } catch (error) {
+      // Lookup must never block the click — fall back to /products at the
+      // caller. But surface the cause so Vercel logs show the real failure
+      // (bad DB connection, schema drift, etc.) instead of a silent null.
+      logger.error(
+        { err: error, courseId },
+        'queryPurchaseHrefForCourse: reverse-lookup failed, falling back to /products',
+      )
       return null
     }
   },
