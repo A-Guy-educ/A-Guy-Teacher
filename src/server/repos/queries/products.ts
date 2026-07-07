@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb'
 import { cache } from 'react'
 
 import { getContentDb, relationId, serializeDoc } from '@/infra/db/content-db'
+import { logger } from '@/infra/utils/logger/logger'
 import {
   isPopulatedCourseRef,
   isPopulatedFeatureRef,
@@ -165,3 +166,65 @@ export const queryAllProductSlugs = cache(async (): Promise<{ slug: string }[]> 
     .filter((product) => product.slug)
     .map((product) => ({ slug: product.slug as string }))
 })
+
+/**
+ * Reverse-lookup: given a courseId, find the slug of the cheapest active product
+ * whose `contents` array contains a `courseBlock` granting that course. Drives
+ * the locked-lesson paywall CTA — instead of always routing to /products, we
+ * route to /products/<slug> so the user lands on the right buy page.
+ *
+ * Returns null when:
+ *   - the course has no matching active product (caller should fall back to /products)
+ *   - the Mongo query throws (e.g. invalid ObjectId, network error)
+ *   - the resolved product has no slug field
+ *
+ * Multi-product tiebreaker: when more than one active product unlocks the same
+ * course (e.g. "7th grade" standalone + a "grades 7–9" bundle), the product
+ * with the lowest `price` wins. This is an assumption pending finalization with
+ * Shai — see PR description for #770.
+ *
+ * Cache key is `courseId` so the same course across a single render (lesson
+ * list + chapter page + study content) shares one DB round-trip via React's
+ * request-scoped `cache()`.
+ */
+export const queryPurchaseHrefForCourse = cache(
+  async ({ courseId }: { courseId: string }): Promise<string | null> => {
+    try {
+      if (!courseId || !ObjectId.isValid(courseId)) return null
+
+      const db = await getContentDb()
+      const product = await db.collection('products').findOne(
+        {
+          ...activeProductFilter,
+          contents: {
+            $elemMatch: {
+              blockType: 'courseBlock',
+              // `block.course` can be stored as either ObjectId or plain string
+              // depending on how the product was created — populateContents above
+              // normalizes via relationId() for the same reason. Match both so a
+              // string-stored ref isn't silently missed.
+              course: { $in: [new ObjectId(courseId), courseId] },
+            },
+          },
+        },
+        {
+          projection: { slug: 1, price: 1 },
+          sort: { price: 1 },
+        },
+      )
+
+      if (!product) return null
+      const slug = (product as { slug?: unknown }).slug
+      return typeof slug === 'string' && slug.length > 0 ? slug : null
+    } catch (error) {
+      // Lookup must never block the click — fall back to /products at the
+      // caller. But surface the cause so Vercel logs show the real failure
+      // (bad DB connection, schema drift, etc.) instead of a silent null.
+      logger.error(
+        { err: error, courseId },
+        'queryPurchaseHrefForCourse: reverse-lookup failed, falling back to /products',
+      )
+      return null
+    }
+  },
+)
