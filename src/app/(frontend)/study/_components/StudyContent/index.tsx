@@ -402,6 +402,10 @@ export function StudyContent({
                             tabColor={tabColor}
                             progress={progressMap[lesson.id] ?? 0}
                             lessonType={lessonType}
+                            courseAccessType={courseInfo?.courseAccessType}
+                            hasPaidAccess={
+                              requiresEntitlement === undefined ? true : !requiresEntitlement
+                            }
                           />
                         </motion.div>
                       ))}

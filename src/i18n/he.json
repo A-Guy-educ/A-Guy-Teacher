@@ -418,6 +418,8 @@
     "chapter": "פרק",
     "lesson": "שיעור",
     "exam": "בחינה",
+    "lockedPurchaseCta": "לרכישת הקורס המלא",
+    "lockedPurchaseHint": "זמין ברכישת הקורס המלא • לחצו לרכישה",
     "exercise": "תרגיל",
     "noCourses": "אין קורסים זמינים כרגע.",
     "noChapters": "אין פרקים זמינים לקורס זה.",
@@ -946,6 +948,22 @@
       "authRequired": "אנא התחבר כדי להשתמש בעוזר הלמידה",
       "sendFailed": "שליחת ההודעה נכשלה. אנא נסה שוב."
     }
+  },
+  "bugReport": {
+    "buttonLabel": "דווח תקלה",
+    "tooltip": "דווח תקלה",
+    "title": "דווח תקלה",
+    "subtitle": "ספרו לנו מה לא עבד",
+    "close": "סגור",
+    "descriptionLabel": "תיאור התקלה",
+    "descriptionPlaceholder": "מה קרה? צעדים לשחזור, מה ציפיתם שיקרה, ומה בפועל קרה.",
+    "emailLabel": "דוא\"ל ליצירת קשר (לא חובה)",
+    "emailPlaceholder": "you@example.com",
+    "submit": "שלח",
+    "sending": "שולח...",
+    "success": "הדיווח נשלח, תודה",
+    "error": "שליחה נכשלה, נסה שוב",
+    "rateLimited": "אתם שולחים יותר מדי דיווחים — אנא המתינו כמה דקות"
   },
   "products": {
     "catalogTitle": "בחרו מסלול לימוד",

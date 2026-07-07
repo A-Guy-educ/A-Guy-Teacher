@@ -162,4 +162,113 @@ describe('LessonCard component', () => {
       expect(toast.info).not.toHaveBeenCalled()
     })
   })
+
+  describe('paid-access paywall', () => {
+    it('shows paywall CTA when course is paid, lesson inherits, and user has no entitlement', () => {
+      const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
+      const { container } = render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <LessonCard
+            lesson={inheritLesson}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.getByTestId('unified-card-paywall-cta')).toBeTruthy()
+      expect(screen.getByTestId('unified-card-paywall-hint')).toBeTruthy()
+      // Locked card is NOT greyed out — it should look like a "buy this" card,
+      // not a disabled one.
+      const root = container.firstChild as HTMLElement
+      expect(root.className).not.toContain('opacity-60')
+    })
+
+    it('does not show paywall CTA when user already has paid entitlement', () => {
+      const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <LessonCard
+            lesson={inheritLesson}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={true}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.queryByTestId('unified-card-paywall-cta')).toBeNull()
+    })
+
+    it('does not show paywall CTA when course is free', () => {
+      const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <LessonCard
+            lesson={inheritLesson}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="free"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.queryByTestId('unified-card-paywall-cta')).toBeNull()
+    })
+
+    it('does not show paywall CTA when lesson is explicitly free even if course is paid', () => {
+      const freeLesson = { ...mockLesson, accessType: 'free' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <LessonCard
+            lesson={freeLesson}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.queryByTestId('unified-card-paywall-cta')).toBeNull()
+    })
+
+    it('shows paywall CTA when lesson is explicitly paid even without courseAccessType', () => {
+      const paidLesson = { ...mockLesson, accessType: 'paid' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <LessonCard
+            lesson={paidLesson}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      expect(screen.getByTestId('unified-card-paywall-cta')).toBeTruthy()
+    })
+
+    it('routes card click to the purchase URL (defaults to /products) when locked', () => {
+      const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
+      render(
+        <I18nProvider locale="en" messages={enMessages}>
+          <LessonCard
+            lesson={inheritLesson}
+            courseSlug="test-course"
+            chapterSlug="test-chapter"
+            courseAccessType="paid"
+            hasPaidAccess={false}
+          />
+        </I18nProvider>,
+      )
+      // The "View Lesson" CTA button's underlying navigation should target
+      // /products (the purchase flow), not the gated lesson page.
+      const button = screen.getByRole('button')
+      expect(button).toBeTruthy()
+      fireEvent.click(button)
+      // The toast for "Soon" must NOT fire — the locked state is a paywall,
+      // not a content-not-ready state.
+      expect(toast.info).not.toHaveBeenCalled()
+    })
+  })
 })

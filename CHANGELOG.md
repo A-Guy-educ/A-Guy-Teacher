@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.26.9 — 2026-07-06
+
+_No notable commits since the last release._
 ## v0.26.8 — 2026-07-05
 
 _No notable commits since the last release._
@@ -1837,6 +1840,11 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #759: Show lock icon and grey out lessons that require course purchase ([#760](https://github.com/A-Guy-educ/A-Guy-Web/pull/760)) — @kodyade[bot]
+- #764: Repurpose floating Learning Assistant button into "Report a Bug" … ([#765](https://github.com/A-Guy-educ/A-Guy-Web/pull/765)) — @kodyade[bot]
+- chore: release v0.26.9 ([#762](https://github.com/A-Guy-educ/A-Guy-Web/pull/762)) — @kodyade[bot]
+- hotfix: Capture PayPal orders from /checkout/success return handler ([#761](https://github.com/A-Guy-educ/A-Guy-Web/pull/761)) — @aguyshayb
+- promote: dev -> main (v0.26.8) ([#751](https://github.com/A-Guy-educ/A-Guy-Web/pull/751)) — @kodyade[bot]
 - chore: release v0.26.8 ([#750](https://github.com/A-Guy-educ/A-Guy-Web/pull/750)) — @kodyade[bot]
 - #728: [Account] Removing selected course redirects to landing instead o… ([#731](https://github.com/A-Guy-educ/A-Guy-Web/pull/731)) — @kodyade[bot]
 - #743: dev CI is red — Kody auto-fix ([#744](https://github.com/A-Guy-educ/A-Guy-Web/pull/744)) — @kodyade[bot]
@@ -1942,9 +1950,9 @@ _No notable commits since the last release._
 - #331: [LessonIntroPage] Add back button to lesson lobby screen ([#336](https://github.com/A-Guy-educ/A-Guy-Web/pull/336)) — @kodyade[bot]
 - #356: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#358](https://github.com/A-Guy-educ/A-Guy-Web/pull/358)) — @kodyade[bot]
 - #372: [Login] מפתח תרגום brand.heroSubtitle מוצג כמו שהוא בדף ההתחברות ([#375](https://github.com/A-Guy-educ/A-Guy-Web/pull/375)) — @kodyade[bot]
-- fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb · 🔄 QA (#747)
+- fix(lesson): Widen content page container and wrap long-NBSP text ([#357](https://github.com/A-Guy-educ/A-Guy-Web/pull/357)) — @aguyshayb · ⚠️ QA 2026-07-05 (#747)
 - fix(lesson): Render content page body via dedicated blockType-based renderer ([#352](https://github.com/A-Guy-educ/A-Guy-Web/pull/352)) — @aguyshayb
-- fix(lesson): Pre-render content page bodies and pass to lesson pager ([#351](https://github.com/A-Guy-educ/A-Guy-Web/pull/351)) — @aguyshayb
+- fix(lesson): Pre-render content page bodies and pass to lesson pager ([#351](https://github.com/A-Guy-educ/A-Guy-Web/pull/351)) — @aguyshayb · ⚠️ QA 2026-07-06 (#757)
 - feat(lesson): render contentPageRef blocks in lesson pager ([#315](https://github.com/A-Guy-educ/A-Guy-Web/pull/315)) — @kodyade[bot] · ⚠️ QA 2026-07-04 (#735)
 - #309: Add prerequisite-lessons list to the lesson start page ([#313](https://github.com/A-Guy-educ/A-Guy-Web/pull/313)) — @kodyade[bot] · ⚠️ QA 2026-07-03 (#714)
 - #310: Add jump-to-exercise number input between prev/next arrows ([#314](https://github.com/A-Guy-educ/A-Guy-Web/pull/314)) — @kodyade[bot] · ⚠️ QA 2026-07-02 (#704)
