@@ -948,6 +948,22 @@
       "sendFailed": "Failed to send message. Please try again."
     }
   },
+  "bugReport": {
+    "buttonLabel": "Report a Bug",
+    "tooltip": "Report a Bug",
+    "title": "Report a Bug",
+    "subtitle": "Tell us what went wrong",
+    "close": "Close",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "What happened? Steps to reproduce, what you expected, and what you saw.",
+    "emailLabel": "Contact email (optional)",
+    "emailPlaceholder": "you@example.com",
+    "submit": "Send",
+    "sending": "Sending...",
+    "success": "Report sent, thanks",
+    "error": "Send failed, please try again",
+    "rateLimited": "You're sending too many reports — please wait a few minutes"
+  },
   "products": {
     "catalogTitle": "Choose a learning plan",
     "catalogDescription": "Full access to lessons, practice, and personal math guidance in one place.",

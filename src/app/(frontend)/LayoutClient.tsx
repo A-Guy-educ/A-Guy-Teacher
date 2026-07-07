@@ -11,11 +11,18 @@ import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
 import { restoreAccent } from '@/ui/web/components/accent-picker'
 import { useEffect, useState } from 'react'
 
-import { FloatingAgentButton } from '@/ui/web/learning-agent/FloatingAgentButton'
-import { AgentChatWindow } from '@/ui/web/learning-agent/AgentChatWindow'
+// PARKED — Learning agent files (FloatingAgentButton, AgentChatWindow, useLearningAgentChat)
+// and /api/agent/learning-chat are intentionally not mounted while the bottom-right
+// slot is repurposed for the "Report a Bug" widget. They remain on disk so we can
+// revive the AI chat later without re-deriving the integration.
+// import { FloatingAgentButton } from '@/ui/web/learning-agent/FloatingAgentButton'
+// import { AgentChatWindow } from '@/ui/web/learning-agent/AgentChatWindow'
+
+import { FloatingBugReportButton } from '@/ui/web/bug-report/FloatingBugReportButton'
+import { BugReportForm } from '@/ui/web/bug-report/BugReportForm'
 
 export function LayoutClient() {
-  const [isAgentChatOpen, setIsAgentChatOpen] = useState(false)
+  const [isBugReportOpen, setIsBugReportOpen] = useState(false)
 
   // Emit SITE_INIT once on mount
   // Other services (like analytics) subscribe to this event
@@ -42,8 +49,8 @@ export function LayoutClient() {
 
   return (
     <>
-      <FloatingAgentButton onClick={() => setIsAgentChatOpen(true)} />
-      <AgentChatWindow isOpen={isAgentChatOpen} onClose={() => setIsAgentChatOpen(false)} />
+      <FloatingBugReportButton onClick={() => setIsBugReportOpen(true)} />
+      <BugReportForm isOpen={isBugReportOpen} onClose={() => setIsBugReportOpen(false)} />
     </>
   )
 }
