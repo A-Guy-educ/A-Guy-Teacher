@@ -76,7 +76,8 @@ export function LessonCard({
       onButtonClick={handleClick}
       buttonClassName={isSoon ? 'bg-muted text-muted-foreground cursor-not-allowed' : undefined}
       locked={isLocked}
-      lockedLabel={t('lockedAriaLabel')}
+      lockedPurchaseLabel={t('lockedPurchaseCta')}
+      lockedHint={t('lockedPurchaseHint')}
     />
   )
 }

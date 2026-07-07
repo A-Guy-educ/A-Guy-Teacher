@@ -89,7 +89,8 @@ export function CourseLessonCard({
       cardHref={isLinkDisabled ? '#' : href}
       cardOnClick={handleClick}
       locked={isLocked}
-      lockedLabel={tc('lockedAriaLabel')}
+      lockedPurchaseLabel={tc('lockedPurchaseCta')}
+      lockedHint={tc('lockedPurchaseHint')}
     />
   )
 }

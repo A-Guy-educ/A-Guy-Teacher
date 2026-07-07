@@ -168,10 +168,10 @@ describe('CourseLessonCard component', () => {
     })
   })
 
-  describe('paid-access lock', () => {
-    it('shows lock icon when course is paid, lesson inherits, and user has no entitlement', () => {
+  describe('paid-access paywall', () => {
+    it('shows paywall CTA when course is paid, lesson inherits, and user has no entitlement', () => {
       const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
-      render(
+      const { container } = render(
         <I18nProvider locale="en" messages={enMessages}>
           <CourseLessonCard
             lesson={inheritLesson}
@@ -183,10 +183,16 @@ describe('CourseLessonCard component', () => {
           />
         </I18nProvider>,
       )
-      expect(screen.getByTestId('unified-card-lock')).toBeTruthy()
+      expect(screen.getByTestId('unified-card-paywall-cta')).toBeTruthy()
+      expect(screen.getByTestId('unified-card-paywall-hint')).toBeTruthy()
+      expect(screen.getByTestId('unified-card-paywall-cart')).toBeTruthy()
+      // Locked card is NOT greyed out — it should look like a "buy this" card,
+      // not a disabled one.
+      const root = container.firstChild as HTMLElement
+      expect(root.className).not.toContain('opacity-60')
     })
 
-    it('does not show lock icon when user already has paid entitlement', () => {
+    it('does not show paywall CTA when user already has paid entitlement', () => {
       const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
       render(
         <I18nProvider locale="en" messages={enMessages}>
@@ -200,10 +206,12 @@ describe('CourseLessonCard component', () => {
           />
         </I18nProvider>,
       )
-      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+      expect(screen.queryByTestId('unified-card-paywall-cta')).toBeNull()
+      expect(screen.queryByTestId('unified-card-paywall-hint')).toBeNull()
+      expect(screen.queryByTestId('unified-card-paywall-cart')).toBeNull()
     })
 
-    it('does not show lock icon when course is free', () => {
+    it('does not show paywall CTA when course is free', () => {
       const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
       render(
         <I18nProvider locale="en" messages={enMessages}>
@@ -217,10 +225,10 @@ describe('CourseLessonCard component', () => {
           />
         </I18nProvider>,
       )
-      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+      expect(screen.queryByTestId('unified-card-paywall-cta')).toBeNull()
     })
 
-    it('does not show lock icon when lesson is explicitly free even if course is paid', () => {
+    it('does not show paywall CTA when lesson is explicitly free even if course is paid', () => {
       const freeLesson = { ...mockLesson, accessType: 'free' as const }
       render(
         <I18nProvider locale="en" messages={enMessages}>
@@ -234,10 +242,10 @@ describe('CourseLessonCard component', () => {
           />
         </I18nProvider>,
       )
-      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+      expect(screen.queryByTestId('unified-card-paywall-cta')).toBeNull()
     })
 
-    it('does not show lock icon when lesson is explicitly gated even if course is paid', () => {
+    it('does not show paywall CTA when lesson is explicitly gated even if course is paid', () => {
       const gatedLesson = { ...mockLesson, accessType: 'gated' as const }
       render(
         <I18nProvider locale="en" messages={enMessages}>
@@ -251,10 +259,10 @@ describe('CourseLessonCard component', () => {
           />
         </I18nProvider>,
       )
-      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+      expect(screen.queryByTestId('unified-card-paywall-cta')).toBeNull()
     })
 
-    it('does not show lock icon when lesson is explicitly mandatory even if course is paid', () => {
+    it('does not show paywall CTA when lesson is explicitly mandatory even if course is paid', () => {
       const mandatoryLesson = { ...mockLesson, accessType: 'mandatory' as const }
       render(
         <I18nProvider locale="en" messages={enMessages}>
@@ -268,10 +276,10 @@ describe('CourseLessonCard component', () => {
           />
         </I18nProvider>,
       )
-      expect(screen.queryByTestId('unified-card-lock')).toBeNull()
+      expect(screen.queryByTestId('unified-card-paywall-cta')).toBeNull()
     })
 
-    it('shows lock icon when lesson is explicitly paid even without courseAccessType', () => {
+    it('shows paywall CTA when lesson is explicitly paid even without courseAccessType', () => {
       const paidLesson = { ...mockLesson, accessType: 'paid' as const }
       render(
         <I18nProvider locale="en" messages={enMessages}>
@@ -284,10 +292,10 @@ describe('CourseLessonCard component', () => {
           />
         </I18nProvider>,
       )
-      expect(screen.getByTestId('unified-card-lock')).toBeTruthy()
+      expect(screen.getByTestId('unified-card-paywall-cta')).toBeTruthy()
     })
 
-    it('keeps the card clickable when locked (visual hint only)', () => {
+    it('routes card click to the purchase URL (defaults to /products) when locked', () => {
       const inheritLesson = { ...mockLesson, accessType: 'inherit' as const }
       render(
         <I18nProvider locale="en" messages={enMessages}>
@@ -301,12 +309,10 @@ describe('CourseLessonCard component', () => {
           />
         </I18nProvider>,
       )
-      // The link should NOT have its href collapsed to '#' the way the "soon"
-      // state collapses it; the user can still click through to the paywall.
+      // The whole card is wrapped in a transparent link overlay; its href
+      // should point to the purchase flow, not the (gated) lesson page.
       const link = screen.getByRole('link')
-      expect(link.getAttribute('href')).toBe(
-        '/courses/test-course/chapters/test-chapter/lessons/test-lesson',
-      )
+      expect(link.getAttribute('href')).toBe('/products')
       expect(toast.info).not.toHaveBeenCalled()
     })
   })

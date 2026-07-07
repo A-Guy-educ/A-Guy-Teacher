@@ -5,7 +5,7 @@ import { LOADING_KEYS } from '@/infra/loading/keys'
 import { cn } from '@/infra/utils/ui'
 import { ContentStatusBadge } from '@/ui/web/shared/ContentStatusBadge'
 import { ProgressCircle } from '@/ui/web/shared/ProgressCircle'
-import { CheckCircle, Lock } from 'lucide-react'
+import { CheckCircle, Lock, ShoppingCart } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface UnifiedCardProps {
@@ -50,10 +50,14 @@ export interface UnifiedCardProps {
   cardOnClick?: (e: React.MouseEvent) => void
   /** Additional className for the label badge (e.g. 'text-[11.5px]' for 15% larger exam label) */
   labelBadgeClassName?: string
-  /** When true, the card renders at reduced opacity with a Lock icon — visual hint only, the card stays clickable */
+  /** When true, the card renders a paywall CTA (cart icon + amber purchase button + hint subtitle) and routes clicks to `lockedPurchaseHref`. */
   locked?: boolean
-  /** Lock badge accessible label */
-  lockedLabel?: string
+  /** Paywall CTA label — sits in the top row next to other badges. */
+  lockedPurchaseLabel?: string
+  /** URL the locked card navigates to when clicked. Defaults to `/products` (matches the course-page paywall). */
+  lockedPurchaseHref?: string
+  /** Hint line shown below the title when the card is locked. */
+  lockedHint?: string
 }
 
 export function UnifiedCard({
@@ -80,13 +84,20 @@ export function UnifiedCard({
   cardOnClick,
   labelBadgeClassName,
   locked,
-  lockedLabel,
+  lockedPurchaseLabel,
+  lockedPurchaseHref,
+  lockedHint,
 }: UnifiedCardProps) {
   const isSoon = contentStatus === 'soon'
   const isLocked = Boolean(locked)
   const color = accentColor ?? 'hsl(var(--primary))'
-  const showProgress = progress !== undefined
+  const showProgress = progress !== undefined && !isLocked
+  const showLockedCart = isLocked
   const showDivider = buttonLabel || buttonHref || children
+  // When locked, the card's primary click target is the purchase URL —
+  // matches the existing /products CTA the course-page paywall uses.
+  const effectiveCardHref = isLocked ? (lockedPurchaseHref ?? '/products') : cardHref
+  const effectiveButtonHref = isLocked ? (lockedPurchaseHref ?? '/products') : buttonHref
 
   // Build a valid hsla() string for the gradient overlay
   const gradientColor = (() => {
@@ -103,7 +114,9 @@ export function UnifiedCard({
     'group relative rounded-2xl border border-border/60 bg-card shadow-card overflow-hidden',
     'transition-all duration-normal will-change-transform',
     !isSoon && 'hover:border-border/80 hover:shadow-card-hover active:scale-[0.98]',
-    (isSoon || isLocked) && 'opacity-60',
+    // Paywall ("locked") cards are intentionally NOT greyed out — they need
+    // to look like a "buy this" marketing card, not a disabled lesson.
+    isSoon && 'opacity-60',
     className,
   )
 
@@ -118,7 +131,7 @@ export function UnifiedCard({
       />
 
       <div className="p-card-padding flex flex-col gap-content-gap">
-        {/* Top row: status badges */}
+        {/* Top row: status badges + paywall CTA */}
         <div className="flex items-start justify-between gap-content-gap-xs">
           <div className="flex items-center gap-content-gap-xs flex-wrap">
             {isOwned && (
@@ -139,43 +152,55 @@ export function UnifiedCard({
             )}
           </div>
 
-          {(contentStatus || badge) && (
-            <ContentStatusBadge
-              contentStatus={contentStatus}
-              contentStatusExpiresAt={contentStatusExpiresAt}
-              contentStatusLabel={contentStatusLabel}
-              className="shrink-0"
-            />
-          )}
+          <div className="flex items-center gap-content-gap-xs shrink-0">
+            {isLocked && lockedPurchaseLabel && (
+              <span
+                data-testid="unified-card-paywall-cta"
+                className="inline-flex items-center gap-1.5 bg-warning text-warning-foreground border border-warning/40 text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-elevation-1"
+                aria-label={lockedPurchaseLabel}
+              >
+                <ShoppingCart className="w-3.5 h-3.5" aria-hidden="true" />
+                {lockedPurchaseLabel}
+              </span>
+            )}
+
+            {!isLocked && (contentStatus || badge) && (
+              <ContentStatusBadge
+                contentStatus={contentStatus}
+                contentStatusExpiresAt={contentStatusExpiresAt}
+                contentStatusLabel={contentStatusLabel}
+                className="shrink-0"
+              />
+            )}
+          </div>
         </div>
 
         {/* Title + description + subtitle */}
         <div className="flex items-start gap-content-gap">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-content-gap-xs mb-1">
-              <h3 className="text-heading-md font-bold text-card-foreground leading-snug">
-                {title}
-              </h3>
-              {isLocked && (
-                <span
-                  className="inline-flex items-center justify-center bg-warning/10 text-warning border border-warning/20 rounded-full w-6 h-6 shrink-0"
-                  aria-label={lockedLabel}
-                  title={lockedLabel}
-                  data-testid="unified-card-lock"
-                >
-                  <Lock className="w-3.5 h-3.5" aria-hidden="true" />
-                </span>
-              )}
-            </div>
+            <h3 className="text-heading-md font-bold text-card-foreground leading-snug mb-1">
+              {title}
+            </h3>
             {description && (
               <p className="text-body-sm text-muted-foreground line-clamp-2 [&_p]:m-0">
                 {description}
               </p>
             )}
-            {subtitle && <p className="text-body-xs text-muted-foreground mt-1">{subtitle}</p>}
+            {isLocked && lockedHint && (
+              <p
+                data-testid="unified-card-paywall-hint"
+                className="text-body-xs text-warning font-medium mt-1.5 inline-flex items-center gap-1"
+              >
+                <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />
+                {lockedHint}
+              </p>
+            )}
+            {!isLocked && subtitle && (
+              <p className="text-body-xs text-muted-foreground mt-1">{subtitle}</p>
+            )}
           </div>
 
-          {/* Progress ring — right side */}
+          {/* Progress ring — right side. Replaced by a cart icon when locked. */}
           {showProgress && (
             <div className="shrink-0 w-14 h-14 relative">
               <ProgressCircle
@@ -205,6 +230,17 @@ export function UnifiedCard({
               </ProgressCircle>
             </div>
           )}
+
+          {/* Locked-state cart icon — same ~56px slot as the progress ring. */}
+          {showLockedCart && (
+            <div
+              data-testid="unified-card-paywall-cart"
+              className="shrink-0 w-14 h-14 rounded-full bg-warning/10 border border-warning/30 flex items-center justify-center text-warning"
+              aria-hidden="true"
+            >
+              <ShoppingCart className="w-6 h-6" />
+            </div>
+          )}
         </div>
 
         {/* Extra content (e.g. chapter list, badges) */}
@@ -218,8 +254,8 @@ export function UnifiedCard({
                 onClick={() => {
                   const shouldNavigate = onButtonClick?.()
                   // Navigate if onButtonClick returned true or if no handler and not locked
-                  if (shouldNavigate !== false && !isSoon && buttonHref) {
-                    window.location.href = buttonHref
+                  if (shouldNavigate !== false && !isSoon && effectiveButtonHref) {
+                    window.location.href = effectiveButtonHref
                   }
                 }}
                 className={cn(
@@ -238,7 +274,7 @@ export function UnifiedCard({
     </>
   )
 
-  if (cardHref) {
+  if (effectiveCardHref) {
     return (
       <div
         className={cn(cardClasses, 'cursor-pointer', !isSoon && 'hover:-translate-y-1')}
@@ -251,13 +287,13 @@ export function UnifiedCard({
           cardOnClick?.(e)
           if (!e.defaultPrevented && !isSoon) {
             loadingManager.register(LOADING_KEYS.ROUTE_TRANSITION, 'route')
-            window.location.href = cardHref
+            window.location.href = effectiveCardHref
           }
         }}
       >
         {/* Transparent overlay — whole card is a link. pointer-events-none lets hover reach the card. */}
         <a
-          href={cardHref}
+          href={effectiveCardHref}
           className="absolute inset-0 z-10 rounded-2xl pointer-events-none"
           aria-label="card-link"
         />
