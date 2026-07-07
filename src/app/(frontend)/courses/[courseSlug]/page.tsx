@@ -6,6 +6,7 @@ import { isValidContentLocale } from '@/infra/types/content'
 import { queryCourseBySlugWithFallback } from '@/server/repos/queries/courses'
 import { queryChaptersByCourse } from '@/server/repos/queries/chapters'
 import { queryLessonsByCourse } from '@/server/repos/queries/lessons'
+import { queryPurchaseHrefForCourse } from '@/server/repos/queries/products'
 import { SystemParams } from '@/infra/config/system-params'
 import { getAuthenticatedUserServer } from '@/server/utils/access-gate-server'
 import { checkPaidAccess } from '@/server/utils/check-paid-access'
@@ -78,6 +79,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
     course.courseLabel || '',
   )
 
+  // Resolve the cheapest active product that unlocks this course — drives the
+  // locked-lesson paywall CTA. Reverse-lookup because the course has no
+  // back-ref to product. Falls back to /products when no product matches or
+  // the query errors; never throws.
+  const purchaseSlug = await queryPurchaseHrefForCourse({ courseId: course.id })
+  const purchaseHref = purchaseSlug ? `/products/${purchaseSlug}` : undefined
+
   return (
     <AccessGateProvider
       accessType={courseAccessType}
@@ -92,6 +100,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
         courseSlug={courseSlug}
         lessonProgressMap={lessonProgressMap}
         isLocaleFallback={isLocaleFallback}
+        purchaseHref={purchaseHref}
       />
     </AccessGateProvider>
   )

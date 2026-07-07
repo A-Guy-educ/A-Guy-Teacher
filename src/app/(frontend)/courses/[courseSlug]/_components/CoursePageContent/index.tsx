@@ -22,6 +22,12 @@ interface CoursePageContentProps {
   courseSlug: string
   lessonProgressMap?: Record<string, LessonProgress>
   isLocaleFallback?: boolean
+  /**
+   * Pre-resolved buy URL for the parent course's locked lessons. Resolved
+   * server-side once per render; forwarded to LessonListTab → CourseLessonCard
+   * so the per-card CTA routes to the right product instead of /products.
+   */
+  purchaseHref?: string
 }
 
 const tabContentVariants = {
@@ -37,6 +43,7 @@ export function CoursePageContent({
   courseSlug,
   lessonProgressMap = {},
   isLocaleFallback = false,
+  purchaseHref,
 }: CoursePageContentProps) {
   const t = useTranslations('coursePage')
   const [activeTab, setActiveTab] = useState<CourseTab>('learn')
@@ -97,6 +104,7 @@ export function CoursePageContent({
                 lessonType={
                   activeTab === 'learn' ? 'learning' : activeTab === 'exams' ? 'exam' : 'practice'
                 }
+                purchaseHref={purchaseHref}
               />
             )}
             {activeTab === 'ask' && (

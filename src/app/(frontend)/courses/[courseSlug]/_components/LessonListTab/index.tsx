@@ -24,6 +24,12 @@ interface LessonListTabProps {
   tabColor?: { text: string; stroke: string }
   lessonProgressMap?: Record<string, LessonProgress>
   lessonType: LessonType
+  /**
+   * Pre-resolved buy URL forwarded to every locked CourseLessonCard. Resolved
+   * once at the container level (course page server component) so the
+   * reverse-lookup fires at most once per course render, not per card.
+   */
+  purchaseHref?: string
 }
 
 export function LessonListTab({
@@ -37,6 +43,7 @@ export function LessonListTab({
   tabColor,
   lessonProgressMap = {},
   lessonType,
+  purchaseHref,
 }: LessonListTabProps) {
   const t = useTranslations('coursePage')
   const filteredLessons = lessons.filter((l) => getEffectiveLessonType(l.type) === lessonType)
@@ -127,6 +134,7 @@ export function LessonListTab({
                 lessonType={lessonType}
                 courseAccessType={courseAccessType}
                 hasPaidAccess={hasPaidAccess}
+                purchaseHref={purchaseHref}
               />
             </StaggerItem>
           )
