@@ -107,7 +107,6 @@ beforeAll(async () => {
     status: 'published',
     categories: [categoryObjectId],
     tenant: tenantObjectId,
-    pageAccessType: 'free',
     accessType: 'free',
     contentStatus: 'none',
     contentStatusVisible: true,
