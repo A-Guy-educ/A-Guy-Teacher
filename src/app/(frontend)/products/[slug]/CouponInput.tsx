@@ -77,8 +77,8 @@ export function CouponInput({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-end gap-2">
-        <div className="flex-1 space-y-1.5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+        <div className="w-full sm:flex-1 min-w-0 space-y-1.5">
           <Label htmlFor="coupon-code">{t('couponLabel')}</Label>
           <Input
             id="coupon-code"
@@ -100,7 +100,7 @@ export function CouponInput({
           disabled={!code.trim() || status === 'loading'}
           variant="outline"
           size="sm"
-          className="h-12 px-4 shrink-0"
+          className="w-full sm:w-auto h-12 px-4 shrink-0"
         >
           {status === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : t('applyCoupon')}
         </Button>

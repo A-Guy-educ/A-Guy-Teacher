@@ -135,11 +135,11 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
   )
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-section-md">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-section-md">
       {/* Breadcrumb */}
       <nav className="mb-8" aria-label="breadcrumb">
-        <ol className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground">
-          <li>
+        <ol className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground min-w-0">
+          <li className="shrink-0">
             <Link
               href="/products"
               className="hover:text-foreground transition-colors duration-normal"
@@ -147,8 +147,8 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
               {t('catalogTitle')}
             </Link>
           </li>
-          <li className="text-muted-foreground/50">/</li>
-          <li className="text-foreground font-medium" aria-current="page">
+          <li className="text-muted-foreground/50 shrink-0">/</li>
+          <li className="text-foreground font-medium truncate min-w-0" aria-current="page">
             {product.name}
           </li>
         </ol>
@@ -157,13 +157,15 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
       {/* Product Card */}
       <div className="bg-card rounded-2xl border border-border/60 shadow-card overflow-hidden">
         {/* Header */}
-        <div className="p-card-padding-lg border-b border-border/40">
-          <div className="flex items-start justify-between gap-content-gap">
-            <div className="flex-1">
-              <h1 className="text-heading-xl font-black text-card-foreground">{product.name}</h1>
+        <div className="p-card-padding sm:p-card-padding-lg border-b border-border/40">
+          <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-content-gap">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-heading-lg sm:text-heading-xl font-black text-card-foreground">
+                {product.name}
+              </h1>
               <p className="text-body-lg text-muted-foreground mt-2">{billingLabel}</p>
             </div>
-            <div className="text-end">
+            <div className="text-start sm:text-end">
               {discountedAmount !== null && discountedAmount < price * 100 ? (
                 <>
                   <span className="text-display-sm font-black text-primary">
@@ -185,7 +187,7 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
 
         {/* Product Contents — courseBlock + non-silent featureBlock */}
         {visibleBlocks.length > 0 && (
-          <div className="p-card-padding-lg border-b border-border/40">
+          <div className="p-card-padding sm:p-card-padding-lg border-b border-border/40">
             <h2 className="text-heading-sm font-bold text-card-foreground mb-4">
               {t('includedItems')}
             </h2>
@@ -198,7 +200,7 @@ export function ProductDetailContent({ product }: ProductDetailContentProps) {
         )}
 
         {/* Actions: Coupon + Buy */}
-        <div className="p-card-padding-lg">
+        <div className="p-card-padding sm:p-card-padding-lg">
           <CouponInput
             productId={product.id}
             currency={currency}
