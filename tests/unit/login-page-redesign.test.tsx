@@ -1,7 +1,22 @@
 // @vitest-environment jsdom
 
-import { render, screen, cleanup } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+const mockLoginAction = vi.hoisted(() => vi.fn())
+const mockUseSearchParams = vi.hoisted(() => vi.fn(() => new URLSearchParams()))
+
+vi.mock('@/app/(frontend)/login/login_authenticate-action', () => ({
+  loginAction: mockLoginAction,
+}))
+
+vi.mock('next/navigation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next/navigation')>()
+  return {
+    ...actual,
+    useSearchParams: mockUseSearchParams,
+  }
+})
 
 import { LoginPageContent } from '@/app/(frontend)/login/LoginPageContent'
 import { LoginForm } from '@/app/(frontend)/login/LoginForm'
@@ -206,5 +221,52 @@ describe('LoginForm - Password enabled mode', () => {
     renderWithPasswordEnabled(<LoginForm />)
 
     expect(screen.getByText('כניסה מהירה')).toBeTruthy()
+  })
+})
+
+describe('LoginForm - submit button wires through to loginAction (issue #780)', () => {
+  const renderWithPasswordEnabled = (children: React.ReactNode) => {
+    return render(
+      <I18nProvider locale="he" messages={mergedHeMessages}>
+        <PasswordLoginProvider enabled={true}>{children}</PasswordLoginProvider>
+      </I18nProvider>,
+    )
+  }
+
+  beforeEach(() => {
+    mockLoginAction.mockReset()
+  })
+
+  it('calls loginAction with the form data when the submit button is clicked', async () => {
+    mockLoginAction.mockResolvedValue({ success: false, error: 'invalidCredentials' })
+
+    renderWithPasswordEnabled(<LoginForm />)
+
+    const emailInput = screen.getByLabelText(/אימייל/) as HTMLInputElement
+    const passwordInput = screen.getByLabelText(/סיסמה/) as HTMLInputElement
+    const submitButton = screen.getByRole('button', { name: /התחבר/ })
+
+    fireEvent.change(emailInput, { target: { value: 'student@example.com' } })
+    fireEvent.change(passwordInput, { target: { value: 'correct-password' } })
+    fireEvent.click(submitButton)
+
+    await waitFor(() => expect(mockLoginAction).toHaveBeenCalledTimes(1))
+
+    const submittedFormData = mockLoginAction.mock.calls[0][0] as FormData
+    expect(submittedFormData).toBeInstanceOf(FormData)
+    expect(submittedFormData.get('email')).toBe('student@example.com')
+    expect(submittedFormData.get('password')).toBe('correct-password')
+  })
+
+  it('renders an error message when loginAction reports failure (regression for the inert post-logout button)', async () => {
+    mockLoginAction.mockResolvedValue({ success: false, error: 'invalidCredentials' })
+
+    renderWithPasswordEnabled(<LoginForm />)
+
+    fireEvent.change(screen.getByLabelText(/אימייל/), { target: { value: 'a@b.com' } })
+    fireEvent.change(screen.getByLabelText(/סיסמה/), { target: { value: 'bad' } })
+    fireEvent.click(screen.getByRole('button', { name: /התחבר/ }))
+
+    await waitFor(() => expect(mockLoginAction).toHaveBeenCalled())
   })
 })
