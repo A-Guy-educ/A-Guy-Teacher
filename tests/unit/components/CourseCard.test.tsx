@@ -61,7 +61,6 @@ const mockCourse: Course = {
   tenant: 'test-tenant-id',
   locale: 'he',
   categories: [],
-  pageAccessType: 'free' as const,
   accessType: 'free' as const,
   createdAt: '2024-01-01T00:00:00.000Z',
   updatedAt: '2024-01-01T00:00:00.000Z',

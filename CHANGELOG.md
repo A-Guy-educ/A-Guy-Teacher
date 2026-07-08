@@ -1840,6 +1840,13 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #781: Remove course.pageAccessType readers ahead of Admin schema drop ([#782](https://github.com/A-Guy-educ/A-Guy-Web/pull/782)) — @kodyade[bot]
+- #778: Update onboarding completion modal copy ([#779](https://github.com/A-Guy-educ/A-Guy-Web/pull/779)) — @kodyade[bot]
+- #784: [prep7] Fix dark mode readability without changing the logo (use … ([#787](https://github.com/A-Guy-educ/A-Guy-Web/pull/787)) — @kodyade[bot]
+- #793: [Lesson] Add visible "back to exercise" control to mobile chat ov… ([#794](https://github.com/A-Guy-educ/A-Guy-Web/pull/794)) — @kodyade[bot]
+- #205: QA: fix(ask): Restore Gemini responseSchema on interactive lesson… ([#791](https://github.com/A-Guy-educ/A-Guy-Web/pull/791)) — @kodyade[bot]
+- #789: החזרת תצוגת /start לגרסה שלפני c44a9fb6 (revert StartPageClient.t… ([#790](https://github.com/A-Guy-educ/A-Guy-Web/pull/790)) — @kodyade[bot]
+- #780: [Login] "התחבר" button stays visible after logout on a screen wit… ([#788](https://github.com/A-Guy-educ/A-Guy-Web/pull/788)) — @kodyade[bot]
 - #770: Redirect locked lesson clicks to the specific product page, not /… ([#771](https://github.com/A-Guy-educ/A-Guy-Web/pull/771)) — @kodyade[bot]
 - promote: dev -> main (v0.26.9) ([#763](https://github.com/A-Guy-educ/A-Guy-Web/pull/763)) — @kodyade[bot]
 - #759: Show lock icon and grey out lessons that require course purchase ([#760](https://github.com/A-Guy-educ/A-Guy-Web/pull/760)) — @kodyade[bot]

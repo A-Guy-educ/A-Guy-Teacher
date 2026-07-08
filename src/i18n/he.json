@@ -276,10 +276,10 @@
       }
     },
     "onboardingComplete": {
-      "title": "נהדר!",
-      "description": "הכנתי את המערכת במיוחד בשבילך. רק רישום קצר (חינמי) ומתחילים ללמוד",
-      "primaryCta": "כניסה מהירה עם Google",
-      "reassurance": "ההרשמה לא כרוכה בעלות או בהזנת אשראי."
+      "title": "נהדר! 🎉",
+      "descriptionBold": "הכנתי עבורך את מערכת הלמידה המותאמת אישית.",
+      "descriptionRest": "רק חיבור מהיר ויוצאים לדרך המשותפת",
+      "primaryCta": "כניסה מהירה עם Google"
     },
     "signup": {
       "title": "צור חשבון",
@@ -321,6 +321,9 @@
       "loggingIn": "מתחבר...",
       "noAccount": "אין לך חשבון?",
       "signupLink": "הירשם",
+      "brand": {
+        "heroSubtitle": "A-Guy המורה הפרטי שלכם"
+      },
       "errors": {
         "invalidCredentials": "אימייל או סיסמה שגויים"
       }
@@ -444,6 +447,7 @@
     "freeResponseBadge": "תשובה חופשית",
     "notFound": "לא נמצא",
     "backToLesson": "חזור לשיעור",
+    "backToExercise": "חזור לתרגיל",
     "exerciseTitle": "תרגיל",
     "submitAnswer": "שלח תשובה",
     "checkAnswer": "בדוק תשובה",

@@ -122,7 +122,6 @@ export async function GET(request: NextRequest) {
       slug,
       title: courseDoc.title ?? null,
       accessType: courseDoc.accessType ?? null,
-      pageAccessType: courseDoc.pageAccessType ?? null,
       isActive: courseDoc.isActive ?? null,
     },
     queries: {

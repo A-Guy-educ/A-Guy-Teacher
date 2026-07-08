@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       courseId: '',
       courseTitle: grade,
       courseLabel: grade,
-      coursePageAccessType: 'free',
+      coursePageAccessType: 'mandatory',
       courseAccessType: 'free',
       gatedDelayMs: 300000,
       gatedWarningMs: 30000,

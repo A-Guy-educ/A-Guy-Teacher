@@ -1,7 +1,7 @@
 import { cache } from 'react'
 
 import type { Chapter, ContentLocale, Lesson } from '@/infra/types/content'
-import { DEFAULT_ACCESS_TYPE, DEFAULT_PAGE_ACCESS_TYPE } from '@/server/constants/access-types'
+import { DEFAULT_ACCESS_TYPE } from '@/server/constants/access-types'
 import { SystemParams } from '@/infra/config/system-params'
 import {
   findManySerialized,
@@ -90,7 +90,7 @@ export const prefetchStudyData = cache(
       courseId: course.id,
       courseTitle: course.title || '',
       courseLabel: course.courseLabel || '',
-      coursePageAccessType: course.pageAccessType || DEFAULT_PAGE_ACCESS_TYPE,
+      coursePageAccessType: 'mandatory',
       courseAccessType: course.accessType || DEFAULT_ACCESS_TYPE,
       purchaseHref,
       gatedDelayMs,

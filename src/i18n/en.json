@@ -276,10 +276,10 @@
       }
     },
     "onboardingComplete": {
-      "title": "Great!",
-      "description": "I prepared the system just for you. A short (free) sign-up and we start learning.",
-      "primaryCta": "Quick sign-in with Google",
-      "reassurance": "No cost, no credit card required."
+      "title": "Great! 🎉",
+      "descriptionBold": "I've prepared your personalized learning system.",
+      "descriptionRest": "Just a quick sign-in and we're on our way together",
+      "primaryCta": "Quick sign-in with Google"
     },
     "login": {
       "subtitle": "Sign in to continue learning",
@@ -298,6 +298,9 @@
       "loggingIn": "Logging in...",
       "noAccount": "Don't have an account?",
       "signupLink": "Sign up",
+      "brand": {
+        "heroSubtitle": "A-Guy Your Personal Tutor"
+      },
       "errors": {
         "invalidCredentials": "Invalid email or password"
       }
@@ -444,6 +447,7 @@
     "freeResponseBadge": "Free Response",
     "notFound": "Not Found",
     "backToLesson": "back to lesson",
+    "backToExercise": "back to exercise",
     "exerciseTitle": "Exercise",
     "submitAnswer": "Submit Answer",
     "checkAnswer": "Check Answer",

@@ -122,7 +122,7 @@ export function StudyContent({
       // Only the page-level gate applies here — lesson-default `courseAccessType`
       // gates individual lessons, not this course landing view.
       const info = prefetchedData
-      const isPaid = info.coursePageAccessType === 'paid'
+      const isPaid = info.courseAccessType === 'paid'
       if (isPaid && info.courseId) {
         fetch(`/api/entitlements/check?courseId=${info.courseId}`)
           .then(async (entRes) => {
@@ -171,7 +171,7 @@ export function StudyContent({
           }
           setCourseInfo(info)
 
-          const isPaid = info.coursePageAccessType === 'paid'
+          const isPaid = info.courseAccessType === 'paid'
           if (isPaid && info.courseId) {
             fetch(`/api/entitlements/check?courseId=${info.courseId}`)
               .then(async (entRes) => {

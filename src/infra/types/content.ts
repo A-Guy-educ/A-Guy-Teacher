@@ -89,7 +89,6 @@ export interface Course {
   contentStatusVisible?: boolean | null
   contentStatusExpiresAt?: string | null
   contentStatusLabel?: string | null
-  pageAccessType?: string | null
   accessType?: string | null
   formulaSheet?: string | FormulaSheet | null
   categories?: Category[] | null

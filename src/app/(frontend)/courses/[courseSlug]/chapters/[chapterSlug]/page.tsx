@@ -46,7 +46,8 @@ export default async function ChapterPage({ params }: ChapterPageProps) {
     notFound()
   }
 
-  const courseAccessType = course.pageAccessType ?? 'free'
+  // Course page gate is now universal — all courses require registration.
+  const courseAccessType = 'mandatory'
   const [gatedDelayMs, gatedWarningMs] = await Promise.all([
     SystemParams.getGatedDelayMs(),
     SystemParams.getGatedWarningMs(),
