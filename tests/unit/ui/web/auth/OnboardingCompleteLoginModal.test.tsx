@@ -3,7 +3,11 @@
  * Unit tests for OnboardingCompleteLoginModal
  *
  * Verifies the post-onboarding Google sign-in popup:
- * - Renders the i18n copy from `auth.onboardingComplete.*` (title, description, reassurance)
+ * - Renders the i18n copy from `auth.onboardingComplete.*` (title with emoji,
+ *   descriptionBold, descriptionRest, primaryCta). The reassurance line was
+ *   removed in #778.
+ * - Renders the description as two stacked lines: first line bold, second line
+ *   regular weight.
  * - Renders the Google button as a native anchor whose `href` points at
  *   `/api/oauth/google?returnTo=...` so iOS Safari's WebKit engine can navigate
  *   even when the button is rendered inside a non-dismissible Radix Dialog portal.
@@ -45,20 +49,45 @@ describe('OnboardingCompleteLoginModal', () => {
   })
 
   it('renders the English copy when open', () => {
-    const { getByText } = renderModal('en', enMessagesAny)
+    const { getByText, queryByText } = renderModal('en', enMessagesAny)
 
-    expect(getByText('Great!')).toBeDefined()
-    expect(getByText(/I prepared the system just for you/)).toBeDefined()
+    expect(getByText('Great! 🎉')).toBeDefined()
+    expect(getByText("I've prepared your personalized learning system.")).toBeDefined()
+    expect(getByText("Just a quick sign-in and we're on our way together")).toBeDefined()
     expect(getByText('Quick sign-in with Google')).toBeDefined()
-    expect(getByText('No cost, no credit card required.')).toBeDefined()
+    // Reassurance line was removed in #778 — must not be in the DOM.
+    expect(queryByText('No cost, no credit card required.')).toBeNull()
   })
 
   it('renders the Hebrew copy when open', () => {
+    const { getByText, queryByText } = renderModal('he', heMessagesAny)
+
+    expect(getByText('נהדר! 🎉')).toBeDefined()
+    expect(getByText('הכנתי עבורך את מערכת הלמידה המותאמת אישית.')).toBeDefined()
+    expect(getByText('רק חיבור מהיר ויוצאים לדרך המשותפת')).toBeDefined()
+    expect(getByText('כניסה מהירה עם Google')).toBeDefined()
+    // Reassurance line was removed in #778 — must not be in the DOM.
+    expect(queryByText('ההרשמה לא כרוכה בעלות או בהזנת אשראי.')).toBeNull()
+  })
+
+  it('renders the description first line in bold and second line in regular weight (English)', () => {
+    const { getByText } = renderModal('en', enMessagesAny)
+
+    const bold = getByText("I've prepared your personalized learning system.")
+    const rest = getByText("Just a quick sign-in and we're on our way together")
+
+    expect((bold as HTMLElement).className).toContain('font-bold')
+    expect((rest as HTMLElement).className).toContain('font-normal')
+  })
+
+  it('renders the description first line in bold and second line in regular weight (Hebrew)', () => {
     const { getByText } = renderModal('he', heMessagesAny)
 
-    expect(getByText('נהדר!')).toBeDefined()
-    expect(getByText('כניסה מהירה עם Google')).toBeDefined()
-    expect(getByText('ההרשמה לא כרוכה בעלות או בהזנת אשראי.')).toBeDefined()
+    const bold = getByText('הכנתי עבורך את מערכת הלמידה המותאמת אישית.')
+    const rest = getByText('רק חיבור מהיר ויוצאים לדרך המשותפת')
+
+    expect((bold as HTMLElement).className).toContain('font-bold')
+    expect((rest as HTMLElement).className).toContain('font-normal')
   })
 
   it('renders the Google control as a native anchor with the OAuth href (iOS Safari contract)', () => {
@@ -94,7 +123,7 @@ describe('OnboardingCompleteLoginModal', () => {
     const { queryByText } = renderModal('en', enMessagesAny, false)
 
     // Radix portals the open dialog; when `open={false}` the title is not in the DOM
-    expect(queryByText('Great!')).toBeNull()
+    expect(queryByText('Great! 🎉')).toBeNull()
   })
 
   it('hides the dialog close button (allowDismiss=false)', () => {
