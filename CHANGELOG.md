@@ -1840,6 +1840,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #797: Footer דינמי מ-CMS עם חלון מובנה לעמודים משפטיים ([#798](https://github.com/A-Guy-educ/A-Guy-Web/pull/798)) — @kodyade[bot]
 - fix(products): Responsive layout for product detail on mobile ([#795](https://github.com/A-Guy-educ/A-Guy-Web/pull/795)) — @aguyshayb
 - #783: Mobile Google login after /start wizard doesn't persist session ([#786](https://github.com/A-Guy-educ/A-Guy-Web/pull/786)) — @kodyade[bot]
 - #781: Remove course.pageAccessType readers ahead of Admin schema drop ([#782](https://github.com/A-Guy-educ/A-Guy-Web/pull/782)) — @kodyade[bot]
