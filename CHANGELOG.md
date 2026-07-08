@@ -1840,6 +1840,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #205: QA: fix(ask): Restore Gemini responseSchema on interactive lesson… ([#791](https://github.com/A-Guy-educ/A-Guy-Web/pull/791)) — @kodyade[bot]
 - #789: החזרת תצוגת /start לגרסה שלפני c44a9fb6 (revert StartPageClient.t… ([#790](https://github.com/A-Guy-educ/A-Guy-Web/pull/790)) — @kodyade[bot]
 - #780: [Login] "התחבר" button stays visible after logout on a screen wit… ([#788](https://github.com/A-Guy-educ/A-Guy-Web/pull/788)) — @kodyade[bot]
 - #770: Redirect locked lesson clicks to the specific product page, not /… ([#771](https://github.com/A-Guy-educ/A-Guy-Web/pull/771)) — @kodyade[bot]
