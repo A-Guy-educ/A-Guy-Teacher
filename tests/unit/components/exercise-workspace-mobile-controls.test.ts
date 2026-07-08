@@ -41,4 +41,31 @@ describe('ExerciseWorkspace mobile controls contract', () => {
     expect(splitPaneSource).toContain("isFullscreen && '[&_.exercise-top-progress]:hidden'")
     expect(splitPaneSource).toContain("isFullscreen && '[&_.exercise-breadcrumb]:hidden'")
   })
+
+  it('renders a mobile-only back-to-exercise header inside the chat panel', () => {
+    const en = readFileSync(path.join(process.cwd(), 'src/i18n/en.json'), 'utf8')
+    const he = readFileSync(path.join(process.cwd(), 'src/i18n/he.json'), 'utf8')
+    expect(en).toMatch(/"backToExercise":\s*"back to exercise"/)
+    expect(he).toMatch(/"backToExercise":\s*"חזור לתרגיל"/)
+
+    expect(workspaceSource).toContain('lg:hidden')
+    expect(workspaceSource).toContain("t('backToExercise')")
+
+    expect(workspaceSource).toContain("onBackToExercise={() => handleMobileModeChange('exercise')}")
+    expect(workspaceSource).not.toMatch(/backToExercise.*router\.back/)
+    expect(workspaceSource).not.toMatch(/backToExercise.*router\.push/)
+  })
+
+  it('does not modify the forbidden files', () => {
+    const backButtonSource = readFileSync(
+      path.join(process.cwd(), 'src/ui/web/components/BackButton/index.tsx'),
+      'utf8',
+    )
+    const chatInterfaceSource = readFileSync(
+      path.join(process.cwd(), 'src/ui/web/chat/ChatInterface/index.tsx'),
+      'utf8',
+    )
+    expect(backButtonSource).not.toContain('backToExercise')
+    expect(chatInterfaceSource).not.toContain('backToExercise')
+  })
 })
