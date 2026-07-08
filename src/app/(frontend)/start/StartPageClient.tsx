@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, Bot, Brain, Check, GraduationCap, UserRound } from 'lucide-react'
+import { Bot } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useCurrentUser } from '@/client/hooks/useCurrentUser'
@@ -23,18 +23,6 @@ interface TeacherProfile {
   description: string
 }
 
-function isPublicTeacherProfile(profile: TeacherProfile) {
-  const slug = profile.slug.trim().toLowerCase()
-  const label = profile.label.trim().toLowerCase()
-  const description = profile.description.trim().toLowerCase()
-
-  return !(
-    slug === 'settings-test-teacher' ||
-    label === 'settings test teacher' ||
-    description.includes('settings tests')
-  )
-}
-
 interface StartPageClientProps {
   courses: Course[]
   direction: Direction
@@ -54,13 +42,6 @@ const START_COPY = {
     moodQuestion: 'איך את/ה היום?',
     courseQuestion: 'איזה כיתה/שאלון את/ה לומד/ת?',
     selected: 'בואו נתחיל!',
-    setupTitle: 'הגדרת למידה',
-    setupDescription: 'שלושה צעדים קצרים כדי לפתוח מסלול מתאים.',
-    steps: {
-      teacher: 'סגנון מורה',
-      mood: 'מצב למידה',
-      courses: 'כיתה וקורס',
-    },
     noCourses: 'אין כרגע קורסים זמינים בשפה שנבחרה.',
     noTeacherProfiles: 'אין מורים זמינים כרגע.',
     courseFallback: 'קורס',
@@ -101,13 +82,6 @@ const START_COPY = {
     moodQuestion: 'How are you feeling today?',
     courseQuestion: 'Which grade or exam are you studying for?',
     selected: "Let's begin!",
-    setupTitle: 'Study setup',
-    setupDescription: 'Three short choices to open the right path.',
-    steps: {
-      teacher: 'Teacher style',
-      mood: 'Study state',
-      courses: 'Grade and course',
-    },
     noCourses: 'No courses are available in the selected language yet.',
     noTeacherProfiles: 'No teachers are available right now.',
     courseFallback: 'Course',
@@ -145,7 +119,7 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
   const copy = locale === 'he' ? START_COPY.he : START_COPY.en
   const [pane, setPane] = useState<Pane>('conversation')
   const [interaction, setInteraction] = useState<Interaction>('none')
-  const [displayedText, setDisplayedText] = useState<string>(copy.intro)
+  const [displayedText, setDisplayedText] = useState('')
   const [audioEnabled] = useState(true)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [selectedMood, setSelectedMood] = useState<Mood>('good')
@@ -222,7 +196,7 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
       if (res.ok) {
         const data = await res.json()
         if (data.profiles) {
-          setTeacherProfiles(data.profiles.filter(isPublicTeacherProfile))
+          setTeacherProfiles(data.profiles)
         }
       }
     } catch {
@@ -233,11 +207,10 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
   const startConversation = useCallback(async () => {
     setPane('conversation')
     setInteraction('none')
-    setDisplayedText(copy.intro)
-    setIsSpeaking(false)
     await fetchTeacherProfiles()
-    await sleep(500)
-    await typeText(copy.teacherQuestion, 30)
+    await typeText(copy.intro, 40)
+    await sleep(900)
+    await typeText(copy.teacherQuestion, 45)
     setInteraction('teacher')
   }, [copy.intro, copy.teacherQuestion, fetchTeacherProfiles, sleep, typeText])
 
@@ -342,15 +315,18 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
   return (
     <main
       dir={direction}
-      className="min-h-screen overflow-hidden bg-muted/25 font-sans text-foreground"
+      className="min-h-screen overflow-hidden bg-background font-sans text-foreground"
     >
+      <div className="pointer-events-none fixed -left-24 top-20 h-72 w-72 rounded-full bg-primary/10 blur-[120px]" />
+      <div className="pointer-events-none fixed -bottom-24 right-10 h-96 w-96 rounded-full bg-success/10 blur-[120px]" />
+
       <div className="relative z-10 flex min-h-screen flex-col">
-        <div className="fixed inset-x-3 top-3 z-50 flex justify-center gap-content-gap-xs rounded-lg border border-border bg-card/95 p-1 shadow-elevation-1 backdrop-blur sm:inset-x-auto sm:left-4 sm:top-4 sm:justify-start">
+        <div className="fixed left-4 top-4 z-50 flex items-center gap-content-gap-xs rounded-xl border border-border bg-card/90 p-1 shadow-elevation-1 backdrop-blur">
           <LanguageSwitcher />
           <ThemeSelector />
         </div>
 
-        <section className="flex flex-1 items-center justify-center px-4 py-section-md pt-24">
+        <section className="flex flex-1 items-center justify-center px-4 py-section-xs">
           {pane === 'conversation' && (
             <ConversationPane
               copy={copy}
@@ -408,116 +384,56 @@ function ConversationPane({
   onSelectTeacher: (teacher: TeacherProfile) => void
 }) {
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-content-gap-lg lg:grid-cols-[280px_minmax(0,1fr)]">
-      <StudySetupPanel copy={copy} interaction={interaction} />
-
-      <div className="rounded-lg border border-border bg-card p-card-padding shadow-elevation-1">
-        <div className="mb-8 grid gap-content-gap md:grid-cols-[auto_1fr] md:items-center">
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-lg border border-border bg-background text-primary">
-            <Bot className="h-8 w-8" aria-hidden />
-            <div className="absolute -bottom-2 flex h-6 items-end gap-1 rounded-full border border-border bg-card px-2 py-1 shadow-elevation-1">
-              {[0, 1, 2].map((item) => (
-                <span
-                  key={item}
-                  className={cn(
-                    'w-1 rounded-full bg-primary transition-all duration-normal',
-                    isSpeaking ? 'h-4 animate-pulse' : 'h-2',
-                  )}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 text-body-sm font-bold text-primary">{copy.badge}</p>
-            <p className="min-h-16 max-w-3xl text-heading-xl font-extrabold leading-relaxed text-foreground md:text-display-sm">
-              {displayedText}
-              {isSpeaking ? (
-                <span className="me-1 inline-block h-5 w-1 animate-pulse bg-primary" />
-              ) : null}
-            </p>
+    <div className="mx-auto w-full max-w-5xl">
+      <div className="mb-10 flex flex-col items-center text-center">
+        <div className="relative mb-8 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card text-primary shadow-elevation-1">
+          <Bot className="h-10 w-10" aria-hidden />
+          <div className="absolute -bottom-3 flex h-7 items-end gap-1 rounded-full bg-card px-2 py-1 shadow-elevation-1">
+            {[0, 1, 2].map((item) => (
+              <span
+                key={item}
+                className={cn(
+                  'w-1 rounded-full bg-primary transition-all duration-normal',
+                  isSpeaking ? 'h-5 animate-pulse' : 'h-2',
+                )}
+              />
+            ))}
           </div>
         </div>
 
-        <div
-          className={cn(
-            'transition-all duration-normal',
-            interaction === 'none' ? 'opacity-0' : 'opacity-100',
-          )}
-        >
-          {interaction === 'teacher' ? (
-            <TeacherGrid
-              copy={copy}
-              teacherProfiles={teacherProfiles}
-              selectedTeacherProfile={selectedTeacherProfile}
-              onSelectTeacher={onSelectTeacher}
-            />
+        <p className="min-h-24 max-w-3xl text-display-sm font-extrabold leading-relaxed text-foreground md:text-display-md">
+          {displayedText}
+          {isSpeaking ? (
+            <span className="me-1 inline-block h-6 w-1 animate-pulse bg-primary" />
           ) : null}
-          {interaction === 'mood' ? <MoodGrid copy={copy} onSelectMood={onSelectMood} /> : null}
-          {interaction === 'courses' ? (
-            <CourseGrid
-              copy={copy}
-              courses={courses}
-              selectedCourse={selectedCourse}
-              onSelectCourse={onSelectCourse}
-            />
-          ) : null}
-        </div>
+        </p>
+      </div>
+
+      <div
+        className={cn(
+          'transition-all duration-normal',
+          interaction === 'none' ? 'opacity-0' : 'opacity-100',
+        )}
+      >
+        {interaction === 'teacher' ? (
+          <TeacherGrid
+            copy={copy}
+            teacherProfiles={teacherProfiles}
+            selectedTeacherProfile={selectedTeacherProfile}
+            onSelectTeacher={onSelectTeacher}
+          />
+        ) : null}
+        {interaction === 'mood' ? <MoodGrid copy={copy} onSelectMood={onSelectMood} /> : null}
+        {interaction === 'courses' ? (
+          <CourseGrid
+            copy={copy}
+            courses={courses}
+            selectedCourse={selectedCourse}
+            onSelectCourse={onSelectCourse}
+          />
+        ) : null}
       </div>
     </div>
-  )
-}
-
-function StudySetupPanel({
-  copy,
-  interaction,
-}: {
-  copy: (typeof START_COPY)['he'] | (typeof START_COPY)['en']
-  interaction: Interaction
-}) {
-  const steps = [
-    { key: 'teacher', label: copy.steps.teacher, icon: UserRound },
-    { key: 'mood', label: copy.steps.mood, icon: Brain },
-    { key: 'courses', label: copy.steps.courses, icon: GraduationCap },
-  ] as const
-
-  const activeIndex = interaction === 'mood' ? 1 : interaction === 'courses' ? 2 : 0
-
-  return (
-    <aside className="rounded-lg border border-border bg-card p-card-padding shadow-elevation-1">
-      <p className="mb-2 text-heading-md font-extrabold text-foreground">{copy.setupTitle}</p>
-      <p className="mb-6 text-body-sm leading-relaxed text-muted-foreground">
-        {copy.setupDescription}
-      </p>
-      <div className="space-y-3">
-        {steps.map((step, index) => {
-          const Icon = step.icon
-          const isDone = index < activeIndex
-          const isActive = index === activeIndex
-
-          return (
-            <div
-              key={step.key}
-              className={cn(
-                'flex items-center gap-content-gap-sm rounded-lg border p-3 text-body-sm font-bold',
-                isActive
-                  ? 'border-primary/40 bg-primary/10 text-primary'
-                  : 'border-border bg-background text-muted-foreground',
-              )}
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-card">
-                {isDone ? (
-                  <Check className="h-4 w-4 text-success" aria-hidden />
-                ) : (
-                  <Icon className="h-4 w-4" aria-hidden />
-                )}
-              </span>
-              {step.label}
-            </div>
-          )
-        })}
-      </div>
-    </aside>
   )
 }
 
@@ -529,15 +445,15 @@ function MoodGrid({
   onSelectMood: (mood: Mood) => void
 }) {
   return (
-    <div className="grid grid-cols-1 gap-content-gap-sm md:grid-cols-3">
+    <div className="mx-auto grid max-w-2xl grid-cols-1 gap-content-gap-sm md:grid-cols-3">
       {moodOrder.map((mood) => (
         <button
           key={mood}
           type="button"
           onClick={() => onSelectMood(mood)}
-          className="flex min-h-40 flex-col items-center rounded-lg border border-border bg-background p-card-padding-sm text-center transition-all duration-normal hover:-translate-y-0.5 hover:border-primary/50"
+          className="flex flex-col items-center rounded-2xl border border-border bg-card p-5 text-center shadow-elevation-1 transition-transform duration-normal hover:-translate-y-0.5 hover:border-primary/50"
         >
-          <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-heading-md">
+          <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-heading-md">
             {copy.moods[mood].emoji}
           </span>
           <span className="mb-1 text-body-md font-extrabold text-card-foreground">
@@ -571,24 +487,21 @@ function CourseGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-content-gap-sm md:grid-cols-3">
+    <div className="mx-auto grid max-w-4xl grid-cols-1 gap-3 md:grid-cols-3">
       {courses.map((course) => (
         <button
           key={course.id}
           type="button"
           onClick={() => onSelectCourse(course)}
           className={cn(
-            'relative min-h-36 rounded-lg border border-border bg-background p-card-padding-sm text-start transition-all duration-normal hover:-translate-y-0.5 hover:border-primary/50',
-            selectedCourse?.id === course.id && 'border-primary bg-primary/5',
+            'relative min-h-32 rounded-xl border border-border bg-card p-card-padding-sm text-start shadow-elevation-1 transition-transform duration-normal hover:-translate-y-0.5 hover:border-primary/50',
+            selectedCourse?.id === course.id && 'border-primary',
           )}
         >
-          <span className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <BookOpen className="h-4 w-4" aria-hidden />
-          </span>
-          <span className="mb-1 block text-body-xs font-extrabold text-primary">
+          <span className="absolute left-3 top-3 rounded border border-primary/10 bg-primary/10 px-2 py-1 text-body-xs font-extrabold text-primary">
             {course.courseLabel || copy.courseFallback}
           </span>
-          <span className="block text-heading-sm font-extrabold text-card-foreground">
+          <span className="mt-8 block text-heading-sm font-extrabold text-card-foreground">
             {course.title}
           </span>
           {course.description ? (
@@ -622,20 +535,17 @@ function TeacherGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-content-gap-sm md:grid-cols-2">
+    <div className="mx-auto grid max-w-4xl grid-cols-1 gap-3 md:grid-cols-2">
       {teacherProfiles.map((teacher) => (
         <button
           key={teacher.slug}
           type="button"
           onClick={() => onSelectTeacher(teacher)}
           className={cn(
-            'min-h-28 rounded-lg border border-border bg-background p-card-padding-sm text-start transition-all duration-normal hover:-translate-y-0.5 hover:border-primary/50',
-            selectedTeacherProfile?.slug === teacher.slug && 'border-primary bg-primary/5',
+            'min-h-24 rounded-xl border border-border bg-card p-card-padding-sm text-start shadow-elevation-1 transition-transform duration-normal hover:-translate-y-0.5 hover:border-primary/50',
+            selectedTeacherProfile?.slug === teacher.slug && 'border-primary',
           )}
         >
-          <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <UserRound className="h-4 w-4" aria-hidden />
-          </span>
           <span className="block text-heading-sm font-extrabold text-card-foreground">
             {teacher.label}
           </span>
@@ -678,7 +588,7 @@ function StartFooter({
   return (
     <div
       role="contentinfo"
-      className="border-t border-border bg-card/80 py-content-gap text-center text-body-xs text-muted-foreground"
+      className="border-t border-border bg-card/70 py-5 text-center text-body-xs text-muted-foreground"
     >
       <div className="mb-3 flex justify-center gap-content-gap-xs">
         {[0, 1, 2].map((index) => (
