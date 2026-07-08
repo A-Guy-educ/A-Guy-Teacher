@@ -292,6 +292,15 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
         mood: selectedMood,
         lastVisit: new Date().toISOString(),
       })
+      // Signal to the OAuth callback that the wizard already collected
+      // teacher / mood / course — the persona onboarding wrap is redundant.
+      // Server-side readers (the Google OAuth callback) use this cookie to
+      // land the new user directly on their selected course instead of
+      // bouncing them through `/onboarding/persona`, which on mobile can
+      // appear as a second login popup (issue #783).
+      if (typeof document !== 'undefined') {
+        document.cookie = `start_wizard_completed=1; path=/; max-age=600; SameSite=Lax`
+      }
       setInteraction('none')
       playTone(580, 120)
       await typeText(copy.selected, 50)
