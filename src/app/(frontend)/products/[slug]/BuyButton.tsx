@@ -31,11 +31,19 @@ export function BuyButton({
 
   if (isAuthLoading) {
     return (
-      <div className="flex gap-3">
-        <Button disabled className="flex-1 h-14 text-body-md font-bold rounded-xl" size="lg">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button
+          disabled
+          className="w-full sm:flex-1 h-14 text-body-md font-bold rounded-xl"
+          size="lg"
+        >
           <Loader2 className="w-5 h-5 animate-spin me-2" />
         </Button>
-        <Button disabled className="flex-1 h-14 text-body-md font-bold rounded-xl" size="lg">
+        <Button
+          disabled
+          className="w-full sm:flex-1 h-14 text-body-md font-bold rounded-xl"
+          size="lg"
+        >
           <Loader2 className="w-5 h-5 animate-spin me-2" />
         </Button>
       </div>
@@ -115,11 +123,11 @@ export function BuyButton({
   }
 
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-col sm:flex-row gap-3">
       <Button
         onClick={() => handleCheckout('stripe')}
         disabled={isLoadingStripe}
-        className="flex-1 h-14 text-body-md font-bold rounded-xl"
+        className="w-full sm:flex-1 h-14 text-body-md font-bold rounded-xl"
         size="lg"
       >
         {isLoadingStripe ? (
@@ -134,7 +142,7 @@ export function BuyButton({
       <Button
         onClick={() => handleCheckout('paypal')}
         disabled={isLoadingPayPal}
-        className="flex-1 h-14 text-body-md font-bold rounded-xl bg-warning text-warning-foreground hover:bg-warning/90 hover:shadow-elevation-1 hover:scale-[1.02]"
+        className="w-full sm:flex-1 h-14 text-body-md font-bold rounded-xl bg-warning text-warning-foreground hover:bg-warning/90 hover:shadow-elevation-1 hover:scale-[1.02]"
         size="lg"
       >
         {isLoadingPayPal ? (
