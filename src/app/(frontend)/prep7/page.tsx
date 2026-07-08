@@ -108,10 +108,11 @@ function PageHeader({ t }: { t: (key: string) => string }) {
 function Hero({ t }: { t: (key: string) => string }) {
   return (
     <section className="relative z-10 mx-auto max-w-4xl px-4 pb-section-md pt-section-xs text-center">
-      <h1 className="mb-6 text-display-md font-extrabold leading-tight text-foreground md:text-display-lg lg:text-display-xl">
-        {t('hero.titleStart')} <span className="text-secondary">{t('hero.titleHighlight')}</span>
+      <h1 className="mb-6 text-display-md font-extrabold leading-tight text-foreground dark:text-white md:text-display-lg lg:text-display-xl">
+        {t('hero.titleStart')}{' '}
+        <span className="text-secondary dark:text-white">{t('hero.titleHighlight')}</span>
       </h1>
-      <p className="mb-10 text-heading-lg font-normal text-muted-foreground md:text-heading-xl">
+      <p className="mb-10 text-heading-lg font-normal text-muted-foreground dark:text-white/80 md:text-heading-xl">
         <span className="font-bold text-primary">{t('hero.newLabel')}</span> {t('hero.subtitle')}
       </p>
 
@@ -143,19 +144,19 @@ function Story({ isRtl, t }: { isRtl: boolean; t: (key: string) => string }) {
       <VideoBackground videoId="EDbWunPa46M" title={t('story.videoTitle')} />
       <div
         className={cn(
-          'absolute inset-0 z-10 from-background via-background/80 to-transparent',
+          'absolute inset-0 z-10 from-background via-background/80 to-transparent dark:from-black dark:via-black/80',
           isRtl ? 'bg-gradient-to-l' : 'bg-gradient-to-r',
         )}
       />
-      <div className="absolute inset-0 z-10 bg-background/20" />
+      <div className="absolute inset-0 z-10 bg-background/20 dark:bg-black/60" />
 
       <div className="relative z-20 mx-auto w-full max-w-6xl px-4 sm:px-8">
         <div className="max-w-lg">
-          <h2 className="mb-5 text-display-sm font-extrabold leading-tight text-foreground md:text-display-md lg:text-display-lg">
+          <h2 className="mb-5 text-display-sm font-extrabold leading-tight text-foreground dark:text-white md:text-display-md lg:text-display-lg">
             {t('story.title')}
           </h2>
           <div className="mb-6 h-1.5 w-16 rounded-full bg-warning" />
-          <p className="text-body-lg font-medium leading-relaxed text-foreground md:text-heading-lg">
+          <p className="text-body-lg font-medium leading-relaxed text-foreground dark:text-white md:text-heading-lg">
             {t('story.descriptionPrefix')}{' '}
             <strong className="font-bold text-primary">{t('story.experience')}</strong>
             {t('story.descriptionSuffix')}
@@ -226,8 +227,8 @@ function LaptopPreview({ t }: { t: (key: string) => string }) {
   return (
     <div className="relative mt-8 w-full lg:mt-0 lg:w-1/2">
       <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
-        <div className="relative z-10 rounded-b-xl rounded-t-3xl border-b-8 border-foreground bg-foreground p-card-padding-sm shadow-card">
-          <div className="relative aspect-video overflow-hidden rounded-lg bg-foreground shadow-inner">
+        <div className="relative z-10 rounded-b-xl rounded-t-3xl border-b-8 border-foreground bg-foreground p-card-padding-sm shadow-card dark:border-zinc-900 dark:bg-zinc-900">
+          <div className="relative aspect-video overflow-hidden rounded-lg bg-foreground shadow-inner dark:bg-zinc-900">
             <iframe
               className="absolute left-0 top-0 h-full w-full scale-125 opacity-90"
               src={youtubeEmbedSrc('4BpyIiLs3jI')}
@@ -363,16 +364,16 @@ function AguyLogo({ className, compact = false }: { className?: string; compact?
     >
       <path
         transform="translate(50, 35) scale(0.6)"
-        className="fill-primary"
+        fill="#801421"
         d="M198.867,58.948h-30.566c-0.686,0-1.24-0.557-1.24-1.24v-30.57c0-0.686,0.558-1.24,1.24-1.24h30.566 c0.688,0,1.24,0.558,1.24,1.24v30.567C200.107,58.392,199.553,58.948,198.867,58.948"
       />
       <path
-        className="fill-secondary"
+        fill="#7B8D7A"
         fillRule="evenodd"
         d="M147.166,88.743l-7.594,6.373c-0.486,0.407-1.217,0.346-1.627-0.145l-14.447-17.219c-0.408-0.488-0.348-1.216,0.143-1.627l7.596-6.373c0.486-0.408,1.216-0.348,1.627,0.143l14.449,17.22C147.719,87.603,147.656,88.332,147.166,88.743 M80.648,119.769l8.48,10.104c0.438,0.523,0.371,1.308-0.154,1.746l-22.109,18.555c-0.521,0.439-1.307,0.373-1.748-0.151l-8.479-10.104c-0.441-0.524-0.371-1.309,0.152-1.748l22.11-18.554C79.428,119.179,80.207,119.243,80.648,119.769 M41.061,154.111l12.012,-10.078c0.525,-0.439,1.309,-0.371,1.746,0.15l5.779,6.887c0.439,0.527,0.373,1.311,-0.152,1.748l-11.664,9.787Z M79.409,179.709l14.145,-51.029l-10.994,-13.1c-0.439,-0.527,-0.371,-1.311,0.152,-1.748l37.562,-31.521c0.524,-0.438,1.307,-0.37,1.746,0.154l11.035,13.146c0.438,0.525,0.37,1.311,-0.152,1.747L97.82,126.796c0.025,0.035,0.053,0.066,0.074,0.104c0.051,0.086,0.086,0.182,0.125,0.27c0.016,0.037,0.039,0.068,0.053,0.107l0.008,0.027c0,0.002,0.002,0.004,0.006,0.008l18.502,52.668L112.31,181.011l-7.971,-22.688H89.871V158.321l-6.215,22.424Z M96.25,135.3l-5.17,18.648h11.725Z"
       />
       {!compact && (
-        <g className="fill-primary" transform="translate(120 150) scale(0.4)">
+        <g fill="#801421" transform="translate(120 150) scale(0.4)">
           <path d="M0 18 Q0 0 18 0 H48 V13 H20 Q13 13 13 20 V42 Q13 49 20 49 H35 V36 H35 V10 H48 V58 Q48 76 30 76 H8 V63 H28 Q35 63 35 56 V53 H18 Q0 53 0 40 Z" />
           <path d="M62 0 H75 V40 Q75 49 84 49 H96 V0 H109 V62 H84 Q62 62 62 40 Z" />
           <path d="M123 0 H137 L153 43 L169 0 H183 L160 60 Q154 76 137 76 H125 V63 H136 Q144 63 147 55 Z" />
