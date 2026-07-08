@@ -1840,6 +1840,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #784: [prep7] Fix dark mode readability without changing the logo (use … ([#787](https://github.com/A-Guy-educ/A-Guy-Web/pull/787)) — @kodyade[bot]
 - #793: [Lesson] Add visible "back to exercise" control to mobile chat ov… ([#794](https://github.com/A-Guy-educ/A-Guy-Web/pull/794)) — @kodyade[bot]
 - #205: QA: fix(ask): Restore Gemini responseSchema on interactive lesson… ([#791](https://github.com/A-Guy-educ/A-Guy-Web/pull/791)) — @kodyade[bot]
 - #789: החזרת תצוגת /start לגרסה שלפני c44a9fb6 (revert StartPageClient.t… ([#790](https://github.com/A-Guy-educ/A-Guy-Web/pull/790)) — @kodyade[bot]
