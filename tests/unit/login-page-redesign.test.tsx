@@ -76,6 +76,16 @@ describe('Login Page Redesign - i18n translations', () => {
     const brand = mergedHeMessages.brand as Record<string, string>
     expect(brand.heroSubtitle).toBe('A-Guy המורה הפרטי שלכם')
   })
+
+  it('auth.login.brand.heroSubtitle is present in merged English messages (issue #205 regression guard)', () => {
+    const loginBrand = (mergedEnMessages.auth.login as Record<string, Record<string, string>>).brand
+    expect(loginBrand.heroSubtitle).toBe('A-Guy Your Personal Tutor')
+  })
+
+  it('auth.login.brand.heroSubtitle is present in merged Hebrew messages (issue #205 regression guard)', () => {
+    const loginBrand = (mergedHeMessages.auth.login as Record<string, Record<string, string>>).brand
+    expect(loginBrand.heroSubtitle).toBe('A-Guy המורה הפרטי שלכם')
+  })
 })
 
 describe('LoginPageContent', () => {
