@@ -1,16 +1,10 @@
-import { getCachedGlobal } from '@/infra/utils/getGlobals'
-import { SystemLink } from '@/infra/loading/components/SystemLink'
-import React from 'react'
-
-import type { Footer } from '@/infra/types/content'
-
-import { ThemeSelector } from '@/ui/web/providers/Theme/ThemeSelector'
-import { CMSLink } from '@/ui/web/Link'
-import { BrandLogo } from '@/ui/web/BrandLogo'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
+
 import { getSystemLocale } from '@/i18n/server-locale'
-import { getNavItemsForLocale } from '@/ui/web/nav-variants'
+
+import { FooterClient } from './FooterClient'
+import { loadFooterData } from './footer-data'
 
 /**
  * Read version directly from package.json
@@ -25,46 +19,9 @@ async function getVersion(): Promise<string> {
   }
 }
 
-/**
- * Minimal version display for public footer
- * Matches admin page styling: 12px, subtle color
- */
-function VersionDisplay({ version }: { version: string }) {
-  return <span className="text-body-xs text-muted-foreground/70 font-normal">v{version}</span>
-}
-
 export async function Footer() {
-  const footerData: Footer = await getCachedGlobal('footer', 1)()
-  const version = await getVersion()
-  const systemLocale = await getSystemLocale()
-  const navItems = getNavItemsForLocale(footerData, systemLocale)
+  const locale = await getSystemLocale()
+  const [data, version] = await Promise.all([loadFooterData(locale), getVersion()])
 
-  return (
-    <footer className="mt-auto border-t border-border bg-footer text-card-foreground relative z-0">
-      <div className="container py-3 flex flex-row flex-wrap items-center justify-center gap-content-gap-xs">
-        <SystemLink className="flex items-center" href="/">
-          <BrandLogo className="h-5 w-auto" />
-        </SystemLink>
-
-        <span className="hidden flex-1 text-center text-body-xs font-bold text-muted-foreground/40 uppercase tracking-[0.2em] sm:block">
-          Aguy Learning Platform
-        </span>
-
-        <div className="flex min-w-0 items-center gap-content-gap-xs text-body-xs">
-          {navItems.map(({ link }, i) => {
-            return (
-              <CMSLink
-                className="text-card-foreground hover:text-primary transition-all duration-normal text-body-xs whitespace-nowrap"
-                key={i}
-                {...link}
-              />
-            )
-          })}
-          <span className="text-muted-foreground/30">|</span>
-          <VersionDisplay version={version} />
-          <ThemeSelector />
-        </div>
-      </div>
-    </footer>
-  )
+  return <FooterClient data={data} version={version} />
 }

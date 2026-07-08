@@ -4,14 +4,24 @@ import { join } from 'path'
 
 describe('Inline style removal refactor', () => {
   describe('Footer VersionDisplay (FR-001)', () => {
-    const source = readFileSync(join(process.cwd(), 'src/ui/web/footer/Component.tsx'), 'utf-8')
+    // The footer was split: Component.tsx loads data, FooterClient.tsx renders.
+    // Both files must remain free of inline styles and use design tokens.
+    const serverSource = readFileSync(
+      join(process.cwd(), 'src/ui/web/footer/Component.tsx'),
+      'utf-8',
+    )
+    const clientSource = readFileSync(
+      join(process.cwd(), 'src/ui/web/footer/FooterClient.tsx'),
+      'utf-8',
+    )
+    const combinedSource = `${serverSource}\n${clientSource}`
 
     it('should NOT contain inline fontSize style', () => {
-      expect(source).not.toMatch(/style=\{\{[\s]*fontSize/)
+      expect(combinedSource).not.toMatch(/style=\{\{[\s]*fontSize/)
     })
 
     it('should still have text-body-xs Tailwind class (design token)', () => {
-      expect(source).toMatch(/text-body-xs/)
+      expect(combinedSource).toMatch(/text-body-xs/)
     })
   })
 
