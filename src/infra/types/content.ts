@@ -323,9 +323,23 @@ export interface Header {
   variants?: Array<{ locale?: string | null; navItems?: unknown[] | null }> | null
 }
 
+export interface FooterMeta {
+  image?: string | Media | null
+  titleColumn?: string | null
+  subtitleColumn?: string | null
+  introColumn?: string | null
+  contact?: {
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+  } | null
+}
+
 export interface Footer {
   navItems?: unknown[] | null
   variants?: Array<{ locale?: string | null; navItems?: unknown[] | null }> | null
+  meta?: FooterMeta | null
+  text?: string | null
 }
 
 export interface CallToActionBlock {
