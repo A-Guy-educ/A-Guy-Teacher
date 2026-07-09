@@ -1865,6 +1865,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #125: Doc coverage: src/infra/system-events/ — Client-side pub/sub even… ([#804](https://github.com/A-Guy-educ/A-Guy-Web/pull/804)) — @kodyade[bot]
 - #690: design: health sweep 2026-07-01 ([#805](https://github.com/A-Guy-educ/A-Guy-Web/pull/805)) — @kodyade[bot]
 - #704: QA: #310 Add jump-to-exercise number input between prev/next arro… ([#796](https://github.com/A-Guy-educ/A-Guy-Web/pull/796)) — @kodyade[bot]
 - #752: [Refactor] Unify "selected course" state behind single module ([#807](https://github.com/A-Guy-educ/A-Guy-Web/pull/807)) — @kodyade[bot]
