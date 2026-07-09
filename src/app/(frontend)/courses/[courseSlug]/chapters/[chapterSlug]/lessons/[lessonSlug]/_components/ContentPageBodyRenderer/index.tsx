@@ -1,11 +1,12 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import type { GeometrySpecV1, AxisSpecV1 } from '@/infra/contracts'
+import { renderAdminHtmlWithMath } from '@/infra/utils/renderAdminHtmlWithMath'
 import { cn } from '@/infra/utils/ui'
+import { SafeHtml } from '@/ui/web/SafeHtml'
 import { AxisRenderer, type DisplaySize } from '@/ui/web/exerciserenderer/blocks/AxisRenderer'
 import { GeometryRenderer } from '@/ui/web/exerciserenderer/blocks/GeometryRenderer'
-import { AdminHtmlWithMath } from '@/ui/web/shared/AdminHtmlWithMath'
 
 import { LexicalToReact } from './lexicalToReact'
 
@@ -21,12 +22,11 @@ function parseJson<T>(value: unknown, fallback: T): T {
 }
 
 function HtmlBlock({ html }: { html: string }) {
-  return (
-    <AdminHtmlWithMath
-      html={html}
-      className="prose dark:prose-invert max-w-none rich-text-content"
-    />
-  )
+  // Math delimiters ($...$, $$...$$) are converted to KaTeX HTML up front
+  // so the sanitization pass that follows can preserve the resulting
+  // `katex` / `katex-display` markup without re-parsing delimiters.
+  const rendered = useMemo(() => renderAdminHtmlWithMath(html), [html])
+  return <SafeHtml html={rendered} enableProse className="rich-text-content" />
 }
 
 function TableBlock({
