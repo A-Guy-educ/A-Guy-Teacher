@@ -158,17 +158,4 @@ export const loadFooterData = cache(async (locale: string): Promise<FooterData> 
   }
 })
 
-/**
- * Extract a usable URL out of a media record or string reference.
- * Returns null when no URL is present.
- */
-export function resolveMediaUrl(media: string | Media | null | undefined): string | null {
-  if (!media) return null
-  if (typeof media === 'string') return media
-  if (typeof media === 'object') {
-    if (typeof media.url === 'string' && media.url.length > 0) return media.url
-    if (typeof media.externalUrl === 'string' && media.externalUrl.length > 0)
-      return media.externalUrl
-  }
-  return null
-}
+export { resolveMediaUrl } from './resolve-media-url'

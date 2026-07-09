@@ -19,13 +19,10 @@ import { BrandLogo } from '@/ui/web/BrandLogo'
 import { CMSLink } from '@/ui/web/Link'
 import { ThemeSelector } from '@/ui/web/providers/Theme/ThemeSelector'
 
+import { resolveMediaUrl } from '@/infra/utils/resolve-media-url'
+
 import { FooterLegalModal } from './FooterLegalModal'
-import {
-  resolveMediaUrl,
-  type FooterData,
-  type FooterLegalPage,
-  type FooterNavItem,
-} from './footer-data'
+import type { FooterData, FooterLegalPage, FooterNavItem } from './footer-data'
 
 interface FooterClientProps {
   data: FooterData
