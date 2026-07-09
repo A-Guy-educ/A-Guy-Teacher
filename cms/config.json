@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "name": "A-Guy-Teacher CMS",
+  "environment": "default",
+  "defaultAdapter": "mongodb",
+  "adapters": {
+    "mongodb": {
+      "databaseUriSecret": "DATABASE_URL"
+    }
+  },
+  "writePolicy": "read-only",
+  "collections": []
+}
