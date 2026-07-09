@@ -1,0 +1,52 @@
+{
+  "slug": "multi-select-list",
+  "name": "Multi select list",
+  "description": "Choose one or more items from a list of options.",
+  "purpose": "multi-select-list",
+  "rule": "Use this purpose when Kody asks the user to choose multiple items from a list.",
+  "data": {
+    "title": {
+      "description": "Short title for the choice.",
+      "type": "text"
+    },
+    "body": {
+      "description": "The question or instruction shown above the options.",
+      "type": "text",
+      "optional": true
+    },
+    "items": {
+      "description": "The exact list of choices the user may pick from.",
+      "type": "selection"
+    }
+  },
+  "type": "layout",
+  "ui": {
+    "type": "stack",
+    "children": [
+      {
+        "type": "text",
+        "value": "$title",
+        "variant": "title"
+      },
+      {
+        "type": "text",
+        "value": "$body"
+      },
+      {
+        "type": "list",
+        "for": "$items",
+        "as": "item",
+        "item": {
+          "type": "checkbox",
+          "name": "selected",
+          "value": "$item.id",
+          "label": "$item.label"
+        }
+      },
+      {
+        "type": "submit",
+        "label": "Confirm"
+      }
+    ]
+  }
+}
