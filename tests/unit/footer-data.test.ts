@@ -15,17 +15,22 @@ const globalState: { footer: unknown; pages: Record<string, unknown> } = {
   pages: {},
 }
 
-const findOneMock = vi.fn(async (filter: { _id?: unknown } = {}) => {
-  if (filter._id) {
+const findOneMock = vi.fn(async (filter: { _id?: unknown; slug?: unknown } = {}) => {
+  if (filter._id !== undefined) {
     const id = String(filter._id)
     if (globalState.pages[id]) return globalState.pages[id]
+  }
+  if (filter.slug !== undefined) {
+    const slug = String(filter.slug)
+    for (const page of Object.values(globalState.pages)) {
+      if ((page as { slug?: string })?.slug === slug) return page
+    }
   }
   return globalState.footer
 })
 
 vi.mock('@/infra/db/content-db', () => ({
   getContentDb: async () => ({ collection: () => ({ findOne: findOneMock }) }),
-  objectIdFromString: (id: string) => id,
   serializeDoc: <T>(doc: T) => doc,
 }))
 
@@ -73,7 +78,8 @@ describe('loadFooterData', () => {
     expect(result.navItems[0]?.link.label).toBe('אודות')
   })
 
-  it('pre-fetches pages referenced by nav items so the modal opens without a request', async () => {
+  it('pre-fetches pages when reference.value is an ObjectId (indexes by id and slug)', async () => {
+    const pageId = '507f1f77bcf86cd799439011' // valid ObjectId shape
     globalState.footer = {
       variants: [
         {
@@ -83,7 +89,7 @@ describe('loadFooterData', () => {
               id: 'nav-1',
               link: {
                 type: 'reference',
-                reference: { relationTo: 'pages', value: 'page-123' },
+                reference: { relationTo: 'pages', value: pageId },
                 label: 'Terms',
               },
             },
@@ -91,8 +97,8 @@ describe('loadFooterData', () => {
         },
       ],
     }
-    globalState.pages['page-123'] = {
-      id: 'page-123',
+    globalState.pages[pageId] = {
+      id: pageId,
       slug: 'terms-of-service',
       title: 'Terms of Service',
       layout: [{ id: 'b1', blockType: 'html', html: '<p>Hello</p>' }],
@@ -100,14 +106,81 @@ describe('loadFooterData', () => {
 
     const result = await loadFooterData('en')
 
-    expect(result.legalPages['page-123']).toEqual({
-      id: 'page-123',
+    expect(result.legalPages[pageId]).toEqual({
+      id: pageId,
       slug: 'terms-of-service',
       title: 'Terms of Service',
       layout: [{ id: 'b1', blockType: 'html', html: '<p>Hello</p>' }],
     })
     // The page is also indexed by slug for the modal to look up by URL.
     expect(result.legalPages['terms-of-service']).toBeDefined()
+  })
+
+  it('treats a 12-char slug as a slug, not a 12-byte ObjectId (boundary case)', async () => {
+    // ObjectId.isValid returns true for any 12-char string because it treats
+    // the string as raw bytes. Slugs like "contact-info" (12 chars) must NOT
+    // fall into the _id branch — they must resolve via slug lookup.
+    globalState.footer = {
+      variants: [
+        {
+          locale: 'en',
+          navItems: [
+            {
+              id: 'nav-12',
+              link: {
+                type: 'reference',
+                reference: { relationTo: 'pages', value: 'contact-info' },
+                label: 'Contact',
+              },
+            },
+          ],
+        },
+      ],
+    }
+    globalState.pages['xyz-doc'] = {
+      id: 'xyz-doc',
+      slug: 'contact-info',
+      title: 'Contact',
+      layout: [],
+    }
+
+    const result = await loadFooterData('en')
+
+    expect(result.legalPages['contact-info']).toBeDefined()
+    expect(result.legalPages['contact-info']?.title).toBe('Contact')
+  })
+
+  it('pre-fetches pages when reference.value is a slug (indexes by slug key)', async () => {
+    globalState.footer = {
+      variants: [
+        {
+          locale: 'en',
+          navItems: [
+            {
+              id: 'nav-2',
+              link: {
+                type: 'reference',
+                reference: { relationTo: 'pages', value: 'privacy-policy' },
+                label: 'Privacy',
+              },
+            },
+          ],
+        },
+      ],
+    }
+    // Mirrors real Payload data: reference.value is the slug, not the ObjectId.
+    globalState.pages['aaa-doc-key'] = {
+      id: 'aaa-doc-key',
+      slug: 'privacy-policy',
+      title: 'Privacy Policy',
+      layout: [{ id: 'b1', blockType: 'html', html: '<p>Policy</p>' }],
+    }
+
+    const result = await loadFooterData('en')
+
+    // The client looks up legalPages[reference.value] — slug in this case.
+    expect(result.legalPages['privacy-policy']).toBeDefined()
+    expect(result.legalPages['privacy-policy']?.title).toBe('Privacy Policy')
   })
 
   it('falls back to the root navItems when the matched variant has no labels', async () => {
