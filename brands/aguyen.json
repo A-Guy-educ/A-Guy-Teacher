@@ -1,0 +1,11 @@
+{
+  "slug": "aguyen",
+  "name": "aguy-en",
+  "accent": "#0f766e",
+  "locale": "en",
+  "modelId": "google/gemini-3.5-flash",
+  "agentSlug": "agent-mrdmubar",
+  "auth": {
+    "required": true
+  }
+}
