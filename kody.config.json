@@ -6,5 +6,10 @@
   "state": {
     "repo": "https://github.com/A-Guy-educ/A-Guy-Teacher",
     "path": ""
+  },
+  "company": {
+    "activeFeatures": [
+      "client-signin"
+    ]
   }
 }
