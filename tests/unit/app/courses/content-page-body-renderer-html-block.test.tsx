@@ -137,4 +137,39 @@ describe('ContentPageBodyRenderer — HtmlBlock (#676)', () => {
     expect(container.querySelector('.katex')).not.toBeNull()
     expect(container.textContent).toContain('<img src=x onerror=alert(1)>')
   })
+
+  it('wraps root container with break-words and overflow-wrap:anywhere so NBSP-joined words can break (#747)', () => {
+    // Regression: AI-extracted HTML occasionally joins every word with U+00A0,
+    // which prevents normal word breaking and pushes the line beyond its box.
+    // The renderer must set break-words + overflow-wrap:anywhere on its root
+    // so a long NBSP-joined string can still wrap inside the container.
+    const { container } = render(
+      <ContentPageBodyRenderer blocks={[{ blockType: 'html', html: '<p>hi</p>' }]} />,
+    )
+
+    const root = container.firstElementChild
+    expect(root).not.toBeNull()
+    expect(root?.className).toContain('break-words')
+    expect(root?.className).toContain('overflow-wrap')
+  })
+
+  it('applies break-words even when rendered blocks have no html content', () => {
+    const { container } = render(
+      <ContentPageBodyRenderer
+        blocks={[
+          {
+            blockType: 'tableBlock',
+            headers: '[]',
+            rows: '[]',
+            showHeader: false,
+            showBorders: false,
+          },
+        ]}
+      />,
+    )
+
+    const root = container.firstElementChild
+    expect(root).not.toBeNull()
+    expect(root?.className).toContain('break-words')
+  })
 })

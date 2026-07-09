@@ -573,7 +573,7 @@ export function ExercisesPager({
       <Progress value={progressPercent} className="h-0.5 rounded-none" />
 
       <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 sm:px-6 py-section-md md:py-section-lg max-w-3xl">
+        <div className="container mx-auto px-4 sm:px-6 py-section-md md:py-section-lg max-w-5xl">
           {pageState.type === 'outro' && (
             <motion.div
               initial={{ opacity: 0, y: 24 }}
