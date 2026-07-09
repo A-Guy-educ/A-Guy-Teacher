@@ -1865,6 +1865,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #754: [Bug] Dashboard "למידה" tab shows nonexistent course "21" ([#755](https://github.com/A-Guy-educ/A-Guy-Web/pull/755)) — @kodyade[bot]
 - [Payments] Grant course + feature entitlements on PayPal success (#680) ([#809](https://github.com/A-Guy-educ/A-Guy-Web/pull/809)) — @kodyade[bot]
 - #757: QA: fix(lesson): Pre-render content page bodies and pass to lesso… ([#813](https://github.com/A-Guy-educ/A-Guy-Web/pull/813)) — @kodyade[bot]
 ## [v0.27.0] - 2026-07-09
