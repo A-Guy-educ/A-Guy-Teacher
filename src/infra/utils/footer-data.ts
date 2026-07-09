@@ -14,7 +14,7 @@
 import { cache } from 'react'
 import type { Document } from 'mongodb'
 
-import type { Footer, Media, Page } from '@/infra/types/content'
+import type { Footer, Page } from '@/infra/types/content'
 import { getContentDb, objectIdFromString, serializeDoc } from '@/infra/db/content-db'
 
 export type FooterResolvedLink = {
