@@ -388,3 +388,43 @@ describe('GET /api/chapters/by-grade — combined filters', () => {
     }
   })
 })
+
+// Bug #754: Dashboard "למידה" tab shows nonexistent course "21"
+// When the requested grade does not match any published/active course,
+// prefetchStudyData returns null. The route must NOT echo the requested grade
+// back as the course title — otherwise the orphan id ("21") is rendered as
+// the active course heading in StudyContent.
+describe('GET /api/chapters/by-grade — missing course (#754)', () => {
+  it('returns empty courseTitle/courseLabel when grade does not exist', async () => {
+    const orphanGrade = `nonexistent-grade-${Date.now()}`
+    const req = makeRequest(orphanGrade, { lessonType: 'learning', locale: 'he' })
+    const res = await GET(req)
+
+    expect(res.status).toBe(200)
+    const body = await res.json()
+
+    expect(body.chapters).toEqual([])
+    expect(body.courseSlug).toBe('')
+    expect(body.courseId).toBe('')
+    expect(body.courseTitle).toBe('')
+    expect(body.courseLabel).toBe('')
+  })
+
+  it('returns empty courseTitle/courseLabel when courseId does not exist', async () => {
+    const req = makeRequest(GRADE_LEVEL, {
+      courseId: '000000000000000000000000',
+      lessonType: 'learning',
+      locale: 'he',
+    })
+    const res = await GET(req)
+
+    expect(res.status).toBe(200)
+    const body = await res.json()
+
+    expect(body.chapters).toEqual([])
+    expect(body.courseSlug).toBe('')
+    expect(body.courseId).toBe('')
+    expect(body.courseTitle).toBe('')
+    expect(body.courseLabel).toBe('')
+  })
+})

@@ -26,13 +26,16 @@ export async function GET(request: NextRequest) {
   const data = await prefetchStudyData(grade, locale, lessonType, courseId)
 
   if (!data) {
+    // Course/grade not found — return empty identity so the client shows the
+    // generic empty state instead of rendering the orphan grade/courseId as
+    // the active course title. See issue #754.
     return NextResponse.json({
       chapters: [],
       courseSlug: '',
       courseId: '',
-      courseTitle: grade,
-      courseLabel: grade,
-      coursePageAccessType: 'mandatory',
+      courseTitle: '',
+      courseLabel: '',
+      coursePageAccessType: 'free',
       courseAccessType: 'free',
       gatedDelayMs: 300000,
       gatedWarningMs: 30000,
