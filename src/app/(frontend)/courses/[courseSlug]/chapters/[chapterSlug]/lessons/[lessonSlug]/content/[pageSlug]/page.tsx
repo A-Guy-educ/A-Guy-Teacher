@@ -1,5 +1,48 @@
-import { notFound } from 'next/navigation'
+import '@/infra/config/server-init'
 
-export default async function ContentPageRoute() {
-  notFound()
+import { notFound, redirect } from 'next/navigation'
+
+import { queryLessonBySlug } from '@/server/repos/queries/lessons'
+import { queryLessonBlocks } from '@/server/repos/queries/lesson-blocks'
+
+interface ContentPageRouteProps {
+  params: Promise<{
+    courseSlug: string
+    chapterSlug: string
+    lessonSlug: string
+    pageSlug: string
+  }>
+}
+
+export default async function ContentPageRoute({ params }: ContentPageRouteProps) {
+  const { courseSlug, chapterSlug, lessonSlug, pageSlug } = await params
+
+  const lesson = await queryLessonBySlug({ slug: lessonSlug })
+
+  if (!lesson) {
+    notFound()
+  }
+
+  const chapter = typeof lesson.chapter === 'object' ? lesson.chapter : null
+  const course = chapter && typeof chapter.course === 'object' ? chapter.course : null
+
+  if (!chapter || !course || chapter.slug !== chapterSlug || course.slug !== courseSlug) {
+    notFound()
+  }
+
+  const blocks = await queryLessonBlocks({ lessonId: lesson.id })
+  const decodedSlug = decodeURIComponent(pageSlug)
+  const blockIndex = blocks.findIndex((block) => {
+    if (block.type !== 'contentPage') return false
+    const cp = block.data as { slug?: string | null; id: string }
+    return (cp.slug || cp.id) === decodedSlug
+  })
+
+  if (blockIndex < 0) {
+    notFound()
+  }
+
+  redirect(
+    `/courses/${courseSlug}/chapters/${chapterSlug}/lessons/${lessonSlug}?block=${blockIndex}`,
+  )
 }

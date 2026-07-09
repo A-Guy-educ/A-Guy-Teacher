@@ -291,9 +291,12 @@ export function ExercisesPager({
                   <span className="truncate max-w-[200px]">{lessonTitle}</span>
                   <ChevronRight className="w-3 h-3 shrink-0 rtl:rotate-180" />
                   <span className="text-foreground font-medium">
-                    {exerciseOrdinal !== null
-                      ? `${t('exercise')} ${exerciseOrdinal} ${t('of')} ${totalExercises}`
-                      : ''}
+                    {exerciseOrdinal !== null ? `${t('exercise')} ` : ''}
+                    {exerciseOrdinal !== null ? (
+                      <span dir="ltr">
+                        {exerciseOrdinal} {t('of')} {totalExercises}
+                      </span>
+                    ) : null}
                   </span>
                 </div>
 
@@ -482,18 +485,24 @@ export function ExercisesPager({
                   <span className="truncate max-w-[200px]">{lessonTitle}</span>
                   <ChevronRight className="w-3 h-3 shrink-0 rtl:rotate-180" />
                   <span className="text-foreground font-medium">
-                    {contentPageOrdinal !== null
-                      ? `${t('contentPageLabel')} ${contentPageOrdinal} ${t('of')} ${totalContentPages}`
-                      : ''}
+                    {contentPageOrdinal !== null ? `${t('contentPageLabel')} ` : ''}
+                    {contentPageOrdinal !== null ? (
+                      <span dir="ltr">
+                        {contentPageOrdinal} {t('of')} {totalContentPages}
+                      </span>
+                    ) : null}
                   </span>
                 </div>
 
                 <header className="text-center">
                   <span className="inline-block px-4 py-1.5 bg-muted text-muted-foreground rounded-full text-label tracking-[0.2em] uppercase mb-5 border border-border/40">
                     <FileText className="w-3 h-3 inline-block me-1" />
-                    {contentPageOrdinal !== null
-                      ? `${t('contentPageLabel')} ${contentPageOrdinal} ${t('of')} ${totalContentPages}`
-                      : ''}
+                    {contentPageOrdinal !== null ? `${t('contentPageLabel')} ` : null}
+                    {contentPageOrdinal !== null ? (
+                      <span dir="ltr">
+                        {contentPageOrdinal} {t('of')} {totalContentPages}
+                      </span>
+                    ) : null}
                   </span>
                   <h1 className="text-display-md md:text-display-lg font-medium leading-tight text-foreground mb-3">
                     {contentPage.title}

@@ -86,6 +86,11 @@ export function LessonIntroPage({
   const tCommon = useTranslations('common.languageSwitcher')
   const searchParams = useSearchParams()
   const deepLinkedExerciseId = searchParams.get('exerciseId')
+  const blockParam = searchParams.get('block')
+  const parsedBlockIndex =
+    blockParam !== null && blockParam !== '' && !Number.isNaN(Number(blockParam))
+      ? Number(blockParam)
+      : null
   const exerciseCount = exercises.length
   const contentPageCount = useMemo(
     () =>
@@ -95,6 +100,7 @@ export function LessonIntroPage({
   const { pageState, handleStart, handleFinishPreamble } = useLessonIntroPage({
     deepLinkedExerciseId,
     hasContentPagesPreamble: contentPageCount > 0,
+    initialBlockIndex: parsedBlockIndex,
   })
   const pdfCount = mediaFiles.length
   const description = plainText(lesson.description)
