@@ -1865,6 +1865,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.27.0 ([#801](https://github.com/A-Guy-educ/A-Guy-Web/pull/801)) — @aguyshayb
 - fix(footer): stop pulling MongoDB into the client bundle ([#802](https://github.com/A-Guy-educ/A-Guy-Web/pull/802)) — @aguyshayb
 - #797: Footer דינמי מ-CMS עם חלון מובנה לעמודים משפטיים ([#798](https://github.com/A-Guy-educ/A-Guy-Web/pull/798)) — @kodyade[bot]
 - fix(products): Responsive layout for product detail on mobile ([#795](https://github.com/A-Guy-educ/A-Guy-Web/pull/795)) — @aguyshayb
