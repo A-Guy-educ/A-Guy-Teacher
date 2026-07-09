@@ -102,7 +102,8 @@
       "ai-agency-health",
       "ci-health",
       "prs-stay-mergeable",
-      "product-quality"
+      "product-quality",
+      "codex-approval-loop-test-20260709"
     ]
   },
   "fly": {
