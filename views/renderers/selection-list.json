@@ -1,0 +1,47 @@
+{
+  "slug": "selection-list",
+  "name": "Selection list",
+  "description": "One choice from a list of options.",
+  "purpose": "selection-list",
+  "rule": "Use this purpose when Kody asks the user to choose an item from a list.",
+  "data": {
+    "title": {
+      "description": "Short title for the choice.",
+      "type": "text"
+    },
+    "body": {
+      "description": "The question or instruction shown above the options.",
+      "type": "text",
+      "optional": true
+    },
+    "items": {
+      "description": "The exact list of choices the user should pick from.",
+      "type": "selection"
+    }
+  },
+  "type": "layout",
+  "ui": {
+    "type": "stack",
+    "children": [
+      {
+        "type": "text",
+        "value": "$title",
+        "variant": "title"
+      },
+      {
+        "type": "text",
+        "value": "$body"
+      },
+      {
+        "type": "list",
+        "for": "$items",
+        "as": "item",
+        "item": {
+          "type": "button",
+          "label": "$item.label",
+          "action": "$item"
+        }
+      }
+    ]
+  }
+}
