@@ -1,7 +1,7 @@
 import { cache } from 'react'
 
 import type { Chapter, ContentLocale, Lesson } from '@/infra/types/content'
-import { DEFAULT_ACCESS_TYPE, DEFAULT_PAGE_ACCESS_TYPE } from '@/server/constants/access-types'
+import { DEFAULT_ACCESS_TYPE } from '@/server/constants/access-types'
 import { SystemParams } from '@/infra/config/system-params'
 import {
   findManySerialized,
@@ -13,6 +13,7 @@ import {
 } from '../mongo'
 import { queryChaptersByCourse, queryChaptersByGrade } from './chapters'
 import { queryPublishedCourses } from './courses'
+import { queryPurchaseHrefForCourse } from './products'
 import { orderLearningFallbackCourses } from '@/app/(frontend)/study/learningPageSelection'
 
 export interface PrefetchedStudyData {
@@ -23,6 +24,12 @@ export interface PrefetchedStudyData {
   courseLabel: string
   coursePageAccessType: string
   courseAccessType: string
+  /**
+   * Resolved buy URL for the locked-lesson paywall CTA. Format: `/products/<slug>`
+   * when an active product unlocks this course; `undefined` when the
+   * container should fall back to the generic `/products` route. See #770.
+   */
+  purchaseHref?: string
   gatedDelayMs?: number
   gatedWarningMs?: number
 }
@@ -66,6 +73,14 @@ export const prefetchStudyData = cache(
       lessonsByChapter[chapterId].push(lesson)
     }
 
+    // Resolve the cheapest active product that unlocks this course once —
+    // forwarded into PrefetchedStudyData so the locked-lesson paywall CTA
+    // routes to /products/<slug> instead of the generic /products index.
+    // Returns null (caller falls back to /products) when no product matches
+    // or the query errors.
+    const purchaseSlug = await queryPurchaseHrefForCourse({ courseId: course.id })
+    const purchaseHref = purchaseSlug ? `/products/${purchaseSlug}` : undefined
+
     return {
       chapters: chapters.map((chapter) => ({
         ...chapter,
@@ -75,8 +90,9 @@ export const prefetchStudyData = cache(
       courseId: course.id,
       courseTitle: course.title || '',
       courseLabel: course.courseLabel || '',
-      coursePageAccessType: course.pageAccessType || DEFAULT_PAGE_ACCESS_TYPE,
+      coursePageAccessType: 'mandatory',
       courseAccessType: course.accessType || DEFAULT_ACCESS_TYPE,
+      purchaseHref,
       gatedDelayMs,
       gatedWarningMs,
     }

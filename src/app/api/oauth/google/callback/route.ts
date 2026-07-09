@@ -12,7 +12,7 @@ import {
   linkGoogleUser,
   setAuthCookie,
 } from '@/infra/auth/web-auth'
-import { getOnboardingRedirect } from '@/infra/onboarding/redirect'
+import { getOnboardingRedirect, START_WIZARD_COMPLETED_COOKIE } from '@/infra/onboarding/redirect'
 
 const googleUserSchema = z.object({
   sub: z.string().min(1),
@@ -33,6 +33,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const code = req.nextUrl.searchParams.get('code')
   const state = req.nextUrl.searchParams.get('state')
   const { valid, returnTo } = validateOAuthState(req, res, state)
+  const wizardCompleted = req.cookies.get(START_WIZARD_COMPLETED_COOKIE)?.value === '1'
 
   if (!valid || !code) {
     res.headers.set('Location', new URL('/login?error=auth_error', req.url).toString())
@@ -67,17 +68,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     if (!byGoogle) await linkGoogleUser(user, google)
 
     const { token } = await createSession(user)
-    setAuthCookie(res, token)
+    setAuthCookie(res, token, req.headers)
     await logOAuthEvent(isNewUser ? 'user_created' : 'session_issued', {
       correlationId,
       userId: String(user._id),
       googleSub: google.sub,
     })
 
-    res.headers.set(
-      'Location',
-      new URL(isNewUser ? getOnboardingRedirect(returnTo) : returnTo, req.url).toString(),
-    )
+    const destination = isNewUser
+      ? getOnboardingRedirect(returnTo, { skipPersona: wizardCompleted })
+      : returnTo
+
+    res.headers.set('Location', new URL(destination, req.url).toString())
     return res
   } catch (error) {
     logOAuthError('callback_failed', error, correlationId)

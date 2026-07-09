@@ -1,11 +1,14 @@
 'use client'
 
 import { useCurrentUser } from '@/client/hooks/useCurrentUser'
+import { isRTL } from '@/i18n/config'
 import { cn } from '@/infra/utils/ui'
 import type { FormulaSheet } from '@/infra/types/content'
 import { FormulaSheetContent } from '@/ui/web/shared/FormulaSheetViewer/FormulaSheetContent'
 import { type MobileExerciseViewMode, SplitPaneLayout } from '@/ui/web/components/split-pane-layout'
 import {
+  ArrowLeft,
+  ArrowRight,
   BookOpen,
   ChevronDown,
   HelpCircle,
@@ -15,12 +18,75 @@ import {
   PenLine,
 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, type ReactElement } from 'react'
 import { ExerciseHeader } from '../ExerciseHeader'
-import { useTranslations } from '@/ui/web/providers/I18n'
+import { useLocale, useTranslations } from '@/ui/web/providers/I18n'
 import { motion, AnimatePresence } from 'framer-motion'
 
 type HelpTab = 'hint' | 'guiding' | 'chat' | 'formulas' | 'notes'
+
+interface MobileChatPanelProps {
+  chatContent: ReactElement
+  displayMode?: 'full' | 'input-only'
+  isMobile?: boolean
+  viewMode?: 'PDF' | 'Chat'
+  onModeToggle?: () => void
+  onChatInteraction?: () => void
+  onBackToExercise: () => void
+}
+
+function MobileChatPanel({
+  chatContent,
+  displayMode,
+  isMobile,
+  viewMode,
+  onModeToggle,
+  onChatInteraction,
+  onBackToExercise,
+}: MobileChatPanelProps) {
+  const t = useTranslations('courses')
+  const locale = useLocale()
+  const rtl = isRTL(locale as 'en' | 'he')
+  const ArrowIcon = rtl ? ArrowRight : ArrowLeft
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="lg:hidden flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-card border-b border-border">
+        <button
+          type="button"
+          onClick={onBackToExercise}
+          aria-label={t('backToExercise')}
+          className={cn(
+            'flex items-center gap-2 p-2 -ms-2 rounded-md',
+            'hover:bg-muted transition-colors duration-normal',
+            'text-body-sm font-medium cursor-pointer text-foreground hover:text-primary',
+          )}
+        >
+          <ArrowIcon className="w-5 h-5" />
+          <span>{t('backToExercise')}</span>
+        </button>
+      </div>
+      <div className="flex-1 min-h-0">
+        {React.cloneElement(
+          chatContent as React.ReactElement<{
+            displayMode?: 'full' | 'input-only'
+            isMobile?: boolean
+            viewMode?: 'PDF' | 'Chat'
+            onModeToggle?: () => void
+            onChatInteraction?: () => void
+          }>,
+          {
+            displayMode,
+            isMobile,
+            viewMode,
+            onModeToggle,
+            onChatInteraction,
+          },
+        )}
+      </div>
+    </div>
+  )
+}
 
 interface ExerciseWorkspaceProps {
   exerciseTitle: string
@@ -115,7 +181,16 @@ export function ExerciseWorkspace({
 
       <SplitPaneLayout
         primaryContent={primaryContent}
-        chatContent={chatContent}
+        chatContent={
+          chatContent && React.isValidElement(chatContent) ? (
+            <MobileChatPanel
+              chatContent={chatContent}
+              onBackToExercise={() => handleMobileModeChange('exercise')}
+            />
+          ) : (
+            chatContent
+          )
+        }
         storageKey="exercise-split-size"
         className="flex-1"
         mobileMode={mobileMode}

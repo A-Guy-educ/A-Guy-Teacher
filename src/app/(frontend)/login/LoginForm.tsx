@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
+import { Suspense, useRef, useState } from 'react'
 
 import Image from 'next/image'
 
@@ -25,19 +25,35 @@ function LoginFormContent() {
   const returnTo = sanitizeReturnTo(searchParams?.get('returnTo'))
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (isLoading) return
     setError(null)
     setIsLoading(true)
     try {
-      const formData = new FormData(e.currentTarget)
+      // Use the ref-captured form rather than e.currentTarget: in React 18+
+      // the synthetic event's currentTarget is nullified before async work
+      // resumes, so relying on it here would throw and the user would see
+      // an inert button. The ref keeps a stable reference to the live DOM node.
+      const formEl = formRef.current ?? e.currentTarget
+      if (!formEl) {
+        setError(t('errors.invalidCredentials'))
+        return
+      }
+      const formData = new FormData(formEl)
       const result = await loginAction(formData)
       if (result.success) {
         window.location.href = returnTo
       } else {
         setError(t('errors.invalidCredentials'))
       }
+    } catch {
+      // Catch any unexpected throw (e.g. from the server action or
+      // FormData construction) so the user sees feedback rather than an
+      // inert button with no error message.
+      setError(t('errors.invalidCredentials'))
     } finally {
       setIsLoading(false)
     }
@@ -84,7 +100,7 @@ function LoginFormContent() {
               <div className="flex-1 h-px bg-border" />
             </div>
 
-            <form onSubmit={handleSubmit} className="w-full space-y-3">
+            <form ref={formRef} onSubmit={handleSubmit} className="w-full space-y-3" noValidate>
               <div className="space-y-1">
                 <Label htmlFor="email">{t('email')}</Label>
                 <Input

@@ -15,7 +15,7 @@ import type { Document, ObjectId } from 'mongodb'
 
 import { getContentDb, objectIdFromString, relationId, serializeDoc } from '@/infra/db/content-db'
 import type { User } from '@/infra/types/content'
-import { AUTH_COOKIE_OPTIONS } from './oauth_constants'
+import { AUTH_COOKIE_OPTIONS, getAuthCookieOptionsForRequest } from './oauth_constants'
 import { encrypt, generateSecret } from './oauth_crypto'
 
 const pbkdf2Async = promisify(pbkdf2)
@@ -257,8 +257,18 @@ export function setAuthCookie(
     }
   },
   token: string,
+  /**
+   * Optional request headers. When provided, the cookie flags are
+   * tailored to the request context: iframe (Kody preview) keeps
+   * `SameSite=None` + `Partitioned`; top-level (mobile / desktop OAuth)
+   * falls back to `SameSite=Lax` so the cookie is honored on the
+   * follow-up same-site request. Omit for server actions (login/signup)
+   * which are inherently top-level form posts.
+   */
+  requestHeaders?: { get(name: string): string | null },
 ) {
-  res.cookies.set(AUTH_COOKIE_NAME, token, AUTH_COOKIE)
+  const options = requestHeaders ? getAuthCookieOptionsForRequest(requestHeaders) : AUTH_COOKIE
+  res.cookies.set(AUTH_COOKIE_NAME, token, options)
 }
 
 export function appendAuthCookieClearHeaders(headers: Headers): void {

@@ -53,6 +53,12 @@ interface PrefetchedData {
   courseLabel: string
   coursePageAccessType: string
   courseAccessType: string
+  /**
+   * Resolved buy URL for the locked-lesson paywall CTA. Resolved server-side
+   * once per render; forwarded to each CourseLessonCard so the reverse-lookup
+   * fires at most once per course render. See #770.
+   */
+  purchaseHref?: string
   gatedDelayMs?: number
   gatedWarningMs?: number
 }
@@ -98,6 +104,9 @@ export function StudyContent({
         }
       : null,
   )
+  // Resolved server-side once per render; forwarded to every locked
+  // CourseLessonCard so the per-card CTA routes to the right product page.
+  const purchaseHref = prefetchedData?.purchaseHref
   const [isLoading, setIsLoading] = useState(!prefetchedData)
   const [requiresEntitlement, setRequiresEntitlement] = useState<boolean | undefined>(undefined)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(undefined)
@@ -113,7 +122,7 @@ export function StudyContent({
       // Only the page-level gate applies here — lesson-default `courseAccessType`
       // gates individual lessons, not this course landing view.
       const info = prefetchedData
-      const isPaid = info.coursePageAccessType === 'paid'
+      const isPaid = info.courseAccessType === 'paid'
       if (isPaid && info.courseId) {
         fetch(`/api/entitlements/check?courseId=${info.courseId}`)
           .then(async (entRes) => {
@@ -162,7 +171,7 @@ export function StudyContent({
           }
           setCourseInfo(info)
 
-          const isPaid = info.coursePageAccessType === 'paid'
+          const isPaid = info.courseAccessType === 'paid'
           if (isPaid && info.courseId) {
             fetch(`/api/entitlements/check?courseId=${info.courseId}`)
               .then(async (entRes) => {
@@ -406,6 +415,7 @@ export function StudyContent({
                             hasPaidAccess={
                               requiresEntitlement === undefined ? true : !requiresEntitlement
                             }
+                            purchaseHref={purchaseHref}
                           />
                         </motion.div>
                       ))}

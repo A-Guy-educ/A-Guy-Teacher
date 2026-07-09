@@ -32,11 +32,13 @@ export function OnboardingCompleteLoginModal({
       <DialogContent allowDismiss={false} className="sm:max-w-md">
         <DialogHeader className="text-center sm:text-center">
           <DialogTitle className="text-heading-xl">{t('title')}</DialogTitle>
-          <DialogDescription className="mt-2">{t('description')}</DialogDescription>
+          <DialogDescription className="mt-2">
+            <span className="block font-bold">{t('descriptionBold')}</span>
+            <span className="block font-normal">{t('descriptionRest')}</span>
+          </DialogDescription>
         </DialogHeader>
         <div className="mt-4 flex flex-col items-center gap-3">
           <GoogleLoginButton returnTo={returnTo} label={t('primaryCta')} className="w-full" />
-          <p className="text-body-xs text-muted-foreground text-center">{t('reassurance')}</p>
         </div>
       </DialogContent>
     </Dialog>

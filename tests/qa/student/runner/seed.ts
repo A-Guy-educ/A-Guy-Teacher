@@ -162,7 +162,6 @@ export async function seedPreconditions(
       data.locale = data.locale || 'he'
       data.courseLabel = data.courseLabel || 'TEST'
       data.order = data.order ?? 0
-      data.pageAccessType = data.pageAccessType || 'free'
       data.contentStatus = data.contentStatus || 'none'
       data.contentStatusVisible = data.contentStatusVisible ?? true
       if (tenantId) {

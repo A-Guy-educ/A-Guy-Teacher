@@ -17,6 +17,13 @@ interface LessonCardProps {
   courseAccessType?: string | null
   /** True when the current user already has entitlement for the parent course (admin → true). */
   hasPaidAccess?: boolean
+  /**
+   * Pre-resolved buy URL for this course's paywall CTA. When set, the locked
+   * card routes to `/products/<slug>` instead of the generic `/products` index.
+   * Resolve once per course at the container level — never per card — so a
+   * single render only fires the reverse-lookup once.
+   */
+  purchaseHref?: string
 }
 
 export function LessonCard({
@@ -25,6 +32,7 @@ export function LessonCard({
   chapterSlug,
   courseAccessType,
   hasPaidAccess = true,
+  purchaseHref,
 }: LessonCardProps) {
   const t = useTranslations('courses')
 
@@ -78,6 +86,7 @@ export function LessonCard({
       locked={isLocked}
       lockedPurchaseLabel={t('lockedPurchaseCta')}
       lockedHint={t('lockedPurchaseHint')}
+      lockedPurchaseHref={purchaseHref}
     />
   )
 }

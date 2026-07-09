@@ -44,7 +44,6 @@ test.describe('Scenario #19 – Course Creation', () => {
         isActive: true,
         locale: 'he',
         order: 999,
-        pageAccessType: 'free',
         accessType: 'free',
         categories: data?.course ? [data.course.courseId] : [],
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,7 +84,6 @@ test.describe('Scenario #20 – Course Archiving', () => {
         isActive: false,
         locale: 'he',
         order: 999,
-        pageAccessType: 'free',
         accessType: 'free',
         categories: data?.course ? [data.course.courseId] : [],
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
