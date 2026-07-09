@@ -1865,6 +1865,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #757: QA: fix(lesson): Pre-render content page bodies and pass to lesso… ([#813](https://github.com/A-Guy-educ/A-Guy-Web/pull/813)) — @kodyade[bot]
 ## [v0.27.0] - 2026-07-09
 
 - promote: dev -> main (v0.27.0) ([#803](https://github.com/A-Guy-educ/A-Guy-Web/pull/803)) — @aguyshayb
