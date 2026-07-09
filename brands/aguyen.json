@@ -6,6 +6,6 @@
   "modelId": "google/gemini-3.5-flash",
   "agentSlug": "agent-mrdmubar",
   "auth": {
-    "required": true
+    "required": false
   }
 }
