@@ -1,0 +1,346 @@
+{
+  "name": "lesson-duplications",
+  "label": "Lesson Duplications",
+  "adapter": "mongodb",
+  "mcpName": "lesson_duplications",
+  "source": {
+    "collection": "lesson-duplications",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "status"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "failed",
+          "value": "failed"
+        },
+        {
+          "label": "needs_review",
+          "value": "needs_review"
+        },
+        {
+          "label": "pending",
+          "value": "pending"
+        },
+        {
+          "label": "succeeded",
+          "value": "succeeded"
+        }
+      ]
+    },
+    {
+      "name": "aiCostUsd",
+      "type": "number",
+      "label": "Ai Cost Usd",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "aiTokensInput",
+      "type": "number",
+      "label": "Ai Tokens Input",
+      "storage": {
+        "kind": "number"
+      },
+      "hidden": true
+    },
+    {
+      "name": "aiTokensOutput",
+      "type": "number",
+      "label": "Ai Tokens Output",
+      "storage": {
+        "kind": "number"
+      },
+      "hidden": true
+    },
+    {
+      "name": "claimAttempts",
+      "type": "number",
+      "label": "Claim Attempts",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "failures",
+      "type": "array",
+      "label": "Failures",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "level",
+      "type": "text",
+      "label": "Level"
+    },
+    {
+      "name": "outputExercises",
+      "type": "array",
+      "label": "Output Exercises",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "outputLesson",
+      "type": "text",
+      "label": "Output Lesson",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "runDurationMs",
+      "type": "number",
+      "label": "Run Duration Ms",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "sourceLesson",
+      "type": "text",
+      "label": "Source Lesson",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "subject",
+      "type": "text",
+      "label": "Subject"
+    },
+    {
+      "name": "warnings",
+      "type": "array",
+      "label": "Warnings",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "aiCostUsd"
+        },
+        {
+          "name": "claimAttempts"
+        },
+        {
+          "name": "runDurationMs"
+        },
+        {
+          "name": "createdBy"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "aiCostUsd"
+        },
+        {
+          "name": "claimAttempts"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "failures"
+        },
+        {
+          "name": "level"
+        },
+        {
+          "name": "outputExercises"
+        },
+        {
+          "name": "outputLesson"
+        },
+        {
+          "name": "runDurationMs"
+        },
+        {
+          "name": "sourceLesson"
+        },
+        {
+          "name": "subject"
+        },
+        {
+          "name": "warnings"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "status"
+        },
+        {
+          "name": "aiCostUsd"
+        },
+        {
+          "name": "claimAttempts"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "failures"
+        },
+        {
+          "name": "level"
+        },
+        {
+          "name": "outputExercises"
+        },
+        {
+          "name": "outputLesson"
+        },
+        {
+          "name": "runDurationMs"
+        },
+        {
+          "name": "sourceLesson"
+        },
+        {
+          "name": "subject"
+        },
+        {
+          "name": "warnings"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "aiCostUsd",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "claimAttempts",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "runDurationMs",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "createdBy",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    }
+  ]
+}

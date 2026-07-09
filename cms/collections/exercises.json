@@ -1,0 +1,364 @@
+{
+  "name": "exercises",
+  "label": "Exercises",
+  "adapter": "mongodb",
+  "mcpName": "exercises",
+  "source": {
+    "collection": "exercises",
+    "idField": "_id"
+  },
+  "titleField": "title",
+  "searchFields": [
+    "title",
+    "idempotencyKey"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "label": "Title"
+    },
+    {
+      "name": "order",
+      "type": "number",
+      "label": "Order",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "content",
+      "type": "object",
+      "label": "Content",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "contentHash",
+      "type": "text",
+      "label": "Content Hash",
+      "hidden": true
+    },
+    {
+      "name": "conversionJobId",
+      "type": "relation",
+      "label": "Conversion Job Id",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "conversion-jobs",
+      "labelField": "title"
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "extractionMeta",
+      "type": "object",
+      "label": "Extraction Meta",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "idempotencyKey",
+      "type": "text",
+      "label": "Idempotency Key"
+    },
+    {
+      "name": "lesson",
+      "type": "relation",
+      "label": "Lesson",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "lessons",
+      "labelField": "title"
+    },
+    {
+      "name": "origin",
+      "type": "text",
+      "label": "Origin"
+    },
+    {
+      "name": "sourceDoc",
+      "type": "text",
+      "label": "Source Doc",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "sourceOrderInSegment",
+      "type": "number",
+      "label": "Source Order In Segment",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "sourcePageEnd",
+      "type": "number",
+      "label": "Source Page End",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "sourcePageStart",
+      "type": "number",
+      "label": "Source Page Start",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "specVersion",
+      "type": "text",
+      "label": "Spec Version"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "title",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "idempotencyKey"
+        },
+        {
+          "name": "conversionJobId"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "order"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "order"
+        },
+        {
+          "name": "content"
+        },
+        {
+          "name": "conversionJobId"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "extractionMeta"
+        },
+        {
+          "name": "idempotencyKey"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "origin"
+        },
+        {
+          "name": "sourceDoc"
+        },
+        {
+          "name": "sourceOrderInSegment"
+        },
+        {
+          "name": "sourcePageEnd"
+        },
+        {
+          "name": "sourcePageStart"
+        },
+        {
+          "name": "specVersion"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "title"
+        },
+        {
+          "name": "order"
+        },
+        {
+          "name": "content"
+        },
+        {
+          "name": "conversionJobId"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "extractionMeta"
+        },
+        {
+          "name": "idempotencyKey"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "origin"
+        },
+        {
+          "name": "sourceDoc"
+        },
+        {
+          "name": "sourceOrderInSegment"
+        },
+        {
+          "name": "sourcePageEnd"
+        },
+        {
+          "name": "sourcePageStart"
+        },
+        {
+          "name": "specVersion"
+        },
+        {
+          "name": "tenant"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "title",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "idempotencyKey",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "conversionJobId",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "lesson",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "tenant",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "order",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

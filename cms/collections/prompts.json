@@ -1,0 +1,308 @@
+{
+  "name": "prompts",
+  "label": "Prompts",
+  "adapter": "mongodb",
+  "mcpName": "prompts",
+  "source": {
+    "collection": "prompts",
+    "idField": "_id"
+  },
+  "titleField": "title",
+  "searchFields": [
+    "title",
+    "status",
+    "key",
+    "locale",
+    "promptKey",
+    "type"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "label": "Title"
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "draft",
+          "value": "draft"
+        },
+        {
+          "label": "published",
+          "value": "published"
+        }
+      ]
+    },
+    {
+      "name": "isDefaultForAgentChat",
+      "type": "date",
+      "label": "Is Default For Agent Chat",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "key",
+      "type": "text",
+      "label": "Key"
+    },
+    {
+      "name": "locale",
+      "type": "select",
+      "label": "Locale",
+      "options": [
+        {
+          "label": "he",
+          "value": "he"
+        }
+      ]
+    },
+    {
+      "name": "promptKey",
+      "type": "text",
+      "label": "Prompt Key"
+    },
+    {
+      "name": "template",
+      "type": "textarea",
+      "label": "Template"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "type",
+      "type": "select",
+      "label": "Type",
+      "options": [
+        {
+          "label": "context",
+          "value": "context"
+        },
+        {
+          "label": "persona",
+          "value": "persona"
+        },
+        {
+          "label": "system",
+          "value": "system"
+        }
+      ]
+    },
+    {
+      "name": "usage",
+      "type": "text",
+      "label": "Usage"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "title",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "promptKey"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "type"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "isDefaultForAgentChat"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "promptKey"
+        },
+        {
+          "name": "template"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "usage"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "isDefaultForAgentChat"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "promptKey"
+        },
+        {
+          "name": "template"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "usage"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "title",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "key",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "locale",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "promptKey",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "type",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    }
+  ]
+}

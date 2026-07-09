@@ -1,0 +1,341 @@
+{
+  "name": "products",
+  "label": "Products",
+  "adapter": "mongodb",
+  "mcpName": "products",
+  "source": {
+    "collection": "products",
+    "idField": "_id"
+  },
+  "titleField": "name",
+  "searchFields": [
+    "name",
+    "billingType",
+    "currency",
+    "slug"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "label": "Name"
+    },
+    {
+      "name": "billingType",
+      "type": "select",
+      "label": "Billing Type",
+      "options": [
+        {
+          "label": "one_time",
+          "value": "one_time"
+        },
+        {
+          "label": "subscription",
+          "value": "subscription"
+        }
+      ]
+    },
+    {
+      "name": "contents",
+      "type": "array",
+      "label": "Contents",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "currency",
+      "type": "select",
+      "label": "Currency",
+      "options": [
+        {
+          "label": "ILS",
+          "value": "ILS"
+        }
+      ]
+    },
+    {
+      "name": "durationDays",
+      "type": "number",
+      "label": "Duration Days",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "interval",
+      "type": "text",
+      "label": "Interval"
+    },
+    {
+      "name": "isActive",
+      "type": "boolean",
+      "label": "Is Active",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "items",
+      "type": "array",
+      "label": "Items",
+      "storage": {
+        "kind": "objectIdArray"
+      }
+    },
+    {
+      "name": "maxDevices",
+      "type": "number",
+      "label": "Max Devices",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "price",
+      "type": "number",
+      "label": "Price",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "label": "Slug"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "name",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "billingType"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "isActive"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "name"
+        },
+        {
+          "name": "billingType"
+        },
+        {
+          "name": "contents"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "durationDays"
+        },
+        {
+          "name": "interval"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "items"
+        },
+        {
+          "name": "maxDevices"
+        },
+        {
+          "name": "price"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "name"
+        },
+        {
+          "name": "billingType"
+        },
+        {
+          "name": "contents"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "durationDays"
+        },
+        {
+          "name": "interval"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "items"
+        },
+        {
+          "name": "maxDevices"
+        },
+        {
+          "name": "price"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "name",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "billingType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "currency",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "slug",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "tenant",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "isActive",
+      "operators": [
+        "equals"
+      ]
+    }
+  ]
+}

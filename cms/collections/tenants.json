@@ -1,0 +1,188 @@
+{
+  "name": "tenants",
+  "label": "Tenants",
+  "adapter": "mongodb",
+  "mcpName": "tenants",
+  "source": {
+    "collection": "tenants",
+    "idField": "_id"
+  },
+  "titleField": "name",
+  "searchFields": [
+    "name",
+    "status",
+    "slug"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "label": "Name"
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "active",
+          "value": "active"
+        }
+      ]
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "label": "Slug"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "name",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "updatedAt"
+        },
+        {
+          "name": "createdAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "name"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "name"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "slug"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "name",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "slug",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "createdAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

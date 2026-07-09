@@ -1,0 +1,314 @@
+{
+  "name": "upload-sessions",
+  "label": "Upload Sessions",
+  "adapter": "mongodb",
+  "mcpName": "upload_sessions",
+  "source": {
+    "collection": "upload-sessions",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "status",
+    "mimeType",
+    "originalFilename",
+    "pathname"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "finalized",
+          "value": "finalized"
+        },
+        {
+          "label": "initiated",
+          "value": "initiated"
+        }
+      ]
+    },
+    {
+      "name": "blobUrl",
+      "type": "textarea",
+      "label": "Blob Url"
+    },
+    {
+      "name": "chatAssetId",
+      "type": "relation",
+      "label": "Chat Asset Id",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "chat-assets",
+      "labelField": "_id"
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "expectedSize",
+      "type": "number",
+      "label": "Expected Size",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "expiresAt",
+      "type": "date",
+      "label": "Expires At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "mimeType",
+      "type": "select",
+      "label": "Mime Type",
+      "options": [
+        {
+          "label": "application/pdf",
+          "value": "application/pdf"
+        },
+        {
+          "label": "image/jpeg",
+          "value": "image/jpeg"
+        },
+        {
+          "label": "image/png",
+          "value": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "originalFilename",
+      "type": "text",
+      "label": "Original Filename"
+    },
+    {
+      "name": "pathname",
+      "type": "text",
+      "label": "Pathname"
+    },
+    {
+      "name": "purpose",
+      "type": "text",
+      "label": "Purpose"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "mimeType"
+        },
+        {
+          "name": "originalFilename"
+        },
+        {
+          "name": "pathname"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "chatAssetId"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "blobUrl"
+        },
+        {
+          "name": "chatAssetId"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "expectedSize"
+        },
+        {
+          "name": "expiresAt"
+        },
+        {
+          "name": "mimeType"
+        },
+        {
+          "name": "originalFilename"
+        },
+        {
+          "name": "pathname"
+        },
+        {
+          "name": "purpose"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "status"
+        },
+        {
+          "name": "blobUrl"
+        },
+        {
+          "name": "chatAssetId"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "expectedSize"
+        },
+        {
+          "name": "expiresAt"
+        },
+        {
+          "name": "mimeType"
+        },
+        {
+          "name": "originalFilename"
+        },
+        {
+          "name": "pathname"
+        },
+        {
+          "name": "purpose"
+        },
+        {
+          "name": "tenant"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "mimeType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "originalFilename",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "pathname",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "chatAssetId",
+      "operators": [
+        "equals"
+      ]
+    }
+  ]
+}

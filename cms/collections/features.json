@@ -1,0 +1,271 @@
+{
+  "name": "features",
+  "label": "Features",
+  "adapter": "mongodb",
+  "mcpName": "features",
+  "source": {
+    "collection": "features",
+    "idField": "_id"
+  },
+  "titleField": "label",
+  "searchFields": [
+    "label",
+    "description",
+    "key",
+    "type"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "label",
+      "type": "text",
+      "label": "Label"
+    },
+    {
+      "name": "defaultPeriod",
+      "type": "text",
+      "label": "Default Period"
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "label": "Description"
+    },
+    {
+      "name": "enforcement",
+      "type": "text",
+      "label": "Enforcement"
+    },
+    {
+      "name": "isActive",
+      "type": "boolean",
+      "label": "Is Active",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "isSilent",
+      "type": "boolean",
+      "label": "Is Silent",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "key",
+      "type": "text",
+      "label": "Key"
+    },
+    {
+      "name": "type",
+      "type": "select",
+      "label": "Type",
+      "options": [
+        {
+          "label": "boolean",
+          "value": "boolean"
+        },
+        {
+          "label": "numeric",
+          "value": "numeric"
+        }
+      ]
+    },
+    {
+      "name": "unit",
+      "type": "text",
+      "label": "Unit"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "label",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "isSilent"
+        },
+        {
+          "name": "defaultPeriod"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "label"
+        },
+        {
+          "name": "defaultPeriod"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "enforcement"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "isSilent"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "unit"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "label"
+        },
+        {
+          "name": "defaultPeriod"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "enforcement"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "isSilent"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "unit"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "label",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "key",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "type",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "isActive",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "isSilent",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "defaultPeriod",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    }
+  ]
+}

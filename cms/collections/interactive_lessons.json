@@ -1,0 +1,264 @@
+{
+  "name": "interactive_lessons",
+  "label": "Interactive Lessons",
+  "adapter": "mongodb",
+  "mcpName": "interactive_lessons",
+  "source": {
+    "collection": "interactive_lessons",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "locale"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "cacheSchemaVersion",
+      "type": "text",
+      "label": "Cache Schema Version"
+    },
+    {
+      "name": "generationMetadata",
+      "type": "object",
+      "label": "Generation Metadata",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "lesson",
+      "type": "object",
+      "label": "Lesson",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "locale",
+      "type": "select",
+      "label": "Locale",
+      "options": [
+        {
+          "label": "he",
+          "value": "he"
+        }
+      ]
+    },
+    {
+      "name": "media",
+      "type": "relation",
+      "label": "Media",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "media",
+      "labelField": "_id"
+    },
+    {
+      "name": "promptId",
+      "type": "relation",
+      "label": "Prompt Id",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "prompts",
+      "labelField": "title"
+    },
+    {
+      "name": "promptUpdatedAt",
+      "type": "date",
+      "label": "Prompt Updated At",
+      "storage": {
+        "kind": "dateString"
+      }
+    },
+    {
+      "name": "user",
+      "type": "relation",
+      "label": "User",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "users",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "media"
+        },
+        {
+          "name": "promptId"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "promptUpdatedAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "cacheSchemaVersion"
+        },
+        {
+          "name": "generationMetadata"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "media"
+        },
+        {
+          "name": "promptId"
+        },
+        {
+          "name": "promptUpdatedAt"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "cacheSchemaVersion"
+        },
+        {
+          "name": "generationMetadata"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "media"
+        },
+        {
+          "name": "promptId"
+        },
+        {
+          "name": "promptUpdatedAt"
+        },
+        {
+          "name": "user"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "locale",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "media",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "promptId",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "user",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "promptUpdatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

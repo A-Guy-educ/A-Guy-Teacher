@@ -1,0 +1,226 @@
+{
+  "name": "webhook-events",
+  "label": "Webhook Events",
+  "adapter": "mongodb",
+  "mcpName": "webhook_events",
+  "source": {
+    "collection": "webhook-events",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "eventType",
+    "provider"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "eventId",
+      "type": "text",
+      "label": "Event Id"
+    },
+    {
+      "name": "eventType",
+      "type": "select",
+      "label": "Event Type",
+      "options": [
+        {
+          "label": "CHECKOUT.ORDER.APPROVED",
+          "value": "CHECKOUT.ORDER.APPROVED"
+        },
+        {
+          "label": "PAYMENT.CAPTURE.COMPLETED",
+          "value": "PAYMENT.CAPTURE.COMPLETED"
+        }
+      ]
+    },
+    {
+      "name": "processed",
+      "type": "boolean",
+      "label": "Processed",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "provider",
+      "type": "select",
+      "label": "Provider",
+      "options": [
+        {
+          "label": "paypal",
+          "value": "paypal"
+        }
+      ]
+    },
+    {
+      "name": "receivedAt",
+      "type": "date",
+      "label": "Received At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "eventType"
+        },
+        {
+          "name": "provider"
+        },
+        {
+          "name": "processed"
+        },
+        {
+          "name": "receivedAt"
+        },
+        {
+          "name": "eventId"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "eventId"
+        },
+        {
+          "name": "eventType"
+        },
+        {
+          "name": "processed"
+        },
+        {
+          "name": "provider"
+        },
+        {
+          "name": "receivedAt"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "eventId"
+        },
+        {
+          "name": "eventType"
+        },
+        {
+          "name": "processed"
+        },
+        {
+          "name": "provider"
+        },
+        {
+          "name": "receivedAt"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "eventType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "provider",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "processed",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "receivedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "eventId",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    }
+  ]
+}

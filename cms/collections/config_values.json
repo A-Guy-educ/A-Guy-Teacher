@@ -1,0 +1,191 @@
+{
+  "name": "config_values",
+  "label": "Config Values",
+  "adapter": "mongodb",
+  "mcpName": "config_values",
+  "source": {
+    "collection": "config_values",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "description"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "config",
+      "type": "object",
+      "label": "Config",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "label": "Description"
+    },
+    {
+      "name": "domain",
+      "type": "text",
+      "label": "Domain"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "domain"
+        },
+        {
+          "name": "updatedAt"
+        },
+        {
+          "name": "createdAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "domain"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "config"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "domain"
+        },
+        {
+          "name": "tenant"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "tenant",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "domain",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "createdAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

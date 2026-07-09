@@ -1,0 +1,279 @@
+{
+  "name": "enrollments",
+  "label": "Enrollments",
+  "adapter": "mongodb",
+  "mcpName": "enrollments",
+  "source": {
+    "collection": "enrollments",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "status"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "active",
+          "value": "active"
+        },
+        {
+          "label": "cancelled",
+          "value": "cancelled"
+        }
+      ]
+    },
+    {
+      "name": "cancelledAt",
+      "type": "date",
+      "label": "Cancelled At",
+      "storage": {
+        "kind": "dateString"
+      }
+    },
+    {
+      "name": "course",
+      "type": "relation",
+      "label": "Course",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "courses",
+      "labelField": "title"
+    },
+    {
+      "name": "enrolledAt",
+      "type": "date",
+      "label": "Enrolled At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "expiresAt",
+      "type": "date",
+      "label": "Expires At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "grantMethod",
+      "type": "text",
+      "label": "Grant Method"
+    },
+    {
+      "name": "metadata",
+      "type": "object",
+      "label": "Metadata",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "source",
+      "type": "text",
+      "label": "Source"
+    },
+    {
+      "name": "user",
+      "type": "relation",
+      "label": "User",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "users",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "cancelledAt"
+        },
+        {
+          "name": "enrolledAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "cancelledAt"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "enrolledAt"
+        },
+        {
+          "name": "expiresAt"
+        },
+        {
+          "name": "grantMethod"
+        },
+        {
+          "name": "metadata"
+        },
+        {
+          "name": "source"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "status"
+        },
+        {
+          "name": "cancelledAt"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "enrolledAt"
+        },
+        {
+          "name": "expiresAt"
+        },
+        {
+          "name": "grantMethod"
+        },
+        {
+          "name": "metadata"
+        },
+        {
+          "name": "source"
+        },
+        {
+          "name": "user"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "course",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "user",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "cancelledAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "enrolledAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "name": "product-items",
+  "label": "Product Items",
+  "adapter": "mongodb",
+  "mcpName": "product_items",
+  "source": {
+    "collection": "product-items",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "featureKey",
+    "type"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "course",
+      "type": "relation",
+      "label": "Course",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "courses",
+      "labelField": "title"
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "featureKey",
+      "type": "text",
+      "label": "Feature Key"
+    },
+    {
+      "name": "isHighlighted",
+      "type": "boolean",
+      "label": "Is Highlighted",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "lesson",
+      "type": "relation",
+      "label": "Lesson",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "lessons",
+      "labelField": "title"
+    },
+    {
+      "name": "lessonTypes",
+      "type": "multiSelect",
+      "label": "Lesson Types",
+      "storage": {
+        "kind": "stringArray"
+      },
+      "options": [
+        {
+          "label": "learning",
+          "value": "learning"
+        }
+      ]
+    },
+    {
+      "name": "period",
+      "type": "text",
+      "label": "Period"
+    },
+    {
+      "name": "type",
+      "type": "select",
+      "label": "Type",
+      "options": [
+        {
+          "label": "course",
+          "value": "course"
+        },
+        {
+          "label": "feature",
+          "value": "feature"
+        },
+        {
+          "label": "lesson",
+          "value": "lesson"
+        }
+      ]
+    },
+    {
+      "name": "value",
+      "type": "number",
+      "label": "Value",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "featureKey"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "isHighlighted"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "featureKey"
+        },
+        {
+          "name": "isHighlighted"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "lessonTypes"
+        },
+        {
+          "name": "period"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "value"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "course"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "featureKey"
+        },
+        {
+          "name": "isHighlighted"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "lessonTypes"
+        },
+        {
+          "name": "period"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "value"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "featureKey",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "type",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "course",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "lesson",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "isHighlighted",
+      "operators": [
+        "equals"
+      ]
+    }
+  ]
+}

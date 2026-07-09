@@ -1,0 +1,194 @@
+{
+  "name": "globals",
+  "label": "Globals",
+  "adapter": "mongodb",
+  "mcpName": "globals",
+  "source": {
+    "collection": "globals",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "globalType"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "globalType",
+      "type": "select",
+      "label": "Global Type",
+      "options": [
+        {
+          "label": "footer",
+          "value": "footer"
+        },
+        {
+          "label": "header",
+          "value": "header"
+        },
+        {
+          "label": "wrong-answer-prompt",
+          "value": "wrong-answer-prompt"
+        }
+      ]
+    },
+    {
+      "name": "navItems",
+      "type": "array",
+      "label": "Nav Items",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "template",
+      "type": "textarea",
+      "label": "Template"
+    },
+    {
+      "name": "variants",
+      "type": "array",
+      "label": "Variants",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "globalType"
+        },
+        {
+          "name": "updatedAt"
+        },
+        {
+          "name": "createdAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "globalType"
+        },
+        {
+          "name": "navItems"
+        },
+        {
+          "name": "template"
+        },
+        {
+          "name": "variants"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "globalType"
+        },
+        {
+          "name": "navItems"
+        },
+        {
+          "name": "template"
+        },
+        {
+          "name": "variants"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "globalType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "createdAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

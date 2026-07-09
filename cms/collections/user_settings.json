@@ -1,0 +1,168 @@
+{
+  "name": "user_settings",
+  "label": "User Settings",
+  "adapter": "mongodb",
+  "mcpName": "user_settings",
+  "source": {
+    "collection": "user_settings",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "teacherProfile",
+      "type": "relation",
+      "label": "Teacher Profile",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "teacher_profiles",
+      "labelField": "label"
+    },
+    {
+      "name": "user",
+      "type": "relation",
+      "label": "User",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "users",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "teacherProfile"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "updatedAt"
+        },
+        {
+          "name": "createdAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "teacherProfile"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "teacherProfile"
+        },
+        {
+          "name": "user"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "teacherProfile",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "user",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "createdAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

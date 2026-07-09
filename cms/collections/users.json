@@ -1,0 +1,387 @@
+{
+  "name": "users",
+  "label": "Users",
+  "adapter": "mongodb",
+  "mcpName": "users",
+  "source": {
+    "collection": "users",
+    "idField": "_id"
+  },
+  "titleField": "name",
+  "searchFields": [
+    "name",
+    "email",
+    "role",
+    "verifiedEmail"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "label": "Name"
+    },
+    {
+      "name": "aiQuestionsUsedDay",
+      "type": "number",
+      "label": "Ai Questions Used Day",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "chatLimitUsedDay",
+      "type": "number",
+      "label": "Chat Limit Used Day",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "chatQuestionsUsed",
+      "type": "number",
+      "label": "Chat Questions Used",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "courseEntitlements",
+      "type": "array",
+      "label": "Course Entitlements",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "email",
+      "type": "text",
+      "label": "Email"
+    },
+    {
+      "name": "featureEntitlements",
+      "type": "array",
+      "label": "Feature Entitlements",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "googleProfile",
+      "type": "object",
+      "label": "Google Profile",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "googleSub",
+      "type": "text",
+      "label": "Google Sub"
+    },
+    {
+      "name": "hash",
+      "type": "textarea",
+      "label": "Hash",
+      "hidden": true
+    },
+    {
+      "name": "lockUntil",
+      "type": "date",
+      "label": "Lock Until",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "loginAttempts",
+      "type": "number",
+      "label": "Login Attempts",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "resetPasswordExpiration",
+      "type": "date",
+      "label": "Reset Password Expiration",
+      "storage": {
+        "kind": "date"
+      },
+      "hidden": true
+    },
+    {
+      "name": "resetPasswordToken",
+      "type": "text",
+      "label": "Reset Password Token",
+      "hidden": true
+    },
+    {
+      "name": "role",
+      "type": "select",
+      "label": "Role",
+      "options": [
+        {
+          "label": "admin",
+          "value": "admin"
+        },
+        {
+          "label": "student",
+          "value": "student"
+        }
+      ]
+    },
+    {
+      "name": "salt",
+      "type": "text",
+      "label": "Salt",
+      "hidden": true
+    },
+    {
+      "name": "sessions",
+      "type": "array",
+      "label": "Sessions",
+      "storage": {
+        "kind": "array"
+      },
+      "hidden": true
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "verifiedEmail",
+      "type": "text",
+      "label": "Verified Email"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "name",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "email"
+        },
+        {
+          "name": "role"
+        },
+        {
+          "name": "verifiedEmail"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "aiQuestionsUsedDay"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "name"
+        },
+        {
+          "name": "aiQuestionsUsedDay"
+        },
+        {
+          "name": "chatLimitUsedDay"
+        },
+        {
+          "name": "chatQuestionsUsed"
+        },
+        {
+          "name": "courseEntitlements"
+        },
+        {
+          "name": "email"
+        },
+        {
+          "name": "featureEntitlements"
+        },
+        {
+          "name": "googleProfile"
+        },
+        {
+          "name": "googleSub"
+        },
+        {
+          "name": "lockUntil"
+        },
+        {
+          "name": "loginAttempts"
+        },
+        {
+          "name": "role"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "verifiedEmail"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "name"
+        },
+        {
+          "name": "aiQuestionsUsedDay"
+        },
+        {
+          "name": "chatLimitUsedDay"
+        },
+        {
+          "name": "chatQuestionsUsed"
+        },
+        {
+          "name": "courseEntitlements"
+        },
+        {
+          "name": "email"
+        },
+        {
+          "name": "featureEntitlements"
+        },
+        {
+          "name": "googleProfile"
+        },
+        {
+          "name": "googleSub"
+        },
+        {
+          "name": "lockUntil"
+        },
+        {
+          "name": "loginAttempts"
+        },
+        {
+          "name": "role"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "verifiedEmail"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "name",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "email",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "role",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "verifiedEmail",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "tenant",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "aiQuestionsUsedDay",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

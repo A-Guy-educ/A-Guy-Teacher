@@ -1,0 +1,373 @@
+{
+  "name": "static-assets",
+  "label": "Static Assets",
+  "adapter": "mongodb",
+  "mcpName": "static_assets",
+  "source": {
+    "collection": "static-assets",
+    "idField": "_id"
+  },
+  "titleField": "key",
+  "searchFields": [
+    "key",
+    "status",
+    "assetType",
+    "contentType",
+    "filename",
+    "mimeType"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "active",
+          "value": "active"
+        }
+      ]
+    },
+    {
+      "name": "assetType",
+      "type": "select",
+      "label": "Asset Type",
+      "options": [
+        {
+          "label": "bundle",
+          "value": "bundle"
+        },
+        {
+          "label": "single",
+          "value": "single"
+        }
+      ]
+    },
+    {
+      "name": "baseUrl",
+      "type": "text",
+      "label": "Base Url"
+    },
+    {
+      "name": "category",
+      "type": "text",
+      "label": "Category"
+    },
+    {
+      "name": "checksumSha256",
+      "type": "text",
+      "label": "Checksum Sha256"
+    },
+    {
+      "name": "contentType",
+      "type": "select",
+      "label": "Content Type",
+      "options": [
+        {
+          "label": "application/json",
+          "value": "application/json"
+        },
+        {
+          "label": "application/zip",
+          "value": "application/zip"
+        }
+      ]
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "filename",
+      "type": "text",
+      "label": "Filename"
+    },
+    {
+      "name": "filesize",
+      "type": "number",
+      "label": "Filesize",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "fileSize",
+      "type": "number",
+      "label": "File Size",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "key",
+      "type": "text",
+      "label": "Key"
+    },
+    {
+      "name": "manifest",
+      "type": "object",
+      "label": "Manifest",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "mimeType",
+      "type": "select",
+      "label": "Mime Type",
+      "options": [
+        {
+          "label": "application/json",
+          "value": "application/json"
+        },
+        {
+          "label": "application/zip",
+          "value": "application/zip"
+        }
+      ]
+    },
+    {
+      "name": "publicUrl",
+      "type": "text",
+      "label": "Public Url"
+    },
+    {
+      "name": "version",
+      "type": "text",
+      "label": "Version"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "key",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "assetType"
+        },
+        {
+          "name": "contentType"
+        },
+        {
+          "name": "filename"
+        },
+        {
+          "name": "mimeType"
+        },
+        {
+          "name": "status"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "assetType"
+        },
+        {
+          "name": "baseUrl"
+        },
+        {
+          "name": "category"
+        },
+        {
+          "name": "checksumSha256"
+        },
+        {
+          "name": "contentType"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "filename"
+        },
+        {
+          "name": "filesize"
+        },
+        {
+          "name": "fileSize"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "manifest"
+        },
+        {
+          "name": "mimeType"
+        },
+        {
+          "name": "publicUrl"
+        },
+        {
+          "name": "version"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "status"
+        },
+        {
+          "name": "assetType"
+        },
+        {
+          "name": "baseUrl"
+        },
+        {
+          "name": "category"
+        },
+        {
+          "name": "checksumSha256"
+        },
+        {
+          "name": "contentType"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "filename"
+        },
+        {
+          "name": "filesize"
+        },
+        {
+          "name": "fileSize"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "manifest"
+        },
+        {
+          "name": "mimeType"
+        },
+        {
+          "name": "publicUrl"
+        },
+        {
+          "name": "version"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "key",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "assetType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "contentType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "filename",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "mimeType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    }
+  ]
+}

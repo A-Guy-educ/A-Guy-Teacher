@@ -1,0 +1,233 @@
+{
+  "name": "config_audit_logs",
+  "label": "Config Audit Logs",
+  "adapter": "mongodb",
+  "mcpName": "config_audit_logs",
+  "source": {
+    "collection": "config_audit_logs",
+    "idField": "_id"
+  },
+  "titleField": "key",
+  "searchFields": [
+    "key",
+    "kind"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "action",
+      "type": "text",
+      "label": "Action"
+    },
+    {
+      "name": "actor",
+      "type": "text",
+      "label": "Actor",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "key",
+      "type": "text",
+      "label": "Key"
+    },
+    {
+      "name": "kind",
+      "type": "select",
+      "label": "Kind",
+      "options": [
+        {
+          "label": "secret",
+          "value": "secret"
+        },
+        {
+          "label": "system_param",
+          "value": "system_param"
+        },
+        {
+          "label": "variable",
+          "value": "variable"
+        }
+      ]
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "key",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "kind"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "action"
+        },
+        {
+          "name": "actor"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "action"
+        },
+        {
+          "name": "actor"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "kind"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "action"
+        },
+        {
+          "name": "actor"
+        },
+        {
+          "name": "key"
+        },
+        {
+          "name": "kind"
+        },
+        {
+          "name": "tenant"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "key",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "kind",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "tenant",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "action",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "actor",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

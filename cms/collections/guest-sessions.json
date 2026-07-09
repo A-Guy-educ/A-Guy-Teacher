@@ -1,0 +1,252 @@
+{
+  "name": "guest-sessions",
+  "label": "Guest Sessions",
+  "adapter": "mongodb",
+  "mcpName": "guest_sessions",
+  "source": {
+    "collection": "guest-sessions",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "status"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "active",
+          "value": "active"
+        }
+      ]
+    },
+    {
+      "name": "expiresAt",
+      "type": "date",
+      "label": "Expires At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "hardExpiresAt",
+      "type": "date",
+      "label": "Hard Expires At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "ipHash",
+      "type": "text",
+      "label": "Ip Hash",
+      "hidden": true
+    },
+    {
+      "name": "lastActiveAt",
+      "type": "date",
+      "label": "Last Active At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "messageCount",
+      "type": "number",
+      "label": "Message Count",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "tokenHash",
+      "type": "text",
+      "label": "Token Hash",
+      "hidden": true
+    },
+    {
+      "name": "tokenVersion",
+      "type": "number",
+      "label": "Token Version",
+      "storage": {
+        "kind": "number"
+      },
+      "hidden": true
+    },
+    {
+      "name": "userAgentHash",
+      "type": "text",
+      "label": "User Agent Hash",
+      "hidden": true
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "expiresAt"
+        },
+        {
+          "name": "hardExpiresAt"
+        },
+        {
+          "name": "lastActiveAt"
+        },
+        {
+          "name": "messageCount"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "expiresAt"
+        },
+        {
+          "name": "hardExpiresAt"
+        },
+        {
+          "name": "lastActiveAt"
+        },
+        {
+          "name": "messageCount"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "status"
+        },
+        {
+          "name": "expiresAt"
+        },
+        {
+          "name": "hardExpiresAt"
+        },
+        {
+          "name": "lastActiveAt"
+        },
+        {
+          "name": "messageCount"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "expiresAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "hardExpiresAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "lastActiveAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "messageCount",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

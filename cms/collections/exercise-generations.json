@@ -1,0 +1,55 @@
+{
+  "name": "exercise-generations",
+  "label": "Exercise Generations",
+  "adapter": "mongodb",
+  "mcpName": "exercise_generations",
+  "source": {
+    "collection": "exercise-generations",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        }
+      ]
+    },
+    "form": {
+      "fields": []
+    }
+  },
+  "filters": []
+}

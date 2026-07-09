@@ -1,0 +1,369 @@
+{
+  "name": "transactions",
+  "label": "Transactions",
+  "adapter": "mongodb",
+  "mcpName": "transactions",
+  "source": {
+    "collection": "transactions",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "status",
+    "currency",
+    "provider"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "pending",
+          "value": "pending"
+        },
+        {
+          "label": "succeeded",
+          "value": "succeeded"
+        }
+      ]
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "label": "Amount",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "cancelUrl",
+      "type": "text",
+      "label": "Cancel Url"
+    },
+    {
+      "name": "capturedAt",
+      "type": "date",
+      "label": "Captured At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "captureId",
+      "type": "text",
+      "label": "Capture Id"
+    },
+    {
+      "name": "currency",
+      "type": "select",
+      "label": "Currency",
+      "options": [
+        {
+          "label": "ILS",
+          "value": "ILS"
+        }
+      ]
+    },
+    {
+      "name": "emailSentAt",
+      "type": "date",
+      "label": "Email Sent At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "entitlementsGrantedAt",
+      "type": "date",
+      "label": "Entitlements Granted At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "metadata",
+      "type": "object",
+      "label": "Metadata",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "product",
+      "type": "relation",
+      "label": "Product",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "products",
+      "labelField": "name"
+    },
+    {
+      "name": "provider",
+      "type": "select",
+      "label": "Provider",
+      "options": [
+        {
+          "label": "paypal",
+          "value": "paypal"
+        },
+        {
+          "label": "stripe",
+          "value": "stripe"
+        }
+      ]
+    },
+    {
+      "name": "providerTransactionId",
+      "type": "text",
+      "label": "Provider Transaction Id"
+    },
+    {
+      "name": "successUrl",
+      "type": "text",
+      "label": "Success Url"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "user",
+      "type": "relation",
+      "label": "User",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "users",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "provider"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "product"
+        },
+        {
+          "name": "tenant"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "amount"
+        },
+        {
+          "name": "cancelUrl"
+        },
+        {
+          "name": "capturedAt"
+        },
+        {
+          "name": "captureId"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "emailSentAt"
+        },
+        {
+          "name": "entitlementsGrantedAt"
+        },
+        {
+          "name": "metadata"
+        },
+        {
+          "name": "product"
+        },
+        {
+          "name": "provider"
+        },
+        {
+          "name": "providerTransactionId"
+        },
+        {
+          "name": "successUrl"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "status"
+        },
+        {
+          "name": "amount"
+        },
+        {
+          "name": "cancelUrl"
+        },
+        {
+          "name": "capturedAt"
+        },
+        {
+          "name": "captureId"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "emailSentAt"
+        },
+        {
+          "name": "entitlementsGrantedAt"
+        },
+        {
+          "name": "metadata"
+        },
+        {
+          "name": "product"
+        },
+        {
+          "name": "provider"
+        },
+        {
+          "name": "providerTransactionId"
+        },
+        {
+          "name": "successUrl"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "user"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "currency",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "provider",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "product",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "tenant",
+      "operators": [
+        "equals"
+      ]
+    }
+  ]
+}

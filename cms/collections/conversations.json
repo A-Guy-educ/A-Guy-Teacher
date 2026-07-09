@@ -1,0 +1,278 @@
+{
+  "name": "conversations",
+  "label": "Conversations",
+  "adapter": "mongodb",
+  "mcpName": "conversations",
+  "source": {
+    "collection": "conversations",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "contextKey",
+    "preferredLocale"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "archivedAt",
+      "type": "date",
+      "label": "Archived At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "contextKey",
+      "type": "text",
+      "label": "Context Key"
+    },
+    {
+      "name": "contextPolicyVersion",
+      "type": "text",
+      "label": "Context Policy Version"
+    },
+    {
+      "name": "contextRef",
+      "type": "object",
+      "label": "Context Ref",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "guestSession",
+      "type": "text",
+      "label": "Guest Session",
+      "hidden": true
+    },
+    {
+      "name": "lastMessageAt",
+      "type": "date",
+      "label": "Last Message At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "messages",
+      "type": "array",
+      "label": "Messages",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "preferredLocale",
+      "type": "select",
+      "label": "Preferred Locale",
+      "options": [
+        {
+          "label": "he",
+          "value": "he"
+        }
+      ]
+    },
+    {
+      "name": "summary",
+      "type": "textarea",
+      "label": "Summary"
+    },
+    {
+      "name": "user",
+      "type": "relation",
+      "label": "User",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "users",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "contextKey"
+        },
+        {
+          "name": "preferredLocale"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "archivedAt"
+        },
+        {
+          "name": "lastMessageAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "archivedAt"
+        },
+        {
+          "name": "contextKey"
+        },
+        {
+          "name": "contextPolicyVersion"
+        },
+        {
+          "name": "contextRef"
+        },
+        {
+          "name": "lastMessageAt"
+        },
+        {
+          "name": "messages"
+        },
+        {
+          "name": "preferredLocale"
+        },
+        {
+          "name": "summary"
+        },
+        {
+          "name": "user"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "archivedAt"
+        },
+        {
+          "name": "contextKey"
+        },
+        {
+          "name": "contextPolicyVersion"
+        },
+        {
+          "name": "contextRef"
+        },
+        {
+          "name": "lastMessageAt"
+        },
+        {
+          "name": "messages"
+        },
+        {
+          "name": "preferredLocale"
+        },
+        {
+          "name": "summary"
+        },
+        {
+          "name": "user"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "contextKey",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "preferredLocale",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "user",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "archivedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "lastMessageAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

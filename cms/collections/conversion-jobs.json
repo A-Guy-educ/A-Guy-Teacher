@@ -1,0 +1,355 @@
+{
+  "name": "conversion-jobs",
+  "label": "Conversion Jobs",
+  "adapter": "mongodb",
+  "mcpName": "conversion_jobs",
+  "source": {
+    "collection": "conversion-jobs",
+    "idField": "_id"
+  },
+  "titleField": "title",
+  "searchFields": [
+    "title",
+    "status"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "label": "Title"
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "draft",
+          "value": "draft"
+        }
+      ]
+    },
+    {
+      "name": "additionalRounds",
+      "type": "array",
+      "label": "Additional Rounds",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "completedExercises",
+      "type": "array",
+      "label": "Completed Exercises",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "config",
+      "type": "object",
+      "label": "Config",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "jobErrors",
+      "type": "array",
+      "label": "Job Errors",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "lesson",
+      "type": "relation",
+      "label": "Lesson",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "lessons",
+      "labelField": "title"
+    },
+    {
+      "name": "logs",
+      "type": "array",
+      "label": "Logs",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "pendingExercises",
+      "type": "array",
+      "label": "Pending Exercises",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "progress",
+      "type": "object",
+      "label": "Progress",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "prompts",
+      "type": "object",
+      "label": "Prompts",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "segments",
+      "type": "array",
+      "label": "Segments",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "sourceMedia",
+      "type": "text",
+      "label": "Source Media",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "title",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "sourceMedia"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "additionalRounds"
+        },
+        {
+          "name": "completedExercises"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "jobErrors"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "logs"
+        },
+        {
+          "name": "pendingExercises"
+        },
+        {
+          "name": "progress"
+        },
+        {
+          "name": "prompts"
+        },
+        {
+          "name": "segments"
+        },
+        {
+          "name": "sourceMedia"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "additionalRounds"
+        },
+        {
+          "name": "completedExercises"
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "jobErrors"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "logs"
+        },
+        {
+          "name": "pendingExercises"
+        },
+        {
+          "name": "progress"
+        },
+        {
+          "name": "prompts"
+        },
+        {
+          "name": "segments"
+        },
+        {
+          "name": "sourceMedia"
+        },
+        {
+          "name": "tenant"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "title",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "lesson",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "tenant",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "sourceMedia",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

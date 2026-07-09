@@ -1,0 +1,221 @@
+{
+  "name": "categories",
+  "label": "Categories",
+  "adapter": "mongodb",
+  "mcpName": "categories",
+  "source": {
+    "collection": "categories",
+    "idField": "_id"
+  },
+  "titleField": "title",
+  "searchFields": [
+    "title",
+    "slug"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "label": "Title"
+    },
+    {
+      "name": "breadcrumbs",
+      "type": "array",
+      "label": "Breadcrumbs",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "generateSlug",
+      "type": "boolean",
+      "label": "Generate Slug",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "label": "Slug"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "title",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "generateSlug"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "updatedAt"
+        },
+        {
+          "name": "createdAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "breadcrumbs"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "generateSlug"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "title"
+        },
+        {
+          "name": "breadcrumbs"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "generateSlug"
+        },
+        {
+          "name": "slug"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "title",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "slug",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "generateSlug",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "createdBy",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "createdAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

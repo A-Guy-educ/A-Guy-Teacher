@@ -1,0 +1,455 @@
+{
+  "name": "courses",
+  "label": "Courses",
+  "adapter": "mongodb",
+  "mcpName": "courses",
+  "source": {
+    "collection": "courses",
+    "idField": "_id"
+  },
+  "titleField": "title",
+  "searchFields": [
+    "title",
+    "status",
+    "accessType",
+    "contentStatus",
+    "courseLabel",
+    "description",
+    "locale",
+    "pageAccessType"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "label": "Title"
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "published",
+          "value": "published"
+        }
+      ]
+    },
+    {
+      "name": "order",
+      "type": "number",
+      "label": "Order",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "accessType",
+      "type": "select",
+      "label": "Access Type",
+      "options": [
+        {
+          "label": "free",
+          "value": "free"
+        },
+        {
+          "label": "gated",
+          "value": "gated"
+        },
+        {
+          "label": "paid",
+          "value": "paid"
+        }
+      ]
+    },
+    {
+      "name": "categories",
+      "type": "relationMany",
+      "label": "Categories",
+      "storage": {
+        "kind": "objectIdArray"
+      },
+      "target": "categories",
+      "labelField": "title"
+    },
+    {
+      "name": "contentStatus",
+      "type": "select",
+      "label": "Content Status",
+      "options": [
+        {
+          "label": "justAdded",
+          "value": "justAdded"
+        },
+        {
+          "label": "none",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "name": "contentStatusExpiresAt",
+      "type": "date",
+      "label": "Content Status Expires At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "contentStatusVisible",
+      "type": "boolean",
+      "label": "Content Status Visible",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "courseLabel",
+      "type": "text",
+      "label": "Course Label"
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "label": "Description"
+    },
+    {
+      "name": "formulaSheet",
+      "type": "relation",
+      "label": "Formula Sheet",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "formula-sheets",
+      "labelField": "title"
+    },
+    {
+      "name": "isActive",
+      "type": "boolean",
+      "label": "Is Active",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "locale",
+      "type": "select",
+      "label": "Locale",
+      "options": [
+        {
+          "label": "he",
+          "value": "he"
+        }
+      ]
+    },
+    {
+      "name": "meta",
+      "type": "object",
+      "label": "Meta",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "pageAccessType",
+      "type": "select",
+      "label": "Page Access Type",
+      "options": [
+        {
+          "label": "free",
+          "value": "free"
+        },
+        {
+          "label": "mandatory",
+          "value": "mandatory"
+        }
+      ]
+    },
+    {
+      "name": "prompt",
+      "type": "relation",
+      "label": "Prompt",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "prompts",
+      "labelField": "title"
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "label": "Slug"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "title",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "accessType"
+        },
+        {
+          "name": "contentStatus"
+        },
+        {
+          "name": "courseLabel"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "pageAccessType"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "order"
+        },
+        {
+          "name": "accessType"
+        },
+        {
+          "name": "categories"
+        },
+        {
+          "name": "contentStatus"
+        },
+        {
+          "name": "contentStatusExpiresAt"
+        },
+        {
+          "name": "contentStatusVisible"
+        },
+        {
+          "name": "courseLabel"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "formulaSheet"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "meta"
+        },
+        {
+          "name": "pageAccessType"
+        },
+        {
+          "name": "prompt"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "order"
+        },
+        {
+          "name": "accessType"
+        },
+        {
+          "name": "categories"
+        },
+        {
+          "name": "contentStatus"
+        },
+        {
+          "name": "contentStatusExpiresAt"
+        },
+        {
+          "name": "contentStatusVisible"
+        },
+        {
+          "name": "courseLabel"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "formulaSheet"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "meta"
+        },
+        {
+          "name": "pageAccessType"
+        },
+        {
+          "name": "prompt"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "title",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "accessType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "contentStatus",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "courseLabel",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "locale",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "pageAccessType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    }
+  ]
+}

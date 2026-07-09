@@ -1,0 +1,179 @@
+{
+  "name": "payload-folders",
+  "label": "Payload Folders",
+  "adapter": "mongodb",
+  "mcpName": "payload_folders",
+  "source": {
+    "collection": "payload-folders",
+    "idField": "_id"
+  },
+  "titleField": "name",
+  "searchFields": [
+    "name"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "label": "Name"
+    },
+    {
+      "name": "folder",
+      "type": "text",
+      "label": "Folder"
+    },
+    {
+      "name": "folderType",
+      "type": "multiSelect",
+      "label": "Folder Type",
+      "storage": {
+        "kind": "stringArray"
+      },
+      "options": [
+        {
+          "label": "media",
+          "value": "media"
+        }
+      ]
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "name",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "folder"
+        },
+        {
+          "name": "updatedAt"
+        },
+        {
+          "name": "createdAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "name"
+        },
+        {
+          "name": "folder"
+        },
+        {
+          "name": "folderType"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "name"
+        },
+        {
+          "name": "folder"
+        },
+        {
+          "name": "folderType"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "name",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "folder",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "createdAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,306 @@
+{
+  "name": "memory_items",
+  "label": "Memory Items",
+  "adapter": "mongodb",
+  "mcpName": "memory_items",
+  "source": {
+    "collection": "memory_items",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "status",
+    "contextKey",
+    "type"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "active",
+          "value": "active"
+        }
+      ]
+    },
+    {
+      "name": "contextKey",
+      "type": "text",
+      "label": "Context Key"
+    },
+    {
+      "name": "contextLevel",
+      "type": "text",
+      "label": "Context Level"
+    },
+    {
+      "name": "conversationId",
+      "type": "text",
+      "label": "Conversation Id"
+    },
+    {
+      "name": "embedding",
+      "type": "array",
+      "label": "Embedding",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "importance",
+      "type": "number",
+      "label": "Importance",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "source",
+      "type": "object",
+      "label": "Source",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "text",
+      "type": "text",
+      "label": "Text"
+    },
+    {
+      "name": "type",
+      "type": "select",
+      "label": "Type",
+      "options": [
+        {
+          "label": "constraint",
+          "value": "constraint"
+        },
+        {
+          "label": "decision",
+          "value": "decision"
+        },
+        {
+          "label": "fact",
+          "value": "fact"
+        },
+        {
+          "label": "open_loop",
+          "value": "open_loop"
+        },
+        {
+          "label": "preference",
+          "value": "preference"
+        },
+        {
+          "label": "profile",
+          "value": "profile"
+        }
+      ]
+    },
+    {
+      "name": "userId",
+      "type": "relation",
+      "label": "User Id",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "users",
+      "labelField": "name"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "contextKey"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "userId"
+        },
+        {
+          "name": "importance"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "contextKey"
+        },
+        {
+          "name": "contextLevel"
+        },
+        {
+          "name": "conversationId"
+        },
+        {
+          "name": "embedding"
+        },
+        {
+          "name": "importance"
+        },
+        {
+          "name": "source"
+        },
+        {
+          "name": "text"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "userId"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "status"
+        },
+        {
+          "name": "contextKey"
+        },
+        {
+          "name": "contextLevel"
+        },
+        {
+          "name": "conversationId"
+        },
+        {
+          "name": "embedding"
+        },
+        {
+          "name": "importance"
+        },
+        {
+          "name": "source"
+        },
+        {
+          "name": "text"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "userId"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "contextKey",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "type",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "userId",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "importance",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

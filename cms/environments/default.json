@@ -1,0 +1,6 @@
+{
+  "name": "default",
+  "adapter": "mongodb",
+  "databaseUriSecret": "DATABASE_URL",
+  "writePolicy": "enabled"
+}

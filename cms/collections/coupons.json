@@ -1,0 +1,351 @@
+{
+  "name": "coupons",
+  "label": "Coupons",
+  "adapter": "mongodb",
+  "mcpName": "coupons",
+  "source": {
+    "collection": "coupons",
+    "idField": "_id"
+  },
+  "titleField": "code",
+  "searchFields": [
+    "code",
+    "status",
+    "currency",
+    "discountType"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "Active",
+          "value": "Active"
+        }
+      ]
+    },
+    {
+      "name": "applicableProducts",
+      "type": "array",
+      "label": "Applicable Products",
+      "storage": {
+        "kind": "objectIdArray"
+      }
+    },
+    {
+      "name": "code",
+      "type": "text",
+      "label": "Code"
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "currency",
+      "type": "select",
+      "label": "Currency",
+      "options": [
+        {
+          "label": "ILS",
+          "value": "ILS"
+        }
+      ]
+    },
+    {
+      "name": "discountDisplay",
+      "type": "text",
+      "label": "Discount Display"
+    },
+    {
+      "name": "discountType",
+      "type": "select",
+      "label": "Discount Type",
+      "options": [
+        {
+          "label": "fixed",
+          "value": "fixed"
+        }
+      ]
+    },
+    {
+      "name": "discountValue",
+      "type": "number",
+      "label": "Discount Value",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "expiresDisplay",
+      "type": "text",
+      "label": "Expires Display"
+    },
+    {
+      "name": "isActive",
+      "type": "boolean",
+      "label": "Is Active",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "maxUses",
+      "type": "number",
+      "label": "Max Uses",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "maxUsesPerUser",
+      "type": "number",
+      "label": "Max Uses Per User",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "usageDisplay",
+      "type": "text",
+      "label": "Usage Display"
+    },
+    {
+      "name": "usesCount",
+      "type": "number",
+      "label": "Uses Count",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "code",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "discountType"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "discountValue"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "applicableProducts"
+        },
+        {
+          "name": "code"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "discountDisplay"
+        },
+        {
+          "name": "discountType"
+        },
+        {
+          "name": "discountValue"
+        },
+        {
+          "name": "expiresDisplay"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "maxUses"
+        },
+        {
+          "name": "maxUsesPerUser"
+        },
+        {
+          "name": "usageDisplay"
+        },
+        {
+          "name": "usesCount"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "status"
+        },
+        {
+          "name": "applicableProducts"
+        },
+        {
+          "name": "code"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "discountDisplay"
+        },
+        {
+          "name": "discountType"
+        },
+        {
+          "name": "discountValue"
+        },
+        {
+          "name": "expiresDisplay"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "maxUses"
+        },
+        {
+          "name": "maxUsesPerUser"
+        },
+        {
+          "name": "usageDisplay"
+        },
+        {
+          "name": "usesCount"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "code",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "currency",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "discountType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "isActive",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "discountValue",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

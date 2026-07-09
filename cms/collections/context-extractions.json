@@ -1,0 +1,192 @@
+{
+  "name": "context-extractions",
+  "label": "Context Extractions",
+  "adapter": "mongodb",
+  "mcpName": "context_extractions",
+  "source": {
+    "collection": "context-extractions",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "exercises",
+      "type": "array",
+      "label": "Exercises",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "lesson",
+      "type": "relation",
+      "label": "Lesson",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "lessons",
+      "labelField": "title"
+    },
+    {
+      "name": "sourceMedia",
+      "type": "text",
+      "label": "Source Media",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "text",
+      "type": "textarea",
+      "label": "Text"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "sourceMedia"
+        },
+        {
+          "name": "updatedAt"
+        },
+        {
+          "name": "createdAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "exercises"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "sourceMedia"
+        },
+        {
+          "name": "text"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "exercises"
+        },
+        {
+          "name": "lesson"
+        },
+        {
+          "name": "sourceMedia"
+        },
+        {
+          "name": "text"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "lesson",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "sourceMedia",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "updatedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "createdAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

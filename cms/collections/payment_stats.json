@@ -1,0 +1,295 @@
+{
+  "name": "payment_stats",
+  "label": "Payment Stats",
+  "adapter": "mongodb",
+  "mcpName": "payment_stats",
+  "source": {
+    "collection": "payment_stats",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "currency"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "currency",
+      "type": "select",
+      "label": "Currency",
+      "options": [
+        {
+          "label": "ILS",
+          "value": "ILS"
+        }
+      ]
+    },
+    {
+      "name": "date",
+      "type": "date",
+      "label": "Date",
+      "storage": {
+        "kind": "dateString"
+      }
+    },
+    {
+      "name": "failedAgorot",
+      "type": "number",
+      "label": "Failed Agorot",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "failedCount",
+      "type": "number",
+      "label": "Failed Count",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "newCustomersCount",
+      "type": "number",
+      "label": "New Customers Count",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "refundedAgorot",
+      "type": "number",
+      "label": "Refunded Agorot",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "refundedCount",
+      "type": "number",
+      "label": "Refunded Count",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "succeededCount",
+      "type": "number",
+      "label": "Succeeded Count",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "totalRevenueAgorot",
+      "type": "number",
+      "label": "Total Revenue Agorot",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "transactionCount",
+      "type": "number",
+      "label": "Transaction Count",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "date"
+        },
+        {
+          "name": "failedAgorot"
+        },
+        {
+          "name": "failedCount"
+        },
+        {
+          "name": "newCustomersCount"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "currency"
+        },
+        {
+          "name": "date"
+        },
+        {
+          "name": "failedAgorot"
+        },
+        {
+          "name": "failedCount"
+        },
+        {
+          "name": "newCustomersCount"
+        },
+        {
+          "name": "refundedAgorot"
+        },
+        {
+          "name": "refundedCount"
+        },
+        {
+          "name": "succeededCount"
+        },
+        {
+          "name": "totalRevenueAgorot"
+        },
+        {
+          "name": "transactionCount"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "currency"
+        },
+        {
+          "name": "date"
+        },
+        {
+          "name": "failedAgorot"
+        },
+        {
+          "name": "failedCount"
+        },
+        {
+          "name": "newCustomersCount"
+        },
+        {
+          "name": "refundedAgorot"
+        },
+        {
+          "name": "refundedCount"
+        },
+        {
+          "name": "succeededCount"
+        },
+        {
+          "name": "totalRevenueAgorot"
+        },
+        {
+          "name": "transactionCount"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "currency",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "date",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "failedAgorot",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "failedCount",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    },
+    {
+      "field": "newCustomersCount",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

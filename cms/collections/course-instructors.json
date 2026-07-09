@@ -1,0 +1,235 @@
+{
+  "name": "course-instructors",
+  "label": "Course Instructors",
+  "adapter": "mongodb",
+  "mcpName": "course_instructors",
+  "source": {
+    "collection": "course-instructors",
+    "idField": "_id"
+  },
+  "titleField": "_id",
+  "searchFields": [
+    "role"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "assignedAt",
+      "type": "date",
+      "label": "Assigned At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "canGrade",
+      "type": "boolean",
+      "label": "Can Grade",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "canMessageStudents",
+      "type": "boolean",
+      "label": "Can Message Students",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "course",
+      "type": "relation",
+      "label": "Course",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "courses",
+      "labelField": "title"
+    },
+    {
+      "name": "instructor",
+      "type": "text",
+      "label": "Instructor",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "role",
+      "type": "select",
+      "label": "Role",
+      "options": [
+        {
+          "label": "primary",
+          "value": "primary"
+        }
+      ]
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "_id",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "role"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "canGrade"
+        },
+        {
+          "name": "canMessageStudents"
+        },
+        {
+          "name": "assignedAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "assignedAt"
+        },
+        {
+          "name": "canGrade"
+        },
+        {
+          "name": "canMessageStudents"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "instructor"
+        },
+        {
+          "name": "role"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "assignedAt"
+        },
+        {
+          "name": "canGrade"
+        },
+        {
+          "name": "canMessageStudents"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "instructor"
+        },
+        {
+          "name": "role"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "role",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "course",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "canGrade",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "canMessageStudents",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "assignedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

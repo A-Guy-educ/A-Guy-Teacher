@@ -1,0 +1,317 @@
+{
+  "name": "pages",
+  "label": "Pages",
+  "adapter": "mongodb",
+  "mcpName": "pages",
+  "source": {
+    "collection": "pages",
+    "idField": "_id"
+  },
+  "titleField": "title",
+  "searchFields": [
+    "title",
+    "_status",
+    "locale",
+    "slug"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "label": "Title"
+    },
+    {
+      "name": "_status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "draft",
+          "value": "draft"
+        },
+        {
+          "label": "published",
+          "value": "published"
+        }
+      ]
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "defaultBlockSpacing",
+      "type": "text",
+      "label": "Default Block Spacing"
+    },
+    {
+      "name": "generateSlug",
+      "type": "boolean",
+      "label": "Generate Slug",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "hero",
+      "type": "object",
+      "label": "Hero",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "layout",
+      "type": "array",
+      "label": "Layout",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "locale",
+      "type": "select",
+      "label": "Locale",
+      "options": [
+        {
+          "label": "en",
+          "value": "en"
+        },
+        {
+          "label": "he",
+          "value": "he"
+        }
+      ]
+    },
+    {
+      "name": "meta",
+      "type": "object",
+      "label": "Meta",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "publishedAt",
+      "type": "date",
+      "label": "Published At",
+      "storage": {
+        "kind": "date"
+      }
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "label": "Slug"
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "title",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "_status"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "generateSlug"
+        },
+        {
+          "name": "publishedAt"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "_status"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "defaultBlockSpacing"
+        },
+        {
+          "name": "generateSlug"
+        },
+        {
+          "name": "hero"
+        },
+        {
+          "name": "layout"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "meta"
+        },
+        {
+          "name": "publishedAt"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "title"
+        },
+        {
+          "name": "_status"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "defaultBlockSpacing"
+        },
+        {
+          "name": "generateSlug"
+        },
+        {
+          "name": "hero"
+        },
+        {
+          "name": "layout"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "meta"
+        },
+        {
+          "name": "publishedAt"
+        },
+        {
+          "name": "slug"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "title",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "_status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "locale",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "slug",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "generateSlug",
+      "operators": [
+        "equals"
+      ]
+    },
+    {
+      "field": "publishedAt",
+      "operators": [
+        "equals",
+        "greater_than_equal",
+        "less_than_equal"
+      ]
+    }
+  ]
+}

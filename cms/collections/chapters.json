@@ -1,0 +1,360 @@
+{
+  "name": "chapters",
+  "label": "Chapters",
+  "adapter": "mongodb",
+  "mcpName": "chapters",
+  "source": {
+    "collection": "chapters",
+    "idField": "_id"
+  },
+  "titleField": "title",
+  "searchFields": [
+    "title",
+    "status",
+    "adminTitle",
+    "chapterLabel",
+    "description",
+    "locale",
+    "slug"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "label": "Title"
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "draft",
+          "value": "draft"
+        },
+        {
+          "label": "published",
+          "value": "published"
+        }
+      ]
+    },
+    {
+      "name": "order",
+      "type": "number",
+      "label": "Order",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "adminTitle",
+      "type": "text",
+      "label": "Admin Title"
+    },
+    {
+      "name": "chapterLabel",
+      "type": "text",
+      "label": "Chapter Label"
+    },
+    {
+      "name": "course",
+      "type": "relation",
+      "label": "Course",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "courses",
+      "labelField": "title"
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "label": "Description"
+    },
+    {
+      "name": "isActive",
+      "type": "boolean",
+      "label": "Is Active",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "locale",
+      "type": "select",
+      "label": "Locale",
+      "options": [
+        {
+          "label": "en",
+          "value": "en"
+        },
+        {
+          "label": "he",
+          "value": "he"
+        }
+      ]
+    },
+    {
+      "name": "mediaFiles",
+      "type": "array",
+      "label": "Media Files",
+      "storage": {
+        "kind": "objectIdArray"
+      }
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "label": "Slug"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "translatedFrom",
+      "type": "text",
+      "label": "Translated From",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "title",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "adminTitle"
+        },
+        {
+          "name": "chapterLabel"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "status"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "order"
+        },
+        {
+          "name": "adminTitle"
+        },
+        {
+          "name": "chapterLabel"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "mediaFiles"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "translatedFrom"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "order"
+        },
+        {
+          "name": "adminTitle"
+        },
+        {
+          "name": "chapterLabel"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "mediaFiles"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "translatedFrom"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "title",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "adminTitle",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "chapterLabel",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "locale",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "slug",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    }
+  ]
+}

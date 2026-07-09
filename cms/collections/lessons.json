@@ -1,0 +1,667 @@
+{
+  "name": "lessons",
+  "label": "Lessons",
+  "adapter": "mongodb",
+  "mcpName": "lessons",
+  "source": {
+    "collection": "lessons",
+    "idField": "_id"
+  },
+  "titleField": "title",
+  "searchFields": [
+    "title",
+    "status",
+    "accessType",
+    "adminTitle",
+    "contentStatus",
+    "description",
+    "introDescription",
+    "locale"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "label": "Title"
+    },
+    {
+      "name": "status",
+      "type": "select",
+      "label": "Status",
+      "options": [
+        {
+          "label": "draft",
+          "value": "draft"
+        },
+        {
+          "label": "published",
+          "value": "published"
+        }
+      ]
+    },
+    {
+      "name": "order",
+      "type": "number",
+      "label": "Order",
+      "storage": {
+        "kind": "number"
+      }
+    },
+    {
+      "name": "accessType",
+      "type": "select",
+      "label": "Access Type",
+      "options": [
+        {
+          "label": "free",
+          "value": "free"
+        },
+        {
+          "label": "gated",
+          "value": "gated"
+        },
+        {
+          "label": "inherit",
+          "value": "inherit"
+        }
+      ]
+    },
+    {
+      "name": "adaptivityEnabled",
+      "type": "boolean",
+      "label": "Adaptivity Enabled",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "adminTitle",
+      "type": "text",
+      "label": "Admin Title"
+    },
+    {
+      "name": "blocks",
+      "type": "textarea",
+      "label": "Blocks"
+    },
+    {
+      "name": "chapter",
+      "type": "relation",
+      "label": "Chapter",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "chapters",
+      "labelField": "title"
+    },
+    {
+      "name": "contentFiles",
+      "type": "array",
+      "label": "Content Files",
+      "storage": {
+        "kind": "objectIdArray"
+      }
+    },
+    {
+      "name": "contentStatus",
+      "type": "select",
+      "label": "Content Status",
+      "options": [
+        {
+          "label": "none",
+          "value": "none"
+        },
+        {
+          "label": "soon",
+          "value": "soon"
+        }
+      ]
+    },
+    {
+      "name": "contentStatusVisible",
+      "type": "boolean",
+      "label": "Content Status Visible",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "course",
+      "type": "relation",
+      "label": "Course",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "courses",
+      "labelField": "title"
+    },
+    {
+      "name": "createdBy",
+      "type": "text",
+      "label": "Created By",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "label": "Description"
+    },
+    {
+      "name": "formulaSheet",
+      "type": "relation",
+      "label": "Formula Sheet",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "formula-sheets",
+      "labelField": "title"
+    },
+    {
+      "name": "intro",
+      "type": "text",
+      "label": "Intro"
+    },
+    {
+      "name": "introContent",
+      "type": "array",
+      "label": "Intro Content",
+      "storage": {
+        "kind": "array"
+      }
+    },
+    {
+      "name": "introDescription",
+      "type": "textarea",
+      "label": "Intro Description"
+    },
+    {
+      "name": "introEnabled",
+      "type": "boolean",
+      "label": "Intro Enabled",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "introMedia",
+      "type": "text",
+      "label": "Intro Media",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "isActive",
+      "type": "boolean",
+      "label": "Is Active",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "lessonContextText",
+      "type": "textarea",
+      "label": "Lesson Context Text"
+    },
+    {
+      "name": "lessonScript",
+      "type": "object",
+      "label": "Lesson Script",
+      "storage": {
+        "kind": "object"
+      }
+    },
+    {
+      "name": "locale",
+      "type": "select",
+      "label": "Locale",
+      "options": [
+        {
+          "label": "en",
+          "value": "en"
+        },
+        {
+          "label": "he",
+          "value": "he"
+        }
+      ]
+    },
+    {
+      "name": "prerequisites",
+      "type": "array",
+      "label": "Prerequisites",
+      "storage": {
+        "kind": "objectIdArray"
+      }
+    },
+    {
+      "name": "prompt",
+      "type": "relation",
+      "label": "Prompt",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "prompts",
+      "labelField": "title"
+    },
+    {
+      "name": "remediationEnabled",
+      "type": "boolean",
+      "label": "Remediation Enabled",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "label": "Slug"
+    },
+    {
+      "name": "tenant",
+      "type": "relation",
+      "label": "Tenant",
+      "storage": {
+        "kind": "objectId"
+      },
+      "target": "tenants",
+      "labelField": "name"
+    },
+    {
+      "name": "translatedFrom",
+      "type": "text",
+      "label": "Translated From",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "type",
+      "type": "select",
+      "label": "Type",
+      "options": [
+        {
+          "label": "exam",
+          "value": "exam"
+        },
+        {
+          "label": "learning",
+          "value": "learning"
+        },
+        {
+          "label": "practice",
+          "value": "practice"
+        }
+      ]
+    },
+    {
+      "name": "typewriterEnabled",
+      "type": "boolean",
+      "label": "Typewriter Enabled",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "visibleRenderers",
+      "type": "multiSelect",
+      "label": "Visible Renderers",
+      "storage": {
+        "kind": "stringArray"
+      },
+      "options": [
+        {
+          "label": "interactive",
+          "value": "interactive"
+        },
+        {
+          "label": "media",
+          "value": "media"
+        },
+        {
+          "label": "pdf",
+          "value": "pdf"
+        }
+      ]
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "title",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "accessType"
+        },
+        {
+          "name": "adminTitle"
+        },
+        {
+          "name": "contentStatus"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "status"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "order"
+        },
+        {
+          "name": "accessType"
+        },
+        {
+          "name": "adaptivityEnabled"
+        },
+        {
+          "name": "adminTitle"
+        },
+        {
+          "name": "blocks"
+        },
+        {
+          "name": "chapter"
+        },
+        {
+          "name": "contentFiles"
+        },
+        {
+          "name": "contentStatus"
+        },
+        {
+          "name": "contentStatusVisible"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "formulaSheet"
+        },
+        {
+          "name": "intro"
+        },
+        {
+          "name": "introContent"
+        },
+        {
+          "name": "introDescription"
+        },
+        {
+          "name": "introEnabled"
+        },
+        {
+          "name": "introMedia"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "lessonContextText"
+        },
+        {
+          "name": "lessonScript"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "prerequisites"
+        },
+        {
+          "name": "prompt"
+        },
+        {
+          "name": "remediationEnabled"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "translatedFrom"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "typewriterEnabled"
+        },
+        {
+          "name": "visibleRenderers"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "title"
+        },
+        {
+          "name": "status"
+        },
+        {
+          "name": "order"
+        },
+        {
+          "name": "accessType"
+        },
+        {
+          "name": "adaptivityEnabled"
+        },
+        {
+          "name": "adminTitle"
+        },
+        {
+          "name": "blocks"
+        },
+        {
+          "name": "chapter"
+        },
+        {
+          "name": "contentFiles"
+        },
+        {
+          "name": "contentStatus"
+        },
+        {
+          "name": "contentStatusVisible"
+        },
+        {
+          "name": "course"
+        },
+        {
+          "name": "createdBy"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "formulaSheet"
+        },
+        {
+          "name": "intro"
+        },
+        {
+          "name": "introContent"
+        },
+        {
+          "name": "introDescription"
+        },
+        {
+          "name": "introEnabled"
+        },
+        {
+          "name": "introMedia"
+        },
+        {
+          "name": "isActive"
+        },
+        {
+          "name": "lessonContextText"
+        },
+        {
+          "name": "lessonScript"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "prerequisites"
+        },
+        {
+          "name": "prompt"
+        },
+        {
+          "name": "remediationEnabled"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "tenant"
+        },
+        {
+          "name": "translatedFrom"
+        },
+        {
+          "name": "type"
+        },
+        {
+          "name": "typewriterEnabled"
+        },
+        {
+          "name": "visibleRenderers"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "title",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "accessType",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "adminTitle",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "contentStatus",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "locale",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "status",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    }
+  ]
+}

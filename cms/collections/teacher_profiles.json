@@ -1,0 +1,299 @@
+{
+  "name": "teacher_profiles",
+  "label": "Teacher Profiles",
+  "adapter": "mongodb",
+  "mcpName": "teacher_profiles",
+  "source": {
+    "collection": "teacher_profiles",
+    "idField": "_id"
+  },
+  "titleField": "label",
+  "searchFields": [
+    "label",
+    "description",
+    "label_en",
+    "label_he",
+    "locale",
+    "slug"
+  ],
+  "writePolicy": "enabled",
+  "operations": {
+    "list": true,
+    "get": true,
+    "search": true,
+    "create": true,
+    "update": true,
+    "delete": true
+  },
+  "defaultSort": [
+    {
+      "field": "updatedAt",
+      "direction": "desc"
+    }
+  ],
+  "fields": [
+    {
+      "name": "_id",
+      "type": "id",
+      "label": "ID",
+      "storage": {
+        "kind": "objectId"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "label",
+      "type": "text",
+      "label": "Label"
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "label": "Description"
+    },
+    {
+      "name": "description_en",
+      "type": "text",
+      "label": "Description En"
+    },
+    {
+      "name": "description_he",
+      "type": "text",
+      "label": "Description He"
+    },
+    {
+      "name": "isEnabled",
+      "type": "boolean",
+      "label": "Is Enabled",
+      "storage": {
+        "kind": "boolean"
+      }
+    },
+    {
+      "name": "label_en",
+      "type": "text",
+      "label": "Label En"
+    },
+    {
+      "name": "label_he",
+      "type": "text",
+      "label": "Label He"
+    },
+    {
+      "name": "locale",
+      "type": "select",
+      "label": "Locale",
+      "options": [
+        {
+          "label": "en",
+          "value": "en"
+        },
+        {
+          "label": "he",
+          "value": "he"
+        }
+      ]
+    },
+    {
+      "name": "slug",
+      "type": "text",
+      "label": "Slug"
+    },
+    {
+      "name": "systemPrompt",
+      "type": "text",
+      "label": "System Prompt",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "translatedFrom",
+      "type": "text",
+      "label": "Translated From",
+      "storage": {
+        "kind": "objectId"
+      }
+    },
+    {
+      "name": "__v",
+      "type": "number",
+      "label": "Version",
+      "storage": {
+        "kind": "number"
+      },
+      "readOnly": true,
+      "hidden": true
+    },
+    {
+      "name": "createdAt",
+      "type": "date",
+      "label": "Created At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    },
+    {
+      "name": "updatedAt",
+      "type": "date",
+      "label": "Updated At",
+      "storage": {
+        "kind": "date"
+      },
+      "readOnly": true
+    }
+  ],
+  "views": {
+    "list": {
+      "fields": [
+        {
+          "name": "label",
+          "role": "primary",
+          "width": "fill"
+        },
+        {
+          "name": "label_en"
+        },
+        {
+          "name": "label_he"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "isEnabled"
+        }
+      ]
+    },
+    "detail": {
+      "fields": [
+        {
+          "name": "_id"
+        },
+        {
+          "name": "label"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "description_en"
+        },
+        {
+          "name": "description_he"
+        },
+        {
+          "name": "isEnabled"
+        },
+        {
+          "name": "label_en"
+        },
+        {
+          "name": "label_he"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "systemPrompt"
+        },
+        {
+          "name": "translatedFrom"
+        },
+        {
+          "name": "createdAt"
+        },
+        {
+          "name": "updatedAt"
+        }
+      ]
+    },
+    "form": {
+      "fields": [
+        {
+          "name": "label"
+        },
+        {
+          "name": "description"
+        },
+        {
+          "name": "description_en"
+        },
+        {
+          "name": "description_he"
+        },
+        {
+          "name": "isEnabled"
+        },
+        {
+          "name": "label_en"
+        },
+        {
+          "name": "label_he"
+        },
+        {
+          "name": "locale"
+        },
+        {
+          "name": "slug"
+        },
+        {
+          "name": "systemPrompt"
+        },
+        {
+          "name": "translatedFrom"
+        }
+      ]
+    }
+  },
+  "filters": [
+    {
+      "field": "label",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "label_en",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "label_he",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "locale",
+      "operators": [
+        "equals",
+        "in"
+      ]
+    },
+    {
+      "field": "slug",
+      "operators": [
+        "contains",
+        "equals"
+      ]
+    },
+    {
+      "field": "isEnabled",
+      "operators": [
+        "equals"
+      ]
+    }
+  ]
+}
