@@ -1,12 +1,12 @@
 {
   "title": "Math teacher chat — phased build",
-  "description": "Private math-lesson instructor on the client chat surface: guide students through lessons stored in the data layer. Phases from simplest deliverable to full implementation.",
+  "description": "Private math-lesson instructor on the client chat surface (/client/<brand> in Kody-Dashboard): guide students through lessons stored in the data layer. DECIDED SEQUENCE (owner, 2026-07-09): build phases 1-3 to genuinely working on main, put a real student through them, and let that experience shape 4-7. Do NOT build all phases up front. All work happens in the Kody-Dashboard repo (aharonyaircohen/Kody-Dashboard, main branch, no feature branches); this repo (A-Guy-Teacher) is the consumer: its state holds brand files, lessons, and student records. Relevant existing pieces: client auth (src/dashboard/lib/client-auth/, brand auth block in brands/<slug>.json), CMS entity API (/api/kody/cms/<collection>), view renderers (/views/renderers), setup wizards (/setup).",
   "createdAt": "2026-07-09T20:30:00.000Z",
   "items": [
     {
       "id": "phase-1-talking-teacher",
       "title": "Phase 1 — Talking teacher",
-      "body": "Brand agent with a math-teacher persona and one lesson written into its instructions. Works with what exists today; zero build.",
+      "body": "Zero dashboard code. In this repo's state: create agents/math-teacher.md (persona: patient private math teacher; persona = identity/values only, no task lists), write one full lesson (explanation, examples, exercises with answers, pass criteria) into the brand's welcome/instructions path, and set agentSlug: math-teacher plus auth block on brands/<slug>.json. Verify: student signs in with Google, chat teaches the lesson, quizzes, corrects. Known gap fixed 2026-07-09: client-surface chat turns now set repo context (kody route) — retest after changes.",
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-09T20:30:00.000Z",
@@ -15,7 +15,7 @@
     {
       "id": "phase-2-lessons-from-storage",
       "title": "Phase 2 — Lessons from storage",
-      "body": "Lessons stored as entities (CMS); chat fetches the chosen lesson and teaches from it.",
+      "body": "Lessons become data. Define a 'lessons' content model (CMS, /content pages; fields: slug, title, level, body-md, exercises, passRule) stored via the storage adapter in this repo's state. Add a chat tool on the kody-direct route (app/api/kody/chat/kody — see existing tools in app/api/kody/chat/tools/) that lists lessons and fetches one by slug, allowed on the client surface. The agent prompt then says: fetch the lesson the student picks and teach from it verbatim-structure, own words.",
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-09T20:30:00.000Z",
@@ -24,7 +24,7 @@
     {
       "id": "phase-3-student-memory",
       "title": "Phase 3 — Student memory",
-      "body": "Data door: signed-in students save progress and resume where they left off; records scoped per user server-side.",
+      "body": "THE DATA DOOR — the real build. New API path that accepts the client session cookie (Auth.js `auth()` from src/dashboard/lib/client-auth/auth.ts) instead of admin headers, resolves the student's verified email, and reads/writes records in a 'progress' collection ALWAYS scoped server-side by that email (stamp on write, filter on read; client can never pick the scope). Expose as chat tools (get_my_progress / save_my_progress) so the agent resumes where the student left off. Records: {email, lessonSlug, position, score, updatedAt}.",
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-09T20:30:00.000Z",
@@ -33,7 +33,7 @@
     {
       "id": "phase-4-structured-lessons",
       "title": "Phase 4 — Structured lessons",
-      "body": "Lesson files with steps, quizzes, pass rules, branching, per-step guardrails, resume position, outcome records, and a version field.",
+      "body": "Lesson files gain structure the AI must follow: ordered steps (say / ask+expected-answer / exercise), pass rules, branching ('struggling -> remediation step'), per-step guardrails (never reveal quiz answers, no skipping), resume via phase-3 position, an outcome record on completion (score, completedAt), and a version field on lesson + run state (no full version management yet — just the field). Mirror the setup-wizard engine pattern: declarative steps validated by zod, the AI is the runner (chat), not buttons.",
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-09T20:30:00.000Z",
@@ -42,7 +42,7 @@
     {
       "id": "phase-5-visual-panels",
       "title": "Phase 5 — Visual pages from JSON primitives",
-      "body": "Progress board and quiz pages beside the chat, structured as JSON compositions of the existing view-renderer platform primitives (stack/row/list/text/input/actions) — no free HTML. Pages call the platform only via the kody.call bridge; permissions enforced server-side.",
+      "body": "Pages are JSON compositions of the EXISTING view-renderer primitives (src/dashboard/lib/view-renderers/definition.ts: stack/row/list/text/input/actions) — decided: NO free HTML, NO new page language. Render a progress board / quiz panel beside the client chat (panel slot in the chat platform contract). Interactions go through one bridge (kody.call style) hitting the phase-3 API; permissions stay server-side.",
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-09T20:30:00.000Z",
@@ -51,7 +51,7 @@
     {
       "id": "phase-6-authoring-by-chat",
       "title": "Phase 6 — Authoring by chat",
-      "body": "Teacher creates and edits lessons by chatting; engine writes lesson files and pages by our rules.",
+      "body": "Teacher (admin) creates/edits lessons by chatting: engine or kody-direct tool writes lesson entities + page JSON, schema-validated before save so a bad generation fails validation instead of corrupting state. Every authored artifact is a normal git-versioned state file (reviewable diff).",
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-09T20:30:00.000Z",
@@ -60,7 +60,7 @@
     {
       "id": "phase-7-brand-component-libraries",
       "title": "Phase 7 — Brand component libraries (escape hatch)",
-      "body": "Only when a real brand outgrows the platform primitives: let a business ship its own component library (custom elements JS/CSS in its repo, any design complexity). The same page JSON then places brand components next to platform primitives; data/actions still flow only through the platform API with the user's identity.",
+      "body": "Escape hatch — build ONLY when a real brand outgrows the platform primitives. A business ships its own component library (custom-elements JS/CSS in its repo, any design complexity); page JSON places brand components next to platform primitives. Markup is free but data/actions still flow only through the platform API with the user's identity — every permission enforced server-side, never in the page.",
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-09T20:30:00.000Z",
