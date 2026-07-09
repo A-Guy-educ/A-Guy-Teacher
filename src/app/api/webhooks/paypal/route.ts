@@ -3,21 +3,21 @@
  *
  * POST /api/webhooks/paypal
  *
- * Minimum-viable handler reinstated after the Payload-runtime removal. Verifies
- * the PayPal webhook signature, then on the events that actually move money
- * marks the transaction `succeeded` and persists the capture ID so refunds can
- * resolve it later. Idempotent: replays from PayPal hit the same target row
- * with a no-op update.
+ * Verifies the PayPal webhook signature, then on the events that actually move
+ * money marks the transaction `succeeded` and persists the capture ID so
+ * refunds can resolve it later. Idempotent: replays from PayPal hit the same
+ * target row with a no-op update.
  *
- * Triggers the purchase-receipt email (via `sendPurchaseReceipt` — Resend SDK
- * direct) once the row is flipped to `succeeded`. The receipt service has its
- * own atomic-claim idempotency on `emailSentAt`.
+ * On the success path, after the transaction is flipped to `succeeded`:
+ *  - calls `grantProductEntitlements` to push course + feature entitlements
+ *    onto the buyer (idempotent at the row level via `entitlementsGrantedAt`)
+ *  - triggers the purchase-receipt email (via `sendPurchaseReceipt` — Resend
+ *    SDK direct). The receipt service has its own atomic-claim idempotency
+ *    on `emailSentAt`.
  *
  * Deliberately NOT in this handler (defer to follow-ups):
  *  - Coupon consumption hook
- *  - PAYMENT.CAPTURE.REFUNDED → status='refunded'
  *  - Webhook-event dedup collection (we rely on per-row idempotency for now)
- *  - Entitlement grant beyond status flip (grantProductEntitlements is a stub)
  *
  * Response codes:
  *  - 400 — invalid body or invalid signature; PayPal will NOT retry.
@@ -30,6 +30,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { getContentDb, relationId } from '@/infra/db/content-db'
 import { logger } from '@/infra/utils/logger/logger'
+import { grantProductEntitlements } from '@/lib/payment/grant-entitlements'
 import { capturePayPalOrder, verifyPayPalWebhook } from '@/lib/payment/paypal'
 import { sendPurchaseReceipt } from '@/server/email/services/purchase-receipt-service'
 
@@ -195,6 +196,49 @@ async function maybeSendReceipt(
   // already_sent and no_adapter are routine no-ops — acknowledge.
 }
 
+/**
+ * Grants course + feature entitlements to the buyer if not already granted.
+ * Idempotent at two levels:
+ *  - the function itself short-circuits when `entitlementsGrantedAt` is set on
+ *    the transaction (per-row gate shared between the two event handlers)
+ *  - `grantProductEntitlements` uses $not elemMatch against the user doc to
+ *    avoid pushing duplicate entitlement rows for replays
+ *
+ * Throws on DB / product-not-found errors so the webhook returns 500 and PayPal
+ * retries — without entitlements the buyer would be stuck on the success page
+ * even though they paid.
+ */
+async function maybeGrantEntitlements(transaction: {
+  _id: unknown
+  user?: unknown
+  product?: unknown
+  entitlementsGrantedAt?: Date | string | null
+}): Promise<void> {
+  if (transaction.entitlementsGrantedAt) {
+    return
+  }
+  const transactionId = String(transaction._id)
+  const userId = relationId(transaction.user)
+  const productId = relationId(transaction.product)
+  if (!userId || !productId) {
+    logger.warn(
+      { transactionId, hasUser: !!userId, hasProduct: !!productId },
+      'PayPal webhook: cannot grant entitlements — transaction missing user/product',
+    )
+    return
+  }
+
+  await grantProductEntitlements(userId, productId, transactionId)
+
+  const db = await getContentDb()
+  await db
+    .collection('transactions')
+    .updateOne(
+      { _id: new ObjectId(transactionId) },
+      { $set: { entitlementsGrantedAt: new Date(), updatedAt: new Date() } },
+    )
+}
+
 async function handleEvent(event: PayPalWebhookEvent): Promise<void> {
   switch (event.event_type) {
     case 'CHECKOUT.ORDER.APPROVED':
@@ -203,6 +247,10 @@ async function handleEvent(event: PayPalWebhookEvent): Promise<void> {
 
     case 'PAYMENT.CAPTURE.COMPLETED':
       await handleCaptureCompleted(event)
+      return
+
+    case 'PAYMENT.CAPTURE.REFUNDED':
+      await handleCaptureRefunded(event)
       return
 
     default:
@@ -259,6 +307,7 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
     },
   )
 
+  await maybeGrantEntitlements(transaction)
   await maybeSendReceipt(transaction, capturedAt)
 }
 
@@ -287,6 +336,13 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
     return
   }
 
+  // Already refunded: don't overwrite that status. Capture-completed arriving
+  // for a refunded row is anomalous (PayPal shouldn't fire it after a refund),
+  // but be defensive and acknowledge without re-flipping.
+  if (transaction.status === 'refunded') {
+    return
+  }
+
   // Idempotent: already marked succeeded with this capture AND the receipt has
   // already gone out → nothing to do. If emailSentAt isn't set (the receipt
   // service rolled back its claim on a prior attempt), let the retry re-enter
@@ -295,7 +351,8 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
   if (
     transaction.status === 'succeeded' &&
     transaction.captureId === captureId &&
-    transaction.emailSentAt
+    transaction.emailSentAt &&
+    transaction.entitlementsGrantedAt
   ) {
     return
   }
@@ -313,5 +370,48 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
     },
   )
 
+  await maybeGrantEntitlements(transaction)
   await maybeSendReceipt(transaction, capturedAt)
+}
+
+async function handleCaptureRefunded(event: PayPalWebhookEvent): Promise<void> {
+  // PAYMENT.CAPTURE.REFUNDED arrives with resource.id = capture ID (not order
+  // ID). Real-world rows store providerTransactionId as the order ID, so we
+  // look up by captureId.
+  const captureId = event.resource.id
+  if (!captureId) {
+    logger.warn(
+      { eventId: event.id },
+      'PayPal webhook: PAYMENT.CAPTURE.REFUNDED without capture id — acknowledging',
+    )
+    return
+  }
+
+  const db = await getContentDb()
+  const transactions = db.collection('transactions')
+
+  const transaction = await transactions.findOne({ captureId })
+  if (!transaction) {
+    logger.warn(
+      { captureId, eventId: event.id },
+      'PayPal webhook: PAYMENT.CAPTURE.REFUNDED for unknown capture — acknowledging',
+    )
+    return
+  }
+
+  if (transaction.status === 'refunded') {
+    return
+  }
+
+  const refundedAt = new Date()
+  await transactions.updateOne(
+    { _id: new ObjectId(String(transaction._id)) },
+    {
+      $set: {
+        status: 'refunded',
+        refundedAt,
+        updatedAt: refundedAt,
+      },
+    },
+  )
 }

@@ -17,6 +17,11 @@ vi.mock('@/lib/payment/paypal', () => ({
   capturePayPalOrder: vi.fn(),
 }))
 
+const grantEntitlementsMock = vi.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/payment/grant-entitlements', () => ({
+  grantProductEntitlements: grantEntitlementsMock,
+}))
+
 const findOneMock = vi.fn()
 const updateOneMock = vi.fn()
 vi.mock('@/infra/db/content-db', async () => {
@@ -85,6 +90,7 @@ function captureCompletedEvent(captureId: string = CAPTURE_ID, orderId: string =
 describe('POST /api/webhooks/paypal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    grantEntitlementsMock.mockResolvedValue(undefined)
   })
 
   it('returns 400 for an invalid JSON body and never tries to verify', async () => {
@@ -160,11 +166,14 @@ describe('POST /api/webhooks/paypal', () => {
 
     expect(res.status).toBe(200)
     expect(capturePayPalOrder).toHaveBeenCalledWith(ORDER_ID)
-    expect(updateOneMock).toHaveBeenCalledTimes(1)
+    // 1) status flip + captureId, 2) entitlementsGrantedAt stamp after grant
+    expect(updateOneMock).toHaveBeenCalledTimes(2)
     const update = updateOneMock.mock.calls[0]?.[1]?.$set as Record<string, unknown>
     expect(update.status).toBe('succeeded')
     expect(update.captureId).toBe(CAPTURE_ID)
     expect(update.capturedAt).toBeInstanceOf(Date)
+    const grantStamp = updateOneMock.mock.calls[1]?.[1]?.$set as Record<string, unknown>
+    expect(grantStamp.entitlementsGrantedAt).toBeInstanceOf(Date)
 
     // Receipt service is triggered after the status flip. The service is
     // mocked so we don't actually email anyone — just that the wiring is
@@ -284,6 +293,7 @@ describe('POST /api/webhooks/paypal', () => {
       status: 'succeeded',
       captureId: CAPTURE_ID,
       emailSentAt: new Date('2026-06-15T10:00:00Z'),
+      entitlementsGrantedAt: new Date('2026-06-15T10:00:00Z'),
     })
 
     const { POST } = await import('@/app/api/webhooks/paypal/route')
