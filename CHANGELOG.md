@@ -1865,6 +1865,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Restore course landing render for paid courses ([#818](https://github.com/A-Guy-educ/A-Guy-Web/pull/818)) — @aguyshayb
 - #742: Replace AGuy logo in src/brands/aguy/components/Logo.tsx with new… ([#815](https://github.com/A-Guy-educ/A-Guy-Web/pull/815)) — @kodyade[bot]
 - #733: Lesson intro back button → course page (חזרה לקורס) ([#816](https://github.com/A-Guy-educ/A-Guy-Web/pull/816)) — @kodyade[bot]
 - #689: [Billing] Implement automatic course entitlement grant on PayPal … ([#810](https://github.com/A-Guy-educ/A-Guy-Web/pull/810)) — @kodyade[bot]
