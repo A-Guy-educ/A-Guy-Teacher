@@ -54,7 +54,11 @@ const EMPTY_FOOTER: FooterData = {
 async function fetchFooterGlobal(): Promise<Footer | null> {
   try {
     const db = await getContentDb()
-    const doc = await db.collection('footer').findOne({} as Document)
+    // Payload 3.x MongoDB adapter stores all globals in a single `globals`
+    // collection, discriminated by `globalType`. Querying db.collection('footer')
+    // (the pre-fix behavior) returns null even when the footer exists in the
+    // CMS, so the site rendered an empty footer.
+    const doc = await db.collection('globals').findOne({ globalType: 'footer' } as Document)
     if (!doc) return null
     return serializeDoc<Footer>(doc)
   } catch {
