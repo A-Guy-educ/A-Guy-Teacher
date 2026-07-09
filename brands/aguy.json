@@ -1,0 +1,8 @@
+{
+  "slug": "aguy",
+  "name": "AGuy",
+  "accent": "#0f766e",
+  "locale": "he",
+  "modelId": "google/gemini-3.5-flash",
+  "agentSlug": "agent-mrdmubar"
+}
