@@ -9,7 +9,7 @@ import type { Lesson, LessonPrerequisite, Media } from '@/infra/types/content'
 import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ChatInterface } from '@/ui/web/chat'
-import { BackToChapter } from '@/app/(frontend)/courses/_components/BackToChapter'
+import { BackToCourses } from '@/app/(frontend)/courses/_components/BackToCourses'
 import { Button } from '@/ui/web/components/button'
 import { Card, CardContent } from '@/ui/web/components/card'
 import { Progress } from '@/ui/web/components/progress'
@@ -210,7 +210,7 @@ export function LessonIntroPage({
     <div className="min-h-screen bg-background">
       <main className="mx-auto flex w-full max-w-6xl flex-col px-4 py-5 sm:px-6 md:min-h-screen md:py-section-lg">
         <div className="flex w-full justify-end">
-          <BackToChapter href={backUrl} />
+          <BackToCourses href={backUrl} />
         </div>
 
         {/* Locale fallback notice */}

@@ -256,7 +256,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   ])
   const lessonIndex = courseLessons.findIndex((courseLesson) => courseLesson.id === lesson.id)
   const nextLesson = lessonIndex >= 0 ? courseLessons[lessonIndex + 1] : null
-  const backUrl = `/courses/${courseSlug}/chapters/${chapterSlug}`
+  const backUrl = `/courses/${courseSlug}`
   const formulaSheet = formulaSheetResult?.sheet ?? null
   const showChat = exercises.length > 0 || Boolean(lesson.lessonContextText?.trim())
   const hasExerciseBlocks = exercises.some(hasBlocks)
