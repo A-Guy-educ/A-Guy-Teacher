@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "variables": {
+    "LLM_MODELS": {
+      "value": "[{\"id\":\"minimax/MiniMax-M3\",\"label\":\"MiniMax M3\",\"provider\":\"minimax\",\"protocol\":\"openai\",\"baseURL\":\"https://api.minimax.io/v1\",\"modelName\":\"MiniMax-M3\",\"apiKeySecret\":\"MINIMAX_API_KEY\",\"enabled\":true,\"default\":true,\"maxSteps\":200,\"engineDefault\":true},{\"id\":\"google/gemini-3.5-flash\",\"label\":\"gemini-3.5-flash\",\"provider\":\"google\",\"protocol\":\"openai\",\"baseURL\":\"https://generativelanguage.googleapis.com/v1beta/openai\",\"modelName\":\"gemini-3.5-flash\",\"apiKeySecret\":\"GEMINI_API_KEY\",\"enabled\":true,\"default\":false}]",
+      "updatedAt": "2026-05-23T14:31:39.125Z",
+      "updatedBy": "aguyaharonyair"
+    },
+    "LOGIN_USER": {
+      "value": "aguy.aharon.yair@gmail.com",
+      "updatedAt": "2026-05-22T11:46:35.266Z",
+      "updatedBy": "aguyaharonyair"
+    },
+    "QA_URL": {
+      "value": "https://dev.aguy.co.il",
+      "updatedAt": "2026-05-22T11:46:29.479Z",
+      "updatedBy": "aguyaharonyair"
+    },
+    "VERCEL_ORG_ID": {
+      "value": "team_I5OEeDKS7oRaELnZp5bdJWpL",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_PROJECT_ID": {
+      "value": "prj_ssaXSGQkzWjCiFn3nn9rQrxPbA7u",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_SCOPE": {
+      "value": "aguy",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "DEV_PREVIEW_ALIAS": {
+      "value": "a-guy-dev-aguy.vercel.app",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "DEV_PREVIEW_BRANCH": {
+      "value": "dev",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_TARGET": {
+      "value": "preview",
+      "updatedAt": "2026-06-15T11:34:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_DEV_ALIAS": {
+      "value": "a-guy-dev-aguy.vercel.app",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_DEV_BRANCH": {
+      "value": "dev",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_DEV_TARGET": {
+      "value": "preview",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_PRODUCTION_BRANCH": {
+      "value": "main",
+      "updatedAt": "2026-06-15T12:30:00.000Z",
+      "updatedBy": "codex"
+    },
+    "BLOB_PUBLIC_BASE_URL": {
+      "value": "https://pd8gxkxxaj3lzovc.public.blob.vercel-storage.com",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "DEFAULT_TENANT_SLUG": {
+      "value": "AGuy",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_ANALYTICS_DEBUG": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_ANALYTICS_DRY_RUN": {
+      "value": "false",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_ANALYTICS_ENABLED": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_EXTERNAL_STORAGE_URL": {
+      "value": "https://www.aguy.co.il",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_GA4_ENABLED": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_GA4_MEASUREMENT_ID": {
+      "value": "G-49KEEFY1WE",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_MIXPANEL_ENABLED": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NEXT_PUBLIC_MIXPANEL_TOKEN": {
+      "value": "4472fb6738b41a819dbbf76fad44108e",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NSC_TENANT_ID": {
+      "value": "tenant_fql41urtcu7sq",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "NX_DAEMON": {
+      "value": "false",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "TURBO_CACHE": {
+      "value": "remote:rw",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "TURBO_DOWNLOAD_LOCAL_ENABLED": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "TURBO_REMOTE_ONLY": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "TURBO_RUN_SUMMARY": {
+      "value": "true",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL": {
+      "value": "1",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_ENV": {
+      "value": "production",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "VERCEL_TARGET_ENV": {
+      "value": "production",
+      "updatedAt": "2026-06-15T13:05:00.000Z",
+      "updatedBy": "codex"
+    },
+    "RELEASE_FLOW": {
+      "value": "{\"integrationBranch\":\"dev\",\"productionBranch\":\"main\"}",
+      "updatedAt": "2026-06-15T13:15:00.000Z",
+      "updatedBy": "codex"
+    }
+  }
+}
