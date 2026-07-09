@@ -15,6 +15,10 @@
  *    SDK direct). The receipt service has its own atomic-claim idempotency
  *    on `emailSentAt`.
  *
+ * Also calls `grantProductEntitlements` to materialise `user-entitlements`
+ * and `enrollments` rows for each `courseBlock` bundled in the product. Per-row
+ * idempotency is tracked via `transactions.entitlementsGrantedAt`.
+ *
  * Deliberately NOT in this handler (defer to follow-ups):
  *  - Coupon consumption hook
  *  - Webhook-event dedup collection (we rely on per-row idempotency for now)
@@ -128,6 +132,50 @@ export async function POST(request: NextRequest) {
 }
 
 /**
+ * Materialises course entitlements bundled in the purchased product for the
+ * buyer, and stamps `transactions.entitlementsGrantedAt` so future webhook
+ * replays no-op. Idempotent on the underlying collections (the grant function
+ * checks for an existing entitlement/enrollment before inserting), so it's
+ * safe to call from both `handleOrderApproved` and `handleCaptureCompleted`.
+ *
+ * Throws when the grant function throws — that surfaces as a 500 webhook
+ * response so PayPal retries, which is what we want for transient DB failures.
+ */
+async function maybeGrantEntitlements(transaction: {
+  _id: unknown
+  user?: unknown
+  product?: unknown
+  entitlementsGrantedAt?: Date | string | null
+}): Promise<void> {
+  if (transaction.entitlementsGrantedAt) return
+
+  const transactionId = String(transaction._id)
+  const userId = relationId(transaction.user)
+  const productId = relationId(transaction.product)
+
+  if (!userId || !productId) {
+    logger.warn(
+      { transactionId, hasUser: !!userId, hasProduct: !!productId },
+      'PayPal webhook: cannot grant entitlements — transaction missing user/product',
+    )
+    return
+  }
+
+  const grantedAt = new Date()
+  await grantProductEntitlements(userId, productId, transactionId)
+
+  const db = await getContentDb()
+  await db
+    .collection('transactions')
+    .updateOne(
+      { _id: new ObjectId(transactionId) },
+      { $set: { entitlementsGrantedAt: grantedAt, updatedAt: grantedAt } },
+    )
+
+  logger.info({ transactionId, userId, productId }, 'PayPal webhook: entitlements granted')
+}
+
+/**
  * Triggers the purchase-receipt email after a webhook flips a transaction to
  * `succeeded`. The service is internally idempotent (via `transactions.emailSentAt`),
  * so calling it from both event handlers is safe — only the first call that
@@ -196,49 +244,6 @@ async function maybeSendReceipt(
   // already_sent and no_adapter are routine no-ops — acknowledge.
 }
 
-/**
- * Grants course + feature entitlements to the buyer if not already granted.
- * Idempotent at two levels:
- *  - the function itself short-circuits when `entitlementsGrantedAt` is set on
- *    the transaction (per-row gate shared between the two event handlers)
- *  - `grantProductEntitlements` uses $not elemMatch against the user doc to
- *    avoid pushing duplicate entitlement rows for replays
- *
- * Throws on DB / product-not-found errors so the webhook returns 500 and PayPal
- * retries — without entitlements the buyer would be stuck on the success page
- * even though they paid.
- */
-async function maybeGrantEntitlements(transaction: {
-  _id: unknown
-  user?: unknown
-  product?: unknown
-  entitlementsGrantedAt?: Date | string | null
-}): Promise<void> {
-  if (transaction.entitlementsGrantedAt) {
-    return
-  }
-  const transactionId = String(transaction._id)
-  const userId = relationId(transaction.user)
-  const productId = relationId(transaction.product)
-  if (!userId || !productId) {
-    logger.warn(
-      { transactionId, hasUser: !!userId, hasProduct: !!productId },
-      'PayPal webhook: cannot grant entitlements — transaction missing user/product',
-    )
-    return
-  }
-
-  await grantProductEntitlements(userId, productId, transactionId)
-
-  const db = await getContentDb()
-  await db
-    .collection('transactions')
-    .updateOne(
-      { _id: new ObjectId(transactionId) },
-      { $set: { entitlementsGrantedAt: new Date(), updatedAt: new Date() } },
-    )
-}
-
 async function handleEvent(event: PayPalWebhookEvent): Promise<void> {
   switch (event.event_type) {
     case 'CHECKOUT.ORDER.APPROVED':
@@ -278,12 +283,17 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
   }
 
   // Idempotent: if we've already captured + marked succeeded AND already sent
-  // the receipt, replays do nothing. If the receipt service rolled back its
-  // emailSentAt claim (e.g. a DB blip during user/product lookup), let the
-  // retry re-enter the send path — capturePayPalOrder treats
-  // ORDER_ALREADY_CAPTURED as a no-op and the updateOne is essentially a
-  // no-op for already-succeeded rows.
-  if (transaction.status === 'succeeded' && transaction.captureId && transaction.emailSentAt) {
+  // the receipt AND already granted entitlements, replays do nothing. If the
+  // receipt service rolled back its emailSentAt claim (e.g. a DB blip during
+  // user/product lookup), let the retry re-enter the send path —
+  // capturePayPalOrder treats ORDER_ALREADY_CAPTURED as a no-op and the
+  // updateOne is essentially a no-op for already-succeeded rows.
+  if (
+    transaction.status === 'succeeded' &&
+    transaction.captureId &&
+    transaction.emailSentAt &&
+    transaction.entitlementsGrantedAt
+  ) {
     return
   }
 
@@ -344,10 +354,10 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
   }
 
   // Idempotent: already marked succeeded with this capture AND the receipt has
-  // already gone out → nothing to do. If emailSentAt isn't set (the receipt
-  // service rolled back its claim on a prior attempt), let the retry re-enter
-  // the send path. updateOne is essentially a no-op when status + captureId
-  // already match.
+  // already gone out AND entitlements are granted → nothing to do. If any
+  // post-flip step (receipt, entitlements) is missing, let the retry
+  // re-enter that path. updateOne is essentially a no-op when status +
+  // captureId already match.
   if (
     transaction.status === 'succeeded' &&
     transaction.captureId === captureId &&

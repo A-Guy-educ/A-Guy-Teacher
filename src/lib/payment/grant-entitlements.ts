@@ -1,66 +1,44 @@
-import { Document, ObjectId } from 'mongodb'
+import { ObjectId } from 'mongodb'
 
 import { getContentDb, relationId } from '@/infra/db/content-db'
 import { logger } from '@/infra/utils/logger/logger'
 
-interface ProductItemsCollection {
-  type?: 'lesson' | 'feature' | string
-  lesson?: ObjectId | string | { id?: string; _id?: unknown }
-  featureKey?: string | null
+interface CourseBlock {
+  blockType: 'courseBlock'
+  course: unknown
 }
 
-interface ResolvedProductItem {
-  type: 'lesson' | 'feature'
-  lessonId?: string
-  featureKey?: string
+type ProductContentBlock = CourseBlock | { blockType: string; [key: string]: unknown }
+
+interface ProductDoc {
+  _id: ObjectId
+  tenant?: ObjectId | string | null
+  contents?: ProductContentBlock[] | null
 }
 
-/**
- * Resolve the product's legacy `items` join into concrete lesson IDs and feature
- * keys. Walks the `product-items` collection so feature keys come back as
- * strings (not ObjectIds) and lesson refs come back as canonical string IDs —
- * same shape used by `resolveProductItems` in the checkout route, kept local
- * here to avoid pulling in HTTP-only deps into webhook handlers.
- */
-async function resolveProductItems(itemRefs: unknown[]): Promise<ResolvedProductItem[]> {
-  const ids = itemRefs.map(relationId).filter((id): id is string => Boolean(id))
-  if (!ids.length) return []
-
-  const db = await getContentDb()
-  const docs = (await db
-    .collection('product-items')
-    .find({ _id: { $in: ids.map((id) => new ObjectId(id)) } })
-    .toArray()) as ProductItemsCollection[]
-
-  const resolved: ResolvedProductItem[] = []
-  for (const doc of docs) {
-    if (doc.type === 'lesson') {
-      const lessonId = relationId(doc.lesson)
-      if (lessonId) resolved.push({ type: 'lesson', lessonId })
-    } else if (doc.type === 'feature') {
-      const featureKey =
-        typeof doc.featureKey === 'string' && doc.featureKey.length > 0 ? doc.featureKey : null
-      if (featureKey) resolved.push({ type: 'feature', featureKey })
-    }
-  }
-  return resolved
+function toObjectIdOrValue(id: string): ObjectId | string {
+  return ObjectId.isValid(id) ? new ObjectId(id) : id
 }
 
 /**
- * Grants course + feature entitlements to a user after a successful payment.
+ * Grants every course entitlement bundled in `productId` to `userId`, tied to
+ * `transactionId`. Idempotent: replays for the same (user, course) pair no-op
+ * rather than double-insert, so PayPal webhook retries can't issue a duplicate
+ * purchase record.
  *
- * Resolves the product's `items` (legacy `product-items` join) and pushes:
- *   - one `courseEntitlements` row per lesson item (grantMethod='payment')
- *   - one `featureEntitlements` row per feature item
+ * Walks `product.contents` and handles `courseBlock` blocks. Each grant
+ * materialises two rows:
+ *   - `user-entitlements` (the access-grant record, audited by the receipt &
+ *     access-check paths)
+ *   - `enrollments` (the active enrollment that drives the lesson/course
+ *     progress UI)
  *
- * Idempotent: each entitlement is keyed by its own identity (course for
- * lessons, key for features) inside the user's existing array. The handler
- * relies on this so a replayed webhook with the same transactionId does
- * not produce duplicate rows — the second pass would either push a second
- * entry for a different course, or no-op via Mongo's `$ne` guard.
+ * Per the #689 spec, non-`courseBlock` blocks are skipped. Feature-only
+ * products (e.g. certificate entitlements) will be added in a follow-up.
  *
- * Throws when the product can't be found — callers (webhook handlers) treat
- * that as a transient error and return 500 so the provider retries.
+ * @throws when the product document is missing — caller should treat this as
+ *   a transient failure so PayPal retries (we don't want to "succeed" an
+ *   enrollment tied to a phantom product).
  */
 export async function grantProductEntitlements(
   userId: string,
@@ -68,118 +46,93 @@ export async function grantProductEntitlements(
   transactionId: string,
 ): Promise<void> {
   if (!userId || !productId || !transactionId) {
-    throw new Error('grantProductEntitlements: missing userId/productId/transactionId')
-  }
-
-  const db = await getContentDb()
-  const productObjectId = ObjectId.isValid(productId) ? new ObjectId(productId) : null
-  if (!productObjectId) {
-    throw new Error(`grantProductEntitlements: invalid productId ${productId}`)
-  }
-
-  const product = (await db.collection('products').findOne({ _id: productObjectId })) as {
-    _id: ObjectId
-    items?: unknown[] | null
-  } | null
-
-  if (!product) {
-    throw new Error(`grantProductEntitlements: product ${productId} not found`)
-  }
-
-  const items = await resolveProductItems(Array.isArray(product.items) ? product.items : [])
-
-  if (items.length === 0) {
     logger.warn(
-      { userId, productId, transactionId },
-      'grantProductEntitlements: product has no resolvable items — nothing to grant',
+      { userId: !!userId, productId: !!productId, transactionId: !!transactionId },
+      'grantProductEntitlements: missing required identifier — skipping',
     )
     return
   }
 
-  const userObjectId = ObjectId.isValid(userId) ? new ObjectId(userId) : null
-  if (!userObjectId) {
-    throw new Error(`grantProductEntitlements: invalid userId ${userId}`)
+  const db = await getContentDb()
+  const productFilter = ObjectId.isValid(productId)
+    ? { _id: new ObjectId(productId) }
+    : { _id: productId as unknown as ObjectId }
+
+  const product = (await db.collection('products').findOne(productFilter)) as ProductDoc | null
+  if (!product) {
+    // Surface to caller so the webhook returns 500 and PayPal retries — never
+    // "succeed" silently, since that would leave the buyer without access AND
+    // mark the payment as done.
+    throw new Error(`grantProductEntitlements: product not found: ${productId}`)
   }
-  const usersCollection = db.collection('users')
-  const coursePushes: Record<string, unknown>[] = []
-  const featurePushes: Record<string, unknown>[] = []
+
+  const contents = product.contents
+  if (!Array.isArray(contents) || contents.length === 0) {
+    return
+  }
+
+  const userValue = toObjectIdOrValue(userId)
+  const transactionValue = toObjectIdOrValue(transactionId)
+  const tenantValue =
+    product.tenant != null && ObjectId.isValid(String(product.tenant))
+      ? new ObjectId(String(product.tenant))
+      : (product.tenant ?? null)
+
   const now = new Date()
 
-  for (const item of items) {
-    if (item.type === 'lesson' && item.lessonId) {
-      coursePushes.push({
-        course: ObjectId.isValid(item.lessonId) ? new ObjectId(item.lessonId) : item.lessonId,
-        grantMethod: 'payment',
-        transactionId,
-        grantedAt: now,
-      })
-    } else if (item.type === 'feature' && item.featureKey) {
-      featurePushes.push({
-        key: item.featureKey,
-        transactionId,
-        grantedAt: now,
-      })
-    }
-  }
+  for (const block of contents) {
+    if (!block || block.blockType !== 'courseBlock') continue
+    const courseId = relationId((block as CourseBlock).course)
+    if (!courseId) continue
 
-  // Guard the push with a $ne filter so a concurrent replay (same user +
-  // transaction) cannot append the same entitlement twice. The filter matches
-  // when the array does NOT already contain a row with this transactionId —
-  // the first call passes, every replay short-circuits with modifiedCount: 0.
-  const baseUserFilter = { _id: userObjectId }
+    const courseValue = toObjectIdOrValue(courseId)
+    const userMatch = { $in: [userValue] }
+    const courseMatch = { $in: [courseValue] }
 
-  if (coursePushes.length > 0) {
-    for (const entry of coursePushes) {
-      const result = await usersCollection.updateOne(
-        {
-          ...baseUserFilter,
-          courseEntitlements: {
-            $not: {
-              $elemMatch: { transactionId: entry.transactionId, course: entry.course },
-            },
-          },
-        },
-        { $push: { courseEntitlements: entry } } as Document,
+    const existingEntitlement = await db
+      .collection('user-entitlements')
+      .findOne({ user: userMatch, course: courseMatch })
+    const existingEnrollment = await db.collection('enrollments').findOne({
+      user: userMatch,
+      course: courseMatch,
+      status: { $ne: 'cancelled' },
+    })
+
+    if (existingEntitlement || existingEnrollment) {
+      logger.info(
+        { userId, courseId, transactionId },
+        'grantProductEntitlements: already entitled — skipping insert',
       )
-      if (result.matchedCount === 0) {
-        logger.warn(
-          { userId, course: relationId(entry.course), transactionId },
-          'grantProductEntitlements: user not found or course entitlement already present',
-        )
-      }
+      continue
     }
-  }
 
-  if (featurePushes.length > 0) {
-    for (const entry of featurePushes) {
-      const result = await usersCollection.updateOne(
-        {
-          ...baseUserFilter,
-          featureEntitlements: {
-            $not: {
-              $elemMatch: { transactionId: entry.transactionId, key: entry.key },
-            },
-          },
-        },
-        { $push: { featureEntitlements: entry } } as Document,
-      )
-      if (result.matchedCount === 0) {
-        logger.warn(
-          { userId, key: entry.key, transactionId },
-          'grantProductEntitlements: user not found or feature entitlement already present',
-        )
-      }
-    }
-  }
+    await db.collection('user-entitlements').insertOne({
+      tenant: tenantValue,
+      user: userValue,
+      contentType: 'course',
+      course: courseValue,
+      grantMethod: 'purchase',
+      transaction: transactionValue,
+      createdAt: now,
+      updatedAt: now,
+    })
 
-  logger.info(
-    {
-      userId,
-      productId,
-      transactionId,
-      courses: coursePushes.map((entry) => relationId(entry.course)),
-      features: featurePushes.map((entry) => entry.key),
-    },
-    'grantProductEntitlements: successfully granted entitlements',
-  )
+    await db.collection('enrollments').insertOne({
+      tenant: tenantValue,
+      user: userValue,
+      course: courseValue,
+      status: 'active',
+      grantMethod: 'purchase',
+      source: 'self',
+      enrolledAt: now,
+      metadata: { transactionId },
+      createdAt: now,
+      updatedAt: now,
+    })
+
+    logger.info(
+      { userId, productId, courseId, transactionId },
+      'grantProductEntitlements: course entitlement granted',
+    )
+  }
 }
