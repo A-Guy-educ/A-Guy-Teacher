@@ -425,4 +425,47 @@ describe('SelectedCourseCard AbortController', () => {
       expect(retryOptions?.signal).not.toBe(firstSignalUsed)
     })
   })
+
+  describe('"Select Course" link target (#728 leftovers)', () => {
+    it('not-selected state links to /courses (not the landing page)', async () => {
+      // No profile → triggers the `not-selected` branch.
+      mockGetUserProfile.mockReturnValue(null)
+
+      renderWithI18n()
+
+      const link = await waitFor(() => screen.getByRole('link', { name: 'Select a Course' }), {
+        timeout: 1000,
+      })
+
+      expect(link.getAttribute('href')).toBe('/courses')
+      expect(link.getAttribute('href')).not.toBe('/')
+    })
+
+    it('not-found state links to /courses (not the landing page)', async () => {
+      // Profile with gradeLevel but no matching course → triggers `not-found`.
+      mockGetUserProfile.mockReturnValue({
+        gradeLevel: '8',
+        lastVisit: '2024-01-01T00:00:00.000Z',
+      })
+
+      const emptyFetch = vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ docs: [] }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        ),
+      )
+      vi.stubGlobal('fetch', emptyFetch)
+
+      renderWithI18n()
+
+      const link = await waitFor(() => screen.getByRole('link', { name: 'Select a Course' }), {
+        timeout: 2000,
+      })
+
+      expect(link.getAttribute('href')).toBe('/courses')
+      expect(link.getAttribute('href')).not.toBe('/')
+    })
+  })
 })

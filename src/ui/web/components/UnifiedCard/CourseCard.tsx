@@ -1,6 +1,6 @@
 'use client'
 
-import { getUserProfile, setUserProfile } from '@/client/state/localStorage/userProfile'
+import { selectCourse } from '@/client/state/localStorage/userProfile'
 import { useLoadingState } from '@/infra/loading/hooks/useLoadingState'
 import { useRouterWithLoading } from '@/infra/loading/hooks/useRouterWithLoading'
 import { LOADING_KEYS } from '@/infra/loading/keys'
@@ -75,12 +75,9 @@ export function CourseCard({ course, isOwned = false }: CourseCardProps) {
     setWasClicked(true)
 
     const gradeLevel = course.courseLabel || '8'
-    const existingProfile = getUserProfile()
-    setUserProfile({
+    selectCourse({
       gradeLevel,
       courseId: course.id,
-      mood: existingProfile?.mood || '',
-      lastVisit: new Date().toISOString(),
     })
 
     systemEventBus.emit(SYSTEM_EVENTS.COURSE_ENTERED, {

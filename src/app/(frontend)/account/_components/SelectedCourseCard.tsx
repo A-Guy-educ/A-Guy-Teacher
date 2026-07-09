@@ -122,7 +122,7 @@ export function SelectedCourseCard() {
         </CardHeader>
         <CardContent>
           <p className="text-body-sm text-muted-foreground mb-4">{t('noCourseSelected')}</p>
-          <Link href="/">
+          <Link href="/courses">
             <Button variant="outline">{t('selectCourse')}</Button>
           </Link>
         </CardContent>
@@ -138,7 +138,7 @@ export function SelectedCourseCard() {
         </CardHeader>
         <CardContent>
           <p className="text-body-sm text-muted-foreground mb-4">{t('noCourseSelected')}</p>
-          <Link href="/">
+          <Link href="/courses">
             <Button variant="outline">{t('selectCourse')}</Button>
           </Link>
         </CardContent>
