@@ -3,11 +3,68 @@
   "description": "Private math-lesson instructor on the client chat surface: guide students through lessons stored in the data layer. Phases from simplest deliverable to full implementation.",
   "createdAt": "2026-07-09T20:30:00.000Z",
   "items": [
-    { "id": "phase-1-talking-teacher", "title": "Phase 1 — Talking teacher", "body": "Brand agent with a math-teacher persona and one lesson written into its instructions. Works with what exists today; zero build.", "assignee": null, "completed": false, "createdAt": "2026-07-09T20:30:00.000Z", "completedAt": null },
-    { "id": "phase-2-lessons-from-storage", "title": "Phase 2 — Lessons from storage", "body": "Lessons stored as entities (CMS); chat fetches the chosen lesson and teaches from it.", "assignee": null, "completed": false, "createdAt": "2026-07-09T20:30:00.000Z", "completedAt": null },
-    { "id": "phase-3-student-memory", "title": "Phase 3 — Student memory", "body": "Data door: signed-in students save progress and resume where they left off; records scoped per user server-side.", "assignee": null, "completed": false, "createdAt": "2026-07-09T20:30:00.000Z", "completedAt": null },
-    { "id": "phase-4-structured-lessons", "title": "Phase 4 — Structured lessons", "body": "Lesson files with steps, quizzes, pass rules, branching, per-step guardrails, resume position, outcome records, and a version field.", "assignee": null, "completed": false, "createdAt": "2026-07-09T20:30:00.000Z", "completedAt": null },
-    { "id": "phase-5-visual-panels", "title": "Phase 5 — Visual panels", "body": "Progress board and quiz pages rendered beside the chat; pages call the platform only via the kody.call bridge, permissions enforced server-side.", "assignee": null, "completed": false, "createdAt": "2026-07-09T20:30:00.000Z", "completedAt": null },
-    { "id": "phase-6-authoring-by-chat", "title": "Phase 6 — Authoring by chat", "body": "Teacher creates and edits lessons by chatting; engine writes lesson files and pages by our rules.", "assignee": null, "completed": false, "createdAt": "2026-07-09T20:30:00.000Z", "completedAt": null }
+    {
+      "id": "phase-1-talking-teacher",
+      "title": "Phase 1 — Talking teacher",
+      "body": "Brand agent with a math-teacher persona and one lesson written into its instructions. Works with what exists today; zero build.",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-09T20:30:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "phase-2-lessons-from-storage",
+      "title": "Phase 2 — Lessons from storage",
+      "body": "Lessons stored as entities (CMS); chat fetches the chosen lesson and teaches from it.",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-09T20:30:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "phase-3-student-memory",
+      "title": "Phase 3 — Student memory",
+      "body": "Data door: signed-in students save progress and resume where they left off; records scoped per user server-side.",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-09T20:30:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "phase-4-structured-lessons",
+      "title": "Phase 4 — Structured lessons",
+      "body": "Lesson files with steps, quizzes, pass rules, branching, per-step guardrails, resume position, outcome records, and a version field.",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-09T20:30:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "phase-5-visual-panels",
+      "title": "Phase 5 — Visual pages from JSON primitives",
+      "body": "Progress board and quiz pages beside the chat, structured as JSON compositions of the existing view-renderer platform primitives (stack/row/list/text/input/actions) — no free HTML. Pages call the platform only via the kody.call bridge; permissions enforced server-side.",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-09T20:30:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "phase-6-authoring-by-chat",
+      "title": "Phase 6 — Authoring by chat",
+      "body": "Teacher creates and edits lessons by chatting; engine writes lesson files and pages by our rules.",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-09T20:30:00.000Z",
+      "completedAt": null
+    },
+    {
+      "id": "phase-7-brand-component-libraries",
+      "title": "Phase 7 — Brand component libraries (escape hatch)",
+      "body": "Only when a real brand outgrows the platform primitives: let a business ship its own component library (custom elements JS/CSS in its repo, any design complexity). The same page JSON then places brand components next to platform primitives; data/actions still flow only through the platform API with the user's identity.",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-09T20:30:00.000Z",
+      "completedAt": null
+    }
   ]
 }
