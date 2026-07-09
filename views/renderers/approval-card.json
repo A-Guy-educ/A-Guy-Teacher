@@ -1,0 +1,67 @@
+{
+  "slug": "approval-card",
+  "name": "Approval",
+  "description": "Title, text, and action buttons.",
+  "purpose": "approval-card",
+  "aliases": [
+    "approval"
+  ],
+  "rule": "Use this purpose when Kody asks the user to approve, confirm, say OK, edit, cancel, or continue before taking the next step.",
+  "data": {
+    "title": {
+      "description": "Short approval question or decision title.",
+      "type": "text"
+    },
+    "body": {
+      "description": "The action, plan, or context the user is approving.",
+      "type": "markdown",
+      "optional": true
+    },
+    "actions": {
+      "description": "Approval responses. For a simple OK confirmation, pass an OK action. Omit this key to use the renderer defaults.",
+      "type": "actions",
+      "optional": true
+    }
+  },
+  "defaults": {
+    "actions": [
+      {
+        "id": "approve",
+        "label": "Approve",
+        "response": "approve",
+        "variant": "primary"
+      },
+      {
+        "id": "cancel",
+        "label": "Cancel",
+        "response": "cancel",
+        "variant": "secondary"
+      }
+    ]
+  },
+  "type": "layout",
+  "ui": {
+    "type": "stack",
+    "children": [
+      {
+        "type": "text",
+        "value": "$title",
+        "variant": "title"
+      },
+      {
+        "type": "markdown",
+        "value": "$body"
+      },
+      {
+        "type": "row",
+        "for": "$actions",
+        "as": "action",
+        "item": {
+          "type": "button",
+          "label": "$action.label",
+          "action": "$action"
+        }
+      }
+    ]
+  }
+}
