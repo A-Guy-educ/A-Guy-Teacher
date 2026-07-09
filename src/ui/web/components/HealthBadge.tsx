@@ -63,7 +63,7 @@ export function HealthBadge({ showVersion = false }: HealthBadgeProps) {
 
   if (state === 'error') {
     return (
-      <div className="inline-flex items-center gap-content-gap-xs px-3 py-1 rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 text-body-sm">
+      <div className="inline-flex items-center gap-content-gap-xs px-3 py-1 rounded-full bg-destructive/15 text-destructive dark:bg-destructive/30 text-body-sm">
         <span>●</span>
         <span>API ERROR</span>
       </div>
@@ -72,7 +72,7 @@ export function HealthBadge({ showVersion = false }: HealthBadgeProps) {
 
   if (state === 'unhealthy') {
     return (
-      <div className="inline-flex items-center gap-content-gap-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 text-body-sm">
+      <div className="inline-flex items-center gap-content-gap-xs px-3 py-1 rounded-full bg-warning/15 text-warning dark:bg-warning/30 text-body-sm">
         <span>●</span>
         <span>API DOWN</span>
         {error && <span className="text-body-xs opacity-75">({error})</span>}
@@ -81,7 +81,7 @@ export function HealthBadge({ showVersion = false }: HealthBadgeProps) {
   }
 
   return (
-    <div className="inline-flex items-center gap-content-gap-xs px-3 py-1 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-body-sm">
+    <div className="inline-flex items-center gap-content-gap-xs px-3 py-1 rounded-full bg-success/15 text-success dark:bg-success/30 text-body-sm">
       <span>●</span>
       <span>API OK</span>
       {showVersion && data && (

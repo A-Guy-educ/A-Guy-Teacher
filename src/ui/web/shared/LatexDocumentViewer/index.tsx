@@ -124,7 +124,7 @@ export function LatexDocumentViewer({
           <button
             onClick={() => window.print()}
             className={cn(
-              'bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm',
+              'bg-primary text-primary-foreground rounded-md px-4 py-2 text-body-sm',
               'hover:bg-primary/90 transition-colors',
             )}
           >

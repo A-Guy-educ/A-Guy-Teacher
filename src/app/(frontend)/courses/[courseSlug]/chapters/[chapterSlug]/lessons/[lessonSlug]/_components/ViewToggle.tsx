@@ -41,7 +41,7 @@ export function ViewToggle({
         onClick={() => handleModeChange('non-interactive')}
         className={cn(
           'transition-all duration-normal rounded-lg gap-2',
-          activeMode === 'non-interactive' ? 'shadow-sm' : 'hover:bg-background/50',
+          activeMode === 'non-interactive' ? 'shadow-elevation-1' : 'hover:bg-background/50',
         )}
       >
         <FileText className="h-4 w-4" />
@@ -53,7 +53,7 @@ export function ViewToggle({
         onClick={() => handleModeChange('interactive')}
         className={cn(
           'transition-all duration-normal rounded-lg gap-2',
-          activeMode === 'interactive' ? 'shadow-sm' : 'hover:bg-background/50',
+          activeMode === 'interactive' ? 'shadow-elevation-1' : 'hover:bg-background/50',
         )}
       >
         <ClipboardCheck className="h-4 w-4" />
