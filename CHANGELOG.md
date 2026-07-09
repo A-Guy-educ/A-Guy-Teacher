@@ -1865,6 +1865,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #704: QA: #310 Add jump-to-exercise number input between prev/next arro… ([#796](https://github.com/A-Guy-educ/A-Guy-Web/pull/796)) — @kodyade[bot]
 - #752: [Refactor] Unify "selected course" state behind single module ([#807](https://github.com/A-Guy-educ/A-Guy-Web/pull/807)) — @kodyade[bot]
 - #747: QA: fix(lesson): Widen content page container and wrap long-NBSP … ([#799](https://github.com/A-Guy-educ/A-Guy-Web/pull/799)) — @kodyade[bot]
 - #671: [UI/UX] Systemic Fix for High-Contrast Accessibility and Rich HTM… ([#812](https://github.com/A-Guy-educ/A-Guy-Web/pull/812)) — @kodyade[bot]
