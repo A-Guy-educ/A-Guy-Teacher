@@ -1889,6 +1889,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: sync main into dev to unblock v0.28.0 promotion ([#830](https://github.com/A-Guy-educ/A-Guy-Web/pull/830)) — @aguyshayb
 - chore: release v0.28.0 ([#828](https://github.com/A-Guy-educ/A-Guy-Web/pull/828)) — @aguyshayb
 - fix: Backport PayPal capture hotfix from main to dev ([#827](https://github.com/A-Guy-educ/A-Guy-Web/pull/827)) — @aguyshayb
 - fix(footer): resolve page refs by slug when the CMS stores slug strings ([#821](https://github.com/A-Guy-educ/A-Guy-Web/pull/821)) — @aguyshayb
