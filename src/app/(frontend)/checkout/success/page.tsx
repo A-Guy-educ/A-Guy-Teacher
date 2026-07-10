@@ -13,6 +13,7 @@
 import { getDirection } from '@/i18n/config'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { pageMetadata } from '@/infra/seo/pageMetadata'
+import { capturePayPalOrder } from '@/lib/payment/paypal'
 import { queryTransactionByProviderId } from '@/server/repos/queries/transactions'
 import type { Metadata } from 'next'
 import { CheckoutSuccessContent } from './CheckoutSuccessContent'
@@ -42,6 +43,30 @@ export default async function CheckoutSuccessPage({ searchParams: searchParamsPr
   // providerTransactionId field we wrote at checkout time.
   const { session_id, token } = await searchParamsPromise
   const lookupId = session_id ?? token
+
+  // PayPal orders are created with intent: 'CAPTURE', which does NOT auto-capture
+  // on buyer approval — someone has to POST /v2/checkout/orders/{token}/capture
+  // for money to actually move (and for PAYMENT.CAPTURE.COMPLETED to fire, which
+  // is what admin's webhook keys off to write the enrollment). PayPal's redirect
+  // back to /checkout/success is the trigger; the buyer is here, the order token
+  // is in the URL, so we call capture from the server component before rendering.
+  //
+  // capturePayPalOrder is idempotent — ORDER_ALREADY_CAPTURED is treated as a
+  // benign no-op — so buyer reloads and PayPal's own retry on the return URL are
+  // both safe. Errors are logged but do NOT block rendering: the buyer still sees
+  // the Pending state, the entitlement poll runs, and the manual refresh button
+  // remains as an escape. Blocking here would trap someone who paid successfully
+  // behind a page crash if PayPal's API had a transient issue at capture time.
+  if (token) {
+    try {
+      await capturePayPalOrder(token)
+    } catch (error) {
+      console.error('PayPal capture failed on /checkout/success return', {
+        orderId: token,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
 
   const [locale, transaction] = await Promise.all([
     getSystemLocale(),
