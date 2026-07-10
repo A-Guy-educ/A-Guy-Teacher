@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.28.0 — 2026-07-10
+
+### Features
+
+- **brands**: bilingual `גאי` logo mark with baked-in wordmark (#815)
+- **courses**: route lesson intro back button to course page (#816)
+- **billing**: grant course entitlements on PayPal purchase success (#810)
+- **payments**: grant course + feature entitlements on successful PayPal checkout (#809)
+- **agent**: add Guy math teacher agent
+
+### Bug Fixes
+
+- **footer**: read global from Payload's `globals` collection, not per-slug (#820)
+- **footer**: resolve page refs by slug when the CMS stores slug strings (#821)
+- Restore course landing render for paid courses (#818)
+- **lesson**: widen outro + complete containers to match content-page width (#799)
+- **a11y**: render lesson HtmlBlock through SafeHtml with enableProse (#812)
+- **study**: hide orphan course id when requested course does not exist (#755)
+- **paypal**: backport `/checkout/success` capture handler to dev, keeps prod in sync (#827)
+
+### Refactor
+
+- Unify selected-course state behind userProfile module (#807)
+
 ## v0.27.0 — 2026-07-09
 
 ### Features
