@@ -1889,6 +1889,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- promote: dev -> main (v0.28.0) ([#829](https://github.com/A-Guy-educ/A-Guy-Web/pull/829)) — @aguyshayb
 - chore: sync main into dev (v2 — MERGE COMMIT ONLY, do not squash) ([#831](https://github.com/A-Guy-educ/A-Guy-Web/pull/831)) — @aguyshayb
 - chore: sync main into dev to unblock v0.28.0 promotion ([#830](https://github.com/A-Guy-educ/A-Guy-Web/pull/830)) — @aguyshayb
 - chore: release v0.28.0 ([#828](https://github.com/A-Guy-educ/A-Guy-Web/pull/828)) — @aguyshayb
