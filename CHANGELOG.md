@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.28.0 — 2026-07-10
+
+### Features
+
+- **brands**: bilingual `גאי` logo mark with baked-in wordmark (#815)
+- **courses**: route lesson intro back button to course page (#816)
+- **billing**: grant course entitlements on PayPal purchase success (#810)
+- **payments**: grant course + feature entitlements on successful PayPal checkout (#809)
+- **agent**: add Guy math teacher agent
+
+### Bug Fixes
+
+- **footer**: read global from Payload's `globals` collection, not per-slug (#820)
+- **footer**: resolve page refs by slug when the CMS stores slug strings (#821)
+- Restore course landing render for paid courses (#818)
+- **lesson**: widen outro + complete containers to match content-page width (#799)
+- **a11y**: render lesson HtmlBlock through SafeHtml with enableProse (#812)
+- **study**: hide orphan course id when requested course does not exist (#755)
+- **paypal**: backport `/checkout/success` capture handler to dev, keeps prod in sync (#827)
+
+### Refactor
+
+- Unify selected-course state behind userProfile module (#807)
+
 ## v0.27.0 — 2026-07-09
 
 ### Features
@@ -1865,6 +1889,28 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: sync main into dev (v2 — MERGE COMMIT ONLY, do not squash) ([#831](https://github.com/A-Guy-educ/A-Guy-Web/pull/831)) — @aguyshayb
+- chore: sync main into dev to unblock v0.28.0 promotion ([#830](https://github.com/A-Guy-educ/A-Guy-Web/pull/830)) — @aguyshayb
+- chore: release v0.28.0 ([#828](https://github.com/A-Guy-educ/A-Guy-Web/pull/828)) — @aguyshayb
+- fix: Backport PayPal capture hotfix from main to dev ([#827](https://github.com/A-Guy-educ/A-Guy-Web/pull/827)) — @aguyshayb
+- fix(footer): resolve page refs by slug when the CMS stores slug strings ([#821](https://github.com/A-Guy-educ/A-Guy-Web/pull/821)) — @aguyshayb
+- fix(footer): read global from Payload's 'globals' collection ([#820](https://github.com/A-Guy-educ/A-Guy-Web/pull/820)) — @aguyshayb
+- fix: Restore course landing render for paid courses ([#818](https://github.com/A-Guy-educ/A-Guy-Web/pull/818)) — @aguyshayb
+- #742: Replace AGuy logo in src/brands/aguy/components/Logo.tsx with new… ([#815](https://github.com/A-Guy-educ/A-Guy-Web/pull/815)) — @kodyade[bot]
+- #733: Lesson intro back button → course page (חזרה לקורס) ([#816](https://github.com/A-Guy-educ/A-Guy-Web/pull/816)) — @kodyade[bot]
+- #689: [Billing] Implement automatic course entitlement grant on PayPal … ([#810](https://github.com/A-Guy-educ/A-Guy-Web/pull/810)) — @kodyade[bot]
+- #125: Doc coverage: src/infra/system-events/ — Client-side pub/sub even… ([#804](https://github.com/A-Guy-educ/A-Guy-Web/pull/804)) — @kodyade[bot]
+- #690: design: health sweep 2026-07-01 ([#805](https://github.com/A-Guy-educ/A-Guy-Web/pull/805)) — @kodyade[bot]
+- #704: QA: #310 Add jump-to-exercise number input between prev/next arro… ([#796](https://github.com/A-Guy-educ/A-Guy-Web/pull/796)) — @kodyade[bot]
+- #752: [Refactor] Unify "selected course" state behind single module ([#807](https://github.com/A-Guy-educ/A-Guy-Web/pull/807)) — @kodyade[bot]
+- #747: QA: fix(lesson): Widen content page container and wrap long-NBSP … ([#799](https://github.com/A-Guy-educ/A-Guy-Web/pull/799)) — @kodyade[bot]
+- #671: [UI/UX] Systemic Fix for High-Contrast Accessibility and Rich HTM… ([#812](https://github.com/A-Guy-educ/A-Guy-Web/pull/812)) — @kodyade[bot]
+- #754: [Bug] Dashboard "למידה" tab shows nonexistent course "21" ([#755](https://github.com/A-Guy-educ/A-Guy-Web/pull/755)) — @kodyade[bot]
+- [Payments] Grant course + feature entitlements on PayPal success (#680) ([#809](https://github.com/A-Guy-educ/A-Guy-Web/pull/809)) — @kodyade[bot]
+- #757: QA: fix(lesson): Pre-render content page bodies and pass to lesso… ([#813](https://github.com/A-Guy-educ/A-Guy-Web/pull/813)) — @kodyade[bot] · 🔄 QA (#817)
+## [v0.27.0] - 2026-07-09
+
+- promote: dev -> main (v0.27.0) ([#803](https://github.com/A-Guy-educ/A-Guy-Web/pull/803)) — @aguyshayb
 - chore: release v0.27.0 ([#801](https://github.com/A-Guy-educ/A-Guy-Web/pull/801)) — @aguyshayb
 - fix(footer): stop pulling MongoDB into the client bundle ([#802](https://github.com/A-Guy-educ/A-Guy-Web/pull/802)) — @aguyshayb
 - #797: Footer דינמי מ-CMS עם חלון מובנה לעמודים משפטיים ([#798](https://github.com/A-Guy-educ/A-Guy-Web/pull/798)) — @kodyade[bot]

@@ -8,7 +8,7 @@ import { Stack } from '@/ui/web/shared/Layout/Stack'
 import { Grid } from '@/ui/web/shared/Layout/Grid'
 import { Section } from '@/ui/web/shared/Layout/Section'
 import { Text } from '@/ui/web/shared/Typography/Text'
-import { setUserProfile } from '@/client/state/localStorage/userProfile'
+import { selectCourse } from '@/client/state/localStorage/userProfile'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import type { Course } from '@/infra/types/content'
 
@@ -78,11 +78,9 @@ export function GreetingFlow({ onComplete }: { onComplete: () => void }) {
     // If courseLabel is already a number, use it directly
     const gradeLevel = course.courseLabel || '8'
 
-    setUserProfile({
+    selectCourse({
       gradeLevel,
       courseId: course.id,
-      mood: selectedMood,
-      lastVisit: new Date().toISOString(),
     })
     setStep('complete')
     setTimeout(() => onComplete(), 1000)

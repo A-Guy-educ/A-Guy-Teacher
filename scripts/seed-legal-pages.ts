@@ -446,7 +446,10 @@ async function upsertFooterNavItems(
   locale: 'he' | 'en',
   items: (typeof FOOTER_NAV_ITEMS)[typeof locale],
 ) {
-  const footer = await db.collection('footer').findOne({})
+  // Payload 3.x stores all globals in a single `globals` collection,
+  // discriminated by `globalType` — matches the reader in
+  // src/infra/utils/footer-data.ts.
+  const footer = await db.collection('globals').findOne({ globalType: 'footer' })
 
   const existingVariants = footer?.variants ?? []
   const existingLocaleVariant = existingVariants.find(
@@ -471,10 +474,11 @@ async function upsertFooterNavItems(
     updatedVariants.push({ locale, navItems: mergedNavItems })
   }
 
-  await db.collection('footer').updateOne(
-    {},
+  await db.collection('globals').updateOne(
+    { globalType: 'footer' },
     {
       $set: {
+        globalType: 'footer',
         variants: updatedVariants,
         updatedAt: new Date().toISOString(),
       },

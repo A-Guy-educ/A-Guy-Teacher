@@ -19,15 +19,30 @@ interface UseLessonIntroPageOptions {
    * When false, Start goes straight to the content renderer.
    */
   hasContentPagesPreamble?: boolean
+  /**
+   * Block index from ?block=N search param. When provided, the intro is skipped
+   * and the content renderer opens directly at the given block (deep-link from
+   * /exercises/[slug] or /content/[slug] route stubs).
+   */
+  initialBlockIndex?: number | null
 }
 
 export function useLessonIntroPage({
   deepLinkedExerciseId,
   hasContentPagesPreamble = false,
+  initialBlockIndex,
 }: UseLessonIntroPageOptions) {
-  const [pageState, setPageState] = useState<LessonIntroPageState>(
-    deepLinkedExerciseId ? { type: 'workspace' } : { type: 'intro' },
-  )
+  const [pageState, setPageState] = useState<LessonIntroPageState>(() => {
+    if (deepLinkedExerciseId) return { type: 'workspace' }
+    if (
+      typeof initialBlockIndex === 'number' &&
+      Number.isFinite(initialBlockIndex) &&
+      initialBlockIndex >= 0
+    ) {
+      return { type: 'content', initialExerciseIndex: Math.floor(initialBlockIndex) }
+    }
+    return { type: 'intro' }
+  })
 
   const handleStart = (initialExerciseIndex = 0) => {
     if (hasContentPagesPreamble && !deepLinkedExerciseId) {

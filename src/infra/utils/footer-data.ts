@@ -12,10 +12,10 @@
  * @/infra/db/content-db, which is the allowed cross-layer touch point.
  */
 import { cache } from 'react'
-import type { Document } from 'mongodb'
+import { ObjectId, type Document } from 'mongodb'
 
 import type { Footer, Page } from '@/infra/types/content'
-import { getContentDb, objectIdFromString, serializeDoc } from '@/infra/db/content-db'
+import { getContentDb, serializeDoc } from '@/infra/db/content-db'
 
 export type FooterResolvedLink = {
   type?: 'reference' | 'custom' | null
@@ -54,7 +54,11 @@ const EMPTY_FOOTER: FooterData = {
 async function fetchFooterGlobal(): Promise<Footer | null> {
   try {
     const db = await getContentDb()
-    const doc = await db.collection('footer').findOne({} as Document)
+    // Payload 3.x MongoDB adapter stores all globals in a single `globals`
+    // collection, discriminated by `globalType`. Querying db.collection('footer')
+    // (the pre-fix behavior) returns null even when the footer exists in the
+    // CMS, so the site rendered an empty footer.
+    const doc = await db.collection('globals').findOne({ globalType: 'footer' } as Document)
     if (!doc) return null
     return serializeDoc<Footer>(doc)
   } catch {
@@ -104,10 +108,21 @@ function getPageIdsFromNav(navItems: FooterNavItem[]): string[] {
   return Array.from(ids)
 }
 
-async function fetchPageById(id: string): Promise<Page | null> {
+const OBJECT_ID_HEX = /^[0-9a-fA-F]{24}$/
+
+async function fetchPageByRef(ref: string): Promise<Page | null> {
   try {
     const db = await getContentDb()
-    const doc = await db.collection('pages').findOne({ _id: objectIdFromString(id) } as Document)
+    // Payload stores a page reference's `value` as either the page's ObjectId
+    // (rendered as a 24-char hex string) OR the page's slug string — depending
+    // on how the reference was authored in the Admin. Query by _id if it's
+    // 24-hex, otherwise by slug. NOTE: we cannot use ObjectId.isValid(ref)
+    // here — it returns true for ANY 12-character string, so slugs like
+    // "contact-info" (12 chars) would be misinterpreted as a 12-byte ObjectId
+    // and silently miss the lookup. The explicit 24-hex regex is the only
+    // reliable check for the string form of an ObjectId.
+    const filter: Document = OBJECT_ID_HEX.test(ref) ? { _id: new ObjectId(ref) } : { slug: ref }
+    const doc = await db.collection('pages').findOne(filter)
     if (!doc) return null
     return serializeDoc<Page>(doc)
   } catch {
@@ -136,11 +151,11 @@ export const loadFooterData = cache(async (locale: string): Promise<FooterData> 
   const pageIds = getPageIdsFromNav(navItems)
 
   const legalPages: Record<string, FooterLegalPage> = {}
-  for (const id of pageIds) {
-    const page = await fetchPageById(id)
+  for (const ref of pageIds) {
+    const page = await fetchPageByRef(ref)
     const legal = page ? toLegalPage(page) : null
     if (legal) {
-      legalPages[id] = legal
+      legalPages[ref] = legal
       if (legal.slug && !legalPages[legal.slug]) {
         legalPages[legal.slug] = legal
       }

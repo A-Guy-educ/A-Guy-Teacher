@@ -1,0 +1,70 @@
+{
+  "slug": "basic-card",
+  "name": "Basic card",
+  "description": "Small chat card for simple messages and decisions.",
+  "purpose": "approval",
+  "rule": "Use this purpose when Kody asks the user to approve, edit, cancel, or continue before taking the next step.",
+  "data": {
+    "title": {
+      "type": "text",
+      "description": "Card heading shown at the top."
+    },
+    "body": {
+      "type": "text",
+      "optional": true,
+      "description": "Optional supporting text shown under the title."
+    },
+    "actions": {
+      "type": "actions",
+      "optional": true,
+      "description": "List of action buttons."
+    }
+  },
+  "defaults": {
+    "actions": [
+      {
+        "id": "approve",
+        "label": "Approve",
+        "response": "approve",
+        "variant": "primary"
+      },
+      {
+        "id": "edit",
+        "label": "Edit first",
+        "response": "edit",
+        "variant": "secondary"
+      },
+      {
+        "id": "cancel",
+        "label": "Cancel",
+        "response": "cancel",
+        "variant": "secondary"
+      }
+    ]
+  },
+  "type": "layout",
+  "ui": {
+    "type": "stack",
+    "children": [
+      {
+        "type": "text",
+        "variant": "title",
+        "value": "$title"
+      },
+      {
+        "type": "text",
+        "value": "$body"
+      },
+      {
+        "type": "row",
+        "for": "$actions",
+        "as": "action",
+        "item": {
+          "type": "button",
+          "label": "$action.label",
+          "action": "$action"
+        }
+      }
+    ]
+  }
+}
