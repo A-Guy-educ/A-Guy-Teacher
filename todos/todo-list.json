@@ -39,6 +39,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:44:33.378Z",
       "completedAt": null
+    },
+    {
+      "id": "01c3cd72-1ad6-4d84-8533-1728096f0552",
+      "title": "תקשורות בטקסט",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:45:16.764Z",
+      "completedAt": null
     }
   ]
 }
