@@ -120,6 +120,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:51:00.092Z",
       "completedAt": null
+    },
+    {
+      "id": "04be6564-c63b-4eda-b5af-b2d4e6c4acc9",
+      "title": "אופי המורה  - להגדיר - יש בווצאפ",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T09:41:51.398Z",
+      "completedAt": null
     }
   ]
 }
