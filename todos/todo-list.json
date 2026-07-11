@@ -12,6 +12,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:40:35.935Z",
       "completedAt": null
+    },
+    {
+      "id": "a48e799b-6be8-48e5-9b69-5effa197ec21",
+      "title": "הצגת ביטוים מתמטים בצט",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:41:39.655Z",
+      "completedAt": null
     }
   ]
 }
