@@ -129,6 +129,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:51:00.092Z",
       "completedAt": null
+    },
+    {
+      "id": "fdc761a9-6db4-4f15-b43b-f42ae09c95ad",
+      "title": "דף נוסחאות -",
+      "body": "הצגת דף הנוסחאות במהלך שיעור או תרגול - או שהמורה מציג או שהתלמיד",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T09:50:54.720Z",
+      "completedAt": null
     }
   ]
 }
