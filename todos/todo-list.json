@@ -30,6 +30,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:42:57.392Z",
       "completedAt": null
+    },
+    {
+      "id": "89add237-b415-49f3-93ee-d4bc0d449fe2",
+      "title": "הצט מדבר את התדברים (מקריא מה שכתוב)",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:44:33.378Z",
+      "completedAt": null
     }
   ]
 }
