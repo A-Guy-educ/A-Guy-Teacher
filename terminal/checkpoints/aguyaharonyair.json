@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "checkpoints": [
+    {
+      "id": "checkpoint-tchfmw-brain-user",
+      "key": "brain:user",
+      "transport": {
+        "type": "brain",
+        "label": "Brain terminal"
+      },
+      "chatSessionId": "1783626456928-uqufb15",
+      "output": "=(Btty; printf '\\n__KR_78a49f4d__\\n'\nConnecting to fdaa:74:e7fe:a7b:533:837d:d266:2... complete\ntty; printf '\\n__KR_78a49f4d__\\n'\nroot@6839edef6ed928:/workspace# tty; printf '\\n__KR_78a49f4d__\\n'\n/dev/pts/0\n__KR_78a49f4d__\nroot@6839edef6ed928:/workspace#\nroot@6839edef6ed928:/workspace#\nroot@6839edef6ed928:/workspace# codex\n-bash: codex: command not found\nroot@6839edef6ed928:/workspace#\n(Btty; printf '\\n__KR_78a49f4d__\\n'\nConnecting to fdaa:74:e7fe:a7b:533:837d:d266:2... complete\ntty; printf '\\n__KR_78a49f4d__\\n'\nroot@6839edef6ed928:/workspace# tty; printf '\\n__KR_78a49f4d__\\n'\n/dev/pts/0\n__KR_78a49f4d__\nroot@6839edef6ed928:/workspace#\nroot@6839edef6ed928:/workspace#\nroot@6839edef6ed928:/workspace# codex\n-bash: codex: command not found\nroot@6839edef6ed928:/workspace#\n(B complete\ntty; printf '\\n__KR_78a49f4d__\\n'\nroot@6839edef6ed928:/workspace# tty; printf '\\n__KR_78a49f4d__\\n'\n/dev/pts/0\n__KR_78a49f4d__\nroot@6839edef6ed928:/workspace#\nroot@6839edef6ed928:/workspace#\nroot@6839edef6ed928:/workspace# codex\n-bash: codex: command not found\nroot@6839edef6ed928:/workspace#\n(B>[exited]",
+      "createdAt": "2026-07-11T11:19:46.115Z",
+      "updatedAt": "2026-07-11T11:19:46.115Z",
+      "savedBy": "aguyaharonyair"
+    }
+  ]
+}
