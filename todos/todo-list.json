@@ -84,6 +84,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:47:52.809Z",
       "completedAt": null
+    },
+    {
+      "id": "18c40352-a6f8-45e0-b484-ce4468dd2254",
+      "title": "העלאת - וידאו",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:48:21.828Z",
+      "completedAt": null
     }
   ]
 }
