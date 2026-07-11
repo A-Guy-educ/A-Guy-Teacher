@@ -48,6 +48,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:45:16.764Z",
       "completedAt": null
+    },
+    {
+      "id": "c4f96c6a-c933-4b4e-bc5e-0fd5f4f9883e",
+      "title": "תקשורות - בקול",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:45:54.610Z",
+      "completedAt": null
     }
   ]
 }
