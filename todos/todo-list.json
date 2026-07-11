@@ -102,6 +102,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:48:51.362Z",
       "completedAt": null
+    },
+    {
+      "id": "d0d76079-6309-4602-9c64-1d98b7e9efda",
+      "title": "תקשורות עם מחברת - בידוק כמו שיש  היום  ב- AGUY",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:49:59.116Z",
+      "completedAt": null
     }
   ]
 }
