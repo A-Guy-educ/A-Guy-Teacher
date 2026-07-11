@@ -93,6 +93,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:48:21.828Z",
       "completedAt": null
+    },
+    {
+      "id": "e25f7c83-4681-4fe5-a4ca-9d6f80bfd5b0",
+      "title": "כיתבת ביטוים מתמטים - בידוק כמו שיש היום ב-AGUY",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:48:51.362Z",
+      "completedAt": null
     }
   ]
 }
