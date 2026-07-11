@@ -111,6 +111,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:49:59.116Z",
       "completedAt": null
+    },
+    {
+      "id": "b699ef7d-8824-4b29-88cd-6d86395c3f20",
+      "title": "סטטוס התלמיד בשיעור - מתעדכן - לפי כללים - מתחיל עם סטטוס ושואפים להגיע לסטטוס יותר טוב",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:51:00.092Z",
+      "completedAt": null
     }
   ]
 }
