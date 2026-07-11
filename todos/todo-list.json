@@ -23,21 +23,21 @@
       "completedAt": null
     },
     {
-      "id": "ecde155a-a1fd-40b6-9fb7-4a040546a0eb",
-      "title": "בחירת תשובה מתוך - 2- 3- 4",
-      "body": "",
-      "assignee": null,
-      "completed": false,
-      "createdAt": "2026-07-11T08:42:57.392Z",
-      "completedAt": null
-    },
-    {
       "id": "05647952-fcb7-4623-92f8-1646e51ea4c6",
       "title": "מורה - פרואקטיבי - המורה מוביל , שיעור מסויים - נושא מסויים",
       "body": "המורה מנחה את השיעור ולא מגיב רק אחרי התלמיד\nייצירת חוויה שיש גורם אנושי, שמוביל את השיעור\n\nאיך אתה היום? \nהאם יש לך תחביבים? \nמתייחס לכל תשובה\n\nואז פותח את השיעור, עם מוטיבציה על נושא... \nומשם לשאלות מנחות ביודק לפי השאלות שיש בשיעור \n10 תרגילים - 4 סעיפים ... \nונותן תרגיל דומה - במקרה של טעות..\n",
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-11T08:40:35.935Z",
+      "completedAt": null
+    },
+    {
+      "id": "ecde155a-a1fd-40b6-9fb7-4a040546a0eb",
+      "title": "בחירת תשובה מתוך - 2- 3- 4",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:42:57.392Z",
       "completedAt": null
     },
     {
@@ -137,15 +137,6 @@
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-11T09:50:54.720Z",
-      "completedAt": null
-    },
-    {
-      "id": "623a9684-e9ee-42e2-8ef5-8f26000aa401",
-      "title": "עמוד - הערות",
-      "body": "המורה במהלך השיעור אוסף הערות חשובות, דגשים וטעיות שהתלמיד עשה\nומציג את זה, הדף למעשה נכנס למחברת ",
-      "assignee": null,
-      "completed": false,
-      "createdAt": "2026-07-11T10:06:35.800Z",
       "completedAt": null
     }
   ]
