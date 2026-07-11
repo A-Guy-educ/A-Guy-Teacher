@@ -66,6 +66,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:46:49.711Z",
       "completedAt": null
+    },
+    {
+      "id": "a49fb236-756d-4a88-b236-a9c2cf749efb",
+      "title": "אופי המורה",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:47:06.524Z",
+      "completedAt": null
     }
   ]
 }
