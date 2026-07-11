@@ -75,6 +75,15 @@
       "completed": false,
       "createdAt": "2026-07-11T08:47:06.524Z",
       "completedAt": null
+    },
+    {
+      "id": "bedc9843-f563-4eb0-9747-c8efb00f29d2",
+      "title": "תקשורת בתמונה - העלאת תמונה",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:47:52.809Z",
+      "completedAt": null
     }
   ]
 }
