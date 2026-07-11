@@ -5,6 +5,15 @@
   "description": "",
   "items": [
     {
+      "id": "a49fb236-756d-4a88-b236-a9c2cf749efb",
+      "title": "אופי המורה",
+      "body": "",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T08:47:06.524Z",
+      "completedAt": null
+    },
+    {
       "id": "05647952-fcb7-4623-92f8-1646e51ea4c6",
       "title": "מורה - פרואקטיבי - המורה מוביל , שיעור מסויים - נושא מסויים",
       "body": "המורה מנחה את השיעור ולא מגיב רק אחרי התלמיד\nייצירת חוויה שיש גורם אנושי, שמוביל את השיעור\n\nאיך אתה היום? \nהאם יש לך תחביבים? \nמתייחס לכל תשובה\n\nואז פותח את השיעור, עם מוטיבציה על נושא... \nומשם לשאלות מנחות ביודק לפי השאלות שיש בשיעור \n10 תרגילים - 4 סעיפים ... \nונותן תרגיל דומה - במקרה של טעות..\n",
@@ -68,15 +77,6 @@
       "completedAt": null
     },
     {
-      "id": "a49fb236-756d-4a88-b236-a9c2cf749efb",
-      "title": "אופי המורה",
-      "body": "",
-      "assignee": null,
-      "completed": false,
-      "createdAt": "2026-07-11T08:47:06.524Z",
-      "completedAt": null
-    },
-    {
       "id": "bedc9843-f563-4eb0-9747-c8efb00f29d2",
       "title": "תקשורת בתמונה - העלאת תמונה",
       "body": "",
@@ -119,15 +119,6 @@
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-11T08:51:00.092Z",
-      "completedAt": null
-    },
-    {
-      "id": "04be6564-c63b-4eda-b5af-b2d4e6c4acc9",
-      "title": "אופי המורה  - להגדיר - יש בווצאפ",
-      "body": "",
-      "assignee": null,
-      "completed": false,
-      "createdAt": "2026-07-11T09:41:51.398Z",
       "completedAt": null
     }
   ]
