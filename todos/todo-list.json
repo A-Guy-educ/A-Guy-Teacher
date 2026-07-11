@@ -14,6 +14,15 @@
       "completedAt": null
     },
     {
+      "id": "c1fda5eb-688a-4039-b2f6-a9a5e98c4907",
+      "title": "ייצירת רקע מוצרי - למורה פרטי",
+      "body": "1. הצגה של התוכן - בלוקים\n2. שמירת המידע של התלמיד (אולי גם סטטוס)\n3. סטטיסטיקה \n4. לוגיקה של שיעור - פרומפטים, חוקיות ... \n5. תשלום ",
+      "assignee": null,
+      "completed": false,
+      "createdAt": "2026-07-11T09:47:12.142Z",
+      "completedAt": null
+    },
+    {
       "id": "ecde155a-a1fd-40b6-9fb7-4a040546a0eb",
       "title": "בחירת תשובה מתוך - 2- 3- 4",
       "body": "",
@@ -38,15 +47,6 @@
       "assignee": null,
       "completed": false,
       "createdAt": "2026-07-11T08:41:39.655Z",
-      "completedAt": null
-    },
-    {
-      "id": "c1fda5eb-688a-4039-b2f6-a9a5e98c4907",
-      "title": "ייצירת רקע מוצרי - למורה פרטי",
-      "body": "1. הצגה של התוכן - בלוקים\n2. שמירת המידע של התלמיד (אולי גם סטטוס)\n3. סטטיסטיקה \n4. לוגיקה של שיעור - פרומפטים, חוקיות ... \n5. תשלום ",
-      "assignee": null,
-      "completed": false,
-      "createdAt": "2026-07-11T09:47:12.142Z",
       "completedAt": null
     },
     {
