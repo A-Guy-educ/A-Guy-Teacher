@@ -269,6 +269,7 @@ export function StartPageClient({ courses, direction }: StartPageClientProps) {
       selectCourse({
         gradeLevel: course.courseLabel || course.title,
         courseId: course.id,
+        source: 'start-page',
       })
       // Signal to the OAuth callback that the wizard already collected
       // teacher / mood / course — the persona onboarding wrap is redundant.

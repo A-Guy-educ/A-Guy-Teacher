@@ -81,6 +81,7 @@ export function GreetingFlow({ onComplete }: { onComplete: () => void }) {
     selectCourse({
       gradeLevel,
       courseId: course.id,
+      source: 'homepage-greeting',
     })
     setStep('complete')
     setTimeout(() => onComplete(), 1000)

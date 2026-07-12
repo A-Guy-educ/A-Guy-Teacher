@@ -10,6 +10,8 @@
  * or `document.cookie = 'a-guy:grade=...'` directly.
  */
 
+import { reportCourseSelection, type CourseSelectionSource } from './courseSelectionTracker'
+
 export interface LocalUserProfile {
   gradeLevel: string // "8", "ח", etc.
   courseId?: string
@@ -98,15 +100,23 @@ export const clearUserProfile = (): void => {
  * Business-level wrapper: the user picked a course.
  * Sets `gradeLevel` and `courseId` and preserves any sibling fields
  * (mood, teacherProfileSlug, lastVisit).
+ *
+ * Also fires a best-effort telemetry POST to the Admin app so we can
+ * count selections. The tracker is fire-and-forget and swallows all
+ * errors — Admin outages must never break the UX. `source` identifies
+ * which call site the pick came from.
  */
 export const selectCourse = ({
   gradeLevel,
   courseId,
+  source,
 }: {
   gradeLevel: string
   courseId: string
+  source: CourseSelectionSource
 }): void => {
   setUserProfile({ gradeLevel, courseId })
+  reportCourseSelection({ courseId, source, gradeLevel })
 }
 
 /**
