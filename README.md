@@ -164,6 +164,12 @@ MCP_ENABLED=false
 # Optional
 MONGODB_MAX_POOL_SIZE=3
 CRON_SECRET=your-cron-secret
+
+# Best-effort telemetry target (sibling Admin app)
+# Local Admin: http://localhost:3001
+# Dev:  https://a-guy-admin-git-dev-aguy.vercel.app
+# Prod: https://a-guy-admin.vercel.app
+NEXT_PUBLIC_ADMIN_URL=http://localhost:3001
 ```
 
 ## Development Commands

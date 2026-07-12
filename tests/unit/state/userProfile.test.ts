@@ -49,12 +49,20 @@ function clearAllCookies(): void {
 }
 
 describe('userProfile state module', () => {
+  let fetchMock: ReturnType<typeof vi.fn>
+
   beforeEach(() => {
     localStorage.clear()
     clearAllCookies()
+    // Stub fetch so the fire-and-forget selection tracker never hits the
+    // network during unrelated tests and so we can assert on it below.
+    fetchMock = vi.fn().mockResolvedValue(new Response('{"success":true}', { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    process.env.NEXT_PUBLIC_ADMIN_URL = 'https://admin.example.test'
   })
 
   afterEach(() => {
+    vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 
@@ -71,7 +79,7 @@ describe('userProfile state module', () => {
     })
 
     it('writes via selectCourse and reads the same profile back via getUserProfile', () => {
-      selectCourse({ gradeLevel: 'ח', courseId: 'course-2' })
+      selectCourse({ gradeLevel: 'ח', courseId: 'course-2', source: 'other' })
 
       const profile = getUserProfile()
       expect(profile?.gradeLevel).toBe('ח')
@@ -173,7 +181,9 @@ describe('userProfile state module', () => {
       delete (globalThis as { window?: unknown }).window
 
       try {
-        expect(() => selectCourse({ gradeLevel: '8', courseId: 'course-1' })).not.toThrow()
+        expect(() =>
+          selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'other' }),
+        ).not.toThrow()
       } finally {
         ;(globalThis as { window?: unknown }).window = originalWindow
       }
@@ -218,10 +228,10 @@ describe('userProfile state module', () => {
     })
 
     it('consecutive selectCourse calls overwrite only gradeLevel / courseId', () => {
-      selectCourse({ gradeLevel: '8', courseId: 'course-1' })
+      selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'other' })
       setUserProfile({ teacherProfileSlug: 'teacher-a' })
 
-      selectCourse({ gradeLevel: 'ח', courseId: 'course-2' })
+      selectCourse({ gradeLevel: 'ח', courseId: 'course-2', source: 'other' })
 
       const profile = getUserProfile()
       expect(profile?.gradeLevel).toBe('ח')
@@ -333,7 +343,7 @@ describe('userProfile state module', () => {
 
   describe('end-to-end flow', () => {
     it('selectCourse → getUserProfile → removeCourseSelection → cookies absent', () => {
-      selectCourse({ gradeLevel: '8', courseId: 'course-1' })
+      selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'other' })
 
       let profile = getUserProfile()
       expect(profile?.gradeLevel).toBe('8')
@@ -358,6 +368,93 @@ describe('userProfile state module', () => {
       // (run separately) will fail. This test just keeps the constant in one
       // place.
       expect(USER_PROFILE_KEY).toBe('a-guy:user-profile')
+    })
+  })
+
+  describe('course-selection tracker (best-effort admin telemetry)', () => {
+    const ADMIN_URL = 'https://admin.example.test'
+    const GUEST_ID_KEY = 'a-guy:guest-id'
+
+    function lastFetchBody(): Record<string, unknown> {
+      expect(fetchMock).toHaveBeenCalled()
+      const call = fetchMock.mock.calls.at(-1)!
+      const init = call[1] as RequestInit
+      return JSON.parse(init.body as string)
+    }
+
+    it('POSTs to {ADMIN_URL}/api/course-selections with credentials', () => {
+      selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'homepage-greeting' })
+
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+      expect(url).toBe(`${ADMIN_URL}/api/course-selections`)
+      expect(init.method).toBe('POST')
+      expect(init.credentials).toBe('include')
+      expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
+    })
+
+    it('sends the correct body for the homepage-greeting call site', () => {
+      selectCourse({ gradeLevel: '8', courseId: 'course-a', source: 'homepage-greeting' })
+      expect(lastFetchBody()).toMatchObject({
+        course: 'course-a',
+        source: 'homepage-greeting',
+        gradeLevel: '8',
+        guestId: expect.any(String),
+      })
+    })
+
+    it('sends the correct body for the course-card call site', () => {
+      selectCourse({ gradeLevel: 'ח', courseId: 'course-b', source: 'course-card' })
+      expect(lastFetchBody()).toMatchObject({
+        course: 'course-b',
+        source: 'course-card',
+        gradeLevel: 'ח',
+        guestId: expect.any(String),
+      })
+    })
+
+    it('sends the correct body for the start-page call site', () => {
+      selectCourse({ gradeLevel: '10', courseId: 'course-c', source: 'start-page' })
+      expect(lastFetchBody()).toMatchObject({
+        course: 'course-c',
+        source: 'start-page',
+        gradeLevel: '10',
+        guestId: expect.any(String),
+      })
+    })
+
+    it('generates a stable guestId and reuses it across selections', () => {
+      selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'course-card' })
+      const first = lastFetchBody().guestId as string
+      expect(first).toBeTruthy()
+      expect(localStorage.getItem(GUEST_ID_KEY)).toBe(first)
+
+      selectCourse({ gradeLevel: '8', courseId: 'course-2', source: 'course-card' })
+      const second = lastFetchBody().guestId as string
+      expect(second).toBe(first)
+    })
+
+    it('does not throw when fetch rejects (Admin down)', async () => {
+      fetchMock.mockRejectedValueOnce(new Error('network down'))
+
+      expect(() =>
+        selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'course-card' }),
+      ).not.toThrow()
+
+      // Give the swallowed .catch() a tick to settle.
+      await Promise.resolve()
+      // Local write still happened — UX is not blocked by the failed report.
+      expect(getUserProfile()?.courseId).toBe('course-1')
+    })
+
+    it('is a no-op when NEXT_PUBLIC_ADMIN_URL is not configured', () => {
+      delete process.env.NEXT_PUBLIC_ADMIN_URL
+
+      selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'course-card' })
+
+      expect(fetchMock).not.toHaveBeenCalled()
+      // Local write still happens.
+      expect(getUserProfile()?.courseId).toBe('course-1')
     })
   })
 })

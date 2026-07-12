@@ -78,6 +78,7 @@ export function CourseCard({ course, isOwned = false }: CourseCardProps) {
     selectCourse({
       gradeLevel,
       courseId: course.id,
+      source: 'course-card',
     })
 
     systemEventBus.emit(SYSTEM_EVENTS.COURSE_ENTERED, {
