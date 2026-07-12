@@ -1889,7 +1889,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
-- feat: Track course selections in Admin from every call site ([#845](https://github.com/A-Guy-educ/A-Guy-Web/pull/845)) — @aguyshayb
+- feat: Track course selections in Admin from every call site ([#845](https://github.com/A-Guy-educ/A-Guy-Web/pull/845)) — @aguyshayb · 🔄 QA (#850)
 ## [v0.28.0] - 2026-07-10
 
 - promote: dev -> main (v0.28.0) ([#829](https://github.com/A-Guy-educ/A-Guy-Web/pull/829)) — @aguyshayb
