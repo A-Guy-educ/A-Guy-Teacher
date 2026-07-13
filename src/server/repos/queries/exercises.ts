@@ -1,30 +1,26 @@
 import { cache } from 'react'
 
-import type { Exercise } from '@/infra/types/content'
 import {
-  findByIdSerialized,
-  findManySerialized,
-  findOneSerialized,
-  objectIdFromString,
-} from '../mongo'
+  findExercisesByLessonWithSections,
+  findExerciseByIdWithSections,
+  findExerciseByLessonSlugWithSections,
+} from './exercises-with-sections'
 
 export const queryExercisesByLesson = cache(async ({ lessonId }: { lessonId: string }) => {
-  return findManySerialized<Exercise>(
-    'exercises',
-    { lesson: objectIdFromString(lessonId) },
-    { sort: { order: 1, createdAt: 1 }, limit: 1000 },
-  )
+  const exercises = await findExercisesByLessonWithSections(lessonId)
+  return exercises.sort((a, b) => {
+    const ao = typeof a.order === 'number' ? a.order : Number.POSITIVE_INFINITY
+    const bo = typeof b.order === 'number' ? b.order : Number.POSITIVE_INFINITY
+    return ao - bo
+  })
 })
 
 export const queryExerciseById = cache(async ({ id }: { id: string }) => {
-  return findByIdSerialized<Exercise>('exercises', id)
+  return findExerciseByIdWithSections(id)
 })
 
 export const queryExerciseBySlug = cache(
   async ({ lessonId, slug }: { lessonId: string; slug: string }) => {
-    return findOneSerialized<Exercise>('exercises', {
-      lesson: objectIdFromString(lessonId),
-      slug,
-    })
+    return findExerciseByLessonSlugWithSections(lessonId, slug)
   },
 )

@@ -111,6 +111,41 @@ export async function countDocs(collection: string, filter: Document): Promise<n
   return db.collection(collection).countDocuments(filter)
 }
 
+/**
+ * Run an aggregation pipeline and serialize the resulting docs (e.g. exercises
+ * with their child sections populated). Mirrors `findManySerialized` so callers
+ * get the same shape: `_id` → `id`, ObjectId/Date normalized.
+ *
+ * The pipeline is responsible for `$match` (if any) and `$limit` (if any); this
+ * helper handles sorting, skipping, and serialization only when those inputs
+ * are provided. Sorting in a `$sort` stage is fine — the helper just forwards.
+ */
+export async function aggregateManySerialized<T = JsonObject>(
+  collection: string,
+  pipeline: Document[],
+  options: { sort?: Sort; limit?: number; skip?: number } = {},
+): Promise<T[]> {
+  const db = await getContentDb()
+  const stages: Document[] = [...pipeline]
+  if (options.sort) stages.push({ $sort: options.sort })
+  if (options.skip) stages.push({ $skip: options.skip })
+  if (options.limit) stages.push({ $limit: options.limit })
+  const docs = await db.collection(collection).aggregate(stages).toArray()
+  return docs.map((doc) => serializeDoc<T>(doc))
+}
+
+/**
+ * Single-doc variant of `aggregateManySerialized` — adds a `$limit: 1` and
+ * returns `null` when the pipeline yields nothing.
+ */
+export async function aggregateOneSerialized<T = JsonObject>(
+  collection: string,
+  pipeline: Document[],
+): Promise<T | null> {
+  const docs = await aggregateManySerialized<T>(collection, pipeline, { limit: 1 })
+  return docs[0] ?? null
+}
+
 export function publishedActiveFilter(extra: Document = {}): Document {
   return {
     ...extra,

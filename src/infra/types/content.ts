@@ -146,12 +146,49 @@ export interface LessonPrerequisite {
   courseSlug: string
 }
 
+/**
+ * Section doc owned by Admin (separate MongoDB record per section).
+ * Each section owns its own `content.blocks` stream; exercises reference
+ * sections via the `exercise.blocks` playlist (see getExerciseBlocks).
+ *
+ * `order` is the fallback sort key when the playlist is empty.
+ */
+export interface Section {
+  id: string
+  title?: string | null
+  slug?: string | null
+  order?: number | null
+  content?: ContentBlock[] | { blocks?: ContentBlock[] | null } | null
+}
+
+/**
+ * Entry inside `exercise.blocks` (JSON textarea). The playlist may also
+ * carry legacy exercise/contentPage refs; web only cares about `sectionRef`.
+ */
+export interface ExercisePlaylistEntry {
+  id?: string
+  blockType?: string
+  section?: string | { id: string } | null
+}
+
 export interface Exercise {
   id: string
   title?: string | null
   slug?: string | null
   lesson?: string | Lesson | null
   content?: ContentBlock[] | { blocks?: ContentBlock[] | null } | null
+  /**
+   * Populated child sections (each with its own `content.blocks`). When
+   * present, `getExerciseBlocks()` reads from these in playlist / section.order
+   * order; when absent, falls back to `content.blocks`.
+   */
+  sections?: Array<string | Section> | null
+  /**
+   * Raw playlist (JSON textarea from Admin). May be a string or parsed array.
+   * `sectionRef` entries pin section ordering; legacy exercise/contentPage
+   * entries are ignored by `getExerciseBlocks()`.
+   */
+  blocks?: string | ExercisePlaylistEntry[] | null
   media?: Array<string | Media> | null
   difficulty?: string | null
   order?: number | null

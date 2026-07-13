@@ -23,6 +23,10 @@ interface UseLessonIntroPageOptions {
    * Block index from ?block=N search param. When provided, the intro is skipped
    * and the content renderer opens directly at the given block (deep-link from
    * /exercises/[slug] or /content/[slug] route stubs).
+   *
+   * The companion `?section=N` param (default 0) is also accepted — every
+   * lesson today has a single section, so the section value is read for
+   * forward compatibility but doesn't change resolution.
    */
   initialBlockIndex?: number | null
 }

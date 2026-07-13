@@ -256,7 +256,7 @@ export class ConversationService {
       const exercise = await this.payload.findByID({
         collection: 'exercises',
         id: params.exerciseId,
-        depth: 0,
+        depth: 1,
         ...(req && { req }),
       })
       const lessonId =

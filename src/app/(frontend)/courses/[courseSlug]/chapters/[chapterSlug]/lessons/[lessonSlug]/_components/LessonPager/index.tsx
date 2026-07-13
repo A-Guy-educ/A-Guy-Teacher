@@ -17,8 +17,8 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { useTranslations } from '@/ui/web/providers/I18n'
-import type { ExerciseContentData } from '@/ui/web/exerciserenderer/types'
 import { Progress } from '@/ui/web/components/progress'
+import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
 import { useLessonPager } from './useLessonPager'
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
 import { ChatInterface } from '@/ui/web/chat'
@@ -196,7 +196,7 @@ export function LessonPager({
                     </div>
                     <div className="bg-card rounded-2xl p-5 md:p-card-padding border border-border/60 shadow-elevation-1">
                       <ExerciseRenderer
-                        content={exercise.content as unknown as ExerciseContentData}
+                        content={{ blocks: getExerciseBlocks(exercise) }}
                         mode="student"
                         showCheckAnswer={true}
                         mediaMap={mediaMap}
@@ -252,12 +252,10 @@ export function LessonPager({
                 id: exercise.id,
                 title: exercise.title ?? '',
                 content: {
-                  blocks: (exercise.content as unknown as ExerciseContentData).blocks.map(
-                    (block) => {
-                      const { id, type, ...rest } = block
-                      return { id, type, ...rest }
-                    },
-                  ),
+                  blocks: getExerciseBlocks(exercise).map((block) => {
+                    const { id, type, ...rest } = block
+                    return { id, type, ...rest }
+                  }),
                 },
               }}
               mediaMap={
