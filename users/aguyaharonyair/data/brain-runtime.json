@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "desiredImageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t100806z",
+  "desiredImageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t151212z",
   "running": {
     "imageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t100806z",
     "app": "kody-brain-aguyaharonyair",
@@ -10,12 +10,12 @@
     "appliedAt": "2026-07-13T13:43:58.697Z"
   },
   "operation": {
-    "id": "18fd580672d24d7a906e5e3138c7a830",
+    "id": "d5af9ca6228e42a18e3a7a973a388371",
     "type": "apply-image",
-    "status": "completed",
-    "imageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t100806z",
-    "startedAt": "2026-07-13T13:42:19.574Z",
-    "updatedAt": "2026-07-13T13:43:58.697Z"
+    "status": "running",
+    "imageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t151212z",
+    "startedAt": "2026-07-13T15:31:33.305Z",
+    "updatedAt": "2026-07-13T15:31:33.305Z"
   },
-  "updatedAt": "2026-07-13T13:43:58.697Z"
+  "updatedAt": "2026-07-13T15:31:33.305Z"
 }
