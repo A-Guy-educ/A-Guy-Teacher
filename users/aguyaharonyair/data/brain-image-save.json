@@ -1,8 +1,8 @@
 {
   "version": 1,
   "status": "running",
-  "phase": "exporting-rootfs",
-  "message": "Exporting the Brain filesystem",
+  "phase": "downloading-rootfs",
+  "message": "Downloading the Brain filesystem",
   "jobId": "73f0e744319f7adffdc8182b551a39a0",
   "app": "kody-brain-aguyaharonyair",
   "machineId": "48e659ebd91548",
@@ -11,5 +11,5 @@
   "defaultRegion": "fra",
   "expectedImageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t151212z",
   "startedAt": "2026-07-13T15:12:12.798Z",
-  "updatedAt": "2026-07-13T15:12:27.631Z"
+  "updatedAt": "2026-07-13T15:26:55.225Z"
 }
