@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "status": "running",
+  "phase": "starting",
+  "message": "Starting Brain image save",
+  "jobId": "5a81453164a5c7ceb492429df8668ba1",
+  "app": "kody-brain-aguyaharonyair",
+  "machineId": "287d471c446138",
+  "bridgeApp": "kody-terminal-guy-koren-1ac92a8e2b6d",
+  "orgSlug": "guy-koren",
+  "defaultRegion": "fra",
+  "expectedImageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t100806z",
+  "startedAt": "2026-07-13T10:08:06.075Z",
+  "updatedAt": "2026-07-13T10:08:06.075Z"
+}
