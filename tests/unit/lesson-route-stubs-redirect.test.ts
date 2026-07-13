@@ -71,7 +71,7 @@ describe('exercise route stub redirects (Issue #757)', () => {
     })
 
     expect(redirectMock).toHaveBeenCalledWith(
-      '/courses/math-101/chapters/chapter-1/lessons/intro-lesson?block=1',
+      '/courses/math-101/chapters/chapter-1/lessons/intro-lesson?section=0&block=1',
     )
     expect(notFoundMock).not.toHaveBeenCalled()
   })
@@ -99,7 +99,7 @@ describe('exercise route stub redirects (Issue #757)', () => {
     })
 
     expect(redirectMock).toHaveBeenCalledWith(
-      '/courses/math-101/chapters/chapter-1/lessons/intro-lesson?block=0',
+      '/courses/math-101/chapters/chapter-1/lessons/intro-lesson?section=0&block=0',
     )
   })
 
@@ -204,7 +204,7 @@ describe('content route stub redirects (Issue #757)', () => {
     })
 
     expect(redirectMock).toHaveBeenCalledWith(
-      '/courses/math-101/chapters/chapter-1/lessons/intro-lesson?block=1',
+      '/courses/math-101/chapters/chapter-1/lessons/intro-lesson?section=0&block=1',
     )
     expect(notFoundMock).not.toHaveBeenCalled()
   })
@@ -232,7 +232,7 @@ describe('content route stub redirects (Issue #757)', () => {
     })
 
     expect(redirectMock).toHaveBeenCalledWith(
-      '/courses/math-101/chapters/chapter-1/lessons/intro-lesson?block=0',
+      '/courses/math-101/chapters/chapter-1/lessons/intro-lesson?section=0&block=0',
     )
   })
 

@@ -4,7 +4,8 @@ import type { Exercise } from '@/infra/types/content'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { UnifiedCard } from '@/ui/web/components/UnifiedCard'
 import { Badge } from '@/ui/web/components/badge'
-import type { ExerciseContentData, ContentBlock } from '@/ui/web/exerciserenderer/types'
+import type { ContentBlock } from '@/ui/web/exerciserenderer/types'
+import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
 
 interface ExerciseCardProps {
   exercise: Exercise
@@ -14,22 +15,9 @@ interface ExerciseCardProps {
   index: number
 }
 
-function isExerciseContent(
-  content: unknown,
-): content is ExerciseContentData & { blocks: ContentBlock[] } {
-  return (
-    typeof content === 'object' &&
-    content !== null &&
-    'blocks' in content &&
-    Array.isArray((content as { blocks: unknown }).blocks)
-  )
-}
-
 function getQuestionTypes(exercise: Exercise): string[] {
-  const content = exercise.content as unknown
-  if (!isExerciseContent(content)) return []
-
-  const questionBlocks = content.blocks.filter(
+  const blocks = getExerciseBlocks(exercise)
+  const questionBlocks = blocks.filter(
     (block): block is ContentBlock =>
       block.type === 'question_select' || block.type === 'question_free_response',
   )
@@ -67,11 +55,9 @@ export function ExerciseCard({
 
   // Extract first block text as description
   let description: string | undefined
-  if (isExerciseContent(exercise.content) && exercise.content.blocks.length > 0) {
-    const firstBlock = exercise.content.blocks[0]
-    if ('value' in firstBlock && typeof firstBlock.value === 'string') {
-      description = firstBlock.value
-    }
+  const firstBlock = getExerciseBlocks(exercise)[0]
+  if (firstBlock && 'value' in firstBlock && typeof firstBlock.value === 'string') {
+    description = firstBlock.value
   }
 
   return (

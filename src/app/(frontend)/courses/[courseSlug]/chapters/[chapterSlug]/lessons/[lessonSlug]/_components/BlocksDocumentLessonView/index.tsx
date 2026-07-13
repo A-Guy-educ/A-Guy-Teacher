@@ -24,6 +24,7 @@ import type { Exercise, Media as MediaType } from '@/infra/types/content'
 import type { QuestionBlock, InlineRichText, RichTextBlock } from '@/ui/web/exerciserenderer/types'
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
 import { HEBREW_LETTERS } from '@/ui/web/exerciserenderer/constants'
+import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
 
 type WorksheetBlocks = React.ComponentProps<typeof ExerciseWorksheet>['blocks']
 
@@ -38,9 +39,7 @@ interface BlocksDocumentLessonViewProps {
 }
 
 function getBlocks(exercise: Exercise): WorksheetBlocks {
-  const content = exercise.content as { blocks?: unknown } | null | undefined
-  if (!content || !Array.isArray(content.blocks)) return []
-  return content.blocks as WorksheetBlocks
+  return getExerciseBlocks(exercise) as WorksheetBlocks
 }
 
 type ExerciseSolutionEntry = {

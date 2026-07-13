@@ -16,8 +16,8 @@ import {
   Target,
 } from 'lucide-react'
 import { useTranslations } from '@/ui/web/providers/I18n'
-import type { ExerciseContentData } from '@/ui/web/exerciserenderer/types'
 import { Progress } from '@/ui/web/components/progress'
+import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
 import { useExercisesPager } from './useExercisesPager'
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
 import { ChatInterface } from '@/ui/web/chat'
@@ -320,7 +320,7 @@ export function ExercisesPager({
                     <div className="md:bg-card md:rounded-2xl md:p-card-padding md:border md:border-border/60 md:shadow-elevation-1">
                       <ExerciseRenderer
                         key={currentExercise.id}
-                        content={currentExercise.content as unknown as ExerciseContentData}
+                        content={{ blocks: getExerciseBlocks(currentExercise) }}
                         mode="student"
                         showCheckAnswer={true}
                         mediaMap={mediaMap}
@@ -425,12 +425,10 @@ export function ExercisesPager({
                 id: currentExercise.id,
                 title: currentExercise.title ?? '',
                 content: {
-                  blocks: (currentExercise.content as unknown as ExerciseContentData).blocks.map(
-                    (block) => {
-                      const { id, type, ...rest } = block
-                      return { id, type, ...rest }
-                    },
-                  ),
+                  blocks: getExerciseBlocks(currentExercise).map((block) => {
+                    const { id, type, ...rest } = block
+                    return { id, type, ...rest }
+                  }),
                 },
               }}
               mediaMap={
