@@ -1890,7 +1890,7 @@ _No notable commits since the last release._
 ## [Unreleased]
 
 - #856: feat: Read sections natively on web (Task 4) ([#857](https://github.com/A-Guy-educ/A-Guy-Web/pull/857)) — @kodyade[bot]
-- feat: Track course selections in Admin from every call site ([#845](https://github.com/A-Guy-educ/A-Guy-Web/pull/845)) — @aguyshayb · 🔄 QA (#850)
+- feat: Track course selections in Admin from every call site ([#845](https://github.com/A-Guy-educ/A-Guy-Web/pull/845)) — @aguyshayb · ⚠️ QA 2026-07-13 (#850)
 ## [v0.28.0] - 2026-07-10
 
 - promote: dev -> main (v0.28.0) ([#829](https://github.com/A-Guy-educ/A-Guy-Web/pull/829)) — @aguyshayb
