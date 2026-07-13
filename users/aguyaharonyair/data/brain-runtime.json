@@ -1,5 +1,13 @@
 {
   "version": 1,
   "desiredImageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t100806z",
-  "updatedAt": "2026-07-13T10:19:40.132Z"
+  "operation": {
+    "id": "18fd580672d24d7a906e5e3138c7a830",
+    "type": "apply-image",
+    "status": "running",
+    "imageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t100806z",
+    "startedAt": "2026-07-13T13:42:19.574Z",
+    "updatedAt": "2026-07-13T13:42:19.574Z"
+  },
+  "updatedAt": "2026-07-13T13:42:19.574Z"
 }
