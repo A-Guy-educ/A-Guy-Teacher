@@ -2,20 +2,20 @@
   "version": 1,
   "desiredImageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t151212z",
   "running": {
-    "imageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t100806z",
+    "imageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t151212z",
     "app": "kody-brain-aguyaharonyair",
-    "machineId": "48e659ebd91548",
+    "machineId": "874237b02d7638",
     "orgSlug": "guy-koren",
     "url": "https://kody-brain-aguyaharonyair.fly.dev",
-    "appliedAt": "2026-07-13T13:43:58.697Z"
+    "appliedAt": "2026-07-13T15:33:08.761Z"
   },
   "operation": {
     "id": "d5af9ca6228e42a18e3a7a973a388371",
     "type": "apply-image",
-    "status": "running",
+    "status": "completed",
     "imageRef": "ghcr.io/a-guy-educ/kody-brain-aguyaharonyair:20260713t151212z",
     "startedAt": "2026-07-13T15:31:33.305Z",
-    "updatedAt": "2026-07-13T15:31:33.305Z"
+    "updatedAt": "2026-07-13T15:33:08.761Z"
   },
-  "updatedAt": "2026-07-13T15:31:33.305Z"
+  "updatedAt": "2026-07-13T15:33:08.761Z"
 }
