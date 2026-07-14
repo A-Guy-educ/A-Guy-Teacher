@@ -110,7 +110,9 @@ export function LessonListTab({
       : groups[0]?.chapter.id
     if (!featuredChapterId) return
     if (autoExpandedFor === featuredChapterId) return
-    setOpenChapters((prev) => (prev.includes(featuredChapterId) ? prev : [...prev, featuredChapterId]))
+    setOpenChapters((prev) =>
+      prev.includes(featuredChapterId) ? prev : [...prev, featuredChapterId],
+    )
     setAutoExpandedFor(featuredChapterId)
   }, [autoExpandedFor, featured, groups])
 

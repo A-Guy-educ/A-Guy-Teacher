@@ -78,8 +78,7 @@ export function useLessonGrouping({
 
         // First non-completed, non-locked lesson becomes the featured "active"
         // one — matches the mockup's auto-expand + hero focus behavior.
-        const canFeature =
-          !featuredAssigned && (status === 'active' || status === 'available')
+        const canFeature = !featuredAssigned && (status === 'active' || status === 'available')
         if (canFeature) {
           featuredAssigned = true
           hasFeatured = true

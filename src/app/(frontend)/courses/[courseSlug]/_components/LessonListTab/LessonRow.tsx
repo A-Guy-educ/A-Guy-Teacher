@@ -31,8 +31,7 @@ export function LessonRow({ node, courseSlug, purchaseHref }: LessonRowProps) {
   const buyHref = purchaseHref ?? '/products'
 
   const isInteractive = status !== 'soon' && status !== 'locked'
-  const targetHref =
-    status === 'soon' ? '#' : status === 'locked' ? buyHref : href
+  const targetHref = status === 'soon' ? '#' : status === 'locked' ? buyHref : href
 
   const handleClick = (e: React.MouseEvent) => {
     if (status === 'soon') {
