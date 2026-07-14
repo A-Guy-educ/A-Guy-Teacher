@@ -1,6 +1,13 @@
+/**
+ * @fileType component
+ * @domain frontend
+ * @pattern lesson-roadmap-hero
+ * @ai-summary Hero card at the top of the lessons roadmap. Shows overall progress ring, next-up lesson title (or an "all complete" state), and a Focus-Next button that opens + scrolls to the featured chapter. Accent color tracks the active tab (learn/practice/exams) via the tabColor prop.
+ */
+
 'use client'
 
-import { Crosshair, RotateCcw } from 'lucide-react'
+import { Crosshair } from 'lucide-react'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { formatMessage } from './formatMessage'
 import { HeroProgressRing } from './HeroProgressRing'
@@ -12,7 +19,6 @@ interface CourseLessonsHeroProps {
   featured: LessonRoadmapNode | null
   accentColor: string
   onFocusNext: () => void
-  onReset?: () => void
 }
 
 export function CourseLessonsHero({
@@ -21,7 +27,6 @@ export function CourseLessonsHero({
   featured,
   accentColor,
   onFocusNext,
-  onReset,
 }: CourseLessonsHeroProps) {
   const t = useTranslations('coursePage')
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0
@@ -38,17 +43,18 @@ export function CourseLessonsHero({
       <div
         className="absolute -top-12 -right-12 w-48 h-48 rounded-full blur-3xl opacity-[0.06] pointer-events-none"
         style={{ background: accentColor }}
+        aria-hidden
       />
       <div
-        className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full blur-3xl opacity-[0.04] pointer-events-none"
-        style={{ background: `hsl(var(--primary))` }}
+        className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full blur-3xl opacity-[0.04] pointer-events-none bg-primary"
+        aria-hidden
       />
 
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-content-gap">
         <div className="flex items-center gap-content-gap-sm w-full md:w-auto">
           <HeroProgressRing percent={percent} accentColor={accentColor} />
           <div className="text-start">
-            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-muted text-muted-foreground uppercase tracking-tracking-sm">
+            <span className="inline-block px-2 py-0.5 rounded text-body-2xs font-semibold bg-muted text-muted-foreground uppercase tracking-tracking-sm">
               {t('roadmapHeroBadge')}
             </span>
             <h3 className="text-body-lg font-bold text-foreground tracking-tight mt-1">
@@ -68,17 +74,6 @@ export function CourseLessonsHero({
             <Crosshair className="w-3.5 h-3.5" />
             <span>{t('roadmapFocusNext')}</span>
           </button>
-          {onReset && (
-            <button
-              type="button"
-              onClick={onReset}
-              title={t('roadmapResetProgress')}
-              aria-label={t('roadmapResetProgress')}
-              className="bg-muted hover:bg-muted/70 text-muted-foreground hover:text-foreground p-3 rounded-xl border border-border transition-colors duration-normal"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          )}
         </div>
       </div>
     </div>

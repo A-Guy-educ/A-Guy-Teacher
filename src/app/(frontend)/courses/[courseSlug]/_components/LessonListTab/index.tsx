@@ -1,3 +1,10 @@
+/**
+ * @fileType component
+ * @domain frontend
+ * @pattern lesson-roadmap-tab
+ * @ai-summary Container for the redesigned course-lessons view. Filters lessons by lessonType (learning/practice/exam), resolves progress + entitlement, groups by chapter, then orchestrates CourseLessonsHero + CourseLessonsFilterBar + a controlled Radix accordion of ChapterAccordion items. Timeline track sits behind the accordion list. Auto-expands the chapter containing the featured next-up lesson.
+ */
+
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
@@ -19,13 +26,22 @@ interface LessonListTabProps {
   lessons: Lesson[]
   chapters: Chapter[]
   courseSlug: string
+  /** Course ID used to look up paid entitlement. When omitted, no entitlement check runs. */
   courseId?: string
+  /** Parent course's lesson-level accessType. Combined with each lesson's own accessType to resolve the effective tier. */
   courseAccessType?: string | null
+  /** Pre-resolved entitlement flag (usually server-side). Wins over the client-side fetch when defined. */
   hasPaidAccess?: boolean
+  /** Grade bucket of the course — used to scope progress reads to the correct grade. */
   gradeLevel: string
   tabColor?: { text: string; stroke: string }
   lessonProgressMap?: Record<string, LessonProgress>
   lessonType: LessonType
+  /**
+   * Pre-resolved buy URL forwarded to every locked lesson row. Resolved once at
+   * the container level (course page server component) so the reverse-lookup
+   * fires at most once per course render, not per card.
+   */
   purchaseHref?: string
 }
 

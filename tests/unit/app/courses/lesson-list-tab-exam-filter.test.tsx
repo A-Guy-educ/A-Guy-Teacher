@@ -6,36 +6,24 @@
  * Pinned behavior:
  * - <LessonListTab lessonType="exam"> renders only lessons whose effective type
  *   is "exam" (and excludes learning/practice lessons from the same course).
- * - Cards rendered for the exams tab use the "Exam N" label, not "Lesson N".
- *   This matches what the Study plan page and the per-lesson card already do
- *   when lessonType="exam".
+ * - The learning tab similarly excludes exam lessons.
+ * - When no lesson of the requested type exists, the tab renders nothing.
+ *
+ * Post-#873 roadmap redesign: the tab renders a chapter-accordion layout
+ * (LessonRow inside ChapterAccordion) instead of a flat grid of CourseLessonCards.
+ * This test asserts the filter contract via the rendered lesson titles + the
+ * `course-lesson-row` testid so it doesn't couple to per-tab visual details.
  */
 
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-// Mock the progress hook so the test never hits the network and `lessonProgressMap`
-// entries are not picked up — this test is purely about filtering & rendering.
 vi.mock('@/client/hooks/useProgressMap', () => ({
   useProgressMap: () => ({ progressMap: {}, statusMap: {}, isLoading: false }),
 }))
 
-// LessonListTab calls `useTranslations` only. Stub with a key passthrough.
 vi.mock('@/ui/web/providers/I18n', () => ({
   useTranslations: () => (key: string) => key,
-}))
-
-const renderCardSpy = vi.fn()
-vi.mock('@/app/(frontend)/courses/[courseSlug]/_components/CourseLessonCard', () => ({
-  CourseLessonCard: (props: Record<string, unknown>) => {
-    renderCardSpy(props)
-    return (
-      <div data-testid="course-lesson-card">
-        <span data-testid="card-lesson-title">{String(props.lesson?.title ?? '')}</span>
-        <span data-testid="card-lesson-type">{String(props.lessonType ?? '')}</span>
-      </div>
-    )
-  },
 }))
 
 import { LessonListTab } from '@/app/(frontend)/courses/[courseSlug]/_components/LessonListTab'
@@ -88,16 +76,12 @@ const examLessons: Lesson[] = [
 
 const chapters: Chapter[] = [{ id: 'chapter-1', title: 'Chapter 1', slug: 'chapter-1' }]
 
-beforeEach(() => {
-  renderCardSpy.mockClear()
-})
-
 afterEach(() => {
   cleanup()
 })
 
 describe('LessonListTab — exam type filter (#725)', () => {
-  it('renders only exam lessons and passes lessonType="exam" to each card', () => {
+  it('renders only exam lessons when lessonType="exam"', async () => {
     const allLessons: Lesson[] = [learningLesson, practiceLesson, ...examLessons]
 
     render(
@@ -110,22 +94,19 @@ describe('LessonListTab — exam type filter (#725)', () => {
       />,
     )
 
-    // Cards rendered
-    const cards = screen.getAllByTestId('course-lesson-card')
-    expect(cards).toHaveLength(2)
-
-    // Only exam lesson titles are present (learning/practice excluded)
-    expect(screen.getByText('מבחן 1')).toBeTruthy()
+    // Chapter with the featured lesson auto-expands (via useEffect), so the
+    // rows for its lessons render. Use findByText to wait for that effect.
+    await screen.findByText('מבחן 1')
     expect(screen.getByText('מבחן 2')).toBeTruthy()
+
+    // Non-exam lessons excluded by the type filter → not rendered even as
+    // rows in a collapsed chapter (they never enter the roadmap).
     expect(screen.queryByText('Learning Lesson')).toBeNull()
     expect(screen.queryByText('Practice Lesson')).toBeNull()
 
-    // Each card received lessonType="exam" so it renders the "Exam N" badge
-    const passedTypes = renderCardSpy.mock.calls.map((call) => {
-      const props = call[0] as { lessonType?: string }
-      return props.lessonType
-    })
-    expect(passedTypes.every((t) => t === 'exam')).toBe(true)
+    // Exactly one row per exam lesson.
+    const rows = screen.getAllByTestId('course-lesson-row')
+    expect(rows).toHaveLength(2)
   })
 
   it('returns nothing for the exams tab when the course has no exam lessons', () => {
@@ -141,12 +122,11 @@ describe('LessonListTab — exam type filter (#725)', () => {
       />,
     )
 
-    // LessonListTab renders `null` when filteredLessons is empty
     expect(container.firstChild).toBeNull()
-    expect(renderCardSpy).not.toHaveBeenCalled()
+    expect(screen.queryAllByTestId('course-lesson-row')).toHaveLength(0)
   })
 
-  it('does not regress the learn/practice type filter when adding "exam" support', () => {
+  it('does not regress the learn tab filter when adding "exam" support', async () => {
     const allLessons: Lesson[] = [learningLesson, practiceLesson, ...examLessons]
 
     render(
@@ -159,9 +139,10 @@ describe('LessonListTab — exam type filter (#725)', () => {
       />,
     )
 
-    const cards = screen.getAllByTestId('course-lesson-card')
-    expect(cards).toHaveLength(1)
-    expect(screen.getByText('Learning Lesson')).toBeTruthy()
+    await screen.findByText('Learning Lesson')
     expect(screen.queryByText('מבחן 1')).toBeNull()
+
+    const rows = screen.getAllByTestId('course-lesson-row')
+    expect(rows).toHaveLength(1)
   })
 })

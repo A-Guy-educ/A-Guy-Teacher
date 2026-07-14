@@ -1,3 +1,10 @@
+/**
+ * @fileType component
+ * @domain frontend
+ * @pattern lesson-roadmap-chapter
+ * @ai-summary Renders one chapter as a Radix accordion item — header with chapter name, unlocked-count progress bar, and chevron; expandable body with the chapter description and a list of LessonRow entries connected by a subtle timeline track. Header tone (completed / featured / neutral) is derived from the group's aggregate status.
+ */
+
 'use client'
 
 import { BookmarkIcon, CheckIcon, ChevronDown } from 'lucide-react'
@@ -69,10 +76,10 @@ export function ChapterAccordion({
             </div>
             <div className="text-start">
               <div className="flex items-center gap-content-gap-xs flex-wrap">
-                <span className="text-[10px] uppercase tracking-tracking-sm font-semibold text-muted-foreground">
+                <span className="text-body-2xs uppercase tracking-tracking-sm font-semibold text-muted-foreground">
                   {formatMessage(t('roadmapChapterLabel'), { num: chapterIndex + 1 })}
                 </span>
-                <span className="text-[10px] text-muted-foreground font-mono">
+                <span className="text-body-2xs text-muted-foreground font-mono">
                   ({formatMessage(t('roadmapChapterCount'), { count: totalCount })})
                 </span>
               </div>
@@ -93,7 +100,7 @@ export function ChapterAccordion({
                   style={{ width: `${percent}%` }}
                 />
               </div>
-              <span className="text-[10px] font-semibold text-muted-foreground font-mono tabular-nums">
+              <span className="text-body-2xs font-semibold text-muted-foreground font-mono tabular-nums">
                 {formatMessage(t('roadmapChapterUnlocked'), {
                   done: completedCount,
                   total: totalCount,
@@ -117,7 +124,10 @@ export function ChapterAccordion({
 
           <div className="relative">
             {visibleLessons.length > 0 && (
-              <div className="absolute start-[15px] top-6 bottom-6 w-px bg-border rounded-full z-0" />
+              <div
+                className="absolute start-[15px] top-6 bottom-6 w-px bg-border rounded-full z-0"
+                aria-hidden
+              />
             )}
             <div className="space-y-content-gap-xs relative z-10">
               {visibleLessons.map((node) => (

@@ -1,3 +1,10 @@
+/**
+ * @fileType component
+ * @domain frontend
+ * @pattern hero-progress-ring
+ * @ai-summary Circular percent indicator (SVG) inside the roadmap hero card. Accent color is passed in from the parent so the ring tracks the active tab color (learn/practice/exams) — track color uses the border token so light + dark themes both render correctly.
+ */
+
 interface HeroProgressRingProps {
   percent: number
   accentColor: string

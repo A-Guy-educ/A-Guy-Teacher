@@ -1,3 +1,10 @@
+/**
+ * @fileType component
+ * @domain frontend
+ * @pattern lesson-roadmap-filter
+ * @ai-summary Segmented filter switch above the chapter accordions. Three mutually-exclusive modes: `all` (default), `focus` (only the chapter with the featured lesson), `uncompleted` (hides completed lessons in every chapter). Purely presentational — parent owns the state.
+ */
+
 'use client'
 
 import { cn } from '@/infra/utils/ui'

@@ -89,6 +89,7 @@ export const fontSize = {
   'body-md': ['1rem', { lineHeight: '1.6' }], // 16px - Default
   'body-sm': ['0.875rem', { lineHeight: '1.5' }], // 14px
   'body-xs': ['0.75rem', { lineHeight: '1.5' }], // 12px
+  'body-2xs': ['0.6875rem', { lineHeight: '1.4' }], // 11px - captions, badges, meta labels
 
   // Monospace sizes (for code)
   'code-lg': ['1rem', { lineHeight: '1.6', fontFamily: 'var(--font-geist-mono)' }],
