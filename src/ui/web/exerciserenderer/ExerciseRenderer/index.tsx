@@ -417,15 +417,11 @@ export function ExerciseRenderer({
             key={b.id}
             blockId={b.id}
             layout={
-              (b.layout as 'textAbove' | 'textBelow' | 'textLeft' | 'textRight') ||
-              'textRight'
+              (b.layout as 'textAbove' | 'textBelow' | 'textLeft' | 'textRight') || 'textRight'
             }
             prompt={b.prompt as import('@/infra/types/exercise').InlineRichText | undefined}
           >
-            <GeometryRenderer
-              blockId={b.id}
-              spec={geometryBlock.geometry as GeometrySpecV1}
-            />
+            <GeometryRenderer blockId={b.id} spec={geometryBlock.geometry as GeometrySpecV1} />
           </GraphWithPrompt>
         ),
         nextIndex: questionIndex,
@@ -442,8 +438,7 @@ export function ExerciseRenderer({
             key={b.id}
             blockId={b.id}
             layout={
-              (b.layout as 'textAbove' | 'textBelow' | 'textLeft' | 'textRight') ||
-              'textRight'
+              (b.layout as 'textAbove' | 'textBelow' | 'textLeft' | 'textRight') || 'textRight'
             }
             prompt={b.prompt as import('@/infra/types/exercise').InlineRichText | undefined}
           >
@@ -543,9 +538,7 @@ export function ExerciseRenderer({
             >
               <SvgRenderer
                 block={svgBlock}
-                selectedHotspotIds={
-                  svgAnswer.type === 'svg' ? svgAnswer.selectedHotspotIds : []
-                }
+                selectedHotspotIds={svgAnswer.type === 'svg' ? svgAnswer.selectedHotspotIds : []}
                 onHotspotToggle={(id) => handleSvgHotspotToggle(svgBlock.id, id)}
                 disabled={!!svgDisabled}
                 checkResult={svgResult}

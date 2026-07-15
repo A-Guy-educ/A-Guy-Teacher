@@ -132,9 +132,7 @@ export function ExerciseWorksheet({
             })
             if (incremented) questionIndex++
             groupNodes.push(
-              <React.Fragment key={getBlockKey(block, blockIdx)}>
-                {renderedBlock}
-              </React.Fragment>,
+              <React.Fragment key={getBlockKey(block, blockIdx)}>{renderedBlock}</React.Fragment>,
             )
           })
           return <React.Fragment key={`group-${groupIdx}`}>{groupNodes}</React.Fragment>

@@ -47,7 +47,9 @@ function getGroups(exercise: Exercise): WorksheetGroups {
  * existing solution-collection pass can iterate question blocks in render
  * order without caring about section boundaries.
  */
-function flattenGroups(groups: WorksheetGroups): import('@/ui/web/exerciserenderer/types').ContentBlock[] {
+function flattenGroups(
+  groups: WorksheetGroups,
+): import('@/ui/web/exerciserenderer/types').ContentBlock[] {
   const out: import('@/ui/web/exerciserenderer/types').ContentBlock[] = []
   for (const group of groups) {
     for (const block of group.blocks) out.push(block)

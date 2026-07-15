@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  getExerciseBlockGroups,
-  getExerciseBlocks,
-} from '@/lib/exercises/getExerciseBlocks'
+import { getExerciseBlockGroups, getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
 import type { ContentBlock } from '@/infra/types/exercise'
 import type { Exercise, Section } from '@/infra/types/content'
 
@@ -121,12 +118,7 @@ describe('getExerciseBlocks', () => {
       sections: [section('s1', 10, [block('s1-a'), block('s1-b')])],
     }
 
-    expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual([
-      'own-1',
-      'own-2',
-      's1-a',
-      's1-b',
-    ])
+    expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual(['own-1', 'own-2', 's1-a', 's1-b'])
   })
 
   it('renders only own content.blocks when sections exist but none are populated', () => {
@@ -165,12 +157,7 @@ describe('getExerciseBlocks', () => {
       ],
     }
 
-    expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual([
-      'own-1',
-      's2-a',
-      's2-b',
-      's1-a',
-    ])
+    expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual(['own-1', 's2-a', 's2-b', 's1-a'])
   })
 })
 
@@ -182,9 +169,7 @@ describe('getExerciseBlockGroups', () => {
     }
 
     const groups = getExerciseBlockGroups(exercise)
-    expect(groups).toEqual([
-      { sectionIndex: null, blocks: [block('c1'), block('c2')] },
-    ])
+    expect(groups).toEqual([{ sectionIndex: null, blocks: [block('c1'), block('c2')] }])
   })
 
   it('omits the own-blocks group when exercise.content.blocks is empty', () => {

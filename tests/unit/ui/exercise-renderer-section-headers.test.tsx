@@ -81,10 +81,7 @@ describe('ExerciseRenderer — section headers (issue #880)', () => {
       { sectionIndex: 0, blocks: [rich('s1-a', 's1')] },
       { sectionIndex: 1, blocks: [rich('s2-a', 's2')] },
     ]
-    renderWithI18n(
-      <ExerciseRenderer groups={groups} hideLatexBlocks={false} />,
-      'he',
-    )
+    renderWithI18n(<ExerciseRenderer groups={groups} hideLatexBlocks={false} />, 'he')
     const headers = screen.getAllByTestId('exercise-section-header')
     expect(headers).toHaveLength(2)
     expect(headers[0]).toHaveAttribute('data-section-index', '0')
