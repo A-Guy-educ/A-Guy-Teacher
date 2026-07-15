@@ -11,18 +11,23 @@ import type { Exercise } from '@/infra/types/content'
 import { aggregateManySerialized, aggregateOneSerialized, objectIdFromString } from '../mongo'
 
 /**
- * Build a `$lookup` stage that joins the `sections` collection onto the
- * `sections` field of an exercise. The local field is preserved as an array of
- * mixed (id | populated doc) entries; the helper downstream (`getExerciseBlocks`)
- * treats each entry structurally so this stays compatible with both legacy
- * string-id docs and new-shape populated docs.
+ * Build a `$lookup` stage that joins child `sections` onto an exercise via the
+ * reverse relationship: each `section.exercise` points at `exercises._id`.
+ * The join writes the populated section docs into `exercise.sections`, which
+ * `getExerciseBlockGroups()` orders using the `exercise.blocks` playlist
+ * (falling back to `section.order`).
+ *
+ * The exercises collection has no `sections` field of its own — the playlist
+ * is stored in `exercise.blocks` (a JSON textarea of `sectionRef` entries),
+ * and sections back-point to their parent via `section.exercise`. Joining the
+ * other way (`localField: 'sections'`) matches nothing.
  */
-function sectionsLookupStage(): Document {
+export function sectionsLookupStage(): Document {
   return {
     $lookup: {
       from: 'sections',
-      localField: 'sections',
-      foreignField: '_id',
+      localField: '_id',
+      foreignField: 'exercise',
       as: 'sections',
     },
   }
