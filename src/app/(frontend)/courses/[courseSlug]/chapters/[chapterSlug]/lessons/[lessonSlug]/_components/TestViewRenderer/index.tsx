@@ -6,18 +6,22 @@
  *             "test" page. Each exercise keeps a small header (number / title)
  *             matching the Scroll view's card cadence, and the question UI is
  *             delegated to ExerciseRenderer with `batchCheckMode` enabled so
- *             hints/solutions/per-question check buttons are hidden and a single
- *             "Check all" button grades every question at once.
+ *             hints/solutions/per-question check buttons are hidden. A single
+ *             "Check all" button pinned at the bottom bumps a shared trigger
+ *             so every ExerciseRenderer on the page grades in one click.
  */
 
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import type { Exercise, FormulaSheet, Media as MediaType } from '@/infra/types/content'
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
 import { ChatInterface } from '@/ui/web/chat'
 import { getExerciseBlockGroups } from '@/lib/exercises/getExerciseBlocks'
+import { Button } from '@/ui/web/components/button'
+import { CheckCircle2 } from 'lucide-react'
+import { useTranslations } from '@/ui/web/providers/I18n'
 
 interface TestViewRendererProps {
   lessonTitle: string
@@ -52,11 +56,17 @@ export function TestViewRenderer({
   hideLatexBlocks,
   nextLesson: _nextLesson,
 }: TestViewRendererProps) {
+  const t = useTranslations('courses')
+
   // Only render exercises that have blocks. Mirrors BlocksDocumentLessonView's
   // filter so empty exercises don't leave gaps in the test page.
   const renderable = exercises
     .map((exercise) => ({ exercise, groups: getExerciseBlockGroups(exercise) }))
     .filter((entry) => entry.groups.some((group) => group.blocks.length > 0))
+
+  // Bumping this counter tells every ExerciseRenderer on the page to run its
+  // batch check. Each child ignores the initial 0 and only reacts to changes.
+  const [checkAllTrigger, setCheckAllTrigger] = useState(0)
 
   const chatContent = showChat ? (
     <ChatInterface
@@ -113,11 +123,27 @@ export function TestViewRenderer({
                         exerciseId={exercise.id}
                         hideLatexBlocks={hideLatexBlocks}
                         batchCheckMode
+                        hideBatchCheckButton
+                        checkAllTrigger={checkAllTrigger}
                       />
                     </div>
                   </section>
                 ))}
               </div>
+
+              {renderable.length > 0 && (
+                <div className="mt-section-sm flex justify-center">
+                  <Button
+                    onClick={() => setCheckAllTrigger((n) => n + 1)}
+                    size="lg"
+                    className="rounded-xl font-bold text-body-md text-white"
+                    data-testid="test-view-check-all"
+                  >
+                    <CheckCircle2 className="w-5 h-5 me-2" />
+                    {t('checkAllAnswers')}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

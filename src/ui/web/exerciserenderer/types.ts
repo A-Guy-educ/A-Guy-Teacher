@@ -249,4 +249,18 @@ export interface ExerciseRendererProps {
    * identically.
    */
   batchCheckMode?: boolean
+  /**
+   * Only meaningful when `batchCheckMode` is true. When true, the renderer
+   * still hides help/per-question check and disables true/false auto-check,
+   * but suppresses its own "Check all" button — the parent (e.g. TestViewRenderer)
+   * owns a single button that grades every exercise on the page.
+   */
+  hideBatchCheckButton?: boolean
+  /**
+   * Only meaningful when `batchCheckMode` is true. Each time this value
+   * changes (and is > 0), the renderer runs its batch check. Lets a parent
+   * with multiple ExerciseRenderer children trigger every child from one
+   * button by bumping the counter.
+   */
+  checkAllTrigger?: number
 }
