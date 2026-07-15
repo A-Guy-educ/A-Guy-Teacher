@@ -1889,6 +1889,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix(exercises): join sections via reverse relationship ([#888](https://github.com/A-Guy-educ/A-Guy-Web/pull/888)) — @aguyshayb
 - #886: 2-option MCQ buttons: click = select + check in one action ([#887](https://github.com/A-Guy-educ/A-Guy-Web/pull/887)) — @kodyade[bot]
 - #881: Render 2-option MCQ as side-by-side buttons ([#882](https://github.com/A-Guy-educ/A-Guy-Web/pull/882)) — @kodyade[bot]
 - fix(exercises): render own blocks + sections with localized a/b/c headers (#880) ([#883](https://github.com/A-Guy-educ/A-Guy-Web/pull/883)) — @kodyade[bot]
