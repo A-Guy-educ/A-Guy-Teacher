@@ -24,9 +24,9 @@ import type { Exercise, Media as MediaType } from '@/infra/types/content'
 import type { QuestionBlock, InlineRichText, RichTextBlock } from '@/ui/web/exerciserenderer/types'
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
 import { HEBREW_LETTERS } from '@/ui/web/exerciserenderer/constants'
-import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
+import { getExerciseBlockGroups } from '@/lib/exercises/getExerciseBlocks'
 
-type WorksheetBlocks = React.ComponentProps<typeof ExerciseWorksheet>['blocks']
+type WorksheetGroups = React.ComponentProps<typeof ExerciseWorksheet>['groups']
 
 interface BlocksDocumentLessonViewProps {
   lessonTitle: string
@@ -38,8 +38,21 @@ interface BlocksDocumentLessonViewProps {
   chatContent?: React.ReactNode
 }
 
-function getBlocks(exercise: Exercise): WorksheetBlocks {
-  return getExerciseBlocks(exercise) as WorksheetBlocks
+function getGroups(exercise: Exercise): WorksheetGroups {
+  return getExerciseBlockGroups(exercise)
+}
+
+/**
+ * Flatten a worksheet's block groups down to the blocks themselves so the
+ * existing solution-collection pass can iterate question blocks in render
+ * order without caring about section boundaries.
+ */
+function flattenGroups(groups: WorksheetGroups): import('@/ui/web/exerciserenderer/types').ContentBlock[] {
+  const out: import('@/ui/web/exerciserenderer/types').ContentBlock[] = []
+  for (const group of groups) {
+    for (const block of group.blocks) out.push(block)
+  }
+  return out
 }
 
 type ExerciseSolutionEntry = {
@@ -76,7 +89,7 @@ function getSolutionsByExercise(
   const entries: ExerciseSolutionEntry[] = []
 
   exercises.forEach((exercise, exerciseIdx) => {
-    const blocks = getBlocks(exercise)
+    const blocks = flattenGroups(getGroups(exercise))
     const exerciseSolutions: ExerciseSolutionEntry['solutions'] = []
 
     for (const block of blocks) {
@@ -171,8 +184,8 @@ export function BlocksDocumentLessonView({
   const dir: 'ltr' | 'rtl' = locale?.toLowerCase().startsWith('he') ? 'rtl' : 'ltr'
 
   const renderable = exercises
-    .map((exercise) => ({ exercise, blocks: getBlocks(exercise) }))
-    .filter((entry) => entry.blocks.length > 0)
+    .map((exercise) => ({ exercise, groups: getGroups(exercise) }))
+    .filter((entry) => entry.groups.some((group) => group.blocks.length > 0))
 
   const solutionEntries = getSolutionsByExercise(exercises, locale)
 
@@ -200,7 +213,7 @@ export function BlocksDocumentLessonView({
                   </h1>
                 )}
                 <div className="flex flex-col gap-12">
-                  {renderable.map(({ exercise, blocks }) => (
+                  {renderable.map(({ exercise, groups }) => (
                     <section key={exercise.id} className="flex flex-col gap-content-gap">
                       {exercise.title && (
                         <h2 className="text-heading-md font-bold text-foreground">
@@ -208,7 +221,7 @@ export function BlocksDocumentLessonView({
                         </h2>
                       )}
                       <ExerciseWorksheet
-                        blocks={blocks}
+                        groups={groups}
                         mediaMap={mediaMap}
                         hideLatexBlocks={false}
                       />

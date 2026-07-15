@@ -5,6 +5,7 @@
  */
 
 import type {
+  ExerciseBlockGroup,
   LatexBlock,
   QuestionMatchingBlock,
   SvgBlock,
@@ -15,6 +16,7 @@ import type {
 } from '@/infra/types/exercise'
 
 export type {
+  ExerciseBlockGroup,
   LatexBlock,
   QuestionMatchingBlock,
   SvgBlock,
@@ -201,7 +203,13 @@ export interface ExerciseContentData {
  * Props for the new block-based exercise renderer
  */
 export interface ExerciseRendererProps {
-  content: ExerciseContentData
+  /**
+   * Render output of `getExerciseBlockGroups(exercise)`. Each group's
+   * `sectionIndex` drives the localized "section a / section b" header
+   * rendered above the group; `sectionIndex: null` means the group holds the
+   * exercise's own `content.blocks` and renders without a header.
+   */
+  groups: ExerciseBlockGroup[]
   mode?: PreviewMode
   showCheckAnswer?: boolean
   className?: string
