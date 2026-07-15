@@ -230,4 +230,15 @@ export interface ExerciseRendererProps {
    * LaTeX visible.
    */
   hideLatexBlocks?: boolean
+  /**
+   * When true, the renderer hides the per-question help system (hint,
+   * guiding question, solution) AND the per-question check button, and
+   * renders a single "Check all" button at the bottom of the questions list
+   * that grades every question at once. The auto-check on true/false answer
+   * selection is also disabled in this mode — nothing is graded until the
+   * student explicitly clicks "Check all". Defaults to `false` so existing
+   * callers (ExercisesPager, BlocksDocumentLessonView, etc.) behave
+   * identically.
+   */
+  batchCheckMode?: boolean
 }

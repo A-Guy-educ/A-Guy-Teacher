@@ -121,7 +121,7 @@ export function LessonIntroPage({
   const hasMedia = pdfCount > 0
   const visibleRenderers: LessonMode[] = []
   if (hasMedia) visibleRenderers.push('media')
-  if (hasExerciseContent) visibleRenderers.push('pdf', 'interactive')
+  if (hasExerciseContent) visibleRenderers.push('pdf', 'interactive', 'test')
   else if (hasContentPagesInBlocks) visibleRenderers.push('interactive')
 
   const completed = progress?.completed ?? 0

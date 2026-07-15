@@ -435,6 +435,8 @@
     "lessonViewModeMedia": "מדיה",
     "lessonViewModePdf": "תצוגת גלילה",
     "lessonViewModeInteractive": "אינטראקטיבי",
+    "lessonViewModeTest": "מבחן",
+    "checkAllAnswers": "בדוק את כל התשובות",
     "pdfBadge": "PDF",
     "scrollView": "תצוגת גלילה",
     "interactiveExercises": "תרגילים אינטראקטיביים",
