@@ -25,6 +25,14 @@ interface McqQuestionProps {
   disabled: boolean
   checkResult: CheckResult | null
   t: (key: string) => string
+  /**
+   * Optional handler used ONLY by the 2-option single-select button variant.
+   * When provided, clicking a button both selects the option AND triggers an
+   * immediate check (equivalent to selecting + pressing "Check Answer" in
+   * one action). Card-list variants (3+ options or multi-select) ignore
+   * this prop and keep the explicit Check Answer flow.
+   */
+  onAutoSubmit?: (answer: UserAnswer) => void
 }
 
 /**
@@ -44,8 +52,12 @@ export function McqQuestion({
   disabled,
   checkResult: _checkResult,
   t,
+  onAutoSubmit,
 }: McqQuestionProps) {
   const selectedIds = answer.type === 'mcq' ? answer.selectedIds : []
+
+  const isTwoOptionSingleSelect =
+    !question.answer.multiSelect && question.answer.options.length === 2
 
   const handleOptionClick = (optionId: string) => {
     if (disabled) return
@@ -59,7 +71,16 @@ export function McqQuestion({
       newSelectedIds = [optionId]
     }
 
-    onChange({ type: 'mcq', selectedIds: newSelectedIds })
+    const nextAnswer: UserAnswer = { type: 'mcq', selectedIds: newSelectedIds }
+
+    // 2-option single-select buttons: clicking selects AND triggers a check in
+    // one action. Other variants fall through to the explicit Check Answer flow.
+    if (isTwoOptionSingleSelect && onAutoSubmit) {
+      onAutoSubmit(nextAnswer)
+      return
+    }
+
+    onChange(nextAnswer)
   }
 
   // Convert InlineRichText to RichTextBlock for renderer
@@ -68,9 +89,6 @@ export function McqQuestion({
     id: `${question.id}-prompt`,
     mediaIds: question.prompt.mediaIds || [],
   }
-
-  const isTwoOptionSingleSelect =
-    !question.answer.multiSelect && question.answer.options.length === 2
 
   return (
     <div className="flex flex-col gap-content-gap">
