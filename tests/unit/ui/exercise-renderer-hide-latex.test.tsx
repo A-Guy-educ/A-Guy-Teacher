@@ -14,7 +14,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import enMessages from '../../../src/i18n/en.json'
 import { I18nProvider } from '@/ui/web/providers/I18n'
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer/ExerciseRenderer'
-import type { ExerciseContentData } from '@/ui/web/exerciserenderer/types'
+import type { ExerciseBlockGroup } from '@/infra/types/exercise'
 
 // Mock the two block renderers we care about with tiny test stubs so we can
 // assert DOM presence without pulling in KaTeX / markdown machinery.
@@ -37,24 +37,28 @@ function renderWithI18n(ui: React.ReactElement) {
   )
 }
 
-function buildContent(): ExerciseContentData {
-  return {
-    blocks: [
-      {
-        id: 'rt-1',
-        type: 'rich_text',
-        format: 'md-math-v1',
-        value: 'Plain prose block',
-        mediaIds: [],
-      },
-      {
-        id: 'lx-1',
-        type: 'latex',
-        latex: 'E = mc^2',
-        renderMode: 'block',
-      },
-    ] as ExerciseContentData['blocks'],
-  }
+function buildGroups(): ExerciseBlockGroup[] {
+  return [
+    {
+      // Exercise's own content.blocks — sectionIndex null renders with no header
+      sectionIndex: null,
+      blocks: [
+        {
+          id: 'rt-1',
+          type: 'rich_text',
+          format: 'md-math-v1',
+          value: 'Plain prose block',
+          mediaIds: [],
+        },
+        {
+          id: 'lx-1',
+          type: 'latex',
+          latex: 'E = mc^2',
+          renderMode: 'block',
+        },
+      ] as ExerciseBlockGroup['blocks'],
+    },
+  ]
 }
 
 describe('ExerciseRenderer — hideLatexBlocks prop', () => {
@@ -63,47 +67,50 @@ describe('ExerciseRenderer — hideLatexBlocks prop', () => {
   })
 
   it('hides latex blocks by default (hideLatexBlocks not set) and keeps other blocks intact', () => {
-    renderWithI18n(<ExerciseRenderer content={buildContent()} />)
+    renderWithI18n(<ExerciseRenderer groups={buildGroups()} />)
     expect(screen.getByTestId('rich-text')).toHaveTextContent('Plain prose block')
     expect(screen.queryByTestId('latex-block')).not.toBeInTheDocument()
   })
 
   it('renders latex blocks when hideLatexBlocks is explicitly false', () => {
-    renderWithI18n(<ExerciseRenderer content={buildContent()} hideLatexBlocks={false} />)
+    renderWithI18n(<ExerciseRenderer groups={buildGroups()} hideLatexBlocks={false} />)
     expect(screen.getByTestId('latex-block')).toHaveTextContent('E = mc^2')
   })
 
   it('skips latex blocks when hideLatexBlocks is true but keeps other blocks intact', () => {
-    renderWithI18n(<ExerciseRenderer content={buildContent()} hideLatexBlocks={true} />)
+    renderWithI18n(<ExerciseRenderer groups={buildGroups()} hideLatexBlocks={true} />)
     expect(screen.getByTestId('rich-text')).toHaveTextContent('Plain prose block')
     expect(screen.queryByTestId('latex-block')).not.toBeInTheDocument()
   })
 
   it('filters multiple latex blocks in one exercise when hideLatexBlocks is true', () => {
-    const content: ExerciseContentData = {
-      blocks: [
-        {
-          id: 'lx-a',
-          type: 'latex',
-          latex: 'FIRST',
-          renderMode: 'block',
-        },
-        {
-          id: 'rt-1',
-          type: 'rich_text',
-          format: 'md-math-v1',
-          value: 'middle prose',
-          mediaIds: [],
-        },
-        {
-          id: 'lx-b',
-          type: 'latex',
-          latex: 'SECOND',
-          renderMode: 'block',
-        },
-      ] as ExerciseContentData['blocks'],
-    }
-    renderWithI18n(<ExerciseRenderer content={content} hideLatexBlocks />)
+    const groups: ExerciseBlockGroup[] = [
+      {
+        sectionIndex: null,
+        blocks: [
+          {
+            id: 'lx-a',
+            type: 'latex',
+            latex: 'FIRST',
+            renderMode: 'block',
+          },
+          {
+            id: 'rt-1',
+            type: 'rich_text',
+            format: 'md-math-v1',
+            value: 'middle prose',
+            mediaIds: [],
+          },
+          {
+            id: 'lx-b',
+            type: 'latex',
+            latex: 'SECOND',
+            renderMode: 'block',
+          },
+        ] as ExerciseBlockGroup['blocks'],
+      },
+    ]
+    renderWithI18n(<ExerciseRenderer groups={groups} hideLatexBlocks />)
     expect(screen.queryByText('FIRST')).not.toBeInTheDocument()
     expect(screen.queryByText('SECOND')).not.toBeInTheDocument()
     expect(screen.getByTestId('rich-text')).toHaveTextContent('middle prose')

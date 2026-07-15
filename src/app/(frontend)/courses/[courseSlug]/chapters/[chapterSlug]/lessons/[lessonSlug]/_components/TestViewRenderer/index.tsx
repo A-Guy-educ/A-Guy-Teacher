@@ -17,7 +17,7 @@ import type { Exercise, FormulaSheet, Media as MediaType } from '@/infra/types/c
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
 import { ChatInterface } from '@/ui/web/chat'
-import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
+import { getExerciseBlockGroups } from '@/lib/exercises/getExerciseBlocks'
 
 interface TestViewRendererProps {
   lessonTitle: string
@@ -55,8 +55,8 @@ export function TestViewRenderer({
   // Only render exercises that have blocks. Mirrors BlocksDocumentLessonView's
   // filter so empty exercises don't leave gaps in the test page.
   const renderable = exercises
-    .map((exercise) => ({ exercise, blocks: getExerciseBlocks(exercise) }))
-    .filter((entry) => entry.blocks.length > 0)
+    .map((exercise) => ({ exercise, groups: getExerciseBlockGroups(exercise) }))
+    .filter((entry) => entry.groups.some((group) => group.blocks.length > 0))
 
   const chatContent = showChat ? (
     <ChatInterface
@@ -83,7 +83,7 @@ export function TestViewRenderer({
                 </h1>
               )}
               <div className="flex flex-col gap-section-sm">
-                {renderable.map(({ exercise, blocks }, exerciseIdx) => (
+                {renderable.map(({ exercise, groups }, exerciseIdx) => (
                   <section
                     key={exercise.id}
                     className="rounded-xl border border-border bg-card shadow-elevation-1 overflow-hidden"
@@ -105,7 +105,7 @@ export function TestViewRenderer({
                     </header>
                     <div className="px-4 py-content-gap">
                       <ExerciseRenderer
-                        content={{ blocks }}
+                        groups={groups}
                         mediaMap={mediaMap}
                         exerciseNumber={exerciseIdx + 1}
                         showExerciseNumber={false}

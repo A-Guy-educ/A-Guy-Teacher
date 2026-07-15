@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { Progress } from '@/ui/web/components/progress'
-import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
+import { getExerciseBlockGroups } from '@/lib/exercises/getExerciseBlocks'
 import { useExercisesPager } from './useExercisesPager'
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
 import { ChatInterface } from '@/ui/web/chat'
@@ -320,7 +320,7 @@ export function ExercisesPager({
                     <div className="md:bg-card md:rounded-2xl md:p-card-padding md:border md:border-border/60 md:shadow-elevation-1">
                       <ExerciseRenderer
                         key={currentExercise.id}
-                        content={{ blocks: getExerciseBlocks(currentExercise) }}
+                        groups={getExerciseBlockGroups(currentExercise)}
                         mode="student"
                         showCheckAnswer={true}
                         mediaMap={mediaMap}
@@ -425,10 +425,12 @@ export function ExercisesPager({
                 id: currentExercise.id,
                 title: currentExercise.title ?? '',
                 content: {
-                  blocks: getExerciseBlocks(currentExercise).map((block) => {
-                    const { id, type, ...rest } = block
-                    return { id, type, ...rest }
-                  }),
+                  blocks: getExerciseBlockGroups(currentExercise).flatMap((group) =>
+                    group.blocks.map((block) => {
+                      const { id, type, ...rest } = block
+                      return { id, type, ...rest }
+                    }),
+                  ),
                 },
               }}
               mediaMap={

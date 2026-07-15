@@ -479,6 +479,7 @@
     "helpHint": "Hint",
     "helpGuidingQuestion": "Guiding Question",
     "helpSolution": "Solution",
+    "sectionHeaderPrefix": "Section",
     "videoUnavailable": "Video is not available",
     "videoLoadError": "Failed to load video",
     "notebookTitle": "Practice Notebook",

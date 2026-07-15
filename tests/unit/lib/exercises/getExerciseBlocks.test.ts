@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
+import { getExerciseBlockGroups, getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
 import type { ContentBlock } from '@/infra/types/exercise'
 import type { Exercise, Section } from '@/infra/types/content'
 
@@ -106,5 +106,143 @@ describe('getExerciseBlocks', () => {
     }
 
     expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual(['s1-a'])
+  })
+
+  // ----- Regression coverage for issue #880 (combined own + sections stream) -----
+
+  it('renders own content.blocks first, then sections, when both are present', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [block('own-1'), block('own-2')] },
+      blocks: JSON.stringify([{ blockType: 'sectionRef', section: 's1' }]),
+      sections: [section('s1', 10, [block('s1-a'), block('s1-b')])],
+    }
+
+    expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual(['own-1', 'own-2', 's1-a', 's1-b'])
+  })
+
+  it('renders only own content.blocks when sections exist but none are populated', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [block('own-1')] },
+      blocks: JSON.stringify([{ blockType: 'sectionRef', section: 'missing' }]),
+      sections: ['missing'] as unknown as Array<string | Section>,
+    }
+
+    expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual(['own-1'])
+  })
+
+  it('emits only section blocks when own content.blocks is empty', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [] },
+      blocks: JSON.stringify([{ blockType: 'sectionRef', section: 's1' }]),
+      sections: [section('s1', 10, [block('s1-a')])],
+    }
+
+    expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual(['s1-a'])
+  })
+
+  it('combines own blocks + multiple sections in playlist order', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [block('own-1')] },
+      blocks: JSON.stringify([
+        { blockType: 'sectionRef', section: 's2' },
+        { blockType: 'sectionRef', section: 's1' },
+      ]),
+      sections: [
+        section('s1', 10, [block('s1-a')]),
+        section('s2', 20, [block('s2-a'), block('s2-b')]),
+      ],
+    }
+
+    expect(getExerciseBlocks(exercise).map((b) => b.id)).toEqual(['own-1', 's2-a', 's2-b', 's1-a'])
+  })
+})
+
+describe('getExerciseBlockGroups', () => {
+  it('emits a single sectionIndex:null group for legacy exercises with only own blocks', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [block('c1'), block('c2')] },
+    }
+
+    const groups = getExerciseBlockGroups(exercise)
+    expect(groups).toEqual([{ sectionIndex: null, blocks: [block('c1'), block('c2')] }])
+  })
+
+  it('omits the own-blocks group when exercise.content.blocks is empty', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [] },
+      blocks: JSON.stringify([{ blockType: 'sectionRef', section: 's1' }]),
+      sections: [section('s1', 10, [block('s1-a')])],
+    }
+
+    const groups = getExerciseBlockGroups(exercise)
+    expect(groups).toEqual([{ sectionIndex: 0, blocks: [block('s1-a')] }])
+  })
+
+  it('numbers section groups in playlist order starting at 0', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [block('own-1')] },
+      blocks: JSON.stringify([
+        { blockType: 'sectionRef', section: 's2' },
+        { blockType: 'sectionRef', section: 's1' },
+      ]),
+      sections: [
+        section('s1', 10, [block('s1-a')]),
+        section('s2', 20, [block('s2-a'), block('s2-b')]),
+      ],
+    }
+
+    const groups = getExerciseBlockGroups(exercise)
+    expect(groups).toEqual([
+      { sectionIndex: null, blocks: [block('own-1')] },
+      { sectionIndex: 0, blocks: [block('s2-a'), block('s2-b')] },
+      { sectionIndex: 1, blocks: [block('s1-a')] },
+    ])
+  })
+
+  it('numbers section groups by section.order when no playlist is set', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [block('own-1')] },
+      blocks: [],
+      sections: [
+        section('s3', 30, [block('s3-a')]),
+        section('s1', 10, [block('s1-a')]),
+        section('s2', 20, [block('s2-a')]),
+      ],
+    }
+
+    const groups = getExerciseBlockGroups(exercise)
+    expect(groups).toEqual([
+      { sectionIndex: null, blocks: [block('own-1')] },
+      { sectionIndex: 0, blocks: [block('s1-a')] },
+      { sectionIndex: 1, blocks: [block('s2-a')] },
+      { sectionIndex: 2, blocks: [block('s3-a')] },
+    ])
+  })
+
+  it('returns [] when no exercise is provided', () => {
+    expect(getExerciseBlockGroups(null)).toEqual([])
+    expect(getExerciseBlockGroups(undefined)).toEqual([])
+    expect(getExerciseBlockGroups({ id: 'ex1' })).toEqual([])
+  })
+
+  it('returns only the own-blocks group when sections exist but none are populated', () => {
+    const exercise: Exercise = {
+      id: 'ex1',
+      content: { blocks: [block('legacy')] },
+      blocks: JSON.stringify([{ blockType: 'sectionRef', section: 'missing' }]),
+      sections: ['missing'] as unknown as Array<string | Section>,
+    }
+
+    expect(getExerciseBlockGroups(exercise)).toEqual([
+      { sectionIndex: null, blocks: [block('legacy')] },
+    ])
   })
 })
