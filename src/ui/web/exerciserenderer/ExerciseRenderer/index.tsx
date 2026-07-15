@@ -9,8 +9,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/infra/utils/ui'
 import { useTranslations, useLocale } from '@/ui/web/providers/I18n'
+import { Button } from '@/ui/web/components/button'
 import { Card } from '@/ui/web/components/card'
-import { XCircle } from 'lucide-react'
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import type {
   ExerciseRendererProps,
   ContentBlock,
@@ -175,6 +176,7 @@ export function ExerciseRenderer({
   exerciseId = '',
   onResultsChange,
   hideLatexBlocks = true,
+  batchCheckMode = false,
 }: ExerciseRendererProps) {
   const t = useTranslations('courses')
   const locale = useLocale()
@@ -264,6 +266,7 @@ export function ExerciseRenderer({
   const [checkResults, setCheckResults] = useState<Record<string, CheckResult>>({})
   const [hasChecked, setHasChecked] = useState<Record<string, boolean>>({})
   const [isChecking, setIsChecking] = useState<Record<string, boolean>>({})
+  const [isBatchChecking, setIsBatchChecking] = useState(false)
   const chatTriggeredRef = useRef<Set<string>>(new Set())
 
   // Aggregate correctness tracking
@@ -316,6 +319,12 @@ export function ExerciseRenderer({
       persistAnswers(updated)
       return updated
     })
+
+    // In batch check mode nothing is graded until the student clicks
+    // "Check all" — we just store the answer and let batchCheck handle it.
+    if (batchCheckMode) {
+      return
+    }
 
     // For true/false questions, check immediately on selection
     const question = questionBlocks.find((q) => q.id === questionId)
@@ -423,6 +432,36 @@ export function ExerciseRenderer({
           },
         }),
       )
+    }
+  }
+
+  const handleBatchCheck = async () => {
+    if (isBatchChecking) return
+    setIsBatchChecking(true)
+    try {
+      const newResults: Record<string, CheckResult> = {}
+      const newHasChecked: Record<string, boolean> = {}
+      for (const question of questionBlocks) {
+        const answer = answers[question.id] ?? getInitialAnswer(question)
+        const result = await checkQuestionAnswer(question, answer, errorMessages)
+        newResults[question.id] = result
+        newHasChecked[question.id] = true
+        if (!result.isCorrect && !chatTriggeredRef.current.has(question.id)) {
+          chatTriggeredRef.current.add(question.id)
+          window.dispatchEvent(
+            new CustomEvent('exercise-incorrect-answer', {
+              detail: {
+                questionJson: JSON.stringify(question),
+                studentAnswer: formatStudentAnswer(question, answer),
+              },
+            }),
+          )
+        }
+      }
+      setCheckResults((prev) => ({ ...prev, ...newResults }))
+      setHasChecked((prev) => ({ ...prev, ...newHasChecked }))
+    } finally {
+      setIsBatchChecking(false)
     }
   }
 
@@ -682,14 +721,19 @@ export function ExerciseRenderer({
     const checked = hasChecked[question.id] || false
     const disabled = checked && checkResult?.isCorrect
 
-    // True/False and Table questions don't use the generic check button
+    // True/False and Table questions don't use the generic check button.
+    // In batch check mode the per-question check button is always hidden
+    // — grading happens through the single "Check all" button instead.
     const showCheckButton =
       showCheckAnswer &&
+      !batchCheckMode &&
       !(question.type === 'question_select' && question.variant === 'true_false') &&
       question.type !== 'question_table'
 
-    // Help system for this question (always shown — AI fallback when no backend content)
-    const helpSystemNode = (
+    // Help system for this question (always shown — AI fallback when no backend content).
+    // In batch check mode the help system is hidden: the student should
+    // attempt the test without hints/solutions.
+    const helpSystemNode = batchCheckMode ? null : (
       <HelpSystem
         question={question}
         helpUsage={
@@ -745,7 +789,9 @@ export function ExerciseRenderer({
               disabled={!!disabled}
               checkResult={checkResult}
               t={t}
-              onAutoSubmit={(ans) => handleAutoCheckMcq(question.id, ans)}
+              onAutoSubmit={
+                batchCheckMode ? undefined : (ans) => handleAutoCheckMcq(question.id, ans)
+              }
             />
           )}
           {question.type === 'question_free_response' && (
@@ -917,6 +963,29 @@ export function ExerciseRenderer({
             })
             return groupNodes
           })()}
+
+          {batchCheckMode && totalQuestions > 0 && (
+            <div className="flex justify-center pt-2">
+              <Button
+                onClick={handleBatchCheck}
+                disabled={isBatchChecking}
+                size="lg"
+                className="rounded-xl font-bold text-body-md text-white"
+              >
+                {isBatchChecking ? (
+                  <>
+                    <Loader2 className="w-5 h-5 me-2 animate-spin" />
+                    {t('checkAnswer')}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 me-2" />
+                    {t('checkAllAnswers')}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </MediaMapProvider>
