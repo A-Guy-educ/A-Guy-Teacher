@@ -297,6 +297,11 @@ export interface ContentData {
   blocks: ContentBlock[]
 }
 
+export interface ExerciseBlockGroup {
+  blocks: ContentBlock[]
+  sectionIndex: number | null
+}
+
 export type ExerciseContent = ContentData
 
 export const ContentSchema = {
