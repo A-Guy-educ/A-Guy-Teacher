@@ -349,30 +349,65 @@ export function ExerciseRenderer({
     }
   }
 
-  const handleCheckAnswer = async (questionId: string) => {
-    const question = questionBlocks.find((q) => q.id === questionId)
-    if (!question) return
+  /**
+   * Run a check against the given answer (already-resolved object, not state).
+   * Shared by `handleCheckAnswer` (explicit Check Answer button) and
+   * `handleAutoCheckMcq` (button-click auto-check on 2-option MCQs). Sourcing
+   * the answer from the parameter — rather than `answers[questionId]` — is
+   * important for the auto-check path because React state hasn't flushed yet
+   * inside the same click handler that just called `setAnswers`.
+   */
+  const runCheckWithAnswer = useCallback(
+    async (questionId: string, ans: UserAnswer) => {
+      const question = questionBlocks.find((q) => q.id === questionId)
+      if (!question) return
 
-    setIsChecking((prev) => ({ ...prev, [questionId]: true }))
-    try {
-      const result = await checkQuestionAnswer(question, answers[questionId], errorMessages)
-      setCheckResults((prev) => ({ ...prev, [questionId]: result }))
-      setHasChecked((prev) => ({ ...prev, [questionId]: true }))
-      if (!result.isCorrect && !chatTriggeredRef.current.has(questionId)) {
-        chatTriggeredRef.current.add(questionId)
-        window.dispatchEvent(
-          new CustomEvent('exercise-incorrect-answer', {
-            detail: {
-              questionJson: JSON.stringify(question),
-              studentAnswer: formatStudentAnswer(question, answers[questionId]),
-            },
-          }),
-        )
+      setIsChecking((prev) => ({ ...prev, [questionId]: true }))
+      try {
+        const result = await checkQuestionAnswer(question, ans, errorMessages)
+        setCheckResults((prev) => ({ ...prev, [questionId]: result }))
+        setHasChecked((prev) => ({ ...prev, [questionId]: true }))
+        if (!result.isCorrect && !chatTriggeredRef.current.has(questionId)) {
+          chatTriggeredRef.current.add(questionId)
+          window.dispatchEvent(
+            new CustomEvent('exercise-incorrect-answer', {
+              detail: {
+                questionJson: JSON.stringify(question),
+                studentAnswer: formatStudentAnswer(question, ans),
+              },
+            }),
+          )
+        }
+      } finally {
+        setIsChecking((prev) => ({ ...prev, [questionId]: false }))
       }
-    } finally {
-      setIsChecking((prev) => ({ ...prev, [questionId]: false }))
-    }
-  }
+    },
+    [questionBlocks, errorMessages],
+  )
+
+  const handleCheckAnswer = useCallback(
+    async (questionId: string) => {
+      await runCheckWithAnswer(questionId, answers[questionId])
+    },
+    [runCheckWithAnswer, answers],
+  )
+
+  /**
+   * Auto-check path for 2-option single-select MCQ buttons: the click already
+   * resolved the new answer, so we update state + run the check against the
+   * parameter directly (state has not flushed yet inside this handler).
+   */
+  const handleAutoCheckMcq = useCallback(
+    async (questionId: string, ans: UserAnswer) => {
+      setAnswers((prev) => {
+        const updated = { ...prev, [questionId]: ans }
+        persistAnswers(updated)
+        return updated
+      })
+      await runCheckWithAnswer(questionId, ans)
+    },
+    [runCheckWithAnswer, persistAnswers],
+  )
 
   const handleTableCheckResult = (questionId: string, isCorrect: boolean) => {
     setCheckResults((prev) => ({ ...prev, [questionId]: { isCorrect } }))
@@ -710,6 +745,7 @@ export function ExerciseRenderer({
               disabled={!!disabled}
               checkResult={checkResult}
               t={t}
+              onAutoSubmit={(ans) => handleAutoCheckMcq(question.id, ans)}
             />
           )}
           {question.type === 'question_free_response' && (
