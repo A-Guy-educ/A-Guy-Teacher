@@ -177,6 +177,8 @@ export function ExerciseRenderer({
   onResultsChange,
   hideLatexBlocks = true,
   batchCheckMode = false,
+  hideBatchCheckButton = false,
+  checkAllTrigger,
 }: ExerciseRendererProps) {
   const t = useTranslations('courses')
   const locale = useLocale()
@@ -464,6 +466,22 @@ export function ExerciseRenderer({
       setIsBatchChecking(false)
     }
   }
+
+  // Parent-driven "Check all" — a parent with multiple ExerciseRenderer
+  // children can bump `checkAllTrigger` to grade every child from a single
+  // button. We intentionally ignore the initial undefined/0 value so mounting
+  // doesn't auto-grade.
+  const triggerRef = useRef<number | undefined>(checkAllTrigger)
+  useEffect(() => {
+    if (!batchCheckMode) return
+    if (checkAllTrigger === undefined || checkAllTrigger === 0) return
+    if (triggerRef.current === checkAllTrigger) return
+    triggerRef.current = checkAllTrigger
+    handleBatchCheck()
+    // handleBatchCheck is stable via closure; we intentionally only depend on
+    // the trigger to avoid re-firing on unrelated re-renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkAllTrigger, batchCheckMode])
 
   /**
    * Render a single block, returning the node and the next question index
@@ -964,7 +982,7 @@ export function ExerciseRenderer({
             return groupNodes
           })()}
 
-          {batchCheckMode && totalQuestions > 0 && (
+          {batchCheckMode && !hideBatchCheckButton && totalQuestions > 0 && (
             <div className="flex justify-center pt-2">
               <Button
                 onClick={handleBatchCheck}
