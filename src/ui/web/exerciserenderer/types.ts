@@ -204,10 +204,11 @@ export interface ExerciseContentData {
  */
 export interface ExerciseRendererProps {
   /**
-   * Render output of `getExerciseBlockGroups(exercise)`. Each group's
-   * `sectionIndex` drives the localized "section a / section b" header
-   * rendered above the group; `sectionIndex: null` means the group holds the
-   * exercise's own `content.blocks` and renders without a header.
+   * Render output of `getExerciseBlockGroups(exercise)`. Blocks from all
+   * groups render sequentially with no visual separator; `sectionIndex` is
+   * carried on each group for structural purposes only (e.g. analytics,
+   * LLM context) and no longer drives a section header — the per-question
+   * Hebrew letter label already conveys the a/b/c grouping.
    */
   groups: ExerciseBlockGroup[]
   mode?: PreviewMode
