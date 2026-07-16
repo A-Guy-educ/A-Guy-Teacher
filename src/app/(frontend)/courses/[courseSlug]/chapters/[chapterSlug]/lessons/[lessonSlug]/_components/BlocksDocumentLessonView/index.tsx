@@ -214,11 +214,17 @@ export function BlocksDocumentLessonView({
                     {lessonTitle}
                   </h1>
                 )}
-                <div className="flex flex-col gap-12">
-                  {renderable.map(({ exercise, groups }) => (
-                    <section key={exercise.id} className="flex flex-col gap-content-gap">
+                <div className="flex flex-col">
+                  {renderable.map(({ exercise, groups }, idx) => (
+                    <section
+                      key={exercise.id}
+                      className={cn(
+                        'flex flex-col gap-content-gap',
+                        idx > 0 && 'mt-section-lg border-t-2 border-border pt-section-md',
+                      )}
+                    >
                       {exercise.title && (
-                        <h2 className="text-heading-md font-bold text-foreground">
+                        <h2 className="text-heading-lg font-bold text-foreground">
                           {exercise.title}
                         </h2>
                       )}

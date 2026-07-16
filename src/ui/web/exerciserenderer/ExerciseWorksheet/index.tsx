@@ -7,10 +7,9 @@
  * answer inputs, no progress bar, no help system.
  *
  * Accepts `groups` (output of `getExerciseBlockGroups()`) and renders each
- * populated section group with a localized header (Section A / סעיף א) above
- * its blocks. Groups with `sectionIndex: null` (the exercise's own
- * `content.blocks`) render with no header so the legacy path stays
- * untouched.
+ * group's blocks sequentially. Sections aren't visually delimited by a header
+ * — each question already carries its own Hebrew letter label, so a section-
+ * level header only duplicated it.
  *
  * Behavior per block type:
  *   - rich_text                  -> paragraph
@@ -33,7 +32,7 @@
 
 import React from 'react'
 import { cn } from '@/infra/utils/ui'
-import { useLocale, useTranslations } from '@/ui/web/providers/I18n'
+import { useLocale } from '@/ui/web/providers/I18n'
 import { MediaMapProvider } from '../context/MediaMapContext'
 import { RichTextRenderer } from '../blocks/RichTextRenderer'
 import { HtmlBlockRenderer } from '../blocks/HtmlBlockRenderer'
@@ -66,10 +65,9 @@ import type {
 
 interface ExerciseWorksheetProps {
   /**
-   * Render output of `getExerciseBlockGroups(exercise)`. Each group's
-   * `sectionIndex` drives the localized "section a / section b" header
-   * rendered above the group; `sectionIndex: null` means the group holds the
-   * exercise's own `content.blocks` and renders without a header.
+   * Render output of `getExerciseBlockGroups(exercise)`. Groups are rendered
+   * sequentially with no visual separator between them; the per-question
+   * Hebrew letter label already covers section-level labeling.
    */
   groups: ExerciseBlockGroup[]
   /** Pre-resolved media map keyed by ID. */
@@ -93,8 +91,6 @@ export function ExerciseWorksheet({
 }: ExerciseWorksheetProps) {
   const locale = useLocale()
   const isRtl = locale?.toLowerCase().startsWith('he') ?? false
-  const t = useTranslations('courses')
-  const sectionPrefix = t('sectionHeaderPrefix')
 
   // Side-by-side layout: text on the reading-start side, diagram opposite.
   // GraphWithPrompt forces dir='ltr' on its flex container so 'textLeft' /
@@ -111,16 +107,6 @@ export function ExerciseWorksheet({
       <div className={cn('flex flex-col gap-content-gap-lg', className)}>
         {groups.map((group, groupIdx) => {
           const groupNodes: React.ReactNode[] = []
-          if (group.sectionIndex !== null && group.sectionIndex !== undefined) {
-            groupNodes.push(
-              <WorksheetSectionHeader
-                key={`section-${group.sectionIndex}-${groupIdx}`}
-                sectionIndex={group.sectionIndex}
-                isRtl={isRtl}
-                prefixText={sectionPrefix}
-              />,
-            )
-          }
           group.blocks.forEach((block, blockIdx) => {
             const { block: renderedBlock, incremented } = renderBlockWithLabel({
               block,
@@ -139,40 +125,6 @@ export function ExerciseWorksheet({
         })}
       </div>
     </MediaMapProvider>
-  )
-}
-
-function WorksheetSectionHeader({
-  sectionIndex,
-  isRtl,
-  prefixText,
-}: {
-  sectionIndex: number
-  isRtl: boolean
-  prefixText: string
-}) {
-  const label = isRtl
-    ? HEBREW_LETTERS[sectionIndex] || String(sectionIndex + 1)
-    : String.fromCharCode('a'.charCodeAt(0) + sectionIndex)
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-content-gap-xs border-t border-border/60 pt-4',
-        isRtl ? 'flex-row-reverse' : 'flex-row',
-      )}
-      data-testid="worksheet-section-header"
-      data-section-index={sectionIndex}
-    >
-      <span
-        className="w-7 h-7 rounded-lg flex items-center justify-center bg-primary/10 border border-primary/20 shrink-0"
-        aria-hidden
-      >
-        <span className="font-extrabold text-body-sm text-primary">{label}</span>
-      </span>
-      <span className="text-body-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        {isRtl ? `${prefixText} ${label}` : `${prefixText} ${label.toUpperCase()}`}
-      </span>
-    </div>
   )
 }
 

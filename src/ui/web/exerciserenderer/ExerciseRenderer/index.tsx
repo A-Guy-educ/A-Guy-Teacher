@@ -95,46 +95,6 @@ function getEnglishLetter(index: number): string {
 }
 
 /**
- * Localized section header rendered above each populated section group. The
- * label is the lowercase letter for the section's index (0 → 'a', 1 → 'b',
- * ...) in the order chosen by `getExerciseBlockGroups()`. Caller passes the
- * localized prefix text so this component stays pure.
- */
-function SectionHeader({
-  sectionIndex,
-  isRtl,
-  prefixText,
-}: {
-  sectionIndex: number
-  isRtl: boolean
-  prefixText: string
-}) {
-  const label = isRtl
-    ? HEBREW_LETTERS[sectionIndex] || String(sectionIndex + 1)
-    : getEnglishLetter(sectionIndex + 1)
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-content-gap-xs border-t border-border/60 pt-4',
-        isRtl ? 'flex-row-reverse' : 'flex-row',
-      )}
-      data-testid="exercise-section-header"
-      data-section-index={sectionIndex}
-    >
-      <span
-        className="w-7 h-7 rounded-lg flex items-center justify-center bg-primary/10 border border-primary/20 shrink-0"
-        aria-hidden
-      >
-        <span className="font-extrabold text-body-sm text-primary">{label}</span>
-      </span>
-      <span className="text-body-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        {isRtl ? `${prefixText} ${label}` : `${prefixText} ${label.toUpperCase()}`}
-      </span>
-    </div>
-  )
-}
-
-/**
  * Format student's answer as readable text for AI context
  */
 function formatStudentAnswer(question: QuestionBlock, answer: UserAnswer): string {
@@ -956,20 +916,6 @@ export function ExerciseRenderer({
             let questionIndex = 0
             const groupNodes: React.ReactNode[] = []
             groups.forEach((group, groupIdx) => {
-              // Section header — only for populated section groups
-              // (sectionIndex === null is the exercise's own content.blocks,
-              // which renders with no header per the issue's "no header
-              // prefix" requirement for the legacy path).
-              if (group.sectionIndex !== null && group.sectionIndex !== undefined) {
-                groupNodes.push(
-                  <SectionHeader
-                    key={`section-${group.sectionIndex}-${groupIdx}`}
-                    sectionIndex={group.sectionIndex}
-                    isRtl={isHebrew}
-                    prefixText={t('sectionHeaderPrefix')}
-                  />,
-                )
-              }
               const blockNodes = group.blocks.map((block) => {
                 const { node, nextIndex } = renderBlock(block, questionIndex)
                 questionIndex = nextIndex
