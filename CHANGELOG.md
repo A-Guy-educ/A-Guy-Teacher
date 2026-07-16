@@ -1889,6 +1889,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix(exercises): drop section headers, separate exercises in scroll view ([#907](https://github.com/A-Guy-educ/A-Guy-Web/pull/907)) — @aguyshayb
 - feat(test-view): Single lesson-wide Check all button ([#889](https://github.com/A-Guy-educ/A-Guy-Web/pull/889)) — @aguyshayb
 - #884: Add "Test" view renderer for lessons with batch answer checking ([#885](https://github.com/A-Guy-educ/A-Guy-Web/pull/885)) — @kodyade[bot]
 - fix(exercises): join sections via reverse relationship ([#888](https://github.com/A-Guy-educ/A-Guy-Web/pull/888)) — @aguyshayb
