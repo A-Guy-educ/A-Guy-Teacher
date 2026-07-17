@@ -1894,7 +1894,7 @@ _No notable commits since the last release._
 - #884: Add "Test" view renderer for lessons with batch answer checking ([#885](https://github.com/A-Guy-educ/A-Guy-Web/pull/885)) — @kodyade[bot]
 - fix(exercises): join sections via reverse relationship ([#888](https://github.com/A-Guy-educ/A-Guy-Web/pull/888)) — @aguyshayb
 - #886: 2-option MCQ buttons: click = select + check in one action ([#887](https://github.com/A-Guy-educ/A-Guy-Web/pull/887)) — @kodyade[bot]
-- #881: Render 2-option MCQ as side-by-side buttons ([#882](https://github.com/A-Guy-educ/A-Guy-Web/pull/882)) — @kodyade[bot]
+- #881: Render 2-option MCQ as side-by-side buttons ([#882](https://github.com/A-Guy-educ/A-Guy-Web/pull/882)) — @kodyade[bot] · 🔄 QA (#911)
 - fix(exercises): render own blocks + sections with localized a/b/c headers (#880) ([#883](https://github.com/A-Guy-educ/A-Guy-Web/pull/883)) — @kodyade[bot] · ⚠️ QA 2026-07-16 (#895)
 - feat(course-lessons): Redesign lessons view — chapter accordions + timeline ([#874](https://github.com/A-Guy-educ/A-Guy-Web/pull/874)) — @aguyshayb · ⚠️ QA 2026-07-15 (#877)
 - #856: feat: Read sections natively on web (Task 4) ([#857](https://github.com/A-Guy-educ/A-Guy-Web/pull/857)) — @kodyade[bot] · ⚠️ QA 2026-07-14 (#865)
