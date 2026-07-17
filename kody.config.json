@@ -103,7 +103,8 @@
       "ai-agency-health",
       "ci-health",
       "prs-stay-mergeable",
-      "product-quality"
+      "product-quality",
+      "agency-observer"
     ]
   },
   "fly": {
