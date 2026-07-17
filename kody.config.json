@@ -104,7 +104,8 @@
       "ci-health",
       "prs-stay-mergeable",
       "product-quality",
-      "agency-observer"
+      "agency-observer",
+      "agency-operating-loop"
     ]
   },
   "fly": {
