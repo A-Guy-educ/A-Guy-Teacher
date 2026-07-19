@@ -1912,6 +1912,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.29.0 ([#921](https://github.com/A-Guy-educ/A-Guy-Web/pull/921)) — @aguyshayb
 - feat(lessons): Swap scroll tab for test tab on exam lessons ([#920](https://github.com/A-Guy-educ/A-Guy-Web/pull/920)) — @aguyshayb
 - fix(exercises): drop section headers, separate exercises in scroll view ([#907](https://github.com/A-Guy-educ/A-Guy-Web/pull/907)) — @aguyshayb
 - feat(test-view): Single lesson-wide Check all button ([#889](https://github.com/A-Guy-educ/A-Guy-Web/pull/889)) — @aguyshayb
