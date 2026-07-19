@@ -8,6 +8,7 @@ import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapter
 import type { Lesson, LessonPrerequisite, Media } from '@/infra/types/content'
 import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
 import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
+import { getEffectiveLessonType } from '@/server/constants/lesson-types'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ChatInterface } from '@/ui/web/chat'
 import { BackToCourses } from '@/app/(frontend)/courses/_components/BackToCourses'
@@ -119,10 +120,15 @@ export function LessonIntroPage({
   const hasContentPagesInBlocks = contentPageCount > 0
 
   const hasMedia = pdfCount > 0
+  // Exam lessons swap the scroll (pdf) tab for the test tab so students see
+  // the batch-graded test view instead of the read-only worksheet. Learning
+  // and practice lessons keep the original scroll + interactive pair.
+  const isExamLesson = getEffectiveLessonType(lesson.type) === 'exam'
   const visibleRenderers: LessonMode[] = []
   if (hasMedia) visibleRenderers.push('media')
-  if (hasExerciseContent) visibleRenderers.push('pdf', 'interactive', 'test')
-  else if (hasContentPagesInBlocks) visibleRenderers.push('interactive')
+  if (hasExerciseContent) {
+    visibleRenderers.push(isExamLesson ? 'test' : 'pdf', 'interactive')
+  } else if (hasContentPagesInBlocks) visibleRenderers.push('interactive')
 
   const completed = progress?.completed ?? 0
   const total = progress?.total ?? exerciseCount
@@ -198,7 +204,13 @@ export function LessonIntroPage({
         formulaSheet={formulaSheet}
         visibleRenderers={visibleRenderers}
         initialExerciseIndex={pageState.initialExerciseIndex}
-        initialMode={hasExerciseContent || hasContentPagesInBlocks ? 'interactive' : undefined}
+        initialMode={
+          isExamLesson && hasExerciseContent
+            ? 'test'
+            : hasExerciseContent || hasContentPagesInBlocks
+              ? 'interactive'
+              : undefined
+        }
         nextLesson={nextLesson}
       />
     )
