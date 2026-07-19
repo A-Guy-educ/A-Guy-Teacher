@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.29.0 — 2026-07-19
+
+### Features
+
+- **exam-lessons**: swap scroll tab for test tab on exam lessons (#920)
+- **exercises**: unify test-view check-all button across all exercises (#889)
+- **lessons**: add Test-view renderer with batch answer checking (#885)
+- **mcq**: auto-check 2-option MCQ on button click (#887)
+- **mcq**: render 2-option single-select as side-by-side buttons (#882)
+- **course-lessons**: redesign lessons view with chapter accordions and timeline (#874)
+- **courses**: track course selections in Admin from every call site (#845)
+
+### Bug Fixes
+
+- **exercises**: drop section headers and separate exercises in scroll view (#907)
+- **exercises**: join sections via reverse relationship (#888)
+- **exercises**: render own blocks + sections with localized a/b/c headers (#880)
+- **course-lessons**: address review feedback + regression fix (#874)
+
+### Docs
+
+- **exercises**: refresh `ExerciseRendererProps.groups` docstring
+
 ## v0.28.0 — 2026-07-10
 
 ### Features
