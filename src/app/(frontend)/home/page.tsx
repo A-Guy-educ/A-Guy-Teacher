@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { COURSE_ID_COOKIE_NAME } from '@/client/state/localStorage/userProfile'
 import { resolveHomeRedirect } from '@/infra/onboarding/homeRedirect'
 import { getMeUser } from '@/infra/utils/getMeUser'
+import { queryCourseSlugById } from '@/server/repos/queries/courses'
 
 export const metadata = { title: 'Home' }
 
@@ -13,9 +14,10 @@ export default async function HomePage() {
   const selectedCourseId = cookieStore.get(COURSE_ID_COOKIE_NAME)?.value
 
   redirect(
-    resolveHomeRedirect({
+    await resolveHomeRedirect({
       isAuthenticated: Boolean(user),
       selectedCourseId,
+      resolveCourseSlug: queryCourseSlugById,
     }),
   )
 }
