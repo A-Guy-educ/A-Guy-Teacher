@@ -6,6 +6,11 @@
  * the Interactive tab edits — but laid out as a static document with no
  * answer inputs, no progress bar, no help system.
  *
+ * Accepts `groups` (output of `getExerciseBlockGroups()`) and renders each
+ * group's blocks sequentially. Sections aren't visually delimited by a header
+ * — each question already carries its own Hebrew letter label, so a section-
+ * level header only duplicated it.
+ *
  * Behavior per block type:
  *   - rich_text                  -> paragraph
  *   - latex                      -> rendered via LatexBlockRenderer (hideLatexBlocks prop controls visibility)
@@ -42,6 +47,7 @@ import { HEBREW_LETTERS } from '../constants'
 import type { Media } from '@/infra/types/content'
 import type {
   ContentBlock,
+  ExerciseBlockGroup,
   GraphLayout,
   InlineRichText,
   MediaBlock,
@@ -58,7 +64,12 @@ import type {
 } from '@/infra/types/exercise'
 
 interface ExerciseWorksheetProps {
-  blocks: ContentBlock[]
+  /**
+   * Render output of `getExerciseBlockGroups(exercise)`. Groups are rendered
+   * sequentially with no visual separator between them; the per-question
+   * Hebrew letter label already covers section-level labeling.
+   */
+  groups: ExerciseBlockGroup[]
   /** Pre-resolved media map keyed by ID. */
   mediaMap?: Record<string, Media>
   className?: string
@@ -73,7 +84,7 @@ interface ExerciseWorksheetProps {
 const EMPTY_MEDIA_MAP: Record<string, Media> = {}
 
 export function ExerciseWorksheet({
-  blocks,
+  groups,
   mediaMap = EMPTY_MEDIA_MAP,
   className,
   hideLatexBlocks = false,
@@ -94,17 +105,23 @@ export function ExerciseWorksheet({
   return (
     <MediaMapProvider value={mediaMap}>
       <div className={cn('flex flex-col gap-content-gap-lg', className)}>
-        {blocks.map((block, i) => {
-          const { block: renderedBlock, incremented } = renderBlockWithLabel({
-            block,
-            mediaMap,
-            sideBySideLayout,
-            isRtl,
-            questionIndex,
-            hideLatexBlocks,
+        {groups.map((group, groupIdx) => {
+          const groupNodes: React.ReactNode[] = []
+          group.blocks.forEach((block, blockIdx) => {
+            const { block: renderedBlock, incremented } = renderBlockWithLabel({
+              block,
+              mediaMap,
+              sideBySideLayout,
+              isRtl,
+              questionIndex,
+              hideLatexBlocks,
+            })
+            if (incremented) questionIndex++
+            groupNodes.push(
+              <React.Fragment key={getBlockKey(block, blockIdx)}>{renderedBlock}</React.Fragment>,
+            )
           })
-          if (incremented) questionIndex++
-          return <React.Fragment key={getBlockKey(block, i)}>{renderedBlock}</React.Fragment>
+          return <React.Fragment key={`group-${groupIdx}`}>{groupNodes}</React.Fragment>
         })}
       </div>
     </MediaMapProvider>

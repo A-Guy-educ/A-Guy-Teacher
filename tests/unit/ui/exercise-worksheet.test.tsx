@@ -13,7 +13,7 @@ import enMessages from '../../../src/i18n/en.json'
 import heMessages from '../../../src/i18n/he.json'
 import { I18nProvider } from '@/ui/web/providers/I18n'
 import { ExerciseWorksheet } from '@/ui/web/exerciserenderer/ExerciseWorksheet'
-import type { ContentBlock } from '@/infra/types/exercise'
+import type { ContentBlock, ExerciseBlockGroup } from '@/infra/types/exercise'
 
 vi.mock('@/ui/web/exerciserenderer/blocks/RichTextRenderer', () => ({
   RichTextRenderer: ({ block }: { block: { value: string } }) => (
@@ -44,9 +44,14 @@ vi.mock('@/ui/web/exerciserenderer/blocks/LatexBlockRenderer', () => ({
 }))
 
 function renderWith(locale: 'en' | 'he', blocks: ContentBlock[], hideLatexBlocks?: boolean) {
+  // Wrap in a single group with sectionIndex=null to match the
+  // exercise's own content.blocks shape; worksheet renders no header for
+  // null sectionIndex, so behavior is identical to the legacy flat-blocks
+  // path for unit-level assertions.
+  const groups: ExerciseBlockGroup[] = [{ sectionIndex: null, blocks }]
   return render(
     <I18nProvider locale={locale} messages={locale === 'en' ? enMessages : heMessages}>
-      <ExerciseWorksheet blocks={blocks} hideLatexBlocks={hideLatexBlocks} />
+      <ExerciseWorksheet groups={groups} hideLatexBlocks={hideLatexBlocks} />
     </I18nProvider>,
   )
 }

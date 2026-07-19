@@ -9,8 +9,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/infra/utils/ui'
 import { useTranslations, useLocale } from '@/ui/web/providers/I18n'
+import { Button } from '@/ui/web/components/button'
 import { Card } from '@/ui/web/components/card'
-import { XCircle } from 'lucide-react'
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import type {
   ExerciseRendererProps,
   ContentBlock,
@@ -124,7 +125,7 @@ function formatStudentAnswer(question: QuestionBlock, answer: UserAnswer): strin
 const EMPTY_MEDIA_MAP = {} as const
 
 export function ExerciseRenderer({
-  content,
+  groups,
   mode: _mode = 'student',
   showCheckAnswer = true,
   className = '',
@@ -135,6 +136,9 @@ export function ExerciseRenderer({
   exerciseId = '',
   onResultsChange,
   hideLatexBlocks = true,
+  batchCheckMode = false,
+  hideBatchCheckButton = false,
+  checkAllTrigger,
 }: ExerciseRendererProps) {
   const t = useTranslations('courses')
   const locale = useLocale()
@@ -155,13 +159,21 @@ export function ExerciseRenderer({
   )
 
   // Track answers and check results for each question block
-  const questionBlocks = content.blocks.filter(
-    (block) =>
-      block.type === 'question_select' ||
-      block.type === 'question_free_response' ||
-      block.type === 'question_table' ||
-      block.type === 'question_matching',
-  ) as QuestionBlock[]
+  const flatBlocks: ContentBlock[] = useMemo(
+    () => groups.flatMap((group) => group.blocks),
+    [groups],
+  )
+  const questionBlocks = useMemo(
+    () =>
+      flatBlocks.filter(
+        (block) =>
+          block.type === 'question_select' ||
+          block.type === 'question_free_response' ||
+          block.type === 'question_table' ||
+          block.type === 'question_matching',
+      ) as QuestionBlock[],
+    [flatBlocks],
+  )
 
   // Help system state (hint/guiding/solution per question)
   const { helpUsage, activeHelp, handleHintClick, handleGuidingClick, handleSolutionClick } =
@@ -216,6 +228,7 @@ export function ExerciseRenderer({
   const [checkResults, setCheckResults] = useState<Record<string, CheckResult>>({})
   const [hasChecked, setHasChecked] = useState<Record<string, boolean>>({})
   const [isChecking, setIsChecking] = useState<Record<string, boolean>>({})
+  const [isBatchChecking, setIsBatchChecking] = useState(false)
   const chatTriggeredRef = useRef<Set<string>>(new Set())
 
   // Aggregate correctness tracking
@@ -269,6 +282,12 @@ export function ExerciseRenderer({
       return updated
     })
 
+    // In batch check mode nothing is graded until the student clicks
+    // "Check all" — we just store the answer and let batchCheck handle it.
+    if (batchCheckMode) {
+      return
+    }
+
     // For true/false questions, check immediately on selection
     const question = questionBlocks.find((q) => q.id === questionId)
     if (
@@ -301,30 +320,65 @@ export function ExerciseRenderer({
     }
   }
 
-  const handleCheckAnswer = async (questionId: string) => {
-    const question = questionBlocks.find((q) => q.id === questionId)
-    if (!question) return
+  /**
+   * Run a check against the given answer (already-resolved object, not state).
+   * Shared by `handleCheckAnswer` (explicit Check Answer button) and
+   * `handleAutoCheckMcq` (button-click auto-check on 2-option MCQs). Sourcing
+   * the answer from the parameter — rather than `answers[questionId]` — is
+   * important for the auto-check path because React state hasn't flushed yet
+   * inside the same click handler that just called `setAnswers`.
+   */
+  const runCheckWithAnswer = useCallback(
+    async (questionId: string, ans: UserAnswer) => {
+      const question = questionBlocks.find((q) => q.id === questionId)
+      if (!question) return
 
-    setIsChecking((prev) => ({ ...prev, [questionId]: true }))
-    try {
-      const result = await checkQuestionAnswer(question, answers[questionId], errorMessages)
-      setCheckResults((prev) => ({ ...prev, [questionId]: result }))
-      setHasChecked((prev) => ({ ...prev, [questionId]: true }))
-      if (!result.isCorrect && !chatTriggeredRef.current.has(questionId)) {
-        chatTriggeredRef.current.add(questionId)
-        window.dispatchEvent(
-          new CustomEvent('exercise-incorrect-answer', {
-            detail: {
-              questionJson: JSON.stringify(question),
-              studentAnswer: formatStudentAnswer(question, answers[questionId]),
-            },
-          }),
-        )
+      setIsChecking((prev) => ({ ...prev, [questionId]: true }))
+      try {
+        const result = await checkQuestionAnswer(question, ans, errorMessages)
+        setCheckResults((prev) => ({ ...prev, [questionId]: result }))
+        setHasChecked((prev) => ({ ...prev, [questionId]: true }))
+        if (!result.isCorrect && !chatTriggeredRef.current.has(questionId)) {
+          chatTriggeredRef.current.add(questionId)
+          window.dispatchEvent(
+            new CustomEvent('exercise-incorrect-answer', {
+              detail: {
+                questionJson: JSON.stringify(question),
+                studentAnswer: formatStudentAnswer(question, ans),
+              },
+            }),
+          )
+        }
+      } finally {
+        setIsChecking((prev) => ({ ...prev, [questionId]: false }))
       }
-    } finally {
-      setIsChecking((prev) => ({ ...prev, [questionId]: false }))
-    }
-  }
+    },
+    [questionBlocks, errorMessages],
+  )
+
+  const handleCheckAnswer = useCallback(
+    async (questionId: string) => {
+      await runCheckWithAnswer(questionId, answers[questionId])
+    },
+    [runCheckWithAnswer, answers],
+  )
+
+  /**
+   * Auto-check path for 2-option single-select MCQ buttons: the click already
+   * resolved the new answer, so we update state + run the check against the
+   * parameter directly (state has not flushed yet inside this handler).
+   */
+  const handleAutoCheckMcq = useCallback(
+    async (questionId: string, ans: UserAnswer) => {
+      setAnswers((prev) => {
+        const updated = { ...prev, [questionId]: ans }
+        persistAnswers(updated)
+        return updated
+      })
+      await runCheckWithAnswer(questionId, ans)
+    },
+    [runCheckWithAnswer, persistAnswers],
+  )
 
   const handleTableCheckResult = (questionId: string, isCorrect: boolean) => {
     setCheckResults((prev) => ({ ...prev, [questionId]: { isCorrect } }))
@@ -343,8 +397,421 @@ export function ExerciseRenderer({
     }
   }
 
+  const handleBatchCheck = async () => {
+    if (isBatchChecking) return
+    setIsBatchChecking(true)
+    try {
+      const newResults: Record<string, CheckResult> = {}
+      const newHasChecked: Record<string, boolean> = {}
+      for (const question of questionBlocks) {
+        const answer = answers[question.id] ?? getInitialAnswer(question)
+        const result = await checkQuestionAnswer(question, answer, errorMessages)
+        newResults[question.id] = result
+        newHasChecked[question.id] = true
+        if (!result.isCorrect && !chatTriggeredRef.current.has(question.id)) {
+          chatTriggeredRef.current.add(question.id)
+          window.dispatchEvent(
+            new CustomEvent('exercise-incorrect-answer', {
+              detail: {
+                questionJson: JSON.stringify(question),
+                studentAnswer: formatStudentAnswer(question, answer),
+              },
+            }),
+          )
+        }
+      }
+      setCheckResults((prev) => ({ ...prev, ...newResults }))
+      setHasChecked((prev) => ({ ...prev, ...newHasChecked }))
+    } finally {
+      setIsBatchChecking(false)
+    }
+  }
+
+  // Parent-driven "Check all" — a parent with multiple ExerciseRenderer
+  // children can bump `checkAllTrigger` to grade every child from a single
+  // button. We intentionally ignore the initial undefined/0 value so mounting
+  // doesn't auto-grade.
+  const triggerRef = useRef<number | undefined>(checkAllTrigger)
+  useEffect(() => {
+    if (!batchCheckMode) return
+    if (checkAllTrigger === undefined || checkAllTrigger === 0) return
+    if (triggerRef.current === checkAllTrigger) return
+    triggerRef.current = checkAllTrigger
+    handleBatchCheck()
+    // handleBatchCheck is stable via closure; we intentionally only depend on
+    // the trigger to avoid re-firing on unrelated re-renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkAllTrigger, batchCheckMode])
+
+  /**
+   * Render a single block, returning the node and the next question index
+   * after incrementing for question blocks (table/select/free_response/
+   * matching). Rich text, latex, html, svg, media, geometry, axis, and
+   * multi-axis blocks leave the counter untouched so the letter sequence
+   * stays aligned with the spec.
+   */
+  const renderBlock = (
+    block: ContentBlock,
+    questionIndex: number,
+  ): { node: React.ReactNode; nextIndex: number } => {
+    // Geometry/Axis — media-only display blocks (type not in ContentBlock union)
+    const b = block as ContentBlock & {
+      geometry?: unknown
+      axis?: unknown
+      layout?: string
+      prompt?: unknown
+    }
+    if (b.type === ('question_geometry' as string)) {
+      const geometryBlock = b as ContentBlock & { geometry?: GeometrySpecV1 }
+      return {
+        node: (
+          <GraphWithPrompt
+            key={b.id}
+            blockId={b.id}
+            layout={
+              (b.layout as 'textAbove' | 'textBelow' | 'textLeft' | 'textRight') || 'textRight'
+            }
+            prompt={b.prompt as import('@/infra/types/exercise').InlineRichText | undefined}
+          >
+            <GeometryRenderer blockId={b.id} spec={geometryBlock.geometry as GeometrySpecV1} />
+          </GraphWithPrompt>
+        ),
+        nextIndex: questionIndex,
+      }
+    }
+    if (b.type === ('question_axis' as string)) {
+      const axisBlock = b as ContentBlock & {
+        axis?: AxisSpecV1
+        displaySize?: DisplaySize
+      }
+      return {
+        node: (
+          <GraphWithPrompt
+            key={b.id}
+            blockId={b.id}
+            layout={
+              (b.layout as 'textAbove' | 'textBelow' | 'textLeft' | 'textRight') || 'textRight'
+            }
+            prompt={b.prompt as import('@/infra/types/exercise').InlineRichText | undefined}
+          >
+            <AxisRenderer
+              blockId={b.id}
+              spec={axisBlock.axis as AxisSpecV1}
+              displaySize={axisBlock.displaySize}
+            />
+          </GraphWithPrompt>
+        ),
+        nextIndex: questionIndex,
+      }
+    }
+    if (b.type === ('question_multi_axis' as string)) {
+      const multiAxisBlock = b as unknown as {
+        id: string
+        graphs: Array<{ id: string; label: string; axis: AxisSpecV1; order: number }>
+        prompt?: {
+          type: 'rich_text'
+          format: 'md-math-v1'
+          value: string
+          mediaIds?: string[]
+        }
+        textPosition?: 'above' | 'below'
+        columnsPerRow?: 1 | 2 | 4
+      }
+      return {
+        node: (
+          <div key={multiAxisBlock.id}>
+            <MultiAxisRenderer
+              blockId={multiAxisBlock.id}
+              graphs={multiAxisBlock.graphs}
+              prompt={multiAxisBlock.prompt}
+              textPosition={multiAxisBlock.textPosition ?? 'above'}
+              columnsPerRow={multiAxisBlock.columnsPerRow}
+            />
+          </div>
+        ),
+        nextIndex: questionIndex,
+      }
+    }
+
+    // Rich text block - just render content
+    if (block.type === 'rich_text') {
+      return {
+        node: (
+          <FadeIn key={block.id}>
+            <div className="prose prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed">
+              <RichTextRenderer block={block} />
+            </div>
+          </FadeIn>
+        ),
+        nextIndex: questionIndex,
+      }
+    }
+
+    // LaTeX blocks: hidden by default in the viewer. They are kept in
+    // exercise content as a source-of-truth reference (the script
+    // converter inserts parsed structured blocks alongside them) but
+    // students see only the parsed output. Callers that need to show
+    // the raw LaTeX (admin previews, etc.) can pass
+    // `hideLatexBlocks={false}`.
+    if (block.type === 'latex') {
+      if (hideLatexBlocks) return { node: null, nextIndex: questionIndex }
+      return {
+        node: (
+          <FadeIn key={block.id}>
+            <div className="prose prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed">
+              <LatexBlockRenderer block={block} />
+            </div>
+          </FadeIn>
+        ),
+        nextIndex: questionIndex,
+      }
+    }
+
+    // SVG block - static or interactive
+    if (block.type === 'svg') {
+      const svgBlock = block as SvgBlock
+      if (svgBlock.interactive && svgBlock.hotspots?.length) {
+        const svgAnswer = svgAnswers[svgBlock.id] ?? getInitialSvgAnswer()
+        const svgResult = svgCheckResults[svgBlock.id] || null
+        const svgDisabled = svgResult?.isCorrect
+        return {
+          node: (
+            <QuestionCard
+              key={svgBlock.id}
+              showCheckButton={showCheckAnswer}
+              onCheckAnswer={() => handleSvgCheck(svgBlock.id, svgBlock)}
+              disabled={!!svgDisabled}
+              loading={false}
+              checked={!!svgResult}
+              checkResult={svgResult}
+              checkAnswerText={t('checkAnswer')}
+              correctText={t('correct')}
+              incorrectText={t('incorrect')}
+            >
+              <SvgRenderer
+                block={svgBlock}
+                selectedHotspotIds={svgAnswer.type === 'svg' ? svgAnswer.selectedHotspotIds : []}
+                onHotspotToggle={(id) => handleSvgHotspotToggle(svgBlock.id, id)}
+                disabled={!!svgDisabled}
+                checkResult={svgResult}
+                correctHotspotIds={svgBlock.correctHotspotIds}
+              />
+            </QuestionCard>
+          ),
+          nextIndex: questionIndex,
+        }
+      }
+      return {
+        node: (
+          <div key={svgBlock.id}>
+            <SvgRenderer block={svgBlock} />
+          </div>
+        ),
+        nextIndex: questionIndex,
+      }
+    }
+
+    // HTML block - render sanitized HTML
+    if (block.type === 'html') {
+      return {
+        node: (
+          <div
+            key={block.id}
+            className="prose prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed"
+          >
+            <HtmlBlockRenderer block={block} />
+          </div>
+        ),
+        nextIndex: questionIndex,
+      }
+    }
+
+    // Media block - render image or video from mediaMap
+    if (block.type === 'media') {
+      const mediaBlock = block as MediaBlock
+      const media = mediaMap[mediaBlock.mediaId]
+
+      if (!media) {
+        return {
+          node: (
+            <div key={mediaBlock.id} className="my-4">
+              <p className="text-body-sm text-muted-foreground">{t('videoUnavailable')}</p>
+            </div>
+          ),
+          nextIndex: questionIndex,
+        }
+      }
+
+      // Check if media is a video (type field or mimeType starts with 'video/')
+      const isVideo = media.type === 'video' || media.mimeType?.startsWith('video/')
+
+      if (isVideo) {
+        return {
+          node: (
+            <div key={mediaBlock.id} className="my-4">
+              <VideoPlayer src={media.url} mimeType={media.mimeType} />
+            </div>
+          ),
+          nextIndex: questionIndex,
+        }
+      }
+
+      // Otherwise render as image (using getMediaUrl for proper URL resolution)
+      const imageSrc = getMediaUrl(media.url)
+      return {
+        node: (
+          <div
+            key={mediaBlock.id}
+            className="my-4 rounded-xl overflow-hidden border border-border/60 bg-muted/30"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageSrc}
+              alt={media.alt || media.filename || ''}
+              className="w-full h-auto max-h-96 object-contain"
+            />
+          </div>
+        ),
+        nextIndex: questionIndex,
+      }
+    }
+
+    // NOTE: We count question_table as a question so it gets its own section letter.
+    // Rich text / latex blocks must NOT increment the counter.
+    const nextIndex =
+      block.type === 'question_select' ||
+      block.type === 'question_free_response' ||
+      block.type === 'question_table' ||
+      block.type === 'question_matching'
+        ? questionIndex + 1
+        : questionIndex
+
+    // Question blocks - render with answer UI
+    const question = block as QuestionBlock
+
+    // Compute question letter label
+    const questionLabel = isHebrew
+      ? HEBREW_LETTERS[nextIndex - 1] || String(nextIndex)
+      : getEnglishLetter(nextIndex)
+
+    const answer = answers[question.id] ?? getInitialAnswer(question)
+    const checkResult = checkResults[question.id] || null
+    const checked = hasChecked[question.id] || false
+    const disabled = checked && checkResult?.isCorrect
+
+    // True/False and Table questions don't use the generic check button.
+    // In batch check mode the per-question check button is always hidden
+    // — grading happens through the single "Check all" button instead.
+    const showCheckButton =
+      showCheckAnswer &&
+      !batchCheckMode &&
+      !(question.type === 'question_select' && question.variant === 'true_false') &&
+      question.type !== 'question_table'
+
+    // Help system for this question (always shown — AI fallback when no backend content).
+    // In batch check mode the help system is hidden: the student should
+    // attempt the test without hints/solutions.
+    const helpSystemNode = batchCheckMode ? null : (
+      <HelpSystem
+        question={question}
+        helpUsage={
+          helpUsage[question.id] ?? {
+            hintShown: false,
+            guidingUsed: false,
+            solutionUnlocked: false,
+          }
+        }
+        activeHelp={activeHelp[question.id] ?? null}
+        onHintClick={() => handleHintClick(question.id)}
+        onGuidingClick={() => handleGuidingClick(question.id)}
+        onSolutionClick={() => handleSolutionClick(question.id)}
+        hintLabel={t('helpHint')}
+        guidingLabel={t('helpGuidingQuestion')}
+        solutionLabel={t('helpSolution')}
+      />
+    )
+
+    return {
+      node: (
+        <QuestionCard
+          key={question.id}
+          showCheckButton={showCheckButton}
+          onCheckAnswer={() => handleCheckAnswer(question.id)}
+          disabled={!!disabled}
+          loading={!!isChecking[question.id]}
+          checked={checked}
+          checkResult={checkResult}
+          checkAnswerText={t('checkAnswer')}
+          correctText={t('correct')}
+          incorrectText={t('incorrect')}
+          questionLabel={questionLabel}
+          dir={dir}
+          helpSystem={helpSystemNode}
+          animationDelay={nextIndex * 0.08}
+        >
+          {/* Render appropriate question component based on type */}
+          {question.type === 'question_select' && question.variant === 'true_false' && (
+            <TrueFalseQuestion
+              question={question as QuestionSelectTrueFalseBlock}
+              answer={answer}
+              onChange={(ans) => handleAnswerChange(question.id, ans)}
+              disabled={!!disabled}
+              checkResult={checkResult}
+            />
+          )}
+          {question.type === 'question_select' && question.variant === 'mcq' && (
+            <McqQuestion
+              question={question as QuestionSelectMcqBlock}
+              answer={answer}
+              onChange={(ans) => handleAnswerChange(question.id, ans)}
+              disabled={!!disabled}
+              checkResult={checkResult}
+              t={t}
+              onAutoSubmit={
+                batchCheckMode ? undefined : (ans) => handleAutoCheckMcq(question.id, ans)
+              }
+            />
+          )}
+          {question.type === 'question_free_response' && (
+            <FreeResponseQuestion
+              question={question as QuestionFreeResponseBlock}
+              answer={answer}
+              onChange={(ans) => handleAnswerChange(question.id, ans)}
+              disabled={!!disabled}
+              checkResult={checkResult}
+              t={t}
+            />
+          )}
+          {question.type === 'question_table' && (
+            <TableQuestion
+              question={question as QuestionTableBlock}
+              answer={answer}
+              onChange={(ans) => handleAnswerChange(question.id, ans)}
+              disabled={!!disabled}
+              checked={checked}
+              allCorrect={!!disabled}
+              onCheckResult={(correct) => handleTableCheckResult(question.id, correct)}
+              t={t}
+            />
+          )}
+          {question.type === 'question_matching' && (
+            <MatchingQuestion
+              question={question as QuestionMatchingBlock}
+              answer={answer}
+              onChange={(ans) => handleAnswerChange(question.id, ans)}
+              disabled={!!disabled}
+              checkResult={checkResult}
+              t={t}
+            />
+          )}
+        </QuestionCard>
+      ),
+      nextIndex,
+    }
+  }
+
   // Validate content structure
-  if (!content?.blocks || !Array.isArray(content.blocks)) {
+  if (!Array.isArray(groups)) {
     return (
       <div className={cn('w-full max-w-3xl mx-auto', className)}>
         <Card className="p-card-padding border-destructive bg-destructive/5">
@@ -354,7 +821,9 @@ export function ExerciseRenderer({
               <h3 className="text-body-lg font-semibold text-destructive mb-1">
                 Invalid Content Format
               </h3>
-              <p className="text-body-sm text-muted-foreground">Expected: {`{ blocks: [] }`}</p>
+              <p className="text-body-sm text-muted-foreground">
+                Expected: ExerciseBlockGroup[] from getExerciseBlockGroups()
+              </p>
             </div>
           </div>
         </Card>
@@ -445,328 +914,42 @@ export function ExerciseRenderer({
         <div className="flex flex-col gap-content-gap-lg">
           {(() => {
             let questionIndex = 0
-            return content.blocks.map((block) => {
-              // Geometry/Axis — media-only display blocks (type not in ContentBlock union)
-              const b = block as ContentBlock & {
-                geometry?: unknown
-                axis?: unknown
-                layout?: string
-                prompt?: unknown
-              }
-              if (b.type === ('question_geometry' as string)) {
-                const geometryBlock = b as ContentBlock & { geometry?: GeometrySpecV1 }
-                return (
-                  <GraphWithPrompt
-                    key={b.id}
-                    blockId={b.id}
-                    layout={
-                      (b.layout as 'textAbove' | 'textBelow' | 'textLeft' | 'textRight') ||
-                      'textRight'
-                    }
-                    prompt={b.prompt as import('@/infra/types/exercise').InlineRichText | undefined}
-                  >
-                    <GeometryRenderer
-                      blockId={b.id}
-                      spec={geometryBlock.geometry as GeometrySpecV1}
-                    />
-                  </GraphWithPrompt>
-                )
-              }
-              if (b.type === ('question_axis' as string)) {
-                const axisBlock = b as ContentBlock & {
-                  axis?: AxisSpecV1
-                  displaySize?: DisplaySize
-                }
-                return (
-                  <GraphWithPrompt
-                    key={b.id}
-                    blockId={b.id}
-                    layout={
-                      (b.layout as 'textAbove' | 'textBelow' | 'textLeft' | 'textRight') ||
-                      'textRight'
-                    }
-                    prompt={b.prompt as import('@/infra/types/exercise').InlineRichText | undefined}
-                  >
-                    <AxisRenderer
-                      blockId={b.id}
-                      spec={axisBlock.axis as AxisSpecV1}
-                      displaySize={axisBlock.displaySize}
-                    />
-                  </GraphWithPrompt>
-                )
-              }
-              if (b.type === ('question_multi_axis' as string)) {
-                const multiAxisBlock = b as unknown as {
-                  id: string
-                  graphs: Array<{ id: string; label: string; axis: AxisSpecV1; order: number }>
-                  prompt?: {
-                    type: 'rich_text'
-                    format: 'md-math-v1'
-                    value: string
-                    mediaIds?: string[]
-                  }
-                  textPosition?: 'above' | 'below'
-                  columnsPerRow?: 1 | 2 | 4
-                }
-                return (
-                  <div key={multiAxisBlock.id}>
-                    <MultiAxisRenderer
-                      blockId={multiAxisBlock.id}
-                      graphs={multiAxisBlock.graphs}
-                      prompt={multiAxisBlock.prompt}
-                      textPosition={multiAxisBlock.textPosition ?? 'above'}
-                      columnsPerRow={multiAxisBlock.columnsPerRow}
-                    />
-                  </div>
-                )
-              }
-
-              // Rich text block - just render content
-              if (block.type === 'rich_text') {
-                return (
-                  <FadeIn key={block.id}>
-                    <div className="prose prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed">
-                      <RichTextRenderer block={block} />
-                    </div>
-                  </FadeIn>
-                )
-              }
-
-              // LaTeX blocks: hidden by default in the viewer. They are kept in
-              // exercise content as a source-of-truth reference (the script
-              // converter inserts parsed structured blocks alongside them) but
-              // students see only the parsed output. Callers that need to show
-              // the raw LaTeX (admin previews, etc.) can pass
-              // `hideLatexBlocks={false}`.
-              if (block.type === 'latex') {
-                if (hideLatexBlocks) return null
-                return (
-                  <FadeIn key={block.id}>
-                    <div className="prose prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed">
-                      <LatexBlockRenderer block={block} />
-                    </div>
-                  </FadeIn>
-                )
-              }
-
-              // SVG block - static or interactive
-              if (block.type === 'svg') {
-                const svgBlock = block as SvgBlock
-                if (svgBlock.interactive && svgBlock.hotspots?.length) {
-                  const svgAnswer = svgAnswers[svgBlock.id] ?? getInitialSvgAnswer()
-                  const svgResult = svgCheckResults[svgBlock.id] || null
-                  const svgDisabled = svgResult?.isCorrect
-                  return (
-                    <QuestionCard
-                      key={svgBlock.id}
-                      showCheckButton={showCheckAnswer}
-                      onCheckAnswer={() => handleSvgCheck(svgBlock.id, svgBlock)}
-                      disabled={!!svgDisabled}
-                      loading={false}
-                      checked={!!svgResult}
-                      checkResult={svgResult}
-                      checkAnswerText={t('checkAnswer')}
-                      correctText={t('correct')}
-                      incorrectText={t('incorrect')}
-                    >
-                      <SvgRenderer
-                        block={svgBlock}
-                        selectedHotspotIds={
-                          svgAnswer.type === 'svg' ? svgAnswer.selectedHotspotIds : []
-                        }
-                        onHotspotToggle={(id) => handleSvgHotspotToggle(svgBlock.id, id)}
-                        disabled={!!svgDisabled}
-                        checkResult={svgResult}
-                        correctHotspotIds={svgBlock.correctHotspotIds}
-                      />
-                    </QuestionCard>
-                  )
-                }
-                return (
-                  <div key={svgBlock.id}>
-                    <SvgRenderer block={svgBlock} />
-                  </div>
-                )
-              }
-
-              // HTML block - render sanitized HTML
-              if (block.type === 'html') {
-                return (
-                  <div
-                    key={block.id}
-                    className="prose prose-slate dark:prose-invert max-w-none text-foreground leading-relaxed"
-                  >
-                    <HtmlBlockRenderer block={block} />
-                  </div>
-                )
-              }
-
-              // Media block - render image or video from mediaMap
-              if (block.type === 'media') {
-                const mediaBlock = block as MediaBlock
-                const media = mediaMap[mediaBlock.mediaId]
-
-                if (!media) {
-                  return (
-                    <div key={mediaBlock.id} className="my-4">
-                      <p className="text-body-sm text-muted-foreground">{t('videoUnavailable')}</p>
-                    </div>
-                  )
-                }
-
-                // Check if media is a video (type field or mimeType starts with 'video/')
-                const isVideo = media.type === 'video' || media.mimeType?.startsWith('video/')
-
-                if (isVideo) {
-                  return (
-                    <div key={mediaBlock.id} className="my-4">
-                      <VideoPlayer src={media.url} mimeType={media.mimeType} />
-                    </div>
-                  )
-                }
-
-                // Otherwise render as image (using getMediaUrl for proper URL resolution)
-                const imageSrc = getMediaUrl(media.url)
-                return (
-                  <div
-                    key={mediaBlock.id}
-                    className="my-4 rounded-xl overflow-hidden border border-border/60 bg-muted/30"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imageSrc}
-                      alt={media.alt || media.filename || ''}
-                      className="w-full h-auto max-h-96 object-contain"
-                    />
-                  </div>
-                )
-              }
-
-              // NOTE: We count question_table as a question so it gets its own section letter.
-              // Rich text / latex blocks must NOT increment the counter.
-              // Increment question index for question_select, question_free_response, and question_table
-              if (
-                block.type === 'question_select' ||
-                block.type === 'question_free_response' ||
-                block.type === 'question_table' ||
-                block.type === 'question_matching'
-              ) {
-                questionIndex++
-              }
-
-              // Question blocks - render with answer UI
-              const question = block as QuestionBlock
-
-              // Compute question letter label
-              const questionLabel = isHebrew
-                ? HEBREW_LETTERS[questionIndex - 1] || String(questionIndex)
-                : getEnglishLetter(questionIndex)
-
-              const answer = answers[question.id] ?? getInitialAnswer(question)
-              const checkResult = checkResults[question.id] || null
-              const checked = hasChecked[question.id] || false
-              const disabled = checked && checkResult?.isCorrect
-
-              // True/False and Table questions don't use the generic check button
-              const showCheckButton =
-                showCheckAnswer &&
-                !(question.type === 'question_select' && question.variant === 'true_false') &&
-                question.type !== 'question_table'
-
-              // Help system for this question (always shown — AI fallback when no backend content)
-              const helpSystemNode = (
-                <HelpSystem
-                  question={question}
-                  helpUsage={
-                    helpUsage[question.id] ?? {
-                      hintShown: false,
-                      guidingUsed: false,
-                      solutionUnlocked: false,
-                    }
-                  }
-                  activeHelp={activeHelp[question.id] ?? null}
-                  onHintClick={() => handleHintClick(question.id)}
-                  onGuidingClick={() => handleGuidingClick(question.id)}
-                  onSolutionClick={() => handleSolutionClick(question.id)}
-                  hintLabel={t('helpHint')}
-                  guidingLabel={t('helpGuidingQuestion')}
-                  solutionLabel={t('helpSolution')}
-                />
-              )
-
-              return (
-                <QuestionCard
-                  key={question.id}
-                  showCheckButton={showCheckButton}
-                  onCheckAnswer={() => handleCheckAnswer(question.id)}
-                  disabled={!!disabled}
-                  loading={!!isChecking[question.id]}
-                  checked={checked}
-                  checkResult={checkResult}
-                  checkAnswerText={t('checkAnswer')}
-                  correctText={t('correct')}
-                  incorrectText={t('incorrect')}
-                  questionLabel={questionLabel}
-                  dir={dir}
-                  helpSystem={helpSystemNode}
-                  animationDelay={questionIndex * 0.08}
-                >
-                  {/* Render appropriate question component based on type */}
-                  {question.type === 'question_select' && question.variant === 'true_false' && (
-                    <TrueFalseQuestion
-                      question={question as QuestionSelectTrueFalseBlock}
-                      answer={answer}
-                      onChange={(ans) => handleAnswerChange(question.id, ans)}
-                      disabled={!!disabled}
-                      checkResult={checkResult}
-                    />
-                  )}
-                  {question.type === 'question_select' && question.variant === 'mcq' && (
-                    <McqQuestion
-                      question={question as QuestionSelectMcqBlock}
-                      answer={answer}
-                      onChange={(ans) => handleAnswerChange(question.id, ans)}
-                      disabled={!!disabled}
-                      checkResult={checkResult}
-                      t={t}
-                    />
-                  )}
-                  {question.type === 'question_free_response' && (
-                    <FreeResponseQuestion
-                      question={question as QuestionFreeResponseBlock}
-                      answer={answer}
-                      onChange={(ans) => handleAnswerChange(question.id, ans)}
-                      disabled={!!disabled}
-                      checkResult={checkResult}
-                      t={t}
-                    />
-                  )}
-                  {question.type === 'question_table' && (
-                    <TableQuestion
-                      question={question as QuestionTableBlock}
-                      answer={answer}
-                      onChange={(ans) => handleAnswerChange(question.id, ans)}
-                      disabled={!!disabled}
-                      checked={checked}
-                      allCorrect={!!disabled}
-                      onCheckResult={(correct) => handleTableCheckResult(question.id, correct)}
-                      t={t}
-                    />
-                  )}
-                  {question.type === 'question_matching' && (
-                    <MatchingQuestion
-                      question={question as QuestionMatchingBlock}
-                      answer={answer}
-                      onChange={(ans) => handleAnswerChange(question.id, ans)}
-                      disabled={!!disabled}
-                      checkResult={checkResult}
-                      t={t}
-                    />
-                  )}
-                </QuestionCard>
+            const groupNodes: React.ReactNode[] = []
+            groups.forEach((group, groupIdx) => {
+              const blockNodes = group.blocks.map((block) => {
+                const { node, nextIndex } = renderBlock(block, questionIndex)
+                questionIndex = nextIndex
+                return node
+              })
+              groupNodes.push(
+                <React.Fragment key={`group-${groupIdx}`}>{blockNodes}</React.Fragment>,
               )
             })
+            return groupNodes
           })()}
+
+          {batchCheckMode && !hideBatchCheckButton && totalQuestions > 0 && (
+            <div className="flex justify-center pt-2">
+              <Button
+                onClick={handleBatchCheck}
+                disabled={isBatchChecking}
+                size="lg"
+                className="rounded-xl font-bold text-body-md text-white"
+              >
+                {isBatchChecking ? (
+                  <>
+                    <Loader2 className="w-5 h-5 me-2 animate-spin" />
+                    {t('checkAnswer')}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 me-2" />
+                    {t('checkAllAnswers')}
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </MediaMapProvider>

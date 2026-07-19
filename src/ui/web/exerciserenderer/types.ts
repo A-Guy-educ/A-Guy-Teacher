@@ -5,6 +5,7 @@
  */
 
 import type {
+  ExerciseBlockGroup,
   LatexBlock,
   QuestionMatchingBlock,
   SvgBlock,
@@ -15,6 +16,7 @@ import type {
 } from '@/infra/types/exercise'
 
 export type {
+  ExerciseBlockGroup,
   LatexBlock,
   QuestionMatchingBlock,
   SvgBlock,
@@ -201,7 +203,14 @@ export interface ExerciseContentData {
  * Props for the new block-based exercise renderer
  */
 export interface ExerciseRendererProps {
-  content: ExerciseContentData
+  /**
+   * Render output of `getExerciseBlockGroups(exercise)`. Blocks from all
+   * groups render sequentially with no visual separator; `sectionIndex` is
+   * carried on each group for structural purposes only (e.g. analytics,
+   * LLM context) and no longer drives a section header — the per-question
+   * Hebrew letter label already conveys the a/b/c grouping.
+   */
+  groups: ExerciseBlockGroup[]
   mode?: PreviewMode
   showCheckAnswer?: boolean
   className?: string
@@ -230,4 +239,29 @@ export interface ExerciseRendererProps {
    * LaTeX visible.
    */
   hideLatexBlocks?: boolean
+  /**
+   * When true, the renderer hides the per-question help system (hint,
+   * guiding question, solution) AND the per-question check button, and
+   * renders a single "Check all" button at the bottom of the questions list
+   * that grades every question at once. The auto-check on true/false answer
+   * selection is also disabled in this mode — nothing is graded until the
+   * student explicitly clicks "Check all". Defaults to `false` so existing
+   * callers (ExercisesPager, BlocksDocumentLessonView, etc.) behave
+   * identically.
+   */
+  batchCheckMode?: boolean
+  /**
+   * Only meaningful when `batchCheckMode` is true. When true, the renderer
+   * still hides help/per-question check and disables true/false auto-check,
+   * but suppresses its own "Check all" button — the parent (e.g. TestViewRenderer)
+   * owns a single button that grades every exercise on the page.
+   */
+  hideBatchCheckButton?: boolean
+  /**
+   * Only meaningful when `batchCheckMode` is true. Each time this value
+   * changes (and is > 0), the renderer runs its batch check. Lets a parent
+   * with multiple ExerciseRenderer children trigger every child from one
+   * button by bumping the counter.
+   */
+  checkAllTrigger?: number
 }

@@ -1,21 +1,21 @@
 'use client'
 
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
-import type { ExerciseContentData } from '@/ui/web/exerciserenderer/types'
+import type { ExerciseBlockGroup } from '@/infra/types/exercise'
 
 interface ExercisePageContentProps {
-  contentJson: unknown
+  groups: ExerciseBlockGroup[]
   showQuestionNumbering?: boolean
 }
 
 export function ExercisePageContent({
-  contentJson,
+  groups,
   showQuestionNumbering = false,
 }: ExercisePageContentProps) {
   return (
     <div className="mt-8 p-card-padding-lg md:p-card-padding sm:p-card-padding-sm bg-card rounded-lg shadow-elevation-1">
       <ExerciseRenderer
-        content={contentJson as ExerciseContentData}
+        groups={groups}
         mode="student"
         showCheckAnswer={true}
         showExerciseNumber={showQuestionNumbering}

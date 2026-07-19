@@ -8,6 +8,10 @@ import {
   relationId,
   publishedActiveFilter,
 } from '../mongo'
+import {
+  findExercisesByIdsWithSections,
+  findExercisesByLessonWithSections,
+} from './exercises-with-sections'
 
 export type ResolvedExerciseBlock = {
   type: 'exercise'
@@ -42,12 +46,13 @@ export const queryLessonBlocks = cache(
     const lesson = await findByIdSerialized<Lesson>('lessons', lessonId)
     const blocks = parseBlocks(lesson?.blocks)
     if (blocks.length === 0) {
-      const exercises = await findManySerialized<Exercise>(
-        'exercises',
-        { lesson: objectIdFromString(lessonId) },
-        { sort: { order: 1, createdAt: 1 }, limit: 1000 },
-      )
-      return exercises.map((exercise) => ({ type: 'exercise', data: exercise }))
+      const exercises = await findExercisesByLessonWithSections(lessonId)
+      const sorted = exercises.sort((a, b) => {
+        const ao = typeof a.order === 'number' ? a.order : Number.POSITIVE_INFINITY
+        const bo = typeof b.order === 'number' ? b.order : Number.POSITIVE_INFINITY
+        return ao - bo
+      })
+      return sorted.map((exercise) => ({ type: 'exercise', data: exercise }))
     }
 
     const exerciseIds = blocks
@@ -61,12 +66,8 @@ export const queryLessonBlocks = cache(
 
     const [exercises, contentPages] = await Promise.all([
       exerciseIds.length
-        ? findManySerialized<Exercise>(
-            'exercises',
-            { _id: { $in: exerciseIds.map(objectIdFromString) } },
-            { limit: exerciseIds.length },
-          )
-        : Promise.resolve([]),
+        ? findExercisesByIdsWithSections(exerciseIds)
+        : Promise.resolve([] as Exercise[]),
       contentPageIds.length
         ? findManySerialized<ContentPage>(
             'content-pages',

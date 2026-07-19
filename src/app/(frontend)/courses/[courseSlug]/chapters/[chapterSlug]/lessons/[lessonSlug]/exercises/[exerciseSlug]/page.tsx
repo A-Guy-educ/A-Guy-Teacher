@@ -43,7 +43,7 @@ export default async function ExercisePage({ params }: ExercisePageProps) {
   }
 
   redirect(
-    `/courses/${courseSlug}/chapters/${chapterSlug}/lessons/${lessonSlug}?block=${blockIndex}`,
+    `/courses/${courseSlug}/chapters/${chapterSlug}/lessons/${lessonSlug}?section=0&block=${blockIndex}`,
   )
 }
 

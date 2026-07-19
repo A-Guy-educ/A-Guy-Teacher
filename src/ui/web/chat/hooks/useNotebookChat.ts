@@ -759,6 +759,15 @@ export function useNotebookChat({
       isInjectingRef.current = true
       lastInjectedExerciseId.current = exercise.id
 
+      if (!exercise.content.blocks || exercise.content.blocks.length === 0) {
+        logger.warn(
+          { exerciseId: exercise.id, exerciseTitle: exercise.title },
+          '[useNotebookChat] Skipping exercise context injection — exercise has no blocks',
+        )
+        isInjectingRef.current = false
+        return
+      }
+
       try {
         const formatted = formatExerciseContextMessage(
           exercise.title,

@@ -94,7 +94,7 @@ export async function getSourceExercisesForLesson(
     const fetched = await Promise.all(
       referencedIds.map((id) =>
         payload
-          .findByID({ collection: 'exercises', id, depth: 0, overrideAccess: true })
+          .findByID({ collection: 'exercises', id, depth: 1, overrideAccess: true })
           .then((doc) => doc as unknown as ExerciseDoc)
           .catch((err) => {
             logger.warn(
@@ -115,7 +115,7 @@ export async function getSourceExercisesForLesson(
     collection: 'exercises',
     where: { lesson: { equals: lessonId } },
     limit: 0,
-    depth: 0,
+    depth: 1,
     overrideAccess: true,
   })
   return fkQuery.docs as unknown as ExerciseDoc[]

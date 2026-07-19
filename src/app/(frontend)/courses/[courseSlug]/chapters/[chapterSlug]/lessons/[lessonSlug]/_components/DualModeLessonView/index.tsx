@@ -2,9 +2,10 @@
  * @fileType component
  * @domain lessons
  * @pattern dual-view
- * @ai-summary Tab-based lesson view supporting up to three tabs: Media (attached
- *             files), PDF (worksheet from exercise blocks), and Interactive (exercise
- *             pager with answer UI). Media tab only appears when the lesson has
+ * @ai-summary Tab-based lesson view supporting up to four tabs: Media (attached
+ *             files), PDF (worksheet from exercise blocks), Interactive (exercise
+ *             pager with answer UI), and Test (single scrollable page with
+ *             batch answer checking). Media tab only appears when the lesson has
  *             attached files. Tab choice is persisted per lesson in localStorage.
  *             Both PDF and Interactive tabs read from `exercise.content.blocks` so
  *             admin edits flow to both.
@@ -20,6 +21,7 @@ import { useTranslations } from '@/ui/web/providers/I18n'
 import { BlocksDocumentLessonView } from '../BlocksDocumentLessonView'
 import { ExercisesPager } from '../ExercisesPager'
 import { MediaTabContent } from '../MediaTabContent'
+import { TestViewRenderer } from '../TestViewRenderer'
 import { TabButton } from './TabButton'
 import { useLessonViewMode, type LessonMode } from './useLessonViewMode'
 
@@ -51,7 +53,7 @@ interface DualModeLessonViewProps {
   chatLessonId?: string
   showChat?: boolean
   formulaSheet?: FormulaSheet | null
-  /** Renderer modes enabled by the admin for this lesson. Defaults to all three. */
+  /** Renderer modes enabled by the admin for this lesson. Defaults to all four. */
   visibleRenderers?: LessonMode[]
   initialExerciseIndex?: number
   initialMode?: LessonMode
@@ -63,20 +65,21 @@ interface DualModeLessonViewProps {
  * data-presence guard for the Media tab.
  *
  * - Media: shown only when `hasMedia` AND 'media' is in `visibleRenderers`.
- * - PDF / Interactive: shown when their respective value is in `visibleRenderers`.
- * - When `visibleRenderers` is undefined, all three tabs are shown (backward
+ * - PDF / Interactive / Test: shown when their respective value is in `visibleRenderers`.
+ * - When `visibleRenderers` is undefined, all four tabs are shown (backward
  *   compatible for lessons created before this feature existed).
  */
 function getVisibleTabs(
   visibleRenderers: LessonMode[] | undefined,
   hasMedia: boolean,
-): { media: boolean; pdf: boolean; interactive: boolean } {
-  const all: LessonMode[] = ['media', 'pdf', 'interactive']
+): { media: boolean; pdf: boolean; interactive: boolean; test: boolean } {
+  const all: LessonMode[] = ['media', 'pdf', 'interactive', 'test']
   const allowed = visibleRenderers ?? all
   return {
     media: hasMedia && allowed.includes('media'),
     pdf: allowed.includes('pdf'),
     interactive: allowed.includes('interactive'),
+    test: allowed.includes('test'),
   }
 }
 
@@ -122,7 +125,8 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
       // Stored mode points to a tab the admin just disabled — pick the first available.
       if (visibleTabs.media) return 'media'
       if (visibleTabs.pdf) return 'pdf'
-      return 'interactive'
+      if (visibleTabs.interactive) return 'interactive'
+      return 'test'
     }
     return mode
   })()
@@ -131,9 +135,11 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
     mediaTab: `lesson-${lessonId}-tab-media`,
     pdfTab: `lesson-${lessonId}-tab-pdf`,
     interactiveTab: `lesson-${lessonId}-tab-interactive`,
+    testTab: `lesson-${lessonId}-tab-test`,
     mediaPanel: `lesson-${lessonId}-panel-media`,
     pdfPanel: `lesson-${lessonId}-panel-pdf`,
     interactivePanel: `lesson-${lessonId}-panel-interactive`,
+    testPanel: `lesson-${lessonId}-panel-test`,
   }
 
   const tabBar = (
@@ -167,6 +173,15 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
           label={t('lessonViewModeInteractive')}
           active={effectiveMode === 'interactive'}
           onClick={() => select('interactive')}
+        />
+      )}
+      {visibleTabs.test && (
+        <TabButton
+          id={tabIds.testTab}
+          controlsId={tabIds.testPanel}
+          label={t('lessonViewModeTest')}
+          active={effectiveMode === 'test'}
+          onClick={() => select('test')}
         />
       )}
     </div>
@@ -234,6 +249,28 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
           headerSlot={tabBar}
           hideLatexBlocks
           initialExerciseIndex={initialExerciseIndex}
+          nextLesson={nextLesson}
+        />
+      </section>
+    )
+  }
+
+  if (effectiveMode === 'test') {
+    return (
+      <section role="tabpanel" id={tabIds.testPanel} aria-labelledby={tabIds.testTab}>
+        <TestViewRenderer
+          lessonTitle={lessonTitle}
+          backUrl={backUrl}
+          courseSlug={courseSlug}
+          chapterSlug={chapterSlug}
+          lessonSlug={lessonSlug}
+          lessonId={lessonId}
+          exercises={exercises}
+          mediaMap={mediaMap}
+          showChat={showChat}
+          formulaSheet={formulaSheet}
+          headerSlot={tabBar}
+          hideLatexBlocks
           nextLesson={nextLesson}
         />
       </section>

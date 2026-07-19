@@ -557,6 +557,15 @@ describe('McqQuestion component', () => {
               mediaIds: [],
             },
           },
+          {
+            id: 'opt3',
+            content: {
+              type: 'rich_text',
+              format: 'md-math-v1',
+              value: '$2x = 16$',
+              mediaIds: [],
+            },
+          },
         ],
         correctOptionIds: ['opt2'],
       },
@@ -578,8 +587,8 @@ describe('McqQuestion component', () => {
       // Find all the text wrappers (flex-1 divs inside each option label)
       const textWrappers = container.querySelectorAll('label > div.flex-1')
 
-      // There should be 2 options
-      expect(textWrappers.length).toBe(2)
+      // There should be 3 options
+      expect(textWrappers.length).toBe(3)
 
       // Each option text wrapper should have text-body-lg class (design token) for larger font
       textWrappers.forEach((wrapper) => {

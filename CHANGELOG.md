@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.29.0 — 2026-07-19
+
+### Features
+
+- **exam-lessons**: swap scroll tab for test tab on exam lessons (#920)
+- **exercises**: unify test-view check-all button across all exercises (#889)
+- **lessons**: add Test-view renderer with batch answer checking (#885)
+- **mcq**: auto-check 2-option MCQ on button click (#887)
+- **mcq**: render 2-option single-select as side-by-side buttons (#882)
+- **course-lessons**: redesign lessons view with chapter accordions and timeline (#874)
+- **courses**: track course selections in Admin from every call site (#845)
+
+### Bug Fixes
+
+- **exercises**: drop section headers and separate exercises in scroll view (#907)
+- **exercises**: join sections via reverse relationship (#888)
+- **exercises**: render own blocks + sections with localized a/b/c headers (#880)
+- **course-lessons**: address review feedback + regression fix (#874)
+
+### Docs
+
+- **exercises**: refresh `ExerciseRendererProps.groups` docstring
+
 ## v0.28.0 — 2026-07-10
 
 ### Features
@@ -1889,6 +1912,21 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.29.0 ([#921](https://github.com/A-Guy-educ/A-Guy-Web/pull/921)) — @aguyshayb
+- feat(lessons): Swap scroll tab for test tab on exam lessons ([#920](https://github.com/A-Guy-educ/A-Guy-Web/pull/920)) — @aguyshayb
+- fix(exercises): drop section headers, separate exercises in scroll view ([#907](https://github.com/A-Guy-educ/A-Guy-Web/pull/907)) — @aguyshayb
+- feat(test-view): Single lesson-wide Check all button ([#889](https://github.com/A-Guy-educ/A-Guy-Web/pull/889)) — @aguyshayb
+- #884: Add "Test" view renderer for lessons with batch answer checking ([#885](https://github.com/A-Guy-educ/A-Guy-Web/pull/885)) — @kodyade[bot]
+- fix(exercises): join sections via reverse relationship ([#888](https://github.com/A-Guy-educ/A-Guy-Web/pull/888)) — @aguyshayb
+- #886: 2-option MCQ buttons: click = select + check in one action ([#887](https://github.com/A-Guy-educ/A-Guy-Web/pull/887)) — @kodyade[bot]
+- #881: Render 2-option MCQ as side-by-side buttons ([#882](https://github.com/A-Guy-educ/A-Guy-Web/pull/882)) — @kodyade[bot] · ⚠️ QA 2026-07-18 (#911)
+- fix(exercises): render own blocks + sections with localized a/b/c headers (#880) ([#883](https://github.com/A-Guy-educ/A-Guy-Web/pull/883)) — @kodyade[bot] · ⚠️ QA 2026-07-16 (#895)
+- feat(course-lessons): Redesign lessons view — chapter accordions + timeline ([#874](https://github.com/A-Guy-educ/A-Guy-Web/pull/874)) — @aguyshayb · ⚠️ QA 2026-07-15 (#877)
+- #856: feat: Read sections natively on web (Task 4) ([#857](https://github.com/A-Guy-educ/A-Guy-Web/pull/857)) — @kodyade[bot] · ⚠️ QA 2026-07-14 (#865)
+- feat: Track course selections in Admin from every call site ([#845](https://github.com/A-Guy-educ/A-Guy-Web/pull/845)) — @aguyshayb · ⚠️ QA 2026-07-13 (#850)
+## [v0.28.0] - 2026-07-10
+
+- promote: dev -> main (v0.28.0) ([#829](https://github.com/A-Guy-educ/A-Guy-Web/pull/829)) — @aguyshayb
 - chore: sync main into dev (v2 — MERGE COMMIT ONLY, do not squash) ([#831](https://github.com/A-Guy-educ/A-Guy-Web/pull/831)) — @aguyshayb
 - chore: sync main into dev to unblock v0.28.0 promotion ([#830](https://github.com/A-Guy-educ/A-Guy-Web/pull/830)) — @aguyshayb
 - chore: release v0.28.0 ([#828](https://github.com/A-Guy-educ/A-Guy-Web/pull/828)) — @aguyshayb
@@ -1907,7 +1945,7 @@ _No notable commits since the last release._
 - #671: [UI/UX] Systemic Fix for High-Contrast Accessibility and Rich HTM… ([#812](https://github.com/A-Guy-educ/A-Guy-Web/pull/812)) — @kodyade[bot]
 - #754: [Bug] Dashboard "למידה" tab shows nonexistent course "21" ([#755](https://github.com/A-Guy-educ/A-Guy-Web/pull/755)) — @kodyade[bot]
 - [Payments] Grant course + feature entitlements on PayPal success (#680) ([#809](https://github.com/A-Guy-educ/A-Guy-Web/pull/809)) — @kodyade[bot]
-- #757: QA: fix(lesson): Pre-render content page bodies and pass to lesso… ([#813](https://github.com/A-Guy-educ/A-Guy-Web/pull/813)) — @kodyade[bot] · 🔄 QA (#817)
+- #757: QA: fix(lesson): Pre-render content page bodies and pass to lesso… ([#813](https://github.com/A-Guy-educ/A-Guy-Web/pull/813)) — @kodyade[bot] · ⚠️ QA 2026-07-11 (#817)
 ## [v0.27.0] - 2026-07-09
 
 - promote: dev -> main (v0.27.0) ([#803](https://github.com/A-Guy-educ/A-Guy-Web/pull/803)) — @aguyshayb

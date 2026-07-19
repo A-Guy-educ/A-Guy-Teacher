@@ -7,6 +7,8 @@ import { useSearchParams } from 'next/navigation'
 import { ExerciseWorkspace } from '@/app/(frontend)/courses/[courseSlug]/chapters/[chapterSlug]/lessons/[lessonSlug]/exercises/[exerciseSlug]/_components/ExerciseWorkspace'
 import type { Lesson, LessonPrerequisite, Media } from '@/infra/types/content'
 import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
+import { getExerciseBlocks } from '@/lib/exercises/getExerciseBlocks'
+import { getEffectiveLessonType } from '@/server/constants/lesson-types'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { ChatInterface } from '@/ui/web/chat'
 import { BackToCourses } from '@/app/(frontend)/courses/_components/BackToCourses'
@@ -86,6 +88,10 @@ export function LessonIntroPage({
   const tCommon = useTranslations('common.languageSwitcher')
   const searchParams = useSearchParams()
   const deepLinkedExerciseId = searchParams.get('exerciseId')
+  // The pager accepts `?section=N&block=M` (default section=0) and the legacy
+  // `?block=N` shape. Today every lesson is a single section so `block` alone
+  // drives resolution; the new contract is emitted by /exercises/[slug] and
+  // /content/[slug] route stubs.
   const blockParam = searchParams.get('block')
   const parsedBlockIndex =
     blockParam !== null && blockParam !== '' && !Number.isNaN(Number(blockParam))
@@ -107,24 +113,22 @@ export function LessonIntroPage({
 
   const hasExerciseContent = exercises.some((exercise) => {
     if (!exercise || typeof exercise !== 'object') return false
-    if (Array.isArray(exercise.content)) return exercise.content.length > 0
-    if (exercise.content && typeof exercise.content === 'object' && 'blocks' in exercise.content) {
-      return (
-        Array.isArray((exercise.content as { blocks?: unknown[] }).blocks) &&
-        (exercise.content as { blocks: unknown[] }).blocks.length > 0
-      )
-    }
-    return false
+    return getExerciseBlocks(exercise).length > 0
   })
 
   /** True when blocks contain at least one contentPage block — routes to LessonPager instead of ExercisesPager */
   const hasContentPagesInBlocks = contentPageCount > 0
 
   const hasMedia = pdfCount > 0
+  // Exam lessons swap the scroll (pdf) tab for the test tab so students see
+  // the batch-graded test view instead of the read-only worksheet. Learning
+  // and practice lessons keep the original scroll + interactive pair.
+  const isExamLesson = getEffectiveLessonType(lesson.type) === 'exam'
   const visibleRenderers: LessonMode[] = []
   if (hasMedia) visibleRenderers.push('media')
-  if (hasExerciseContent) visibleRenderers.push('pdf', 'interactive')
-  else if (hasContentPagesInBlocks) visibleRenderers.push('interactive')
+  if (hasExerciseContent) {
+    visibleRenderers.push(isExamLesson ? 'test' : 'pdf', 'interactive')
+  } else if (hasContentPagesInBlocks) visibleRenderers.push('interactive')
 
   const completed = progress?.completed ?? 0
   const total = progress?.total ?? exerciseCount
@@ -200,7 +204,13 @@ export function LessonIntroPage({
         formulaSheet={formulaSheet}
         visibleRenderers={visibleRenderers}
         initialExerciseIndex={pageState.initialExerciseIndex}
-        initialMode={hasExerciseContent || hasContentPagesInBlocks ? 'interactive' : undefined}
+        initialMode={
+          isExamLesson && hasExerciseContent
+            ? 'test'
+            : hasExerciseContent || hasContentPagesInBlocks
+              ? 'interactive'
+              : undefined
+        }
         nextLesson={nextLesson}
       />
     )

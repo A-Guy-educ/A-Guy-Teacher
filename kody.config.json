@@ -16,11 +16,6 @@
       "aguyaharonyair"
     ]
   },
-  "state": {
-    "repo": "https://github.com/A-Guy-educ/kody-state",
-    "path": "A-Guy-Web",
-    "branch": "main"
-  },
   "agent": {
     "model": "minimax/MiniMax-M3",
     "reasoningEffort": "high"
@@ -37,9 +32,6 @@
     "smokeCommand": "pnpm tsx scripts/smoke-web-api.ts",
     "e2eCommand": "npx tsx scripts/release-e2e-gate.ts",
     "timeoutMs": 1800000
-  },
-  "jobs": {
-    "stateBackend": "contents-api"
   },
   "defaultExecutable": "classify",
   "defaultPrExecutable": "fix",
@@ -103,7 +95,9 @@
       "ai-agency-health",
       "ci-health",
       "prs-stay-mergeable",
-      "product-quality"
+      "product-quality",
+      "agency-observer",
+      "agency-operating-loop"
     ]
   },
   "fly": {
