@@ -77,7 +77,8 @@
       "qa-verify",
       "quality-watch",
       "ui-review",
-      "fix"
+      "fix",
+      "resolve"
     ],
     "activeAgents": [
       "ceo",
