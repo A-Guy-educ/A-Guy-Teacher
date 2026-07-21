@@ -8,4 +8,5 @@
 - content upload - 80% up, 20% more to go
 - content approval
 - marketing
+- content upload standard
 
