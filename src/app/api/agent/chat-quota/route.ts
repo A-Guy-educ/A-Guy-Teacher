@@ -1,5 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET() {
-  return NextResponse.json({ remaining: 999, limit: 999, resetAt: null, allowed: true })
+import { getUserChatQuotaStatus, requireUser } from '@/server/auth/api-auth'
+
+export async function GET(request: NextRequest) {
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+
+  const status = await getUserChatQuotaStatus(auth.value.id)
+  return NextResponse.json(status)
 }

@@ -1,18 +1,13 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
+import { enforceGuestOrUserChatQuota } from '@/server/auth/api-auth'
 import {
   appendMessage,
   generateAssistantReply,
   getOrCreateConversation,
   type WebChatMessage,
 } from '@/server/web-api/chat'
-import {
-  GUEST_SESSION_COOKIE,
-  getOrCreateGuestId,
-  getWebUser,
-  publicUserId,
-} from '@/infra/web-api/mongo-payload'
 
 const BodySchema = z.object({
   message: z.string().trim().min(1),
@@ -33,9 +28,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Missing message or gradeLevel' }, { status: 400 })
   }
 
-  const user = await getWebUser(request.headers)
-  const guestId = getOrCreateGuestId(request)
-  const ownerId = publicUserId(user, guestId)
+  const quota = await enforceGuestOrUserChatQuota(request)
+  if (!quota.ok) return quota.response
+
+  const ownerId = quota.value.ownerId
   const contextKey = `learning:${parsed.data.gradeLevel}`
   const conversation = await getOrCreateConversation(ownerId, contextKey)
   const messages = Array.isArray(conversation.messages)
@@ -75,14 +71,15 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  const response = new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive',
-      'Set-Cookie': `${GUEST_SESSION_COOKIE}=${guestId}; Path=/; Max-Age=2592000; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}; HttpOnly`,
-    },
-  })
+  const headers: Record<string, string> = {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+  }
+  if (quota.value.guestCookieToken) {
+    headers['Set-Cookie'] =
+      `guest_session=${quota.value.guestCookieToken}; Path=/; Max-Age=2592000; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}; HttpOnly`
+  }
 
-  return response
+  return new Response(stream, { headers })
 }

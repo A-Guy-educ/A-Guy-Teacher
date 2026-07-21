@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { enforceGuestOrUserChatQuota } from '@/server/auth/api-auth'
+import { buildGuestSessionCookieHeader } from '@/server/services/guest-session'
 import {
   appendMessage,
   generateAssistantReply,
   getOrCreateConversation,
   resolveContextKey,
 } from '@/server/web-api/chat'
-import {
-  getOrCreateGuestId,
-  getWebUser,
-  publicUserId,
-  withGuestCookie,
-} from '@/infra/web-api/mongo-payload'
 
 const BodySchema = z.object({
   message: z.string().min(1),
@@ -31,13 +27,14 @@ export async function POST(request: NextRequest) {
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
+  const quota = await enforceGuestOrUserChatQuota(request)
+  if (!quota.ok) return quota.response
+
   const body = parsed.data
   const contextKey = resolveContextKey(body, body.contextKeyOverride)
   if (!contextKey) return NextResponse.json({ error: 'Missing context ID' }, { status: 400 })
 
-  const guestId = getOrCreateGuestId(request)
-  const user = await getWebUser(request.headers)
-  const ownerId = publicUserId(user, guestId)
+  const ownerId = quota.value.ownerId
   const conversation = await getOrCreateConversation(ownerId, contextKey)
 
   await appendMessage(String(conversation.id), {
@@ -57,14 +54,18 @@ export async function POST(request: NextRequest) {
 
   await appendMessage(String(conversation.id), { role: 'assistant', content: message })
 
-  return withGuestCookie(
-    NextResponse.json({
-      success: true,
-      message,
-      conversationId: conversation.id,
-      contextKey,
-      isGuestMode: !user,
-    }),
-    guestId,
-  )
+  const response = NextResponse.json({
+    success: true,
+    message,
+    conversationId: conversation.id,
+    contextKey,
+    isGuestMode: quota.value.isGuest,
+  })
+
+  if (quota.value.guestCookieToken) {
+    const cookieHeader = await buildGuestSessionCookieHeader(quota.value.guestCookieToken)
+    response.headers.append('Set-Cookie', cookieHeader)
+  }
+
+  return response
 }

@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
+import { enforceUserChatQuota, requireUser } from '@/server/auth/api-auth'
+
 const BodySchema = z.object({
   questionId: z.string().min(1),
   questionText: z.string().min(1),
@@ -83,10 +85,16 @@ async function semanticMatch(input: z.infer<typeof BodySchema>) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
     return Response.json({ success: false, error: 'Validation failed' }, { status: 400 })
   }
+
+  const quota = await enforceUserChatQuota(auth.value.id)
+  if (!quota.ok) return quota.response
 
   const exact = localMatch(parsed.data.studentAnswer, parsed.data.acceptedAnswers)
   if (exact.matched) {

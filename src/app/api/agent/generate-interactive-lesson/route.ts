@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { resolveMediaFilePath } from '@/infra/config/storage'
+import { enforceUserChatQuota, requireUser } from '@/server/auth/api-auth'
 import { getContentDb, objectIdFromString } from '@/infra/db/content-db'
 import {
   callGeminiResiliently,
@@ -127,10 +128,16 @@ async function generateWithGemini(
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: 'mediaId is required' }, { status: 400 })
   }
+
+  const quota = await enforceUserChatQuota(auth.value.id)
+  if (!quota.ok) return quota.response
 
   try {
     const media = await loadMedia(parsed.data.mediaId)
