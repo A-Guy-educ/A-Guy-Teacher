@@ -1,4 +1,4 @@
-**rollout plan v2**
+*rollout plan v2*
 ## Target 10 direct subscribers
 ### destination - 1.08
 
