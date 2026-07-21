@@ -11,5 +11,8 @@
     "activeFeatures": [
       "client-signin"
     ]
+  },
+  "agent": {
+    "model": "minimax/MiniMax-M3"
   }
 }
