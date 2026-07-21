@@ -56,7 +56,6 @@
       "chore",
       "spec",
       "review",
-      "fix",
       "fix-ci",
       "ci-health",
       "dev-ci-health",
