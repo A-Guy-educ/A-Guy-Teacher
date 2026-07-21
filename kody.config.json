@@ -62,7 +62,6 @@
       "pr-health-triage",
       "redispatch",
       "sync",
-      "resolve",
       "merge",
       "revert",
       "release-prepare",
