@@ -1912,6 +1912,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #928: Security: AI/paid-API endpoints are unauthenticated and unthrottl… ([#941](https://github.com/A-Guy-educ/A-Guy-Web/pull/941)) — @kodyade[bot]
 - #923: Redirect logged-in users with a picked course from /home to /cour… ([#924](https://github.com/A-Guy-educ/A-Guy-Web/pull/924)) — @kodyade[bot]
 - promote: dev -> main (v0.29.0) ([#922](https://github.com/A-Guy-educ/A-Guy-Web/pull/922)) — @aguyshayb
 - chore: release v0.29.0 ([#921](https://github.com/A-Guy-educ/A-Guy-Web/pull/921)) — @aguyshayb
