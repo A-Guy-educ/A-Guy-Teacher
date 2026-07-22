@@ -24,8 +24,8 @@ describe.skipIf(!process.env.GITHUB_TOKEN || process.env.KODY_LIVE_GITHUB_SMOKE 
   'kody-engine v0.3.48 classify→bug dispatch',
   () => {
     // gh() uses require() inside the function scope to avoid vi.mock('child_process')
-    // conflicts with sibling unit test files (tests/unit/scripts/inspector/github-client.test.ts).
-    // GH_TOKEN is injected via the env option, matching scripts/inspector/clients/github.ts line 23.
+    // Keep GitHub authentication scoped to this subprocess so live-test credentials
+    // do not leak into unrelated test workers.
     const gh = (args: string[]): string => {
       const { execFileSync } = require('child_process')
       return execFileSync('gh', args, {
