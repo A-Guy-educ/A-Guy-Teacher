@@ -302,8 +302,17 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
   const { captureId } = await capturePayPalOrder(orderId)
 
   const capturedAt = new Date()
-  await transactions.updateOne(
-    { _id: new ObjectId(String(transaction._id)) },
+  // Atomically claim the pending row. Two concurrent webhooks for the same
+  // order must only flip the status once, so we filter on `status !==
+  // 'succeeded'`. If the claim loses, we still run the side effects below —
+  // they're independently idempotent (atomic upsert on entitlements +
+  // atomic claim on the receipt), so a losing webhook can safely re-enter
+  // the path in case the winning webhook crashed mid-flight.
+  const claim = await transactions.updateOne(
+    {
+      _id: new ObjectId(String(transaction._id)),
+      status: { $in: ['pending', 'failed'] },
+    },
     {
       $set: {
         status: 'succeeded',
@@ -316,6 +325,13 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
       },
     },
   )
+
+  if (claim.modifiedCount !== 1) {
+    logger.info(
+      { transactionId: String(transaction._id), eventId: event.id, orderId },
+      'PayPal webhook: ORDER.APPROVED lost the race to flip status — re-entering side effects',
+    )
+  }
 
   await maybeGrantEntitlements(transaction)
   await maybeSendReceipt(transaction, capturedAt)
@@ -368,8 +384,14 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
   }
 
   const capturedAt = new Date()
-  await transactions.updateOne(
-    { _id: new ObjectId(String(transaction._id)) },
+  // Same atomic-claim pattern as handleOrderApproved: only one webhook flips
+  // the status out of pending. Concurrent losers still re-enter the side
+  // effects — those are independently idempotent.
+  const claim = await transactions.updateOne(
+    {
+      _id: new ObjectId(String(transaction._id)),
+      status: { $in: ['pending', 'failed'] },
+    },
     {
       $set: {
         status: 'succeeded',
@@ -379,6 +401,13 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
       },
     },
   )
+
+  if (claim.modifiedCount !== 1) {
+    logger.info(
+      { transactionId: String(transaction._id), eventId: event.id, orderId, captureId },
+      'PayPal webhook: CAPTURE.COMPLETED lost the race to flip status — re-entering side effects',
+    )
+  }
 
   await maybeGrantEntitlements(transaction)
   await maybeSendReceipt(transaction, capturedAt)
