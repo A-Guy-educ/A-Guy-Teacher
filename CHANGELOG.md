@@ -1912,6 +1912,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #940: Security: move Gemini API key from URL query string to header ([#949](https://github.com/A-Guy-educ/A-Guy-Web/pull/949)) — @kodyade[bot]
 - #933: Cleanup: delete 37 dead '410 Gone' stub API routes ([#948](https://github.com/A-Guy-educ/A-Guy-Web/pull/948)) — @kodyade[bot]
 - #931: CI: coverage flag is silently ignored (test:unit -- --coverage) ([#943](https://github.com/A-Guy-educ/A-Guy-Web/pull/943)) — @kodyade[bot]
 - #937: Security: replace in-memory rate limiter with durable per-user li… ([#946](https://github.com/A-Guy-educ/A-Guy-Web/pull/946)) — @kodyade[bot]
