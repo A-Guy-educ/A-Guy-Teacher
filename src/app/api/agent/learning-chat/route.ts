@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
+import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { enforceGuestOrUserChatQuota } from '@/server/auth/api-auth'
 import {
   appendMessage,
@@ -17,6 +18,9 @@ const BodySchema = z.object({
   locale: z.string().optional(),
 })
 
+const LEARNING_CHAT_RATE_LIMIT_MAX = 20
+const LEARNING_CHAT_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+
 function chunkText(text: string) {
   const chunks = text.match(/.{1,80}(\s|$)/g)
   return chunks?.map((chunk) => chunk.trimEnd()).filter(Boolean) ?? [text]
@@ -30,6 +34,13 @@ export async function POST(request: NextRequest) {
 
   const quota = await enforceGuestOrUserChatQuota(request)
   if (!quota.ok) return quota.response
+
+  const rate = await rateLimit({
+    key: `chat:${quota.value.ownerId}:agent-learning-chat`,
+    limit: LEARNING_CHAT_RATE_LIMIT_MAX,
+    windowMs: LEARNING_CHAT_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!rate.allowed) return rateLimitExceededResponse(rate)
 
   const ownerId = quota.value.ownerId
   const contextKey = `learning:${parsed.data.gradeLevel}`

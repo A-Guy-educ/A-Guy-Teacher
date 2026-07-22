@@ -20,8 +20,10 @@
  * @ai-summary Tests the /api/bug-report handler: validation, send, no-adapter fallback, and rate limit.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
+
+import { startMongoContainer } from '@/infra/utils/test/mongodb-container'
 
 // Mock the bug-report service BEFORE importing the route so the route picks
 // up the mocked module. We do not mock the email service for the happy-path
@@ -47,7 +49,22 @@ vi.mock('@/infra/web-api/mongo-payload', () => ({
 }))
 
 let POST: (request: NextRequest) => Promise<Response>
-let _resetBugReportRateLimitCache: () => void
+let _resetBugReportRateLimitCache: () => Promise<void> | void
+let mongoStarted = false
+
+beforeAll(async () => {
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = await startMongoContainer()
+    mongoStarted = true
+  }
+})
+
+afterAll(async () => {
+  if (mongoStarted) {
+    // Reset the test-only DATABASE_URL so other suites get a clean slate.
+    delete process.env.DATABASE_URL
+  }
+})
 
 function makeRequest(body: unknown, ip: string, userAgent: string): NextRequest {
   return new NextRequest('http://localhost/api/bug-report', {
@@ -62,14 +79,14 @@ function makeRequest(body: unknown, ip: string, userAgent: string): NextRequest 
 }
 
 beforeEach(async () => {
-  // Reset the route's in-memory rate limit cache between tests so a previous
-  // test's quota doesn't bleed into the next one.
+  // Reset the route's durable (Mongo-backed) rate limit cache between tests so
+  // a previous test's quota doesn't bleed into the next one.
   if (!_resetBugReportRateLimitCache) {
     const routeMod = await import('@/app/api/bug-report/route')
     POST = routeMod.POST
     _resetBugReportRateLimitCache = routeMod._resetBugReportRateLimitCache
   } else {
-    _resetBugReportRateLimitCache()
+    await _resetBugReportRateLimitCache()
   }
   sendBugReportMock.mockReset()
   // Default to a successful send — individual tests override as needed.

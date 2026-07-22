@@ -24,6 +24,21 @@ vi.mock('@/infra/types/backend', async () => {
   }
 })
 
+vi.mock('@/infra/security/rate-limit', async () => {
+  const actual = await vi.importActual<typeof import('@/infra/security/rate-limit')>(
+    '@/infra/security/rate-limit',
+  )
+  return {
+    ...actual,
+    rateLimit: vi.fn(async () => ({
+      allowed: true,
+      remaining: 999,
+      resetAt: Date.now() + 60_000,
+      limit: 999,
+    })),
+  }
+})
+
 describe('chat-quota route (issue #928)', () => {
   it('proxies getChatQuotaStatus when authenticated', async () => {
     vi.resetModules()

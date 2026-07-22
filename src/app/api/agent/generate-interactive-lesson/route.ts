@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { resolveMediaFilePath } from '@/infra/config/storage'
+import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { enforceUserChatQuota, requireUser } from '@/server/auth/api-auth'
 import { getContentDb, objectIdFromString } from '@/infra/db/content-db'
 import {
@@ -127,9 +128,19 @@ async function generateWithGemini(
   return { lesson: validateLesson(parseResponse(responseText), locale), sizeBytes }
 }
 
+const GENERATE_LESSON_RATE_LIMIT_MAX = 10
+const GENERATE_LESSON_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+
 export async function POST(request: NextRequest) {
   const auth = await requireUser(request)
   if (!auth.ok) return auth.response
+
+  const rate = await rateLimit({
+    key: `user:${auth.value.id}:agent-generate-interactive-lesson`,
+    limit: GENERATE_LESSON_RATE_LIMIT_MAX,
+    windowMs: GENERATE_LESSON_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!rate.allowed) return rateLimitExceededResponse(rate)
 
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
