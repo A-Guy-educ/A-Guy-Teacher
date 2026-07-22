@@ -72,6 +72,13 @@ const eslintConfig = [
       'aguy/prefer-design-tokens': 'warn',
     },
   },
+  {
+    plugins: { aguy: aguyPlugin },
+    files: ['src/app/api/**/route.ts', 'src/server/payload/endpoints/**/*.ts'],
+    rules: {
+      'aguy/require-auth-endpoints': 'error',
+    },
+  },
 
   {
     ignores: [

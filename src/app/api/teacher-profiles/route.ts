@@ -27,6 +27,7 @@ export function isPublicTeacherProfile(profile: Record<string, unknown>) {
 }
 
 export async function GET(request: NextRequest) {
+  // public endpoint: published teacher profiles
   const db = await getContentDb()
   const locale = localeFromRequest(request)
   const docs = await db

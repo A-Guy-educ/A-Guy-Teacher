@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // public endpoint: reads published media metadata; uploads use guest ownership above
   const id = request.nextUrl.searchParams.get('id')
   const db = await getContentDb()
   if (id && ObjectId.isValid(id)) {

@@ -8,6 +8,7 @@ function idCandidates(id: string) {
 }
 
 export async function POST(request: NextRequest) {
+  // public endpoint: compatibility probe; this handler performs no import or mutation
   const lessonId = request.nextUrl.searchParams.get('lessonId')
   if (!lessonId) return NextResponse.json({ error: 'lessonId is required' }, { status: 400 })
 

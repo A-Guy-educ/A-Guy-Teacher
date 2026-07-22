@@ -9,6 +9,7 @@ import {
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
+  // public endpoint: returns anonymous state when no valid session exists
   const token = tokenFromHeaders(request.headers)
   const session = await getSessionFromToken(token)
   if (!session) {

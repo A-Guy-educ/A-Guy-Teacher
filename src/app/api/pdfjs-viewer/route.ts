@@ -24,6 +24,7 @@ import { NextRequest, NextResponse } from 'next/server'
  * - Uses PDF.js native file loading via query parameter
  */
 export async function GET(request: NextRequest) {
+  // public endpoint: validated proxy for published PDF media
   const requestId = crypto.randomUUID()
   const reqLogger = logger.child({ requestId, component: 'pdfjs-viewer' })
 

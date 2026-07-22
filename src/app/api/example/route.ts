@@ -21,6 +21,7 @@ const requestSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  // public endpoint: documented validation example
   // Generate request ID for correlation
   const requestId = randomUUID()
   const reqLogger = createRequestLogger(requestId)
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  // public endpoint: documented health-style example
   logger.info('Example GET request')
 
   return NextResponse.json({
