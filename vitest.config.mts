@@ -48,7 +48,6 @@ const activeIntegrationTests = [
   'tests/int/guardrails/**/*.int.spec.ts',
   'tests/int/health.api.int.spec.ts',
   'tests/int/health-badge.int.spec.ts',
-  'tests/int/media-cleanup-workflow.int.spec.ts',
   'tests/int/middleware.int.spec.ts',
   'tests/int/openai-error-handling.int.spec.ts',
   'tests/int/pdf-conversion-cleanup-regression.int.spec.ts',

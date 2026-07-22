@@ -12,7 +12,6 @@
  * fresh exerciseRef entries).
  *
  * Used by:
- *   - POST /api/lessons/create-context-exercises (Steps Convert)
  *   - runFullMediaPipeline (Full Convert (Media))
  *   - runFullLatexPipeline (Full Convert (LaTeX))
  */
