@@ -56,6 +56,34 @@ function matchesObjectId(value: unknown, target: string): boolean {
   return false
 }
 
+function applyUpdate(row: Row, update: Record<string, unknown>): void {
+  const set = (update as { $set?: Record<string, unknown> }).$set
+  const unset = (update as { $unset?: Record<string, ''> }).$unset
+  if (set) {
+    for (const [key, value] of Object.entries(set)) {
+      const dotted = key.split('.')
+      let cursor: Row = row
+      for (let i = 0; i < dotted.length - 1; i++) {
+        const segment = dotted[i]!
+        const next = cursor[segment]
+        if (next && typeof next === 'object' && !Array.isArray(next)) {
+          cursor = next as Row
+        } else {
+          const fresh: Row = {}
+          cursor[segment] = fresh
+          cursor = fresh
+        }
+      }
+      cursor[dotted[dotted.length - 1]!] = value
+    }
+  }
+  if (unset) {
+    for (const key of Object.keys(unset)) {
+      delete row[key]
+    }
+  }
+}
+
 function collectionMock(rows: Row[]) {
   return {
     findOne: vi.fn(
@@ -64,6 +92,24 @@ function collectionMock(rows: Row[]) {
     insertOne: vi.fn(async (doc: Row) => {
       rows.push(doc)
       return { insertedId: 'fake' }
+    }),
+    updateOne: vi.fn(async (filter: Record<string, unknown>, update: Record<string, unknown>) => {
+      // Mirror the MongoDB driver semantics used by grantProductEntitlements:
+      //   - filter matches → apply $set / $unset to the existing row
+      //   - filter misses + $setOnInsert → insert the document
+      //   - filter misses + other update → insert via the filter shape
+      const existing = rows.find((r) => matches(r, filter))
+      if (existing) {
+        applyUpdate(existing, update)
+        return { matchedCount: 1, modifiedCount: 1, upsertedCount: 0 }
+      }
+      const setOnInsert = (update as { $setOnInsert?: Row }).$setOnInsert
+      if (setOnInsert) {
+        rows.push({ ...setOnInsert })
+      } else {
+        rows.push({ ...filter })
+      }
+      return { matchedCount: 0, modifiedCount: 0, upsertedCount: 1 }
     }),
   }
 }
@@ -155,7 +201,9 @@ describe('grantProductEntitlements', () => {
 
   it('is idempotent — does not re-insert when an entitlement already exists', async () => {
     seedProduct()
-    // Pre-existing entitlement for the (user, course) pair.
+    // Pre-existing entitlement for the (user, course) pair. The unique
+    // (user, course) index is the contract — the upsert no-ops via
+    // $setOnInsert and MongoDB rejects a second insert with E11000.
     entitlementRows.push({
       _id: new ObjectId(),
       user: new ObjectId(USER_ID),
@@ -165,12 +213,15 @@ describe('grantProductEntitlements', () => {
     await grantProductEntitlements(USER_ID, PRODUCT_ID, TX_ID)
 
     expect(entitlementRows).toHaveLength(1)
-    expect(enrollmentRows).toHaveLength(0)
+    // Entitlement and enrollment track separate writes — a buyer could have
+    // an entitlement (e.g. granted via coupon) without an active enrollment.
+    // The function still materialises the enrollment so the lesson UI works.
+    expect(enrollmentRows).toHaveLength(1)
   })
 
   it('is idempotent — does not re-insert when an active enrollment already exists', async () => {
     seedProduct()
-    // No entitlement, but an existing active enrollment short-circuits the grant.
+    // No entitlement, but an existing active enrollment short-circuits the enrollment insert.
     enrollmentRows.push({
       _id: new ObjectId(),
       user: new ObjectId(USER_ID),
@@ -180,16 +231,21 @@ describe('grantProductEntitlements', () => {
 
     await grantProductEntitlements(USER_ID, PRODUCT_ID, TX_ID)
 
-    expect(entitlementRows).toHaveLength(0)
+    // Entitlement upsert always runs (it's the auditable access-grant row),
+    // but no-ops for the existing enrollment branch.
+    expect(entitlementRows).toHaveLength(1)
     expect(enrollmentRows).toHaveLength(1)
   })
 
   it('treats cancelled enrollments as non-existent and re-grants', async () => {
     // A cancelled enrollment should NOT block re-granting — the buyer had
     // their access revoked and is now buying (or re-buying) the course.
+    // The unique (user, course) index means we re-activate in place rather
+    // than insert a new row.
     seedProduct()
+    const cancelledId = new ObjectId()
     enrollmentRows.push({
-      _id: new ObjectId(),
+      _id: cancelledId,
       user: new ObjectId(USER_ID),
       course: new ObjectId(COURSE_ID),
       status: 'cancelled',
@@ -198,7 +254,10 @@ describe('grantProductEntitlements', () => {
     await grantProductEntitlements(USER_ID, PRODUCT_ID, TX_ID)
 
     expect(entitlementRows).toHaveLength(1)
-    expect(enrollmentRows).toHaveLength(2) // existing cancelled + new active
+    expect(enrollmentRows).toHaveLength(1)
+    // The existing row is re-activated in place — same _id, status 'active'.
+    expect(String(enrollmentRows[0]!._id)).toBe(cancelledId.toString())
+    expect(enrollmentRows[0]!.status).toBe('active')
   })
 
   it('skips non-courseBlock blocks (featureBlock falls outside this spec)', async () => {

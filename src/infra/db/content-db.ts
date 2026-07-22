@@ -4,6 +4,7 @@ type JsonObject = Record<string, unknown>
 
 declare global {
   var __aguyMongoClientPromise: Promise<MongoClient> | undefined
+  var __aguyPaymentIndexesPromise: Promise<void> | undefined
 }
 
 function getConnectionString(): string {
@@ -14,13 +15,36 @@ function getConnectionString(): string {
   return url
 }
 
+async function ensurePaymentIndexes(db: Db): Promise<void> {
+  if (!globalThis.__aguyPaymentIndexesPromise) {
+    globalThis.__aguyPaymentIndexesPromise = Promise.all([
+      db
+        .collection('user-entitlements')
+        .createIndex(
+          { user: 1, course: 1 },
+          { name: 'user_entitlements_user_course_unique', unique: true },
+        ),
+      db
+        .collection('enrollments')
+        .createIndex(
+          { user: 1, course: 1 },
+          { name: 'enrollments_user_course_unique', unique: true },
+        ),
+    ]).then(() => undefined)
+  }
+
+  await globalThis.__aguyPaymentIndexesPromise
+}
+
 export async function getContentDb(): Promise<Db> {
   if (!globalThis.__aguyMongoClientPromise) {
     globalThis.__aguyMongoClientPromise = new MongoClient(getConnectionString()).connect()
   }
 
   const client = await globalThis.__aguyMongoClientPromise
-  return client.db()
+  const db = client.db()
+  await ensurePaymentIndexes(db)
+  return db
 }
 
 export function objectIdFromString(id: string): ObjectId | string {
