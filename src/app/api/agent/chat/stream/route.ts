@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
+import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { enforceGuestOrUserChatQuota } from '@/server/auth/api-auth'
 import {
   appendMessage,
@@ -21,12 +22,22 @@ const BodySchema = z.object({
   contextKeyOverride: z.string().optional(),
 })
 
+const CHAT_STREAM_RATE_LIMIT_MAX = 20
+const CHAT_STREAM_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+
 export async function POST(request: NextRequest) {
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return Response.json({ error: 'Invalid request' }, { status: 400 })
 
   const quota = await enforceGuestOrUserChatQuota(request)
   if (!quota.ok) return quota.response
+
+  const rate = await rateLimit({
+    key: `chat:${quota.value.ownerId}:agent-chat-stream`,
+    limit: CHAT_STREAM_RATE_LIMIT_MAX,
+    windowMs: CHAT_STREAM_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!rate.allowed) return rateLimitExceededResponse(rate)
 
   const body = parsed.data
   const contextKey = resolveContextKey(body, body.contextKeyOverride)

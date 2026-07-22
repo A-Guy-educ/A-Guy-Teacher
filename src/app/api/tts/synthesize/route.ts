@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { enforceUserChatQuota, requireUser } from '@/server/auth/api-auth'
 import { synthesizeRequestSchema, synthesizeSpeech } from '@/server/services/tts/google-cloud-tts'
+
+const TTS_RATE_LIMIT_MAX = 20
+const TTS_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser(request)
   if (!auth.ok) return auth.response
+
+  const rate = await rateLimit({
+    key: `user:${auth.value.id}:tts-synthesize`,
+    limit: TTS_RATE_LIMIT_MAX,
+    windowMs: TTS_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!rate.allowed) return rateLimitExceededResponse(rate)
 
   const requestId = crypto.randomUUID()
   const parsed = synthesizeRequestSchema.safeParse(await request.json().catch(() => null))

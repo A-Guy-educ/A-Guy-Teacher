@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { enforceGuestOrUserChatQuota } from '@/server/auth/api-auth'
 import { buildGuestSessionCookieHeader } from '@/server/services/guest-session'
 import {
@@ -23,6 +24,9 @@ const BodySchema = z.object({
   contextKeyOverride: z.string().optional(),
 })
 
+const CHAT_RATE_LIMIT_MAX = 30
+const CHAT_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+
 export async function POST(request: NextRequest) {
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
@@ -30,11 +34,26 @@ export async function POST(request: NextRequest) {
   const quota = await enforceGuestOrUserChatQuota(request)
   if (!quota.ok) return quota.response
 
+  const ownerId = quota.value.ownerId
+  const rate = await rateLimit({
+    key: `chat:${ownerId}:agent-chat`,
+    limit: CHAT_RATE_LIMIT_MAX,
+    windowMs: CHAT_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!rate.allowed) {
+    if (quota.value.guestCookieToken) {
+      const cookieHeader = await buildGuestSessionCookieHeader(quota.value.guestCookieToken)
+      const response = rateLimitExceededResponse(rate)
+      response.headers.append('Set-Cookie', cookieHeader)
+      return response
+    }
+    return rateLimitExceededResponse(rate)
+  }
+
   const body = parsed.data
   const contextKey = resolveContextKey(body, body.contextKeyOverride)
   if (!contextKey) return NextResponse.json({ error: 'Missing context ID' }, { status: 400 })
 
-  const ownerId = quota.value.ownerId
   const conversation = await getOrCreateConversation(ownerId, contextKey)
 
   await appendMessage(String(conversation.id), {

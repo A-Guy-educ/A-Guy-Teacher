@@ -18,6 +18,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import {
+  _resetDurableRateLimit,
+  rateLimit,
+  rateLimitExceededResponse,
+} from '@/infra/security/rate-limit'
 import { logger } from '@/infra/utils/logger/logger'
 
 import { sendBugReport } from '@/server/email/services/bug-report-service'
@@ -44,16 +49,13 @@ const BodySchema = z.object({
   userAgent: z.string().trim().min(1).max(1_000),
 })
 
-interface RateLimitEntry {
-  count: number
-  windowStart: number
-}
-
-const rateLimitCache = new Map<string, RateLimitEntry>()
-
-/** Reset the per-IP rate limit cache (testing only). */
-export function _resetBugReportRateLimitCache(): void {
-  rateLimitCache.clear()
+/**
+ * Reset the durable rate-limit entries for this endpoint (testing only).
+ * Delegates to the shared infra helper because the route no longer owns any
+ * in-memory state.
+ */
+export function _resetBugReportRateLimitCache(): Promise<void> {
+  return _resetDurableRateLimit()
 }
 
 function getClientKey(request: NextRequest): string {
@@ -67,60 +69,20 @@ function getClientKey(request: NextRequest): string {
     request.headers.get('x-real-ip') ||
     'unknown'
   const ua = request.headers.get('user-agent') || 'unknown-ua'
-  return `${ip}::${ua}`
-}
-
-function checkRateLimit(
-  key: string,
-  max: number,
-  windowMs: number,
-): { allowed: boolean; remaining: number; resetAt: number } {
-  const now = Date.now()
-  const entry = rateLimitCache.get(key)
-
-  if (!entry || now - entry.windowStart > windowMs) {
-    rateLimitCache.set(key, { count: 1, windowStart: now })
-    return { allowed: true, remaining: max - 1, resetAt: now + windowMs }
-  }
-
-  if (entry.count >= max) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetAt: entry.windowStart + windowMs,
-    }
-  }
-
-  entry.count++
-  return {
-    allowed: true,
-    remaining: max - entry.count,
-    resetAt: entry.windowStart + windowMs,
-  }
+  return `bug-report:${ip}::${ua}`
 }
 
 export async function POST(request: NextRequest) {
   const clientKey = getClientKey(request)
-  const rate = checkRateLimit(clientKey, BUG_REPORT_RATE_LIMIT_MAX, BUG_REPORT_RATE_LIMIT_WINDOW_MS)
+  const rate = await rateLimit({
+    key: clientKey,
+    limit: BUG_REPORT_RATE_LIMIT_MAX,
+    windowMs: BUG_REPORT_RATE_LIMIT_WINDOW_MS,
+  })
 
   if (!rate.allowed) {
-    const retryAfter = Math.max(1, Math.ceil((rate.resetAt - Date.now()) / 1000))
-    logger.warn(
-      { clientKeyPrefix: clientKey.slice(0, 32), retryAfter },
-      'Bug report: rate limit exceeded',
-    )
-    return NextResponse.json(
-      { error: 'rate_limited', retryAfter },
-      {
-        status: 429,
-        headers: {
-          'Retry-After': String(retryAfter),
-          'X-RateLimit-Limit': String(BUG_REPORT_RATE_LIMIT_MAX),
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(Math.ceil(rate.resetAt / 1000)),
-        },
-      },
-    )
+    logger.warn({ clientKeyPrefix: clientKey.slice(0, 32) }, 'Bug report: rate limit exceeded')
+    return rateLimitExceededResponse(rate)
   }
 
   let payload: unknown
