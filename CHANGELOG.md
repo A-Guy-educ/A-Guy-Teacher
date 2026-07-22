@@ -1912,6 +1912,8 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #939: Stats: streak calculation uses server timezone instead of user ti… ([#945](https://github.com/A-Guy-educ/A-Guy-Web/pull/945)) — @kodyade[bot]
+- #934: Security: unescaped user input in $regex in shared Mongo query tr… ([#944](https://github.com/A-Guy-educ/A-Guy-Web/pull/944)) — @kodyade[bot]
 - #928: Security: AI/paid-API endpoints are unauthenticated and unthrottl… ([#941](https://github.com/A-Guy-educ/A-Guy-Web/pull/941)) — @kodyade[bot]
 - #923: Redirect logged-in users with a picked course from /home to /cour… ([#924](https://github.com/A-Guy-educ/A-Guy-Web/pull/924)) — @kodyade[bot]
 - promote: dev -> main (v0.29.0) ([#922](https://github.com/A-Guy-educ/A-Guy-Web/pull/922)) — @aguyshayb
