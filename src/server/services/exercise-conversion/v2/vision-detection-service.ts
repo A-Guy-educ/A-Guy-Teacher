@@ -152,7 +152,7 @@ function parseDetectionResponse(response: string): PageDetectionResult {
     return { contentStartY, contentEndY, continuesFromPrevious, exercises }
   } catch (error) {
     console.error('[V2 Vision] Failed to parse detection response:', error)
-    console.debug('[V2 Vision] Raw response:', response)
+    console.warn('[V2 Vision] Raw response:', response)
     return fallback
   }
 }

@@ -44,7 +44,7 @@ function isUsingMongoService(): boolean {
 export async function startMongoContainer(): Promise<string> {
   // In CI with service container, use it directly
   if (isUsingMongoService()) {
-    console.log('Using MongoDB service container (USE_MONGO_SERVICE=true)')
+    console.warn('Using MongoDB service container (USE_MONGO_SERVICE=true)')
     return 'mongodb://localhost:27017/test?directConnection=true'
   }
 
@@ -53,7 +53,7 @@ export async function startMongoContainer(): Promise<string> {
   // Tests that need Atlas (vector-search) use USE_ATLAS=true explicitly.
   const currentDbUrl = process.env.DATABASE_URL
   if (currentDbUrl && isProductionDatabase(currentDbUrl)) {
-    console.log(
+    console.warn(
       `[testcontainers] DATABASE_URL is set to Atlas — clearing it for testcontainers.\n` +
         `If you need Atlas tests, use: pnpm test:int:atlas`,
     )
@@ -98,7 +98,7 @@ export async function stopMongoContainer(): Promise<void> {
 
   // No-op: container is cleaned up by global teardown
   // This enables container reuse across test files for faster tests
-  console.log(
+  console.warn(
     '[mongodb-container] stopMongoContainer() called but is no-op (container managed globally)',
   )
 }
@@ -114,7 +114,7 @@ export async function forceStopMongoContainer(): Promise<void> {
   if (mongoContainer) {
     await mongoContainer.stop()
     mongoContainer = null
-    console.log('[mongodb-container] Container force stopped')
+    console.warn('[mongodb-container] Container force stopped')
   }
 }
 

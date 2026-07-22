@@ -110,7 +110,7 @@ export function enforceTestContainersOnly(): void {
     isVectorSearchTest() &&
     (dbUrl.includes('mongodb+srv://') || dbUrl.includes('.mongodb.net'))
   ) {
-    console.log('⚠️  Using MongoDB Atlas for vector search tests (vector search requires Atlas)')
+    console.warn('⚠️  Using MongoDB Atlas for vector search tests (vector search requires Atlas)')
     return // Allow Atlas for vector search tests
   }
 

@@ -99,6 +99,20 @@ const eslintConfig = [
   },
 
   // =============================================================================
+  // Console Hygiene Rule
+  // =============================================================================
+  // Forbid `console.log` in source code — analytics and other modules must use
+  // the debug-logger helper or proper warning/error reporting. `console.warn`
+  // and `console.error` remain allowed for legitimate error reporting.
+  {
+    name: 'no-console',
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // =============================================================================
   // Layer Boundary Rules
   // =============================================================================
   // UI layer - block server/services and server/repos imports (payload/ allowed)
