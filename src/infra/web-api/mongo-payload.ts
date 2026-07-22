@@ -21,9 +21,33 @@ function isObjectIdString(value: unknown): value is string {
   return typeof value === 'string' && ObjectId.isValid(value)
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') return false
+  if (Array.isArray(value)) return false
+  if (value instanceof Date) return false
+  if (value instanceof ObjectId) return false
+  return true
+}
+
+function escapeRegex(value: unknown): string {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 function queryableValue(value: unknown) {
   if (isObjectIdString(value)) return { $in: [value, new ObjectId(value)] }
   return value
+}
+
+function isScalar(value: unknown): boolean {
+  if (value === null || value === undefined) return true
+  const type = typeof value
+  if (type === 'string' || type === 'number' || type === 'boolean' || type === 'bigint') {
+    return true
+  }
+  if (type === 'object') {
+    return value instanceof Date || value instanceof ObjectId
+  }
+  return false
 }
 
 function fieldQuery(field: string, condition: unknown): Filter<Document> {
@@ -33,22 +57,36 @@ function fieldQuery(field: string, condition: unknown): Filter<Document> {
 
   const clauses: Filter<Document>[] = []
   for (const [operator, rawValue] of Object.entries(condition as Record<string, unknown>)) {
+    // Reject operator injection: a plain object as an operator value (e.g.
+    // { $where: '...' } or { $gt: 1 }) is never a legitimate input here.
+    if (isPlainObject(rawValue)) continue
+
     if (operator === 'equals') clauses.push({ [field]: queryableValue(rawValue) })
     if (operator === 'not_equals') clauses.push({ [field]: { $ne: rawValue } })
     if (operator === 'in' && Array.isArray(rawValue)) {
-      const values = rawValue.flatMap((value) =>
-        isObjectIdString(value) ? [value, new ObjectId(value)] : [value],
-      )
-      clauses.push({ [field]: { $in: values } })
+      const values = rawValue
+        .filter((value) => !isPlainObject(value))
+        .flatMap((value) => (isObjectIdString(value) ? [value, new ObjectId(value)] : [value]))
+      if (values.length > 0) clauses.push({ [field]: { $in: values } })
     }
-    if (operator === 'exists') clauses.push({ [field]: { $exists: Boolean(rawValue) } })
-    if (operator === 'contains' || operator === 'like') {
-      clauses.push({ [field]: { $regex: String(rawValue), $options: 'i' } })
+    if (operator === 'exists' && isScalar(rawValue)) {
+      clauses.push({ [field]: { $exists: Boolean(rawValue) } })
     }
-    if (operator === 'greater_than') clauses.push({ [field]: { $gt: rawValue } })
-    if (operator === 'greater_than_equal') clauses.push({ [field]: { $gte: rawValue } })
-    if (operator === 'less_than') clauses.push({ [field]: { $lt: rawValue } })
-    if (operator === 'less_than_equal') clauses.push({ [field]: { $lte: rawValue } })
+    if ((operator === 'contains' || operator === 'like') && isScalar(rawValue)) {
+      clauses.push({ [field]: { $regex: escapeRegex(rawValue), $options: 'i' } })
+    }
+    if (operator === 'greater_than' && isScalar(rawValue)) {
+      clauses.push({ [field]: { $gt: rawValue } })
+    }
+    if (operator === 'greater_than_equal' && isScalar(rawValue)) {
+      clauses.push({ [field]: { $gte: rawValue } })
+    }
+    if (operator === 'less_than' && isScalar(rawValue)) {
+      clauses.push({ [field]: { $lt: rawValue } })
+    }
+    if (operator === 'less_than_equal' && isScalar(rawValue)) {
+      clauses.push({ [field]: { $lte: rawValue } })
+    }
   }
 
   if (clauses.length === 0) return { [field]: condition }
@@ -56,7 +94,7 @@ function fieldQuery(field: string, condition: unknown): Filter<Document> {
   return { $and: clauses }
 }
 
-function toMongoWhere(where?: Where): Filter<Document> {
+export function toMongoWhere(where?: Where): Filter<Document> {
   if (!where) return {}
 
   const clauses: Filter<Document>[] = []
