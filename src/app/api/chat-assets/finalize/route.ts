@@ -23,6 +23,9 @@ const BodySchema = z
     originalFilename: z.string().optional(),
   })
   .refine((body) => body.uploadSessionId || body.blobUrl)
+  .refine((body) => !body.uploadSessionId || ObjectId.isValid(body.uploadSessionId), {
+    message: 'uploadSessionId is not a valid ObjectId',
+  })
 
 export async function POST(request: Request) {
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
