@@ -56,7 +56,8 @@ export function useActiveTimeTracker({
     if (streakSentRef.current) return // Already sent today
 
     try {
-      await fetch('/api/stats/streak', {
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      await fetch(`/api/stats/streak?timeZone=${encodeURIComponent(timeZone)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
