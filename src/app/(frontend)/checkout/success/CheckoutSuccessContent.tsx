@@ -14,6 +14,7 @@ type TransactionStatus = 'pending' | 'succeeded' | 'failed' | 'refunded'
 interface TransactionData {
   id: string
   status: TransactionStatus
+  entitlementsGrantedAt: string | null
 }
 
 interface FirstCourse {
@@ -215,11 +216,8 @@ export function CheckoutSuccessContent({
     )
   }
 
-  // TODO: when grantProductEntitlements is wired up (currently a stub at
-  // src/lib/payment/grant-entitlements.ts), tighten this back to also require
-  // `entitlementsGrantedAt`. Right now nothing ever sets that field, so
-  // requiring it would leave every payment stuck on "Pending" forever.
-  const isConfirmed = transaction.status === 'succeeded'
+  const isConfirmed =
+    transaction.status === 'succeeded' && Boolean(transaction.entitlementsGrantedAt)
   const isFailed = transaction.status === 'failed' || transaction.status === 'refunded'
 
   if (isFailed) {
@@ -264,8 +262,8 @@ export function CheckoutSuccessContent({
             </p>
           )}
           {waitingForAccess ? (
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex items-center gap-2 text-body-sm text-muted-foreground">
+            <div className="flex flex-col items-center gap-content-gap-xs">
+              <div className="flex items-center gap-content-gap-xs text-body-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>{t('success.grantingAccess')}</span>
               </div>

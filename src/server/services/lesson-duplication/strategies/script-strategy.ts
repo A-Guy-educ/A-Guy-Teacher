@@ -10,6 +10,7 @@
 import type { Exercise } from '@/infra/types/content'
 import type { DuplicationLevel, DuplicationSubject } from '@/infra/types/backend'
 import type { ContentBlock, InlineRichText } from '@/infra/types/exercise'
+import { evaluate } from 'mathjs'
 import type { VariationResult, VariationStrategy } from './types'
 import { isPurelyAlgebraic } from './algebraic-detector'
 
@@ -76,8 +77,7 @@ function safeArithmeticEval(expr: string): number | null {
       return null
     }
 
-    // Use Function constructor with an allowlist — limited scope but intentional
-    const result = new Function(`"use strict"; return (${normalized})`)()
+    const result = evaluate(normalized)
     if (typeof result !== 'number' || !isFinite(result)) return null
     return result
   } catch {

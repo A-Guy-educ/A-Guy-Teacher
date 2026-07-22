@@ -7,7 +7,9 @@
   "scripts": {
     "kody": "npx @kody-ade/kody-engine serve",
     "build": "cross-env NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS='--no-deprecation --max-old-space-size=6144' next build",
-    "postbuild": "if [ \"$CI\" = \"true\" ] || [ \"$VERCEL\" = \"1\" ]; then next-sitemap --config next-sitemap.config.cjs; else echo 'Skipping sitemap (local build)'; fi",
+    "postbuild": "pnpm sitemap:generate",
+    "sitemap:generate": "if [ \"$CI\" = \"true\" ] || [ \"$VERCEL\" = \"1\" ]; then next-sitemap --config next-sitemap.config.cjs; else echo 'Skipping sitemap (local build)'; fi",
+    "build:timed": "time pnpm build",
     "build:analyze": "cross-env ANALYZE=true pnpm build",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "dev:fast": "cross-env NEXT_TURBOPACK_DEV=0 NODE_OPTIONS=--no-deprecation next dev",

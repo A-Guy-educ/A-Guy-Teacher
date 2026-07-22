@@ -1,7 +1,7 @@
 /**
  * MCP → Genkit tool mapping
  *
- * @ai-summary Maps MCP tool definitions to Genkit-compatible tool specs. Input schemas are passed through as `properties` objects — complex nested schemas are truncated to top-level field names for readability.
+ * @ai-summary Adapts MCP tools to Genkit by preserving each tool's name and description and placing its input schema into Genkit's object `properties` contract. Batch execution runs calls sequentially and returns a result map keyed by tool name; failures are logged and converted to `Error: ...` strings so one failed call does not stop later calls. The direct Genkit wrapper converts a successful executor string into Genkit response parts shaped as `[{ text }]` and deliberately leaves thrown errors for the Genkit caller to handle.
  *
  * @fileType module
  * @domain ai

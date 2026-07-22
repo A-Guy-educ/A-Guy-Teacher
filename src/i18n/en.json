@@ -302,7 +302,9 @@
         "heroSubtitle": "A-Guy Your Personal Tutor"
       },
       "errors": {
-        "invalidCredentials": "Invalid email or password"
+        "invalidCredentials": "Invalid email or password",
+        "invalidEmail": "Enter a valid email address",
+        "passwordRequired": "Password is required"
       }
     },
     "account": {
@@ -916,6 +918,8 @@
     "examDate": "When is the exam?",
     "topicsTitle": "Topics to Focus On",
     "addTopicPlaceholder": "Add a topic...",
+    "addTopic": "Add topic",
+    "removeTopic": "Remove topic",
     "mastery": {
       "weak": "Weak",
       "medium": "Medium",

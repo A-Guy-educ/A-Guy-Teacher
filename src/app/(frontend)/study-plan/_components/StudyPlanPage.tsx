@@ -31,7 +31,7 @@ function TopicRow({ topic, onMasteryChange, onDelete }: TopicRowProps) {
   const t = useTranslations('studyPlan')
 
   return (
-    <div className="flex items-center gap-2 p-3 bg-card rounded-lg border border-border transition-colors duration-normal">
+    <div className="flex items-center gap-content-gap-xs p-3 bg-card rounded-lg border border-border transition-colors duration-normal">
       <div className="flex-1 min-w-0">
         <span className="text-body-sm font-medium text-foreground truncate block">
           {topic.topicLabel}
@@ -53,8 +53,10 @@ function TopicRow({ topic, onMasteryChange, onDelete }: TopicRowProps) {
           </button>
         ))}
         <button
+          type="button"
           onClick={onDelete}
-          className="p-1.5 text-muted-foreground hover:text-destructive transition-colors duration-normal"
+          aria-label={t('removeTopic')}
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted-foreground transition-all duration-normal hover:bg-destructive/10 hover:text-destructive"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -186,7 +188,7 @@ export function StudyPlanPage() {
             <div className="lg:col-span-1 space-y-content-gap">
               {/* Exam Date Card */}
               <div className="bg-card rounded-2xl border border-border p-card-padding shadow-elevation-1">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-content-gap-xs mb-4">
                   <Calendar className="w-5 h-5 text-muted-foreground" />
                   <h2 className="text-heading-lg font-semibold text-foreground">{t('examDate')}</h2>
                 </div>
@@ -211,7 +213,7 @@ export function StudyPlanPage() {
                 <button
                   type="button"
                   onClick={() => setShowCourseSelector((prev) => !prev)}
-                  className="w-full flex items-center gap-2 px-3 py-2 mb-3 text-body-sm font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-lg border border-primary/20 transition-colors duration-normal"
+                  className="w-full flex items-center gap-content-gap-xs px-3 py-2 mb-3 text-body-sm font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-lg border border-primary/20 transition-colors duration-normal"
                 >
                   {showCourseSelector ? (
                     <ChevronDown className="w-4 h-4" />
@@ -245,7 +247,7 @@ export function StudyPlanPage() {
                   ))}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-content-gap-xs">
                   <input
                     type="text"
                     value={newTopic}
@@ -255,8 +257,10 @@ export function StudyPlanPage() {
                     className="flex-1 px-3 py-2 border border-border rounded-lg text-foreground bg-card text-body-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                   />
                   <button
+                    type="button"
                     onClick={handleAddTopic}
-                    className="p-2 bg-foreground text-background rounded-lg hover:bg-foreground/90 transition-colors duration-normal"
+                    aria-label={t('addTopic')}
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-foreground text-background transition-all duration-normal hover:bg-foreground/90"
                   >
                     <Plus className="w-5 h-5" />
                   </button>

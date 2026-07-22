@@ -325,7 +325,9 @@
         "heroSubtitle": "A-Guy המורה הפרטי שלכם"
       },
       "errors": {
-        "invalidCredentials": "אימייל או סיסמה שגויים"
+        "invalidCredentials": "אימייל או סיסמה שגויים",
+        "invalidEmail": "נדרש אימייל תקין",
+        "passwordRequired": "נדרשת סיסמה"
       }
     },
     "account": {
@@ -916,6 +918,8 @@
     "examDate": "מתי הבחינה?",
     "topicsTitle": "נושאים למיקוד",
     "addTopicPlaceholder": "הוסף נושא...",
+    "addTopic": "הוסף נושא",
+    "removeTopic": "הסר נושא",
     "mastery": {
       "weak": "חלש",
       "medium": "בינוני",

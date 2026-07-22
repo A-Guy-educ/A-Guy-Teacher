@@ -80,7 +80,15 @@ export default async function CheckoutSuccessPage({ searchParams: searchParamsPr
     >
       <CheckoutSuccessContent
         sessionId={lookupId}
-        transaction={transaction ? { id: transaction.id, status: transaction.status } : null}
+        transaction={
+          transaction
+            ? {
+                id: transaction.id,
+                status: transaction.status,
+                entitlementsGrantedAt: transaction.entitlementsGrantedAt,
+              }
+            : null
+        }
         productName={transaction?.productName ?? ''}
         firstCourse={transaction?.firstCourse ?? null}
       />

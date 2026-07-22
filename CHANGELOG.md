@@ -72,33 +72,6 @@
 
 - Remove `course.pageAccessType` readers ahead of Admin schema drop (#782)
 
-## v0.26.9 — 2026-07-06
-
-_No notable commits since the last release._
-## v0.26.8 — 2026-07-05
-
-_No notable commits since the last release._
-## v0.26.7 — 2026-07-04
-
-_No notable commits since the last release._
-## v0.26.6 — 2026-07-03
-
-_No notable commits since the last release._
-## v0.26.5 — 2026-07-02
-
-_No notable commits since the last release._
-## v0.26.4 — 2026-06-30
-
-_No notable commits since the last release._
-## v0.26.3 — 2026-06-30
-
-_No notable commits since the last release._
-## v0.26.2 — 2026-06-25
-
-_No notable commits since the last release._
-## v0.26.1 — 2026-06-24
-
-_No notable commits since the last release._
 ## [0.26.0] - 2026-06-17
 
 ### Features
