@@ -9,6 +9,7 @@ import type { SystemEventEnvelope, SystemEventName, Unsubscribe } from '@/infra/
 import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
 import { PRODUCT_EVENTS } from './contracts/events'
 import { analytics } from './core/tracker'
+import { analyticsDebugLog as debugLog } from './utils/debug-logger'
 import { getOrCreateAnonymousId } from './utils/anonymous-id'
 
 let initialized = false
@@ -44,7 +45,7 @@ export function initAnalyticsSubscriber(): () => void {
   }
 
   // Subscribe to all system events (10 core + 9 exercise)
-  console.log('[Analytics] 🔄 Initializing system events subscriber...')
+  debugLog.log('🔄 Initializing system events subscriber...')
   cleanupFns = [
     // Page & Session
     safeSubscribe(SYSTEM_EVENTS.PAGE_VIEWED, (envelope) => {
@@ -169,7 +170,7 @@ export function initAnalyticsSubscriber(): () => void {
         message_length?: number
         user_id?: string
       }
-      console.log(`[Analytics] 📥 RECEIVED: CHAT_MESSAGE_SUBMITTED`, payload)
+      debugLog.log('📥 RECEIVED: CHAT_MESSAGE_SUBMITTED', payload)
       analytics.track(PRODUCT_EVENTS.CHAT_MESSAGE_SENT, {
         conversation_id: payload.conversation_id,
         message_type: payload.message_type,
@@ -626,11 +627,7 @@ export function initAnalyticsSubscriber(): () => void {
     }),
   ]
 
-  console.log(
-    '[Analytics] ✅ System events subscriber initialized with',
-    cleanupFns.length,
-    'handlers',
-  )
+  debugLog.log('✅ System events subscriber initialized with', cleanupFns.length, 'handlers')
 
   return () => cleanup()
 }

@@ -89,7 +89,7 @@ export async function withRetry<T, E extends Error>(
         onRetry(castError, attempt)
       }
 
-      console.debug(
+      console.warn(
         `${logPrefix} Retry attempt ${attempt}/${maxRetries} after ${retryDelay}ms: ${castError.message}`,
       )
 

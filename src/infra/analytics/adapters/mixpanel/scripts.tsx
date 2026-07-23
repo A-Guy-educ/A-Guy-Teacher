@@ -141,7 +141,11 @@ export function MixpanelScripts() {
               try {
                 var raw = localStorage.getItem('analytics_user_properties');
                 if (raw) cachedUser = JSON.parse(raw);
-              } catch(e) {}
+              } catch(e) {
+                // Intentionally swallowed: a corrupt or absent localStorage
+                // cache must NOT prevent SDK init. The user just stays anonymous
+                // and Mixpanel People is rebuilt from the next event.
+              }
 
               if (cachedUser && cachedUser.user_id) {
                 // Returning identified user — keep their real ID
