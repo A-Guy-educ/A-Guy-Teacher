@@ -78,7 +78,10 @@
       "quality-watch",
       "ui-review",
       "fix",
-      "resolve"
+      "resolve",
+      "build-knowledge-graph",
+      "create-knowledge-report",
+      "publish-knowledge-system"
     ],
     "activeAgents": [
       "ceo",
@@ -98,6 +101,9 @@
       "product-quality",
       "agency-observer",
       "agency-operating-loop"
+    ],
+    "activeWorkflows": [
+      "refresh-knowledge-system"
     ]
   },
   "fly": {
