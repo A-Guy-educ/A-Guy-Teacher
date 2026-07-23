@@ -1885,6 +1885,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore(security): Bump next 15.5.18 -> 15.5.21 + format kody.yml ([#969](https://github.com/A-Guy-educ/A-Guy-Web/pull/969)) — @aguyshayb
 - #932: CI: pnpm audit failures are swallowed with '|| true' ([#951](https://github.com/A-Guy-educ/A-Guy-Web/pull/951)) — @kodyade[bot]
 - #935: API: unvalidated ObjectId causes unhandled 500 in chat-assets/fin… ([#950](https://github.com/A-Guy-educ/A-Guy-Web/pull/950)) — @kodyade[bot]
 - #940: Security: move Gemini API key from URL query string to header ([#949](https://github.com/A-Guy-educ/A-Guy-Web/pull/949)) — @kodyade[bot]
