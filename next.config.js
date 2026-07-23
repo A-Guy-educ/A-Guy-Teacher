@@ -99,8 +99,6 @@ const nextConfig = {
     // Tree-shake barrel exports to avoid parsing entire packages on each import
     optimizePackageImports: ['lucide-react', 'framer-motion', 'date-fns', 'react-hook-form'],
   },
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true },
   outputFileTracingExcludes: {
     '*': ['**/node_modules/@swc/core*/**/*'],
   },
