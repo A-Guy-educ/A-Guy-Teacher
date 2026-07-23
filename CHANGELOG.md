@@ -72,33 +72,6 @@
 
 - Remove `course.pageAccessType` readers ahead of Admin schema drop (#782)
 
-## v0.26.9 — 2026-07-06
-
-_No notable commits since the last release._
-## v0.26.8 — 2026-07-05
-
-_No notable commits since the last release._
-## v0.26.7 — 2026-07-04
-
-_No notable commits since the last release._
-## v0.26.6 — 2026-07-03
-
-_No notable commits since the last release._
-## v0.26.5 — 2026-07-02
-
-_No notable commits since the last release._
-## v0.26.4 — 2026-06-30
-
-_No notable commits since the last release._
-## v0.26.3 — 2026-06-30
-
-_No notable commits since the last release._
-## v0.26.2 — 2026-06-25
-
-_No notable commits since the last release._
-## v0.26.1 — 2026-06-24
-
-_No notable commits since the last release._
 ## [0.26.0] - 2026-06-17
 
 ### Features
@@ -1912,6 +1885,7 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore(security): Bump next 15.5.18 -> 15.5.21 + format kody.yml ([#969](https://github.com/A-Guy-educ/A-Guy-Web/pull/969)) — @aguyshayb
 - #932: CI: pnpm audit failures are swallowed with '|| true' ([#951](https://github.com/A-Guy-educ/A-Guy-Web/pull/951)) — @kodyade[bot]
 - #935: API: unvalidated ObjectId causes unhandled 500 in chat-assets/fin… ([#950](https://github.com/A-Guy-educ/A-Guy-Web/pull/950)) — @kodyade[bot]
 - #940: Security: move Gemini API key from URL query string to header ([#949](https://github.com/A-Guy-educ/A-Guy-Web/pull/949)) — @kodyade[bot]

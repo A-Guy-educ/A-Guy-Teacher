@@ -1,6 +1,9 @@
 /**
  * Interactive lesson generation from geometry problem images
  *
+ * @fileType service
+ * @domain interactive-lesson
+ * @pattern constrained-gemini-generation
  * @ai-summary Calls Gemini directly via `generateContent` (bypassing Genkit) to pass `responseSchema` for constrained output — Gemini is forced to emit exactly the expected JSON shape, eliminating schema drift. Reliability primitives (circuit breaker, timeout 180s, retry 2x) wrap every call. Bakes TTS audio per step with a lesson-level 8MB budget — steps that exceed the budget skip audio caching and fall through to live TTS at playback; per-step TTS failures are also non-fatal.
  */
 import type { Payload } from '@/infra/types/backend'
@@ -23,6 +26,7 @@ import type {
 
 // Single source of truth for the Gemini call config. Used for both the API
 // request and metadata reporting so they can't diverge.
+/** @ai-summary Shared Gemini model, output, timeout, and retry settings for interactive lessons. */
 export const GEMINI_CONFIG = {
   modelName: 'gemini-2.5-flash',
   temperature: 0,
@@ -209,6 +213,8 @@ function isRetryableGeminiError(err: Error): boolean {
  * matching our exact shape, eliminating field-name variations (id vs
  * label, p1 vs from, etc.) at the source. Timeout/retry/circuit-breaker
  * are applied by the caller.
+ *
+ * @ai-summary Sends one image and prompt to Gemini with the generated responseSchema constraint.
  */
 export async function callGeminiWithSchema(args: {
   apiKey: string
@@ -269,6 +275,8 @@ export async function callGeminiWithSchema(args: {
  * doesn't fail the user's request on first try. Shared by the service and
  * the route — both import this module so they hit the same module-level
  * circuit breaker instance and fail-fast together when Gemini is down.
+ *
+ * @ai-summary Executes constrained Gemini generation behind timeout, retry, and circuit-breaker guards.
  */
 export async function callGeminiResiliently(args: {
   apiKey: string
@@ -315,6 +323,7 @@ function stripUnsupportedKeys(node: unknown): unknown {
   return node
 }
 
+/** @ai-summary Optimizes image inputs for Gemini while preserving PDFs and reports the payload size. */
 export async function prepareImage(buffer: Buffer, mimeType: string) {
   if (mimeType === 'application/pdf') {
     return {
@@ -338,6 +347,7 @@ function fixLatexEscapes(text: string): string {
   return text.replace(/\\([^"\\/bfnrtu])/g, '\\\\$1')
 }
 
+/** @ai-summary Parses Gemini JSON, removing code fences and repairing unescaped LaTeX backslashes. */
 export function parseResponse(responseText: string): Record<string, unknown> {
   const cleaned = responseText
     .trim()
@@ -353,6 +363,7 @@ export function parseResponse(responseText: string): Record<string, unknown> {
   }
 }
 
+/** @ai-summary Normalizes parsed Gemini output into the stable interactive-lesson contract. */
 export function validateLesson(
   parsed: Record<string, unknown>,
   locale: 'he' | 'en',

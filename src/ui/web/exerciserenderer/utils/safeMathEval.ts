@@ -17,7 +17,7 @@ interface ParseResult {
  * Parse a mathematical expression and return an evaluator function
  * Supports: +, -, *, /, ^, sin, cos, tan, sqrt, abs, x variable
  *
- * Uses mathjs for safe evaluation (no eval()) to prevent code injection
+ * Uses the mathjs expression parser and does not execute JavaScript
  */
 export function parseMathExpression(expr: string): ParseResult {
   if (!expr || typeof expr !== 'string') {

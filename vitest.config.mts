@@ -37,6 +37,7 @@ const activeIntegrationTests = [
   'tests/int/api/ai-paid-api-auth-928.int.spec.ts',
   'tests/int/api/ai-paid-api-auth-quota-928.int.spec.ts',
   'tests/int/api/chat-assets-finalize-objectid-935.int.spec.ts',
+  'tests/int/api/generate-interactive-lesson-flow.int.spec.ts',
   'tests/int/checkAnswer.int.spec.ts',
   'tests/int/auth-middleware.int.spec.ts',
   'tests/int/courses-auth-gate-673.int.spec.ts',

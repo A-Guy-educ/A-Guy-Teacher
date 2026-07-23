@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import packageJson from '../../../../package.json'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,7 +9,7 @@ export async function GET() {
     {
       ok: true,
       checks: {},
-      version: process.env.npm_package_version || 'unknown',
+      version: packageJson.version,
       gitSha: process.env.GIT_SHA || 'unknown',
       timestamp: new Date().toISOString(),
     },
