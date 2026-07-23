@@ -1885,6 +1885,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- #936: Deploy: env validation never runs in CI or the build path ([#955](https://github.com/A-Guy-educ/A-Guy-Web/pull/955)) — @kodyade[bot]
 - fix(ui): Restore soft yellow tint on locked lesson card CTA ([#952](https://github.com/A-Guy-educ/A-Guy-Web/pull/952)) — @aguyshayb
 - #938: Cleanup: console.log statements ship in production client bundle … ([#956](https://github.com/A-Guy-educ/A-Guy-Web/pull/956)) — @kodyade[bot]
 - chore(security): Bump next 15.5.18 -> 15.5.21 + format kody.yml ([#969](https://github.com/A-Guy-educ/A-Guy-Web/pull/969)) — @aguyshayb
