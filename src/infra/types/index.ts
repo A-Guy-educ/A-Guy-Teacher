@@ -16,7 +16,6 @@ export type {
   ExerciseAsset,
   Form,
   FormSubmission,
-  GuestSession,
   Lesson,
   Media,
   MemoryItem,

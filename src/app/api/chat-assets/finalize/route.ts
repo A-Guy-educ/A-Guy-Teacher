@@ -1,6 +1,6 @@
 import { head } from '@vercel/blob'
 import { ObjectId } from 'mongodb'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import {
@@ -9,48 +9,55 @@ import {
   CHAT_ASSET_RETENTION_DAYS,
 } from '@/server/chat-assets/constants'
 import { getContentDb, serializeDoc } from '@/infra/db/content-db'
-import {
-  getOrCreateGuestId,
-  getWebUser,
-  publicUserId,
-  withGuestCookie,
-} from '@/infra/web-api/mongo-payload'
+import { requireUser } from '@/server/auth/api-auth'
 
 const BodySchema = z
   .object({
     uploadSessionId: z.string().optional(),
     blobUrl: z.string().url().optional(),
-    originalFilename: z.string().optional(),
+    originalFilename: z.string().max(255).optional(),
   })
   .refine((body) => body.uploadSessionId || body.blobUrl)
   .refine((body) => !body.uploadSessionId || ObjectId.isValid(body.uploadSessionId), {
     message: 'uploadSessionId is not a valid ObjectId',
   })
 
-export async function POST(request: Request) {
+const BLOB_HOST_SUFFIX = '.blob.vercel-storage.com'
+
+/**
+ * Only Vercel Blob URLs may be stored as a chat asset URL. Anything stored here
+ * is later fetched by the server when the asset is attached to a chat message.
+ */
+export function isBlobStorageUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' && url.hostname.endsWith(BLOB_HOST_SUFFIX)
+  } catch {
+    return false
+  }
+}
+
+export async function POST(request: NextRequest) {
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return Response.json({ error: 'Invalid request' }, { status: 400 })
 
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+
   const db = await getContentDb()
-  const user = await getWebUser(request.headers)
-  const guestId = getOrCreateGuestId(request)
-  const ownerId = publicUserId(user, guestId)
+  const ownerId = auth.value.id
   const { uploadSessionId, blobUrl, originalFilename } = parsed.data
 
   let session = uploadSessionId
     ? await db.collection('upload-sessions').findOne({ _id: new ObjectId(uploadSessionId) })
     : null
 
+  // Resolve by blobUrl only within the caller's own sessions. Matching on
+  // blobUrl alone would let one user finalize another user's upload session.
   if (!session && blobUrl) {
     session = await db.collection('upload-sessions').findOne({
-      $or: [
-        { blobUrl },
-        {
-          createdBy: ownerId,
-          originalFilename,
-          status: { $in: ['initiated', 'uploaded'] },
-        },
-      ],
+      createdBy: ownerId,
+      $or: [{ blobUrl }, { originalFilename, status: { $in: ['initiated', 'uploaded'] } }],
     })
   }
 
@@ -62,18 +69,23 @@ export async function POST(request: Request) {
       .collection('chat-assets')
       .findOne({ _id: new ObjectId(String(session.chatAssetId)) })
     if (existing) {
-      return withGuestCookie(
-        NextResponse.json({
-          chatAssetId: existing._id.toString(),
-          chatAsset: serializeDoc(existing),
-        }),
-        guestId,
-      )
+      return NextResponse.json({
+        chatAssetId: existing._id.toString(),
+        chatAsset: serializeDoc(existing),
+      })
     }
   }
 
+  // Prefer the URL the Blob store reported via `onUploadCompleted`. That
+  // callback cannot reach localhost, so a client-supplied URL is still accepted
+  // in dev — but only after host validation: this URL is fetched server-side
+  // when the asset is attached to a chat message, so an arbitrary host here
+  // would be an SSRF primitive.
   const resolvedUrl = String(session.blobUrl || blobUrl || '')
   if (!resolvedUrl) return Response.json({ error: 'Upload not completed' }, { status: 409 })
+  if (!isBlobStorageUrl(resolvedUrl)) {
+    return Response.json({ error: 'Upload URL is not an allowed blob URL' }, { status: 400 })
+  }
 
   let size = Number(session.expectedSize || 0)
   let mimeType = String(session.mimeType || '')
@@ -124,8 +136,8 @@ export async function POST(request: Request) {
     },
   )
   const doc = await db.collection('chat-assets').findOne({ _id: asset.insertedId })
-  return withGuestCookie(
-    NextResponse.json({ chatAssetId: asset.insertedId.toString(), chatAsset: serializeDoc(doc) }),
-    guestId,
-  )
+  return NextResponse.json({
+    chatAssetId: asset.insertedId.toString(),
+    chatAsset: serializeDoc(doc),
+  })
 }

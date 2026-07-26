@@ -42,7 +42,6 @@ interface UseNotebookChatProps {
   initialMessage: string
   authRequiredMessage: string
   errorMessage: string
-  guestLimitMessage?: string
   hintPrompt: string
   solutionPrompt: string
   fullSolutionPrompt: string
@@ -69,7 +68,6 @@ export function useNotebookChat({
   initialMessage,
   authRequiredMessage,
   errorMessage,
-  guestLimitMessage,
   hintPrompt,
   solutionPrompt,
   fullSolutionPrompt,
@@ -137,9 +135,6 @@ export function useNotebookChat({
 
   // Error state
   const [chatError, setChatError] = useState<ChatError | null>(null)
-
-  // Guest mode state
-  const [_isGuestMode, setIsGuestMode] = useState(false)
 
   // Track last injected exercise ID to avoid duplicate context injection
   const lastInjectedExerciseId = useRef<string | null>(null)
@@ -341,17 +336,8 @@ export function useNotebookChat({
           if (result.success && !result.exists) {
             // No conversation exists yet - keep initial welcome message
             logger.debug({ contextKey }, '[useNotebookChat] No conversation found for contextKey')
-            // Track guest mode status
-            if (result.isGuestMode) {
-              setIsGuestMode(true)
-            }
             setIsLoadingHistory(false)
             return
-          }
-
-          // Track guest mode from successful response
-          if (result.isGuestMode) {
-            setIsGuestMode(true)
           }
 
           // API call failed
@@ -517,15 +503,6 @@ export function useNotebookChat({
               if (!options?.silent) {
                 setChatError({ type: 'auth' as const, message: authRequiredMessage })
               }
-            } else if (errMsg?.toLowerCase().includes('guest message limit')) {
-              if (!options?.silent) {
-                setChatError({
-                  type: 'limit' as const,
-                  message:
-                    guestLimitMessage ||
-                    'Guest message limit reached. Sign up for unlimited access.',
-                })
-              }
             } else if (errMsg?.startsWith('quota_exceeded:')) {
               setChatError({
                 type: 'quota' as const,
@@ -563,7 +540,7 @@ export function useNotebookChat({
         inputRef.current?.focus()
       }
     },
-    [errorMessage, authRequiredMessage, guestLimitMessage, scrollToBottom, onConversationCreated],
+    [errorMessage, authRequiredMessage, scrollToBottom, onConversationCreated],
   )
 
   /**
@@ -597,12 +574,6 @@ export function useNotebookChat({
       if (!result.success) {
         if (result.authRequired) {
           setChatError({ type: 'auth' as const, message: authRequiredMessage })
-        } else if (result.guestLimitReached) {
-          setChatError({
-            type: 'limit' as const,
-            message:
-              guestLimitMessage || 'Guest message limit reached. Sign up for unlimited access.',
-          })
         } else if (result.quotaExceeded) {
           setChatError({
             type: 'quota' as const,
@@ -617,11 +588,6 @@ export function useNotebookChat({
       // Notify caller of conversation creation
       if (result.conversationId && result.contextKey) {
         onConversationCreated?.(result.conversationId, result.contextKey)
-      }
-
-      // Track guest mode
-      if (result.isGuestMode) {
-        setIsGuestMode(true)
       }
 
       if (result.message) {
@@ -663,10 +629,6 @@ export function useNotebookChat({
           { id: crypto.randomUUID(), role: ChatRole.Assistant, content: initialMessage },
         ])
         toast.success(resetSuccessMessage)
-        // Track guest mode
-        if (result.isGuestMode) {
-          setIsGuestMode(true)
-        }
       } else {
         toast.error(result.error || resetErrorMessage)
       }
@@ -929,8 +891,6 @@ export function useNotebookChat({
     // Error handling
     chatError,
     dismissError,
-    // Guest mode
-    isGuestMode: _isGuestMode,
     // Programmatic message injection
     addAssistantMessage,
     injectExerciseContext,

@@ -19,7 +19,7 @@
  * @pattern bug-report
  * @ai-summary Tests the /api/bug-report handler: validation, send, no-adapter fallback, and rate limit.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
@@ -43,9 +43,6 @@ vi.mock('@/server/email/services/bug-report-service', () => ({
 // optional anyway; we just want it to return null.
 vi.mock('@/infra/web-api/mongo-payload', () => ({
   getWebUser: vi.fn(async () => null),
-  getOrCreateGuestId: vi.fn(() => 'guest-test'),
-  publicUserId: vi.fn(() => 'guest:test'),
-  withGuestCookie: vi.fn((r: unknown) => r),
 }))
 
 let POST: (request: NextRequest) => Promise<Response>

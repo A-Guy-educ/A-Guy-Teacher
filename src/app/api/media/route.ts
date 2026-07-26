@@ -4,25 +4,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { VercelBlobAdapter } from '@/infra/blob/vercel-blob-adapter'
 import { getContentDb, serializeDoc } from '@/infra/db/content-db'
 import { inferMediaType } from '@/infra/media/inferMediaType'
-import {
-  getOrCreateGuestId,
-  getWebUser,
-  publicUserId,
-  withGuestCookie,
-} from '@/infra/web-api/mongo-payload'
+import { requireUser } from '@/server/auth/api-auth'
 
 function safeName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'upload'
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+
   const form = await request.formData()
   const file = form.get('file')
   if (!(file instanceof File)) return NextResponse.json({ error: 'Missing file' }, { status: 400 })
 
-  const user = await getWebUser(request.headers)
-  const guestId = getOrCreateGuestId(request)
-  const ownerId = publicUserId(user, guestId)
+  const ownerId = auth.value.id
   const db = await getContentDb()
   const filename = `${Date.now()}-${safeName(file.name)}`
   const buffer = Buffer.from(await file.arrayBuffer())
@@ -44,11 +40,11 @@ export async function POST(request: NextRequest) {
     updatedAt: now,
   })
   const doc = serializeDoc(await db.collection('media').findOne({ _id: result.insertedId }))
-  return withGuestCookie(NextResponse.json({ doc, ...doc }), guestId)
+  return NextResponse.json({ doc, ...doc })
 }
 
 export async function GET(request: NextRequest) {
-  // public endpoint: reads published media metadata; uploads use guest ownership above
+  // public endpoint: reads published media metadata; uploads require a session above
   const id = request.nextUrl.searchParams.get('id')
   const db = await getContentDb()
   if (id && ObjectId.isValid(id)) {

@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
-import { enforceGuestOrUserChatQuota } from '@/server/auth/api-auth'
+import { requireUserWithChatQuota } from '@/server/auth/api-auth'
 import {
   appendMessage,
   generateAssistantReply,
@@ -10,20 +10,32 @@ import {
   type WebChatMessage,
 } from '@/server/web-api/chat'
 
+const MAX_MESSAGE_LENGTH = 4000
+
 const BodySchema = z.object({
-  message: z.string().trim().min(1),
-  acknowledgment: z.string().optional(),
+  message: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
+  acknowledgment: z.string().max(MAX_MESSAGE_LENGTH).optional(),
   conversationId: z.string().optional().nullable(),
-  gradeLevel: z.string().trim().min(1),
-  locale: z.string().optional(),
+  gradeLevel: z.string().trim().min(1).max(50),
+  locale: z.string().max(10).optional(),
 })
 
 const LEARNING_CHAT_RATE_LIMIT_MAX = 20
 const LEARNING_CHAT_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+const CHUNK_SIZE = 80
 
-function chunkText(text: string) {
-  const chunks = text.match(/.{1,80}(\s|$)/g)
-  return chunks?.map((chunk) => chunk.trimEnd()).filter(Boolean) ?? [text]
+/**
+ * Split a reply into fixed-size pieces for incremental delivery. Slicing by
+ * index keeps the concatenated chunks byte-identical to the original reply;
+ * the previous regex-and-trim approach glued words together at every boundary.
+ */
+function chunkText(text: string): string[] {
+  if (!text) return []
+  const chunks: string[] = []
+  for (let i = 0; i < text.length; i += CHUNK_SIZE) {
+    chunks.push(text.slice(i, i + CHUNK_SIZE))
+  }
+  return chunks
 }
 
 export async function POST(request: NextRequest) {
@@ -32,7 +44,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Missing message or gradeLevel' }, { status: 400 })
   }
 
-  const quota = await enforceGuestOrUserChatQuota(request)
+  const quota = await requireUserWithChatQuota(request)
   if (!quota.ok) return quota.response
 
   const rate = await rateLimit({
@@ -55,6 +67,7 @@ export async function POST(request: NextRequest) {
   })
 
   const reply = await generateAssistantReply({
+    ownerId,
     message: parsed.data.message,
     acknowledgment: parsed.data.acknowledgment,
     history: messages,
@@ -82,15 +95,11 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache, no-transform',
-    Connection: 'keep-alive',
-  }
-  if (quota.value.guestCookieToken) {
-    headers['Set-Cookie'] =
-      `guest_session=${quota.value.guestCookieToken}; Path=/; Max-Age=2592000; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}; HttpOnly`
-  }
-
-  return new Response(stream, { headers })
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+    },
+  })
 }

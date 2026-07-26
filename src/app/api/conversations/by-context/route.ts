@@ -3,12 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { getContentDb, serializeDoc } from '@/infra/db/content-db'
-import {
-  getOrCreateGuestId,
-  getWebUser,
-  publicUserId,
-  withGuestCookie,
-} from '@/infra/web-api/mongo-payload'
+import { requireUser } from '@/server/auth/api-auth'
 
 const CreateConversationSchema = z.object({
   courseId: z.string().min(1),
@@ -16,9 +11,6 @@ const CreateConversationSchema = z.object({
 })
 
 function ownerFilter(ownerId: string) {
-  if (ownerId.startsWith('guest:')) {
-    return { guestSession: ownerId.slice('guest:'.length) }
-  }
   return {
     user: ObjectId.isValid(ownerId) ? { $in: [ownerId, new ObjectId(ownerId)] } : ownerId,
   }
@@ -45,9 +37,9 @@ function escapeRegex(value: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const user = await getWebUser(request.headers)
-  const guestId = getOrCreateGuestId(request)
-  const ownerId = publicUserId(user, guestId)
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+  const ownerId = auth.value.id
   const searchParams = request.nextUrl.searchParams
   const contextKey = searchParams.get('contextKey')
   const contextKeyPrefix = searchParams.get('contextKeyPrefix')
@@ -92,7 +84,7 @@ export async function GET(request: NextRequest) {
     }
   })
 
-  return withGuestCookie(NextResponse.json({ conversations, total }), guestId)
+  return NextResponse.json({ conversations, total })
 }
 
 export async function POST(request: NextRequest) {
@@ -101,18 +93,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const user = await getWebUser(request.headers)
-  const guestId = getOrCreateGuestId(request)
-  const ownerId = publicUserId(user, guestId)
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+  const ownerId = auth.value.id
   const db = await getContentDb()
   const now = new Date()
   const contextKey = `ask:${parsed.data.courseId}:${now.getTime()}`
-  const owner = ownerId.startsWith('guest:')
-    ? { guestSession: ownerId.slice('guest:'.length) }
-    : { user: ObjectId.isValid(ownerId) ? new ObjectId(ownerId) : ownerId }
 
   const result = await db.collection('conversations').insertOne({
-    ...owner,
+    user: ObjectId.isValid(ownerId) ? new ObjectId(ownerId) : ownerId,
     contextRef: { relationTo: 'courses', value: parsed.data.courseId },
     contextKey,
     preferredLocale: parsed.data.locale ?? 'he',
@@ -123,10 +112,7 @@ export async function POST(request: NextRequest) {
     updatedAt: now,
   })
 
-  return withGuestCookie(
-    NextResponse.json({ id: result.insertedId.toString(), contextKey }),
-    guestId,
-  )
+  return NextResponse.json({ id: result.insertedId.toString(), contextKey })
 }
 
 export async function DELETE(request: NextRequest) {
@@ -135,9 +121,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'id is required' }, { status: 400 })
   }
 
-  const user = await getWebUser(request.headers)
-  const guestId = getOrCreateGuestId(request)
-  const ownerId = publicUserId(user, guestId)
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+  const ownerId = auth.value.id
   const db = await getContentDb()
 
   const result = await db
@@ -148,5 +134,5 @@ export async function DELETE(request: NextRequest) {
     )
 
   if (!result.matchedCount) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return withGuestCookie(NextResponse.json({ success: true }), guestId)
+  return NextResponse.json({ success: true })
 }

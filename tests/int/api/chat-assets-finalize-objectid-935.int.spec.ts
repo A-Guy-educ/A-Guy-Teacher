@@ -9,36 +9,24 @@
  * generic "Invalid request" envelope, no 500.
  *
  * Mirrors the mock-based pattern in tests/int/api/stats-streak-timezone-939:
- * stub the DB + auth helpers, hit the route handler directly with NextRequest.
+ * stub the DB + auth guard, hit the route handler directly with NextRequest.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const {
-  getContentDbMock,
-  getWebUserMock,
-  getOrCreateGuestIdMock,
-  publicUserIdMock,
-  withGuestCookieMock,
-} = vi.hoisted(() => ({
+const { getContentDbMock, requireUserMock } = vi.hoisted(() => ({
   getContentDbMock: vi.fn(),
-  getWebUserMock: vi.fn(),
-  getOrCreateGuestIdMock: vi.fn(),
-  publicUserIdMock: vi.fn(),
-  withGuestCookieMock: vi.fn((response: unknown) => response),
+  requireUserMock: vi.fn(),
 }))
 
 vi.mock('@/infra/db/content-db', () => ({
   getContentDb: getContentDbMock,
 }))
 
-vi.mock('@/infra/web-api/mongo-payload', () => ({
-  getWebUser: getWebUserMock,
-  getOrCreateGuestId: getOrCreateGuestIdMock,
-  publicUserId: publicUserIdMock,
-  withGuestCookie: withGuestCookieMock,
+vi.mock('@/server/auth/api-auth', () => ({
+  requireUser: requireUserMock,
 }))
 
 vi.mock('@vercel/blob', () => ({
@@ -56,9 +44,7 @@ function makeRequest(body: Record<string, unknown>): NextRequest {
 }
 
 beforeEach(() => {
-  getWebUserMock.mockResolvedValue({ id: 'user-1' })
-  getOrCreateGuestIdMock.mockReturnValue('guest-1')
-  publicUserIdMock.mockReturnValue('user-1')
+  requireUserMock.mockResolvedValue({ ok: true, value: { id: 'user-1' } })
   // The route never reaches DB queries when validation fails, but stub in case.
   getContentDbMock.mockResolvedValue({
     collection: vi.fn(() => ({

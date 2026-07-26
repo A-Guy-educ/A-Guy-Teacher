@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
-import { enforceGuestOrUserChatQuota } from '@/server/auth/api-auth'
-import { buildGuestSessionCookieHeader } from '@/server/services/guest-session'
+import { requireUserWithChatQuota } from '@/server/auth/api-auth'
+import { CHAT_ASSET_MAX_ATTACHMENTS } from '@/server/chat-assets/constants'
 import {
   appendMessage,
   generateAssistantReply,
@@ -11,17 +11,20 @@ import {
   resolveContextKey,
 } from '@/server/web-api/chat'
 
+const MAX_MESSAGE_LENGTH = 4000
+const MAX_CONTEXT_KEY_LENGTH = 200
+
 const BodySchema = z.object({
-  message: z.string().min(1),
-  acknowledgment: z.string().optional(),
+  message: z.string().min(1).max(MAX_MESSAGE_LENGTH),
+  acknowledgment: z.string().max(MAX_MESSAGE_LENGTH).optional(),
   exerciseId: z.string().optional(),
   lessonId: z.string().optional(),
   chapterId: z.string().optional(),
   courseId: z.string().optional(),
   categoryId: z.string().optional(),
-  mediaIds: z.array(z.string()).optional(),
-  chatAssetIds: z.array(z.string()).optional(),
-  contextKeyOverride: z.string().optional(),
+  mediaIds: z.array(z.string()).max(CHAT_ASSET_MAX_ATTACHMENTS).optional(),
+  chatAssetIds: z.array(z.string()).max(CHAT_ASSET_MAX_ATTACHMENTS).optional(),
+  contextKeyOverride: z.string().max(MAX_CONTEXT_KEY_LENGTH).optional(),
 })
 
 const CHAT_RATE_LIMIT_MAX = 30
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
-  const quota = await enforceGuestOrUserChatQuota(request)
+  const quota = await requireUserWithChatQuota(request)
   if (!quota.ok) return quota.response
 
   const ownerId = quota.value.ownerId
@@ -40,15 +43,7 @@ export async function POST(request: NextRequest) {
     limit: CHAT_RATE_LIMIT_MAX,
     windowMs: CHAT_RATE_LIMIT_WINDOW_MS,
   })
-  if (!rate.allowed) {
-    if (quota.value.guestCookieToken) {
-      const cookieHeader = await buildGuestSessionCookieHeader(quota.value.guestCookieToken)
-      const response = rateLimitExceededResponse(rate)
-      response.headers.append('Set-Cookie', cookieHeader)
-      return response
-    }
-    return rateLimitExceededResponse(rate)
-  }
+  if (!rate.allowed) return rateLimitExceededResponse(rate)
 
   const body = parsed.data
   const contextKey = resolveContextKey(body, body.contextKeyOverride)
@@ -64,6 +59,7 @@ export async function POST(request: NextRequest) {
   })
 
   const message = await generateAssistantReply({
+    ownerId,
     message: body.message,
     acknowledgment: body.acknowledgment,
     history: Array.isArray(conversation.messages) ? conversation.messages : [],
@@ -73,18 +69,10 @@ export async function POST(request: NextRequest) {
 
   await appendMessage(String(conversation.id), { role: 'assistant', content: message })
 
-  const response = NextResponse.json({
+  return NextResponse.json({
     success: true,
     message,
     conversationId: conversation.id,
     contextKey,
-    isGuestMode: quota.value.isGuest,
   })
-
-  if (quota.value.guestCookieToken) {
-    const cookieHeader = await buildGuestSessionCookieHeader(quota.value.guestCookieToken)
-    response.headers.append('Set-Cookie', cookieHeader)
-  }
-
-  return response
 }
