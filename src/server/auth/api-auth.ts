@@ -4,13 +4,13 @@
  * Shared guards for /api/* routes that:
  *  1. Require an authenticated user (reject 401 for anonymous).
  *  2. Enforce a per-user chat quota (reject 429 when the user is over budget).
- *  3. Allow guests with a separate guest quota for endpoints that are
- *     intentionally guest-accessible (chat, chat/stream, learning-chat).
+ *
+ * Guest (unauthenticated) chat is no longer supported — every chat route
+ * requires a session. See `docs/` history for the removed guest-session flow.
  *
  * Reuses:
  *  - `web-auth.ts` for session-token verification (the canonical auth path).
  *  - `services/chat-quota.ts` for the rolling-window authenticated-user quota.
- *  - `services/guest-session.ts` for guest sessions + atomic message counting.
  *
  * @fileType utility
  * @domain auth
@@ -20,14 +20,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { getSessionFromToken, tokenFromHeaders } from '@/infra/auth/web-auth'
-import { getPayload } from '@/infra/types/backend'
 import { checkAndIncrementChatQuota, getChatQuotaStatus } from '@/server/services/chat-quota'
-import {
-  checkAndIncrementGuestMessageCount,
-  createGuestSession,
-  getGuestSessionByToken,
-  getGuestSessionCookie,
-} from '@/server/services/guest-session'
 
 type AuthedUser = { id: string }
 
@@ -67,8 +60,7 @@ export async function enforceUserChatQuota(
   | GuardSuccess<{ questionsUsed: number; maxQuestions: number; resetAt: string | null }>
   | GuardFailure
 > {
-  const payload = await getPayload()
-  const result = await checkAndIncrementChatQuota(payload, userId)
+  const result = await checkAndIncrementChatQuota(userId)
   if (!result.allowed) {
     return fail(
       NextResponse.json(
@@ -90,73 +82,29 @@ export async function enforceUserChatQuota(
 }
 
 /**
- * Enforce a quota for endpoints that may be reached by guests.
- * - Authenticated users: authenticated rolling-window chat quota.
- * - Guests: per-session message count backed by the `guest-sessions` collection
- *   (atomic findOneAndUpdate, exactly the same shape as `guest-session.ts`).
- *
- * Lazily creates a guest session when a guest cookie is not yet known, and
- * returns the cookie token so callers can attach it to the response.
+ * Require a session and enforce the chat quota in one step. Replaces the
+ * former `enforceGuestOrUserChatQuota` now that guests cannot chat.
  */
-export async function enforceGuestOrUserChatQuota(request: NextRequest): Promise<
+export async function requireUserWithChatQuota(request: NextRequest): Promise<
   | GuardSuccess<{
       ownerId: string
-      isGuest: boolean
       questionsUsed: number
       maxQuestions: number
       resetAt: string | null
-      guestCookieToken?: string
     }>
   | GuardFailure
 > {
-  const token = tokenFromHeaders(request.headers)
-  const session = await getSessionFromToken(token)
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth
 
-  if (session?.user?.id) {
-    const quota = await enforceUserChatQuota(String(session.user.id))
-    if (!quota.ok) return quota
-    return ok({
-      ownerId: String(session.user.id),
-      isGuest: false,
-      questionsUsed: quota.value.questionsUsed,
-      maxQuestions: quota.value.maxQuestions,
-      resetAt: quota.value.resetAt,
-    })
-  }
-
-  const payload = await getPayload()
-  const cookieToken = getGuestSessionCookie(request.headers)
-
-  let guestSession = cookieToken ? await getGuestSessionByToken(payload, cookieToken) : null
-  let guestCookieToken: string | undefined
-  if (!guestSession) {
-    const created = await createGuestSession(payload, {})
-    guestSession = created.session
-    guestCookieToken = created.token
-  }
-
-  const limit = await checkAndIncrementGuestMessageCount(payload, guestSession.id)
-  if (!limit.allowed) {
-    return fail(
-      NextResponse.json(
-        {
-          error: 'Quota exceeded',
-          questionsUsed: limit.current,
-          maxQuestions: limit.max,
-          resetAt: null,
-        },
-        { status: 429 },
-      ),
-    )
-  }
+  const quota = await enforceUserChatQuota(auth.value.id)
+  if (!quota.ok) return quota
 
   return ok({
-    ownerId: `guest:${guestSession.id}`,
-    isGuest: true,
-    questionsUsed: limit.current,
-    maxQuestions: limit.max,
-    resetAt: null,
-    guestCookieToken,
+    ownerId: auth.value.id,
+    questionsUsed: quota.value.questionsUsed,
+    maxQuestions: quota.value.maxQuestions,
+    resetAt: quota.value.resetAt,
   })
 }
 
@@ -166,8 +114,7 @@ export async function enforceGuestOrUserChatQuota(request: NextRequest): Promise
  * state instead of a hardcoded `999`.
  */
 export async function getUserChatQuotaStatus(userId: string) {
-  const payload = await getPayload()
-  const status = await getChatQuotaStatus(payload, userId)
+  const status = await getChatQuotaStatus(userId)
   return {
     allowed: status.allowed,
     questionsUsed: status.questionsUsed,

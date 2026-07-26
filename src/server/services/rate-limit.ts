@@ -17,7 +17,10 @@
  * Gotcha: In-memory state is per-instance in serverless — does not enforce across multiple instances
  */
 import { logger } from '@/infra/utils/logger'
-import { getGuestChatConfig } from '@/server/config/guest-chat-config'
+
+/** Fallback limits used when a caller does not pass explicit values. */
+const DEFAULT_MAX_REQUESTS = 1
+const DEFAULT_WINDOW_MS = 60_000
 
 interface RateLimitEntry {
   count: number
@@ -50,11 +53,8 @@ export async function checkRateLimit(
   maxRequests?: number,
   windowMs?: number,
 ): Promise<RateLimitResult> {
-  if (maxRequests === undefined || windowMs === undefined) {
-    const guestConfig = await getGuestChatConfig()
-    maxRequests = maxRequests ?? guestConfig.rate_limit_max_requests
-    windowMs = windowMs ?? guestConfig.rate_limit_window_ms
-  }
+  maxRequests = maxRequests ?? DEFAULT_MAX_REQUESTS
+  windowMs = windowMs ?? DEFAULT_WINDOW_MS
 
   const key = getRateLimitKey(ipHash, userAgentHash)
   const now = Date.now()
@@ -125,11 +125,8 @@ export async function getRemainingRequests(
   maxRequests?: number,
   windowMs?: number,
 ): Promise<RateLimitResult> {
-  if (maxRequests === undefined || windowMs === undefined) {
-    const guestConfig = await getGuestChatConfig()
-    maxRequests = maxRequests ?? guestConfig.rate_limit_max_requests
-    windowMs = windowMs ?? guestConfig.rate_limit_window_ms
-  }
+  maxRequests = maxRequests ?? DEFAULT_MAX_REQUESTS
+  windowMs = windowMs ?? DEFAULT_WINDOW_MS
 
   const key = getRateLimitKey(ipHash, userAgentHash)
   const now = Date.now()
@@ -188,11 +185,10 @@ export async function getRateLimitStats(): Promise<{
   maxRequests: number
   windowMs: number
 }> {
-  const guestConfig = await getGuestChatConfig()
   return {
     size: rateLimitCache.size,
-    maxRequests: guestConfig.rate_limit_max_requests,
-    windowMs: guestConfig.rate_limit_window_ms,
+    maxRequests: DEFAULT_MAX_REQUESTS,
+    windowMs: DEFAULT_WINDOW_MS,
   }
 }
 

@@ -1,13 +1,10 @@
 import { ObjectId, type Document, type Filter } from 'mongodb'
-import { NextResponse } from 'next/server'
 
 import { getSessionFromToken, tokenFromHeaders } from '@/infra/auth/web-auth'
-import { getContentDb, objectIdFromString, relationId, serializeDoc } from '@/infra/db/content-db'
+import { getContentDb, objectIdFromString, serializeDoc } from '@/infra/db/content-db'
 
 type Where = Record<string, unknown>
 type Sort = string | Record<string, 1 | -1> | undefined
-
-export const GUEST_SESSION_COOKIE = 'guest_session'
 
 const COLLECTION_ALIASES: Record<string, string> = {
   'user-progress': 'user-progresses',
@@ -223,30 +220,4 @@ export type WebPayload = Awaited<ReturnType<typeof getWebPayload>>
 export async function getWebUser(headers: Headers) {
   const session = await getSessionFromToken(tokenFromHeaders(headers))
   return session?.user ?? null
-}
-
-export function getOrCreateGuestId(request: Request) {
-  const existing = request.headers
-    .get('cookie')
-    ?.split(';')
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith(`${GUEST_SESSION_COOKIE}=`))
-    ?.slice(GUEST_SESSION_COOKIE.length + 1)
-
-  return existing || crypto.randomUUID()
-}
-
-export function withGuestCookie<T extends NextResponse>(response: T, guestId: string) {
-  response.cookies.set(GUEST_SESSION_COOKIE, guestId, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 30,
-  })
-  return response
-}
-
-export function publicUserId(user: { id?: unknown } | null, guestId: string) {
-  return user?.id ? relationId(user.id) || String(user.id) : `guest:${guestId}`
 }

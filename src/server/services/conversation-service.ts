@@ -14,29 +14,12 @@
  * - Validate enrollment/ownership for access control
  */
 import { logger } from '@/infra/utils/logger'
-import { getGuestChatConfig } from '@/server/config/guest-chat-config'
 import { AccountRole } from '@/infra/auth/roles'
 import { DEFAULT_CONTENT_LOCALE } from '@/infra/types/content'
 import type { ContentLocale } from '@/infra/types/content'
 import { logActivity } from '@/infra/types/backend'
 import { hasEntitlement } from '@/server/services/entitlement_check'
 import type { Payload, PayloadRequest } from '@/infra/types/backend'
-
-export class GuestConversationLimitError extends Error {
-  constructor(limit: number) {
-    super(
-      `Guest session has reached the maximum of ${limit} conversations. Please sign up to continue.`,
-    )
-    this.name = 'GuestConversationLimitError'
-  }
-}
-
-export class GuestSessionClaimingError extends Error {
-  constructor() {
-    super('Guest session is currently being claimed. Please try again.')
-    this.name = 'GuestSessionClaimingError'
-  }
-}
 
 /**
  * Context reference shape for polymorphic relationships
@@ -53,7 +36,6 @@ export interface ResolvedContext {
   relationTo: ContextRef['relationTo']
   value: string
   contextKey: string
-  guestSessionId?: string
 }
 
 /**
@@ -72,7 +54,6 @@ export interface ChatMessage {
 export interface ConversationWithHistory {
   id: string
   user: string | { id: string }
-  guestSession?: string
   contextKey: string
   messages: ChatMessage[]
   summary?: string
@@ -377,48 +358,6 @@ export class ConversationService {
   }
 
   /**
-   * Validate guest session has access to context
-   * Guests cannot access paid course content (they can't have entitlements)
-   */
-  async validateGuestContextAccess(
-    guestSessionId: string,
-    contextRef: ContextRef,
-    req?: PayloadRequest,
-  ): Promise<boolean> {
-    // Get the course ID for this context
-    const courseId = await this.getCourseIdFromContext(contextRef, req)
-    if (!courseId) {
-      // No course found - allow access
-      logger.debug({ guestSessionId, contextRef }, 'Guest context access granted (no course)')
-      return true
-    }
-
-    // Check if the course requires entitlement
-    const course = await this.payload.findByID({
-      collection: 'courses',
-      id: courseId,
-      depth: 0,
-      select: { accessType: true },
-      overrideAccess: true,
-    })
-
-    // Guests cannot have entitlements - deny access to paid courses
-    if (course.accessType === 'paid') {
-      logger.info(
-        { guestSessionId, contextRef, courseId },
-        'Guest context access denied - paid course requires entitlement',
-      )
-      return false
-    }
-
-    logger.debug(
-      { guestSessionId, contextRef, courseId, accessType: course.accessType },
-      'Guest context access granted',
-    )
-    return true
-  }
-
-  /**
    * Get the course ID from a context reference by traversing the hierarchy.
    * Exercise → Lesson → Chapter → Course
    * Lesson → Chapter → Course
@@ -550,173 +489,6 @@ export class ConversationService {
     }
 
     return result.docs[0] as unknown as ConversationWithHistory
-  }
-
-  /**
-   * Get or create active conversation for a GUEST session
-   * Similar to user version but uses guestSession instead of user
-   */
-  async getOrCreateGuestConversation(
-    guestSessionId: string,
-    contextRef: ContextRef,
-    req?: PayloadRequest,
-  ): Promise<ConversationWithHistory> {
-    // Verify guest session status before creating conversation
-    const sessionDoc = await this.payload.findByID({
-      collection: 'guest-sessions',
-      id: guestSessionId,
-      depth: 0,
-    })
-    if (!sessionDoc || sessionDoc.status !== 'active') {
-      throw new GuestSessionClaimingError()
-    }
-
-    const contextKey = `${contextRef.relationTo}:${contextRef.value}`
-
-    const existingConv = await this.payload.find({
-      collection: 'conversations',
-      where: {
-        and: [
-          { guestSession: { equals: guestSessionId } },
-          { contextKey: { equals: contextKey } },
-          { archivedAt: { exists: false } },
-        ],
-      },
-      limit: 1,
-      ...(req && { req }),
-    })
-
-    if (existingConv.docs.length > 0) {
-      logger.info(
-        { guestSessionId, contextKey, conversationId: existingConv.docs[0].id },
-        'Found existing active guest conversation',
-      )
-      return existingConv.docs[0] as unknown as ConversationWithHistory
-    }
-
-    // Check conversation limit before creating new one
-    const countResult = await this.payload.find({
-      collection: 'conversations',
-      where: {
-        and: [{ guestSession: { equals: guestSessionId } }, { archivedAt: { exists: false } }],
-      },
-      limit: 0,
-      ...(req && { req }),
-    })
-
-    const guestConfig = await getGuestChatConfig()
-    if (countResult.totalDocs >= guestConfig.max_conversations) {
-      throw new GuestConversationLimitError(guestConfig.max_conversations)
-    }
-
-    const newConv = await this.payload.create({
-      collection: 'conversations',
-      data: {
-        guestSession: guestSessionId,
-        contextRef: {
-          relationTo: contextRef.relationTo,
-          value: contextRef.value,
-        },
-        contextKey,
-        messages: [],
-        lastMessageAt: new Date(),
-        contextPolicyVersion: 'v1',
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      draft: false,
-      ...(req && { req }),
-    })
-
-    logger.info(
-      { guestSessionId, contextKey, conversationId: newConv.id },
-      'Created new guest conversation',
-    )
-    return newConv as unknown as ConversationWithHistory
-  }
-
-  /**
-   * Get guest conversation by context key
-   */
-  async getGuestConversation(
-    guestSessionId: string,
-    contextKey: string,
-    req?: PayloadRequest,
-  ): Promise<ConversationWithHistory | null> {
-    const result = await this.payload.find({
-      collection: 'conversations',
-      where: {
-        and: [
-          { guestSession: { equals: guestSessionId } },
-          { contextKey: { equals: contextKey } },
-          { archivedAt: { exists: false } },
-        ],
-      },
-      limit: 1,
-      ...(req && { req }),
-    })
-
-    if (result.docs.length === 0) return null
-    return result.docs[0] as unknown as ConversationWithHistory
-  }
-
-  /**
-   * Reset guest conversation (archive + create new)
-   */
-  async resetGuestConversation(
-    guestSessionId: string,
-    contextKey: string,
-    req?: PayloadRequest,
-  ): Promise<ConversationWithHistory> {
-    const existingConv = await this.payload.find({
-      collection: 'conversations',
-      where: {
-        and: [
-          { guestSession: { equals: guestSessionId } },
-          { contextKey: { equals: contextKey } },
-          { archivedAt: { exists: false } },
-        ],
-      },
-      limit: 1,
-      ...(req && { req }),
-    })
-
-    if (existingConv.docs.length > 0) {
-      const currentConv = existingConv.docs[0]
-      await this.payload.update({
-        collection: 'conversations',
-        id: currentConv.id,
-        data: {
-          archivedAt: new Date(),
-        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        overrideAccess: true,
-        context: { allowArchive: true },
-        ...(req && { req }),
-      })
-      logger.info(
-        { guestSessionId, contextKey, conversationId: currentConv.id },
-        'Archived guest conversation',
-      )
-    }
-
-    const [relationTo, value] = contextKey.split(':') as [ContextRef['relationTo'], string]
-    const newConv = await this.payload.create({
-      collection: 'conversations',
-      data: {
-        guestSession: guestSessionId,
-        contextRef: { relationTo, value },
-        contextKey,
-        messages: [],
-        lastMessageAt: new Date(),
-        contextPolicyVersion: 'v1',
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      draft: false,
-      ...(req && { req }),
-    })
-
-    logger.info(
-      { guestSessionId, contextKey, conversationId: newConv.id },
-      'Created new guest conversation after reset',
-    )
-    return newConv as unknown as ConversationWithHistory
   }
 }
 

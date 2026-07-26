@@ -92,7 +92,7 @@ export const SiteBehaviorSchema = z.discriminatedUnion('type', [
     id: z.string().min(1),
     feature: z.string().min(1),
     type: z.literal('auth'),
-    flow: z.enum(['login', 'logout', 'session-timeout', 'guest-upgrade']),
+    flow: z.enum(['login', 'logout', 'session-timeout']),
     redirectTo: z.string().optional(),
     preserveState: z.boolean().optional(),
   }),

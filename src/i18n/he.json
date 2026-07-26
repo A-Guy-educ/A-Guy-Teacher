@@ -365,12 +365,7 @@
     "purchases": {
       "title": "הרכישות שלי",
       "refresh": "רענן",
-      "status": {
-        "pending": "בהמתנה",
-        "succeeded": "הושלם",
-        "failed": "נכשל",
-        "refunded": "הוחזר"
-      },
+      "status": "סטטוס",
       "couponApplied": "קופון: {code}",
       "unknownProduct": "מוצר לא ידוע",
       "empty": {
@@ -383,7 +378,6 @@
       "amount": "סכום",
       "provider": "ספק",
       "transactionId": "מזהה עסקה",
-      "status": "סטטוס",
       "coupon": "קופון",
       "pendingHelpText": "התשלום שלך מעובד. זה עשוי לקחת מספר רגעים.",
       "refreshStatus": "רענן סטטוס",
@@ -499,7 +493,6 @@
     "chatAuthRequired": "יש להתחבר כדי להשתמש בעוזר הבינה המלאכותית",
     "chatAuthRequiredLogin": "התחבר",
     "chatAuthRequiredCTA": "הירשם כדי להמשיך",
-    "chatGuestLimitMessage": "הגעת למגבלת ההודעות לאורחים. הירשם כדי לקבל גישה בלתי מוגבלת.",
     "chatErrorDismiss": "סגור התראה",
     "chatHintPrompt": "האם תוכל לתת לי רמז שיעזור לי לפתור את התרגיל?",
     "chatSolutionPrompt": "האם תוכל להסביר את גישת הפתרון?",

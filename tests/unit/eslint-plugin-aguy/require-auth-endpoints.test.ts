@@ -288,15 +288,14 @@ describe('require-auth-endpoints ESLint rule', () => {
     invalid: [],
   })
 
-  ruleTester.run('accepts guest ownership and signed webhooks', rule.default ?? rule, {
+  ruleTester.run('accepts session guards and signed webhooks', rule.default ?? rule, {
     valid: [
       {
         code: `
           export async function POST(request) {
             const user = await getWebUser(request.headers)
-            const guestId = getOrCreateGuestId(request)
-            const ownerId = publicUserId(user, guestId)
-            return Response.json({ ownerId })
+            if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+            return Response.json({ ownerId: user.id })
           }
         `,
         filename: '/app/api/conversations/route.ts',
@@ -304,7 +303,7 @@ describe('require-auth-endpoints ESLint rule', () => {
       {
         code: `
           export async function POST(request) {
-            const quota = await enforceGuestOrUserChatQuota(request)
+            const quota = await requireUserWithChatQuota(request)
             if (!quota.ok) return quota.response
             return Response.json({ allowed: true })
           }
