@@ -19,4 +19,4 @@
 
 
 ## Additional Features
-- **conversion**: add step for format the result (exercize hook)
+- **conversion**: add step for format the result (exercise hook)
