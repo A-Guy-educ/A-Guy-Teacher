@@ -26,19 +26,11 @@ export function BuyButton({
   const t = useTranslations('products')
   const router = useRouter()
   const { user, isLoading: isAuthLoading } = useCurrentUser()
-  const [isLoadingStripe, setIsLoadingStripe] = useState(false)
   const [isLoadingPayPal, setIsLoadingPayPal] = useState(false)
 
   if (isAuthLoading) {
     return (
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button
-          disabled
-          className="w-full sm:flex-1 h-14 text-body-md font-bold rounded-xl"
-          size="lg"
-        >
-          <Loader2 className="w-5 h-5 animate-spin me-2" />
-        </Button>
         <Button
           disabled
           className="w-full sm:flex-1 h-14 text-body-md font-bold rounded-xl"
@@ -65,12 +57,8 @@ export function BuyButton({
     )
   }
 
-  const handleCheckout = async (provider: 'stripe' | 'paypal') => {
-    if (provider === 'stripe') {
-      setIsLoadingStripe(true)
-    } else {
-      setIsLoadingPayPal(true)
-    }
+  const handleCheckout = async (provider: 'paypal') => {
+    setIsLoadingPayPal(true)
 
     try {
       const body: Record<string, string> = { productId, provider }
@@ -103,42 +91,19 @@ export function BuyButton({
         } else {
           toast.error(message)
         }
-        if (provider === 'stripe') {
-          setIsLoadingStripe(false)
-        } else {
-          setIsLoadingPayPal(false)
-        }
+        setIsLoadingPayPal(false)
         return
       }
 
       window.location.href = data.checkoutUrl
     } catch {
       toast.error(t('errors.checkoutFailed'))
-      if (provider === 'stripe') {
-        setIsLoadingStripe(false)
-      } else {
-        setIsLoadingPayPal(false)
-      }
+      setIsLoadingPayPal(false)
     }
   }
 
   return (
     <div className="flex flex-col sm:flex-row gap-3">
-      <Button
-        onClick={() => handleCheckout('stripe')}
-        disabled={isLoadingStripe}
-        className="w-full sm:flex-1 h-14 text-body-md font-bold rounded-xl"
-        size="lg"
-      >
-        {isLoadingStripe ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin me-2" />
-            {t('redirecting')}
-          </>
-        ) : (
-          t('payWithCard')
-        )}
-      </Button>
       <Button
         onClick={() => handleCheckout('paypal')}
         disabled={isLoadingPayPal}
