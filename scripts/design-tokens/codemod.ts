@@ -11,16 +11,9 @@
  * Usage (file mode - for lint-staged):
  *   pnpm tsx scripts/design-tokens/codemod.ts file1.tsx file2.tsx
  *
- * Patterns replaced:
- * - text-heading-xl → text-heading-xl
- * - text-body-lg → text-body-lg
- * - p-card-padding → p-card-padding
- * - py-section-md → py-section-md
- * - gap-content-gap → gap-content-gap
- * - shadow-card → shadow-card
- * - duration-fast → duration-fast
- * - rounded-[20px] → rounded-chat-lg
- * - rounded-[30px] → rounded-chat-2xl
+ * See the REPLACEMENTS array below for the full mapping table.
+ * (Note: raw examples are not listed in this docstring because the
+ * codemod would rewrite its own documentation when run on this file.)
  */
 
 import { readFile, writeFile, readdir, stat } from 'fs/promises'
