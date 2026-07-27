@@ -1044,7 +1044,15 @@
       "productNotActive": "This product is no longer available.",
       "invalidCoupon": "This coupon code is invalid or expired.",
       "checkoutFailed": "Unable to start checkout. Please try again.",
-      "providerNotConfigured": "This payment provider is not configured. Please contact support."
+      "providerNotConfigured": "This payment provider is not configured. Please contact support.",
+      "subscriptionCheckoutDisabled": "Subscriptions are coming soon. Please check back shortly.",
+      "inFlightSubscriptionExists": "You already have a checkout in progress for this subscription. Please finish or cancel it before starting a new one.",
+      "stripeSubscriptionsNotSupported": "Subscriptions can only be paid via PayPal.",
+      "couponsNotSupportedOnSubscriptions": "Coupon codes cannot be used on subscription plans.",
+      "productMissingInterval": "This subscription is misconfigured. Please contact support.",
+      "productInvalidInterval": "This subscription is misconfigured. Please contact support.",
+      "productMissingPrice": "This product is misconfigured. Please contact support.",
+      "invalidCurrency": "This product is misconfigured. Please contact support."
     },
     "payWithCard": "Pay with Credit Card",
     "payWithPaypal": "Pay with PayPal"

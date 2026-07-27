@@ -84,9 +84,31 @@ export function BuyButton({
           invalid_coupon: t('errors.invalidCoupon'),
           checkout_failed: t('errors.checkoutFailed'),
           payment_provider_not_configured: t('errors.providerNotConfigured'),
+          // Subscription-branch error codes. `subscription_checkout_disabled`
+          // fires while the Admin webhook receiver is still shipping — buyers
+          // deserve a "coming soon" message rather than a generic "checkout
+          // failed" that reads like an outage.
+          subscription_checkout_disabled: t('errors.subscriptionCheckoutDisabled'),
+          in_flight_subscription_exists: t('errors.inFlightSubscriptionExists'),
+          stripe_subscriptions_not_supported: t('errors.stripeSubscriptionsNotSupported'),
+          coupons_not_supported_on_subscriptions: t('errors.couponsNotSupportedOnSubscriptions'),
+          product_missing_interval: t('errors.productMissingInterval'),
+          product_invalid_interval: t('errors.productInvalidInterval'),
+          product_missing_price: t('errors.productMissingPrice'),
+          invalid_currency: t('errors.invalidCurrency'),
         }
         const message = errorMessages[errorKey] ?? t('errors.checkoutFailed')
-        if (errorKey === 'payment_provider_not_configured') {
+        // Longer toast for states the buyer can't self-serve (misconfig or
+        // provider outage) — they need time to read what to do next.
+        const longToastKeys = new Set([
+          'payment_provider_not_configured',
+          'subscription_checkout_disabled',
+          'product_missing_interval',
+          'product_invalid_interval',
+          'product_missing_price',
+          'invalid_currency',
+        ])
+        if (longToastKeys.has(errorKey)) {
           toast.error(message, { duration: 5000 })
         } else {
           toast.error(message)
