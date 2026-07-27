@@ -118,7 +118,7 @@ export function LessonRow({ node, courseSlug, purchaseHref }: LessonRowProps) {
         <div className="flex items-center gap-content-gap-sm text-start w-full sm:w-auto">
           <div
             className={cn(
-              'text-display-xl md:text-display-sm font-mono tracking-tight shrink-0 select-none transition-colors duration-normal tabular-nums',
+              'text-heading-xl md:text-display-sm font-mono tracking-tight shrink-0 select-none transition-colors duration-normal tabular-nums',
               numberTone,
             )}
           >
