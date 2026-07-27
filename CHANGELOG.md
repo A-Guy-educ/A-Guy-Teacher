@@ -1885,6 +1885,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- test(products): Fix checkout responsive tests after paypal-only merge ([#981](https://github.com/A-Guy-educ/A-Guy-Web/pull/981)) — @aguyshayb
 - fix(ui): Yellow-tint locked lesson rows in course roadmap ([#978](https://github.com/A-Guy-educ/A-Guy-Web/pull/978)) — @aguyshayb
 - feat: Show only PayPal on the product buy button ([#979](https://github.com/A-Guy-educ/A-Guy-Web/pull/979)) — @aharonyaircohen
 - fix(vercel): Unignore scripts/ so build can invoke validate-env.ts ([#975](https://github.com/A-Guy-educ/A-Guy-Web/pull/975)) — @aguyshayb
