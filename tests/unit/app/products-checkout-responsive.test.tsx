@@ -66,7 +66,7 @@ describe('BuyButton — responsive layout (#785)', () => {
     useCurrentUserMock.mockReset()
   })
 
-  it('stacks the two auth-loading spinners vertically on mobile, side-by-side on sm+', () => {
+  it('renders the auth-loading spinner as a full-width button (paypal-only checkout, #979)', () => {
     useCurrentUserMock.mockReturnValue({
       user: null,
       isLoading: true,
@@ -77,12 +77,14 @@ describe('BuyButton — responsive layout (#785)', () => {
     const { container } = render(
       <BuyButton productId="p1" productSlug="test-product" productName="Test" />,
     )
+    // Wrapper still uses the mobile-first flex-col/sm:flex-row layout so a
+    // future re-introduction of a second provider slots in without reshuffling.
     const row = container.firstChild as HTMLElement
     expect(row.className).toContain('flex')
     expect(row.className).toContain('flex-col')
     expect(row.className).toContain('sm:flex-row')
     const buttons = container.querySelectorAll('button')
-    expect(buttons.length).toBe(2)
+    expect(buttons.length).toBe(1)
     buttons.forEach((btn) => {
       expect(btn.className).toContain('w-full')
       expect(btn.className).toContain('sm:flex-1')
@@ -105,7 +107,7 @@ describe('BuyButton — responsive layout (#785)', () => {
     expect(button.className).toContain('w-full')
   })
 
-  it('stacks the two payment buttons vertically on mobile and side-by-side on sm+', () => {
+  it('renders the payment button as a full-width row-child (paypal-only checkout, #979)', () => {
     useCurrentUserMock.mockReturnValue({
       user: sampleUser,
       isLoading: false,
@@ -122,11 +124,13 @@ describe('BuyButton — responsive layout (#785)', () => {
         discountedAmount={3900}
       />,
     )
+    // Wrapper still uses the flex-col/sm:flex-row layout so re-introducing
+    // Stripe (or any other provider) later doesn't require re-plumbing.
     const row = container.querySelector('div.flex.flex-col.sm\\:flex-row') as HTMLElement
     expect(row).toBeTruthy()
     expect(row.className).toContain('gap-3')
     const buttons = container.querySelectorAll('button')
-    expect(buttons.length).toBe(2)
+    expect(buttons.length).toBe(1)
     buttons.forEach((btn) => {
       expect(btn.className).toContain('w-full')
       expect(btn.className).toContain('sm:flex-1')
@@ -144,7 +148,7 @@ describe('CouponInput — responsive layout (#785)', () => {
     )
     const row = container.querySelector('div.flex.flex-col.sm\\:flex-row') as HTMLElement
     expect(row).toBeTruthy()
-    expect(row.className).toContain('gap-2')
+    expect(row.className).toContain('gap-content-gap-xs')
     expect(row.className).toContain('sm:items-end')
 
     const inputWrapper = container.querySelector('div.w-full.sm\\:flex-1') as HTMLElement
