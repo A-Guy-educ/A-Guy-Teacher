@@ -13,7 +13,8 @@
 - ✅ content approval (create agent which will provide report) (agent ?)
 - ✅ marketing - 2 meetings - what + how (ilan)
 
-
+## Additional bugs
 - auto deploy web dev branch (yair)
+- admin runs on vercel preview (yair)
 
 
