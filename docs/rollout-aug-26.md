@@ -5,8 +5,9 @@
 
 ## First Milestone
 - remove *pay with credit*
-- promo landong page leads to aguy landing page
+- promo landing page leads to aguy landing page
 
+## 
 
 
 - ✅ chat improvements (yair)   
