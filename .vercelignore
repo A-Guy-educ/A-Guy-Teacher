@@ -16,3 +16,10 @@ tests/
 coverage/
 playwright-report/
 test-results/
+vitest.setup.ts
+vitest.config.mts
+vitest.config.unit.mts
+vitest.config.canary.mts
+vitest.config.external.mts
+playwright.config.ts
+playwright.e2e-gate.config.ts
