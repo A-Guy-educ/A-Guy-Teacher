@@ -13,3 +13,7 @@
 - ✅ content approval (create agent which will provide report) (agent ?)
 - ✅ marketing - 2 meetings - what + how (ilan)
 
+
+- auto deploy web dev branch
+
+
