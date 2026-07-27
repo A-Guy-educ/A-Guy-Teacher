@@ -4,9 +4,9 @@
 
 
 ## First Milestone
-- remove *pay with credit*
-- promo landing page leads to aguy landing page
-- add payapl subscription
+- remove *pay with credit* (yair)
+- promo landing page leads to aguy landing page (guy)
+- add payapl subscription (shai)
 
 ## Sencond Milestone
 - connect grow
