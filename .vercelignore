@@ -12,7 +12,6 @@
 .windsurf/
 docs/
 plans/
-scripts/
 tests/
 coverage/
 playwright-report/
