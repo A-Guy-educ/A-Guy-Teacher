@@ -235,6 +235,16 @@ async function createSubscriptionCheckout({
         { $set: { subscription: localSubscriptionId, updatedAt: new Date() } },
       )
   } catch (insertErr) {
+    // Distinguish the "another checkout for the same (user, product) is
+    // already pending/active" race from a generic DB failure. The partial
+    // unique index on subscriptions(user, product) filtered to
+    // status ∈ {pending, active} is what surfaces this as Mongo error 11000
+    // when a rapid double-click hits us. See review #980 Medium #2.
+    const isDuplicateSubscriptionKey =
+      typeof insertErr === 'object' &&
+      insertErr !== null &&
+      (insertErr as { code?: unknown }).code === 11000
+
     logger.error(
       {
         err:
@@ -247,6 +257,7 @@ async function createSubscriptionCheckout({
         userId: user.id,
         partialTransactionId: transactionId?.toString() ?? null,
         partialSubscriptionId: localSubscriptionId?.toString() ?? null,
+        isDuplicateSubscriptionKey,
       },
       'Failed to persist subscription rows after PayPal subscription was created — cancelling remote subscription',
     )
@@ -301,6 +312,12 @@ async function createSubscriptionCheckout({
           subscriptionId,
         },
         'Failed to cancel remote subscription after local insert failed — manual reconciliation required',
+      )
+    }
+    if (isDuplicateSubscriptionKey) {
+      return NextResponse.json(
+        { success: false, error: 'in_flight_subscription_exists' },
+        { status: 409 },
       )
     }
     return NextResponse.json({ success: false, error: 'checkout_failed' }, { status: 500 })

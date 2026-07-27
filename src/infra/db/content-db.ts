@@ -30,9 +30,14 @@ async function ensureIndex(
   collection: string,
   keys: Record<string, 1 | -1>,
   name: string,
+  partialFilterExpression?: Record<string, unknown>,
 ): Promise<void> {
   try {
-    await db.collection(collection).createIndex(keys, { name, unique: true })
+    await db.collection(collection).createIndex(keys, {
+      name,
+      unique: true,
+      ...(partialFilterExpression ? { partialFilterExpression } : {}),
+    })
   } catch (error) {
     if ((error as { code?: number })?.code === INDEX_OPTIONS_CONFLICT) return
     throw error
@@ -49,6 +54,21 @@ async function ensurePaymentIndexes(db: Db): Promise<void> {
         'user_entitlements_user_course_unique',
       ),
       ensureIndex(db, 'enrollments', { user: 1, course: 1 }, 'enrollments_user_course_unique'),
+      // Partial unique index on subscriptions — a user should never hold more
+      // than one active-or-pending subscription for the same product. Prevents
+      // the double-click race where two concurrent checkouts create two live
+      // PayPal subscriptions (the `Date.now()` in PayPal-Request-Id defeats
+      // PayPal-side idempotency by design, so we enforce uniqueness locally).
+      // Filtered to (pending, active) so the historical cancelled/expired rows
+      // don't block a legitimate re-subscription later. See review #980
+      // Medium #2.
+      ensureIndex(
+        db,
+        'subscriptions',
+        { user: 1, product: 1 },
+        'subscriptions_user_product_active_unique',
+        { status: { $in: ['pending', 'active'] } },
+      ),
     ]).then(() => undefined)
   }
 

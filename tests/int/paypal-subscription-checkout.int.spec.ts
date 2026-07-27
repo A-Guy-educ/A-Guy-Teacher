@@ -174,6 +174,15 @@ afterAll(async () => {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+// Simulates the buyer completing or cancelling the current pending checkout
+// so a subsequent checkout for the same product can proceed past the partial
+// unique index on subscriptions(user, product) filtered to pending/active.
+async function clearPendingSubscriptionState(productId: ObjectId): Promise<void> {
+  const db = await getContentDb()
+  await db.collection('subscriptions').deleteMany({ user: mockUserId, product: productId })
+  await db.collection('transactions').deleteMany({ user: mockUserId, product: productId })
+}
+
 async function seedSubscriptionProduct(overrides: Record<string, unknown> = {}): Promise<ObjectId> {
   const db = await getContentDb()
   const productId = new ObjectId()
@@ -330,6 +339,11 @@ describe('PayPal Subscription Checkout', () => {
     expect(firstCallHitCatalog).toBe(true)
     expect(firstCallHitPlans).toBe(true)
 
+    // Simulate the user finishing / cancelling the first pending checkout
+    // — the partial unique index on subscriptions(user, product) filtered to
+    // pending/active would otherwise block a legitimate second attempt.
+    await clearPendingSubscriptionState(productId)
+
     // Reset the fetch call log for the 2nd checkout — cached IDs should skip
     // both the catalog and billing-plan round-trips entirely.
     paypalFetchCalls.length = 0
@@ -364,6 +378,12 @@ describe('PayPal Subscription Checkout', () => {
     // admin path would go through Payload but the on-disk field is what
     // ensurePayPalSubscriptionPlan reads.
     await db.collection('products').updateOne({ _id: productId }, { $set: { price: 49.9 } })
+
+    // Simulate the first pending sub being cancelled/finished so the second
+    // legitimate checkout at the new price doesn't hit the pending-uniqueness
+    // guard. In prod the buyer would either approve, cancel, or let the row
+    // reap before starting a new checkout.
+    await clearPendingSubscriptionState(productId)
 
     paypalFetchCalls.length = 0
 
@@ -561,5 +581,41 @@ describe('PayPal Subscription Checkout', () => {
     } finally {
       insertSpy.mockRestore()
     }
+  })
+
+  it('should return 409 in_flight_subscription_exists when a second checkout races the same (user, product)', async () => {
+    const productId = await seedSubscriptionProduct()
+
+    // First checkout succeeds and leaves a pending subscription row.
+    const first = await callCheckoutEndpoint(productId)
+    expect(first.status).toBe(200)
+    expect(cancelPayPalSubscriptionMock).not.toHaveBeenCalled()
+
+    // Second checkout for the same (user, product) hits the partial unique
+    // index and gets 11000 from Mongo. The route must cancel the second
+    // PayPal subscription (so we don't leak recurring billing) and surface
+    // the specific `in_flight_subscription_exists` error so the UI can tell
+    // the buyer to finish or cancel the existing one.
+    createPayPalSubscriptionMock.mockClear()
+    cancelPayPalSubscriptionMock.mockClear()
+
+    const second = await callCheckoutEndpoint(productId)
+    expect(second.status).toBe(409)
+    expect(second.data.error).toBe('in_flight_subscription_exists')
+    // The PayPal side of the second attempt was created and then cancelled.
+    expect(createPayPalSubscriptionMock).toHaveBeenCalledTimes(1)
+    expect(cancelPayPalSubscriptionMock).toHaveBeenCalledTimes(1)
+
+    // Local rows: still exactly one pending sub + one pending tx (the
+    // originals). No orphan from the failed second attempt.
+    const db = await getContentDb()
+    const txCount = await db
+      .collection('transactions')
+      .countDocuments({ user: mockUserId, product: productId })
+    const subCount = await db
+      .collection('subscriptions')
+      .countDocuments({ user: mockUserId, product: productId })
+    expect(txCount).toBe(1)
+    expect(subCount).toBe(1)
   })
 })
