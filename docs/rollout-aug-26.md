@@ -2,6 +2,13 @@
 ## Target 10 direct subscribers
 ### destination - 1.08
 
+
+## First Milestone
+- remove *pay with credit*
+- promo landong page leads to aguy landing page
+
+
+
 - ✅ chat improvements (yair)   
     - v1 use existing chat
     - v2 migrate to kody
