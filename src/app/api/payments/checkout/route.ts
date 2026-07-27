@@ -60,6 +60,11 @@ interface SubscriptionCheckoutParams {
   couponCode?: string
 }
 
+function isPayPalSubscriptionsEnabled(): boolean {
+  const raw = process.env.PAYPAL_SUBSCRIPTIONS_ENABLED
+  return raw === '1' || raw?.toLowerCase() === 'true'
+}
+
 async function createSubscriptionCheckout({
   request,
   db,
@@ -69,6 +74,19 @@ async function createSubscriptionCheckout({
   provider,
   couponCode,
 }: SubscriptionCheckoutParams): Promise<NextResponse> {
+  // Feature gate: the subscription-lifecycle webhook receiver
+  // (BILLING.SUBSCRIPTION.ACTIVATED) lives in the parallel Admin PR
+  // (A-Guy-Admin#266). Until that ships, a buyer who approves here would sit
+  // as a permanently `pending` local row with no entitlements. Keep this
+  // branch OFF by default and flip PAYPAL_SUBSCRIPTIONS_ENABLED=1 in the
+  // deployment env once the Admin receiver is live.
+  if (!isPayPalSubscriptionsEnabled()) {
+    return NextResponse.json(
+      { success: false, error: 'subscription_checkout_disabled' },
+      { status: 503 },
+    )
+  }
+
   if (provider !== 'paypal') {
     return NextResponse.json(
       { success: false, error: 'stripe_subscriptions_not_supported' },
@@ -84,12 +102,20 @@ async function createSubscriptionCheckout({
   if (!product.interval) {
     return NextResponse.json({ success: false, error: 'product_missing_interval' }, { status: 400 })
   }
+  const interval = String(product.interval).trim().toLowerCase()
+  if (interval !== 'month' && interval !== 'year') {
+    return NextResponse.json({ success: false, error: 'product_invalid_interval' }, { status: 400 })
+  }
 
   const currency = parseCurrency(product.currency)
   if (!currency) {
     return NextResponse.json({ success: false, error: 'invalid_currency' }, { status: 400 })
   }
-  const amount = Math.round(Number(product.price || 0) * 100)
+  const priceMajor = Number(product.price || 0)
+  if (!(priceMajor > 0)) {
+    return NextResponse.json({ success: false, error: 'product_missing_price' }, { status: 400 })
+  }
+  const amount = Math.round(priceMajor * 100)
 
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
@@ -99,11 +125,26 @@ async function createSubscriptionCheckout({
   const cancelUrl = `${baseUrl}/checkout/cancel?${cancelParams.toString()}`
   const paypalSuccessUrl = `${baseUrl}/checkout/success`
 
+  // Metadata parity with the one-time transaction row — reporting queries and
+  // entitlement grant flows that read metadata.itemIds/featureKeys shouldn't
+  // see a shape gap between one-time and subscription rows.
+  const { itemIds, featureKeys } = await resolveProductItems(
+    Array.isArray(product.items) ? product.items : [],
+  )
+
   let paypalPlanId: string
   let approvalUrl: string
   let subscriptionId: string
   try {
-    const ensured = await ensurePayPalSubscriptionPlan(product)
+    // Pass the validated currency / price / interval explicitly — the helper
+    // doesn't fall back to defaults, so a divergence between what the route
+    // stores locally and what PayPal bills is impossible.
+    const ensured = await ensurePayPalSubscriptionPlan({
+      product,
+      price: priceMajor,
+      currency,
+      interval,
+    })
     paypalPlanId = ensured.paypalPlanId
     const subscription = await createPayPalSubscription({
       planId: paypalPlanId,
@@ -143,9 +184,10 @@ async function createSubscriptionCheckout({
   let localSubscriptionId: ObjectId | null = null
   try {
     // Order matters: transaction first, then subscription with
-    // initialTransaction populated. An ACTIVATED webhook arriving in the gap
-    // between the two inserts could otherwise see initialTransaction=null and
-    // fall back to an entitlement-grant path whose grants can't be cleanly
+    // initialTransaction populated. When the parallel Admin webhook receiver
+    // (A-Guy-Admin#266) lands, ACTIVATED events arriving in the gap between
+    // the two inserts could otherwise see initialTransaction=null and fall
+    // back to an entitlement-grant path whose grants can't be cleanly
     // revoked later. See task #976 for the rationale.
     const transactionInsert = await db.collection('transactions').insertOne({
       tenant: product.tenant ?? null,
@@ -157,6 +199,7 @@ async function createSubscriptionCheckout({
       status: 'pending',
       amount,
       currency,
+      metadata: { itemIds, featureKeys },
       successUrl: paypalSuccessUrl,
       cancelUrl,
       createdAt: now,
@@ -263,13 +306,30 @@ async function createSubscriptionCheckout({
     return NextResponse.json({ success: false, error: 'checkout_failed' }, { status: 500 })
   }
 
-  // Both inserts succeeded — non-null assertions are safe here (either we
-  // return in the catch above or both IDs are set by the end of the try).
+  // Explicit guard rather than non-null assertions — if a future edit ever
+  // adds an early `return` inside the try block, this stays sound.
+  if (!transactionId || !localSubscriptionId) {
+    logger.error(
+      {
+        subscriptionId,
+        transactionId: transactionId?.toString() ?? null,
+        localSubscriptionId: localSubscriptionId?.toString() ?? null,
+      },
+      'Unexpected null local subscription IDs after successful insert path — invariant broken',
+    )
+    return NextResponse.json({ success: false, error: 'checkout_failed' }, { status: 500 })
+  }
+  // `localSubscriptionId` is the Mongo _id of the local `subscriptions` row.
+  // The PayPal-side subscription id (I-XXX) is the buyer-facing value carried
+  // by the approval-return URL's ?subscription_id= param — clients should
+  // consume that from PayPal's redirect rather than expect it in this
+  // response envelope. Naming it explicitly avoids ambiguity with the PayPal
+  // id.
   return NextResponse.json({
     success: true,
     checkoutUrl: approvalUrl,
-    transactionId: transactionId!.toString(),
-    subscriptionId: localSubscriptionId!.toString(),
+    transactionId: transactionId.toString(),
+    localSubscriptionId: localSubscriptionId.toString(),
   })
 }
 
@@ -283,6 +343,12 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: 'invalid_request' }, { status: 400 })
   }
+
+  // Normalize coupon input at the top so both the subscription and one-time
+  // branches see the same "no coupon" value for empty/whitespace strings —
+  // otherwise the sub branch's truthy check rejects "   " while the one-time
+  // branch's later trim() silently accepts it.
+  const normalizedCouponCode = parsed.data.couponCode?.trim() || undefined
 
   const db = await getContentDb()
   const product = await db
@@ -302,15 +368,15 @@ export async function POST(request: NextRequest) {
       product: product as unknown as PayPalPlanProductDoc & Record<string, unknown>,
       productId: parsed.data.productId,
       provider: parsed.data.provider,
-      couponCode: parsed.data.couponCode,
+      couponCode: normalizedCouponCode,
     })
   }
 
   let amount = Math.round(Number(product.price || 0) * 100)
   let appliedCoupon: Record<string, unknown> | null = null
-  if (parsed.data.couponCode) {
+  if (normalizedCouponCode) {
     const coupon = await db.collection('coupons').findOne({
-      code: parsed.data.couponCode.trim().toUpperCase(),
+      code: normalizedCouponCode.toUpperCase(),
       isActive: true,
     })
     if (!coupon)
@@ -409,7 +475,10 @@ export async function POST(request: NextRequest) {
   let transaction: { insertedId: { toString(): string } }
   try {
     transaction = await db.collection('transactions').insertOne({
-      tenant: product.tenant,
+      // Align with subscription branch shape — always a value, `null` when the
+      // product is tenant-less. Reporting queries then don't have to match on
+      // both `undefined` and `null` for the same field.
+      tenant: product.tenant ?? null,
       user: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id,
       product: product._id,
       provider: parsed.data.provider,

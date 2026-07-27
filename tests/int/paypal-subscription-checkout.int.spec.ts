@@ -99,6 +99,10 @@ beforeAll(async () => {
   process.env.PAYPAL_CLIENT_ID = 'test_client_id'
   process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
   process.env.PAYPAL_WEBHOOK_ID = 'test_webhook'
+  // Enable the sub branch — production defaults to OFF until the Admin
+  // BILLING.SUBSCRIPTION.ACTIVATED receiver ships (A-Guy-Admin#266). Tests
+  // that verify the "gate off" behavior toggle this per-test.
+  process.env.PAYPAL_SUBSCRIPTIONS_ENABLED = 'true'
 
   const db = await getContentDb()
 
@@ -225,7 +229,11 @@ describe('PayPal Subscription Checkout', () => {
     expect(result.data.success).toBe(true)
     expect(result.data.checkoutUrl).toContain('https://paypal.example.com/approve-sub')
     expect(result.data.transactionId).toBeDefined()
-    expect(result.data.subscriptionId).toBeDefined()
+    // Response uses `localSubscriptionId` (Mongo _id) — the PayPal-side
+    // subscription id (I-XXX) is only ever exposed via PayPal's redirect,
+    // never in this envelope.
+    expect(result.data.localSubscriptionId).toBeDefined()
+    expect(result.data.subscriptionId).toBeUndefined()
 
     expect(createPayPalSubscriptionMock).toHaveBeenCalledTimes(1)
     expect(createPayPalSubscriptionMock.mock.calls[0]![0].planId).toBe('P-FAKE-456')
@@ -240,11 +248,17 @@ describe('PayPal Subscription Checkout', () => {
     expect(transaction!.provider).toBe('paypal')
     expect(transaction!.status).toBe('pending')
     expect(transaction!.isRenewal).toBe(false)
-    expect(transaction!.subscription?.toString()).toBe(result.data.subscriptionId)
+    expect(transaction!.subscription?.toString()).toBe(result.data.localSubscriptionId)
+    // Metadata parity with the one-time transaction row.
+    expect(transaction!.metadata).toBeDefined()
+    expect(Array.isArray((transaction!.metadata as any).itemIds)).toBe(true)
+    expect(Array.isArray((transaction!.metadata as any).featureKeys)).toBe(true)
+    // Tenant field is always present (null-if-tenantless), matches one-time.
+    expect(transaction!.tenant).toBeDefined()
 
     const subscription = await db
       .collection('subscriptions')
-      .findOne({ _id: new ObjectId(result.data.subscriptionId as string) })
+      .findOne({ _id: new ObjectId(result.data.localSubscriptionId as string) })
     expect(subscription).toBeTruthy()
     expect(subscription!.provider).toBe('paypal')
     expect(subscription!.status).toBe('pending')
@@ -254,6 +268,21 @@ describe('PayPal Subscription Checkout', () => {
     // future product-price edits.
     expect(subscription!.amount).toBe(transaction!.amount)
     expect(subscription!.currency).toBe(transaction!.currency)
+  })
+
+  it('should return 503 subscription_checkout_disabled when the feature flag is off', async () => {
+    const productId = await seedSubscriptionProduct()
+    const original = process.env.PAYPAL_SUBSCRIPTIONS_ENABLED
+    delete process.env.PAYPAL_SUBSCRIPTIONS_ENABLED
+
+    try {
+      const result = await callCheckoutEndpoint(productId)
+      expect(result.status).toBe(503)
+      expect(result.data.error).toBe('subscription_checkout_disabled')
+      expect(createPayPalSubscriptionMock).not.toHaveBeenCalled()
+    } finally {
+      if (original !== undefined) process.env.PAYPAL_SUBSCRIPTIONS_ENABLED = original
+    }
   })
 
   it('should reject Stripe subscriptions with 400 stripe_subscriptions_not_supported', async () => {
@@ -316,16 +345,153 @@ describe('PayPal Subscription Checkout', () => {
     expect(secondCallHitPlans).toBe(false)
   })
 
+  it('should recreate the billing plan (but not the catalog product) after the product price is edited', async () => {
+    const productId = await seedSubscriptionProduct()
+
+    // 1st checkout — caches catalog + plan + fingerprint at price 29.90.
+    const first = await callCheckoutEndpoint(productId)
+    expect(first.status).toBe(200)
+
+    const db = await getContentDb()
+    const afterFirst = await db.collection('products').findOne({ _id: productId })
+    const originalPlanId = String(afterFirst!.paypalPlanId)
+    const originalProductId = String(afterFirst!.paypalProductId)
+    const originalFingerprint = String(afterFirst!.paypalPlanFingerprint)
+    expect(originalPlanId).toBeTruthy()
+    expect(originalFingerprint).toContain('29.90')
+
+    // Admin edits the price. Emulate by direct Mongo update — the storefront
+    // admin path would go through Payload but the on-disk field is what
+    // ensurePayPalSubscriptionPlan reads.
+    await db.collection('products').updateOne({ _id: productId }, { $set: { price: 49.9 } })
+
+    paypalFetchCalls.length = 0
+
+    // 2nd checkout at the new price. Fingerprint mismatches, so the helper
+    // must POST a new billing plan (catalog product is reused — pricing lives
+    // on the plan, not the catalog entry).
+    // Return a different plan id so we can assert the cached IDs got replaced.
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, ...rest: unknown[]) => {
+      const s = typeof url === 'string' ? url : url.toString()
+      if (s.includes('/v1/oauth2/token')) {
+        return new Response(
+          JSON.stringify({
+            access_token: 'fake_token',
+            token_type: 'Bearer',
+            expires_in: 3600,
+          }),
+          { status: 200 },
+        )
+      }
+      if (s.includes('/v1/catalogs/products')) {
+        paypalFetchCalls.push(s)
+        return new Response(JSON.stringify({ id: 'PROD-SHOULD-NOT-HIT' }), { status: 200 })
+      }
+      if (s.includes('/v1/billing/plans') && !s.includes('/subscriptions')) {
+        paypalFetchCalls.push(s)
+        return new Response(JSON.stringify({ id: 'P-NEW-AFTER-PRICE-EDIT' }), { status: 200 })
+      }
+      return originalFetch(url as any, ...(rest as [any]))
+    }) as unknown as typeof fetch
+
+    const second = await callCheckoutEndpoint(productId)
+    expect(second.status).toBe(200)
+
+    // Catalog product endpoint must NOT be re-hit — only the plan endpoint.
+    expect(paypalFetchCalls.some((u) => u.includes('/v1/catalogs/products'))).toBe(false)
+    expect(
+      paypalFetchCalls.some(
+        (u) => u.includes('/v1/billing/plans') && !u.includes('/subscriptions'),
+      ),
+    ).toBe(true)
+
+    const afterSecond = await db.collection('products').findOne({ _id: productId })
+    expect(String(afterSecond!.paypalPlanId)).toBe('P-NEW-AFTER-PRICE-EDIT')
+    expect(String(afterSecond!.paypalPlanId)).not.toBe(originalPlanId)
+    expect(String(afterSecond!.paypalProductId)).toBe(originalProductId) // unchanged
+    expect(String(afterSecond!.paypalPlanFingerprint)).toContain('49.90')
+    expect(String(afterSecond!.paypalPlanFingerprint)).not.toBe(originalFingerprint)
+  })
+
+  it('should retry plan creation without re-POSTing catalog when a prior plan step failed', async () => {
+    const productId = await seedSubscriptionProduct()
+
+    // Simulate: catalog POST succeeds, plan POST fails on 1st attempt.
+    let planCallCount = 0
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, ...rest: unknown[]) => {
+      const s = typeof url === 'string' ? url : url.toString()
+      if (s.includes('/v1/oauth2/token')) {
+        return new Response(
+          JSON.stringify({
+            access_token: 'fake_token',
+            token_type: 'Bearer',
+            expires_in: 3600,
+          }),
+          { status: 200 },
+        )
+      }
+      if (s.includes('/v1/catalogs/products')) {
+        paypalFetchCalls.push(s)
+        return new Response(JSON.stringify({ id: 'PROD-STEP1-OK' }), { status: 200 })
+      }
+      if (s.includes('/v1/billing/plans') && !s.includes('/subscriptions')) {
+        planCallCount++
+        paypalFetchCalls.push(s)
+        if (planCallCount === 1) {
+          return new Response('{"name":"INTERNAL_SERVER_ERROR"}', { status: 500 })
+        }
+        return new Response(JSON.stringify({ id: 'P-STEP2-OK-ON-RETRY' }), { status: 200 })
+      }
+      return originalFetch(url as any, ...(rest as [any]))
+    }) as unknown as typeof fetch
+
+    const first = await callCheckoutEndpoint(productId)
+    expect(first.status).toBe(500)
+    expect(first.data.error).toBe('checkout_failed')
+
+    // The route bailed but the catalog ID was persisted before the plan
+    // failure — confirm.
+    const db = await getContentDb()
+    const midProduct = await db.collection('products').findOne({ _id: productId })
+    expect(String(midProduct!.paypalProductId)).toBe('PROD-STEP1-OK')
+    expect(midProduct!.paypalPlanId).toBeUndefined()
+
+    paypalFetchCalls.length = 0
+
+    // 2nd checkout — should skip catalog entirely and only hit /v1/billing/plans.
+    const second = await callCheckoutEndpoint(productId)
+    expect(second.status).toBe(200)
+
+    expect(paypalFetchCalls.some((u) => u.includes('/v1/catalogs/products'))).toBe(false)
+    expect(
+      paypalFetchCalls.some(
+        (u) => u.includes('/v1/billing/plans') && !u.includes('/subscriptions'),
+      ),
+    ).toBe(true)
+
+    const finalProduct = await db.collection('products').findOne({ _id: productId })
+    expect(String(finalProduct!.paypalProductId)).toBe('PROD-STEP1-OK')
+    expect(String(finalProduct!.paypalPlanId)).toBe('P-STEP2-OK-ON-RETRY')
+  })
+
   it('should call cancelPayPalSubscription and leave no local rows when the transactions insert fails', async () => {
     const productId = await seedSubscriptionProduct()
 
-    // Force the FIRST insertOne call to fail. In the subscription checkout
-    // path, the first insertOne is against the `transactions` collection.
-    // Spying at the prototype level catches the route's fresh Collection
-    // instance (mongo driver returns a new wrapper each db.collection() call).
-    const insertSpy = vi
-      .spyOn(Collection.prototype, 'insertOne')
-      .mockRejectedValueOnce(new Error('simulated DB failure'))
+    // Force the first insertOne against `transactions` to fail. Filtering
+    // by collectionName keeps the spy robust if a future refactor adds an
+    // upstream insertOne (e.g. audit log) that we don't want to intercept.
+    const originalInsertOne = Collection.prototype.insertOne
+    let alreadyRejected = false
+    const insertSpy = vi.spyOn(Collection.prototype, 'insertOne').mockImplementation(function (
+      this: Collection,
+      ...args: any[]
+    ) {
+      if (!alreadyRejected && this.collectionName === 'transactions') {
+        alreadyRejected = true
+        return Promise.reject(new Error('simulated DB failure'))
+      }
+      return originalInsertOne.apply(this, args as any) as any
+    })
 
     try {
       const result = await callCheckoutEndpoint(productId)
@@ -353,20 +519,22 @@ describe('PayPal Subscription Checkout', () => {
   it('should clean up the partial transaction row and cancel PayPal when the subscriptions insert fails', async () => {
     const productId = await seedSubscriptionProduct()
 
-    // Let the FIRST insertOne (transactions) succeed and reject the SECOND
-    // (subscriptions). This is the "partial insert" path that the review
-    // flagged — before the fix a dangling `pending` transactions row would
-    // leak here.
+    // Reject the insert against the `subscriptions` collection specifically,
+    // letting the transactions insert succeed. Filtering by collectionName
+    // rather than a raw call counter keeps the test robust against future
+    // refactors that add unrelated insertOne calls upstream.
     const originalInsertOne = Collection.prototype.insertOne
-    let insertCallCount = 0
+    let subscriptionsRejected = false
+    let transactionsInserted = false
     const insertSpy = vi.spyOn(Collection.prototype, 'insertOne').mockImplementation(function (
       this: Collection,
       ...args: any[]
     ) {
-      insertCallCount++
-      if (insertCallCount === 2) {
-        return Promise.reject(new Error('simulated DB failure on second insert'))
+      if (!subscriptionsRejected && this.collectionName === 'subscriptions') {
+        subscriptionsRejected = true
+        return Promise.reject(new Error('simulated DB failure on subscriptions insert'))
       }
+      if (this.collectionName === 'transactions') transactionsInserted = true
       return originalInsertOne.apply(this, args as any) as any
     })
 
@@ -376,9 +544,8 @@ describe('PayPal Subscription Checkout', () => {
       expect(result.status).toBe(500)
       expect(result.data.error).toBe('checkout_failed')
       expect(cancelPayPalSubscriptionMock).toHaveBeenCalledTimes(1)
-      // Sanity check that both inserts were attempted (transactions succeeded,
-      // subscriptions rejected).
-      expect(insertCallCount).toBe(2)
+      expect(transactionsInserted).toBe(true)
+      expect(subscriptionsRejected).toBe(true)
 
       // The critical assertion: the recovery path deleted the partial
       // transactions row so nothing dangles as `pending`.

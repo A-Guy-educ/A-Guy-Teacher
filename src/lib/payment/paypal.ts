@@ -276,17 +276,28 @@ export async function refundPayPal(
 
 /**
  * Product doc shape read from the raw `products` Mongo collection. Kept narrow
- * — only fields the subscription helpers actually read.
+ * — only fields the subscription helpers actually read. Pricing is passed in
+ * separately via EnsurePayPalPlanInput; the helper never reads price/currency
+ * off the product doc to avoid divergence with the caller's already-validated
+ * values (see review #980 Critical #1).
  */
 export interface PayPalPlanProductDoc {
   _id: ObjectId
   name?: string | null
   title?: string | null
-  price?: number | null
-  currency?: string | null
-  interval?: string | null
   paypalProductId?: string | null
   paypalPlanId?: string | null
+  paypalPlanFingerprint?: string | null
+}
+
+export interface EnsurePayPalPlanInput {
+  product: PayPalPlanProductDoc
+  /** Major-unit price (e.g. 29.90). Caller must validate > 0. */
+  price: number
+  /** ISO 4217 uppercase code. Caller must validate. */
+  currency: string
+  /** Caller must validate; helper does not default. */
+  interval: 'month' | 'year'
 }
 
 /**
@@ -295,68 +306,121 @@ export interface PayPalPlanProductDoc {
  * persisting the returned IDs onto the Product doc so subsequent checkouts
  * skip the PayPal round-trips.
  *
- * Idempotent: if the product already carries both IDs, returns them without
- * touching PayPal. If PayPal returns 422 with a duplicate-resource signal
- * (RESOURCE_ALREADY_EXISTS / IDEMPOTENCY_CONFLICT), that's a concurrent-race
- * hint — another request beat us to creating the resource and already wrote
- * the IDs onto the local product doc. We re-read from Mongo and return the
- * winning writer's IDs.
+ * Cache validation: the cache is fingerprinted by (price, currency, interval).
+ * If the product's pricing was edited since the plan was created, the
+ * fingerprint mismatches and we create a fresh billing plan (reusing the
+ * catalog product — pricing lives on the plan, not the catalog entry).
+ * Existing PayPal subscriptions on the old plan continue at their captured
+ * price; only new checkouts move to the new plan. Without this check an admin
+ * price edit would silently keep billing the old price while local rows
+ * snapshot the new one (review #980 Critical #2).
+ *
+ * Persistence: we write paypalProductId immediately after the catalog POST
+ * succeeds, then write paypalPlanId + fingerprint after the plan POST
+ * succeeds. This means a mid-flow failure (plan POST throws, or the second
+ * updateOne throws) can be recovered on retry — the next call sees a cached
+ * catalog product and skips step 1 (review #980 Major #2).
+ *
+ * Concurrent-race handling: if PayPal returns 422 with a duplicate-resource
+ * signal (RESOURCE_ALREADY_EXISTS / IDEMPOTENCY_CONFLICT), another request
+ * beat us to creating the resource. We re-read the product doc from Mongo
+ * and return the winning writer's IDs if present.
  */
 export async function ensurePayPalSubscriptionPlan(
-  product: PayPalPlanProductDoc,
+  input: EnsurePayPalPlanInput,
 ): Promise<EnsuredPayPalPlan> {
-  if (product.paypalProductId && product.paypalPlanId) {
+  const { product, price, currency, interval } = input
+
+  if (!currency || !/^[A-Z]{3}$/.test(currency)) {
+    throw new Error(`ensurePayPalSubscriptionPlan: invalid currency "${currency}"`)
+  }
+  if (!(price > 0)) {
+    throw new Error(`ensurePayPalSubscriptionPlan: invalid price "${price}" (must be > 0)`)
+  }
+
+  const intervalUnit = normalizePayPalInterval(interval)
+  const fingerprint = planFingerprint(price, currency, interval)
+
+  // Cache short-circuit: only if both IDs are present AND the fingerprint
+  // matches the current pricing. A mismatch (admin edited the product's
+  // price/currency/interval after the plan was cached) falls through and
+  // creates a new plan.
+  if (
+    product.paypalProductId &&
+    product.paypalPlanId &&
+    product.paypalPlanFingerprint === fingerprint
+  ) {
     return { paypalProductId: product.paypalProductId, paypalPlanId: product.paypalPlanId }
   }
 
   const productName = String(product.name || product.title || 'Product')
-  const currency = String(product.currency || 'USD').toUpperCase()
-  const price = Number(product.price || 0)
-  const intervalUnit = normalizePayPalInterval(product.interval)
-
   const token = await getPayPalAccessToken()
+  const db = await getContentDb()
 
-  // 1) Catalog product — required parent for a Billing Plan.
-  const catalogProductResponse = await fetch(`${getPayPalApiBase()}/v1/catalogs/products`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'PayPal-Request-Id': `catalog-product-${product._id.toString()}`,
-    },
-    body: JSON.stringify({
-      name: productName,
-      type: 'SERVICE',
-      category: 'EDUCATIONAL_AND_TEXTBOOKS',
-    }),
-  })
-
+  // Step 1: catalog product. Skipped if we already have a cached catalog ID
+  // — the catalog entry doesn't carry pricing, so a stale fingerprint doesn't
+  // invalidate it (only the billing plan needs to be re-created).
   let paypalProductId: string
-  if (catalogProductResponse.ok) {
-    const body = (await catalogProductResponse.json()) as { id: string }
-    paypalProductId = body.id
+  if (product.paypalProductId) {
+    paypalProductId = product.paypalProductId
   } else {
-    const errorText = await catalogProductResponse.text()
-    if (catalogProductResponse.status === 422 && isDuplicatePayPalError(errorText)) {
-      // Concurrent race: another checkout for the same product beat us to
-      // creating the catalog product. The winning writer will have (or is
-      // about to) persist both IDs onto the product doc — re-read and reuse.
-      const cached = await readCachedPayPalPlan(product._id)
-      if (cached) return cached
-      throw new Error(`PayPal catalog product already exists (concurrent race): ${errorText}`)
+    // Stable request ID → PayPal short-circuits repeat calls with identical
+    // bodies for concurrent-race idempotency (~6h window).
+    const catalogProductResponse = await fetch(`${getPayPalApiBase()}/v1/catalogs/products`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'PayPal-Request-Id': `catalog-product-${product._id.toString()}`,
+      },
+      body: JSON.stringify({
+        name: productName,
+        type: 'SERVICE',
+        category: 'EDUCATIONAL_AND_TEXTBOOKS',
+      }),
+    })
+
+    if (catalogProductResponse.ok) {
+      const body = (await catalogProductResponse.json()) as { id: string }
+      paypalProductId = body.id
+    } else {
+      const errorText = await catalogProductResponse.text()
+      if (catalogProductResponse.status === 422 && isDuplicatePayPalError(errorText)) {
+        // Concurrent race: sibling request beat us. Re-read from Mongo and
+        // reuse the winning writer's catalog ID (and plan if also persisted).
+        const cached = await readCachedPayPalPlan(product._id)
+        if (cached?.paypalProductId && cached?.paypalPlanId && cached.fingerprint === fingerprint) {
+          return { paypalProductId: cached.paypalProductId, paypalPlanId: cached.paypalPlanId }
+        }
+        if (cached?.paypalProductId) {
+          paypalProductId = cached.paypalProductId
+        } else {
+          throw new Error(
+            `PayPal catalog product already exists but winner not yet persisted: ${errorText}`,
+          )
+        }
+      } else {
+        throw new Error(
+          `PayPal catalog product creation failed: ${catalogProductResponse.status} ${errorText}`,
+        )
+      }
     }
-    throw new Error(
-      `PayPal catalog product creation failed: ${catalogProductResponse.status} ${errorText}`,
-    )
+
+    // Persist the catalog ID immediately so a subsequent plan-step failure
+    // can retry the plan without re-POSTing to /v1/catalogs/products.
+    await db
+      .collection('products')
+      .updateOne({ _id: product._id }, { $set: { paypalProductId, updatedAt: new Date() } })
   }
 
-  // 2) Billing plan attached to the catalog product.
+  // Step 2: billing plan. Request ID includes fingerprint so a re-created
+  // plan after a pricing edit doesn't collide with the old plan's stable ID.
   const planResponse = await fetch(`${getPayPalApiBase()}/v1/billing/plans`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
-      'PayPal-Request-Id': `billing-plan-${product._id.toString()}`,
+      'PayPal-Request-Id': `billing-plan-${product._id.toString()}-${fingerprint}`,
     },
     body: JSON.stringify({
       product_id: paypalProductId,
@@ -389,22 +453,33 @@ export async function ensurePayPalSubscriptionPlan(
     const errorText = await planResponse.text()
     if (planResponse.status === 422 && isDuplicatePayPalError(errorText)) {
       const cached = await readCachedPayPalPlan(product._id)
-      if (cached) return cached
+      if (cached?.paypalPlanId && cached.fingerprint === fingerprint) {
+        return { paypalProductId, paypalPlanId: cached.paypalPlanId }
+      }
       throw new Error(`PayPal billing plan already exists (concurrent race): ${errorText}`)
     }
     throw new Error(`PayPal billing plan creation failed: ${planResponse.status} ${errorText}`)
   }
 
-  // 3) Persist onto the local Product doc so subsequent checkouts skip PayPal.
-  const db = await getContentDb()
-  await db
-    .collection('products')
-    .updateOne(
-      { _id: product._id },
-      { $set: { paypalProductId, paypalPlanId, updatedAt: new Date() } },
-    )
+  // Persist plan ID + fingerprint so future checkouts short-circuit until
+  // the product's pricing is edited again.
+  await db.collection('products').updateOne(
+    { _id: product._id },
+    {
+      $set: {
+        paypalProductId,
+        paypalPlanId,
+        paypalPlanFingerprint: fingerprint,
+        updatedAt: new Date(),
+      },
+    },
+  )
 
   return { paypalProductId, paypalPlanId }
+}
+
+function planFingerprint(price: number, currency: string, interval: 'month' | 'year'): string {
+  return `${price.toFixed(2)}|${currency}|${interval}`
 }
 
 /**
@@ -424,18 +499,30 @@ function normalizePayPalInterval(interval: unknown): 'MONTH' | 'YEAR' {
   )
 }
 
-async function readCachedPayPalPlan(productId: ObjectId): Promise<EnsuredPayPalPlan | null> {
+interface CachedPayPalPlan {
+  paypalProductId?: string
+  paypalPlanId?: string
+  fingerprint?: string
+}
+
+async function readCachedPayPalPlan(productId: ObjectId): Promise<CachedPayPalPlan | null> {
   const db = await getContentDb()
-  const fresh = await db
-    .collection('products')
-    .findOne({ _id: productId }, { projection: { paypalProductId: 1, paypalPlanId: 1 } })
-  if (fresh?.paypalProductId && fresh?.paypalPlanId) {
-    return {
-      paypalProductId: String(fresh.paypalProductId),
-      paypalPlanId: String(fresh.paypalPlanId),
-    }
+  const fresh = await db.collection('products').findOne(
+    { _id: productId },
+    {
+      projection: {
+        paypalProductId: 1,
+        paypalPlanId: 1,
+        paypalPlanFingerprint: 1,
+      },
+    },
+  )
+  if (!fresh) return null
+  return {
+    paypalProductId: fresh.paypalProductId ? String(fresh.paypalProductId) : undefined,
+    paypalPlanId: fresh.paypalPlanId ? String(fresh.paypalPlanId) : undefined,
+    fingerprint: fresh.paypalPlanFingerprint ? String(fresh.paypalPlanFingerprint) : undefined,
   }
-  return null
 }
 
 function isDuplicatePayPalError(errorText: string): boolean {
@@ -451,8 +538,12 @@ interface PayPalSubscriptionResponse {
 /**
  * Create a PayPal Billing Subscription against an existing Plan and return the
  * approval URL for the buyer to consent to recurring billing. On approval,
- * PayPal fires BILLING.SUBSCRIPTION.ACTIVATED which the Admin webhook handler
- * turns into an active local subscription + first Transaction row.
+ * PayPal fires BILLING.SUBSCRIPTION.ACTIVATED. That event is consumed by the
+ * Admin repo's subscription-lifecycle webhook handler (parallel PR
+ * A-Guy-Admin#266) which flips the local subscription to `active`, grants
+ * entitlements, and marks the initial transaction succeeded. Until that Admin
+ * PR ships this branch should stay behind PAYPAL_SUBSCRIPTIONS_ENABLED so
+ * buyers don't approve and then get stuck as permanently `pending`.
  */
 export async function createPayPalSubscription(
   options: CreateSubscriptionOptions,

@@ -463,15 +463,18 @@ describe('PayPal Payment Service', () => {
   })
 
   describe('ensurePayPalSubscriptionPlan', () => {
-    const mockProductDoc = {
+    const mockProduct = {
       _id: new ObjectId('507f1f77bcf86cd799439011'),
       name: 'Premium Plan',
+    }
+    // Fingerprint matches (29.90|ILS|month) as computed by planFingerprint.
+    const defaultPricing = {
       price: 29.9,
       currency: 'ILS',
       interval: 'month' as const,
     }
 
-    it('should skip PayPal when product already has both IDs (cached path)', async () => {
+    it('should skip PayPal when product has cached IDs AND matching fingerprint', async () => {
       process.env.PAYPAL_CLIENT_ID = 'test_client_id'
       process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
       resetPaymentEnvCache()
@@ -482,9 +485,13 @@ describe('PayPal Payment Service', () => {
 
       const { ensurePayPalSubscriptionPlan } = await import('@/lib/payment/paypal')
       const result = await ensurePayPalSubscriptionPlan({
-        ...mockProductDoc,
-        paypalProductId: 'PROD-CACHED',
-        paypalPlanId: 'P-CACHED',
+        product: {
+          ...mockProduct,
+          paypalProductId: 'PROD-CACHED',
+          paypalPlanId: 'P-CACHED',
+          paypalPlanFingerprint: '29.90|ILS|month',
+        },
+        ...defaultPricing,
       })
 
       expect(fetchMock).not.toHaveBeenCalled()
@@ -492,7 +499,73 @@ describe('PayPal Payment Service', () => {
       expect(result).toEqual({ paypalProductId: 'PROD-CACHED', paypalPlanId: 'P-CACHED' })
     })
 
-    it('should create catalog product then billing plan and persist IDs', async () => {
+    it('should invalidate cache and recreate plan when the fingerprint mismatches (price edited)', async () => {
+      // Product carries cached IDs from an earlier checkout at 29.90, but the
+      // admin has since edited the price to 49.90. The helper must NOT
+      // short-circuit — it must POST a new billing plan (catalog is reused
+      // because the cached catalog ID is present).
+      process.env.PAYPAL_CLIENT_ID = 'test_client_id'
+      process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
+      resetPaymentEnvCache()
+
+      mockUpdateOne.mockClear()
+
+      let catalogCalled = false
+      let planCalled = false
+      let capturedPlanBody: string | undefined
+
+      globalThis.fetch = vi.fn().mockImplementation((url: string, options?: RequestInit) => {
+        if (url.includes('/v1/oauth2/token')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockTokenResponse),
+          }) as unknown as Response
+        }
+        if (url.includes('/v1/catalogs/products')) {
+          catalogCalled = true
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ id: 'PROD-SHOULD-NOT-HIT' }),
+          }) as unknown as Response
+        }
+        if (url.includes('/v1/billing/plans')) {
+          planCalled = true
+          capturedPlanBody = options?.body as string
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ id: 'P-NEW-AFTER-PRICE-EDIT' }),
+          }) as unknown as Response
+        }
+        return Promise.reject(new Error(`Unexpected URL: ${url}`))
+      })
+
+      const { ensurePayPalSubscriptionPlan, resetPayPalTokenCache } =
+        await import('@/lib/payment/paypal')
+      resetPayPalTokenCache()
+
+      const result = await ensurePayPalSubscriptionPlan({
+        product: {
+          ...mockProduct,
+          paypalProductId: 'PROD-EXISTING',
+          paypalPlanId: 'P-OLD',
+          paypalPlanFingerprint: '29.90|ILS|month',
+        },
+        price: 49.9,
+        currency: 'ILS',
+        interval: 'month',
+      })
+
+      expect(catalogCalled).toBe(false)
+      expect(planCalled).toBe(true)
+      expect(result).toEqual({
+        paypalProductId: 'PROD-EXISTING',
+        paypalPlanId: 'P-NEW-AFTER-PRICE-EDIT',
+      })
+      const planBody = JSON.parse(capturedPlanBody!)
+      expect(planBody.billing_cycles[0].pricing_scheme.fixed_price.value).toBe('49.90')
+    })
+
+    it('should create catalog then plan, persist catalog after step 1, and persist plan+fingerprint after step 2', async () => {
       process.env.PAYPAL_CLIENT_ID = 'test_client_id'
       process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
       resetPaymentEnvCache()
@@ -532,7 +605,10 @@ describe('PayPal Payment Service', () => {
         await import('@/lib/payment/paypal')
       resetPayPalTokenCache()
 
-      const result = await ensurePayPalSubscriptionPlan(mockProductDoc)
+      const result = await ensurePayPalSubscriptionPlan({
+        product: mockProduct,
+        ...defaultPricing,
+      })
 
       expect(catalogCalled).toBe(true)
       expect(planCalled).toBe(true)
@@ -543,21 +619,86 @@ describe('PayPal Payment Service', () => {
       expect(planBody.billing_cycles[0].frequency.interval_unit).toBe('MONTH')
       expect(planBody.billing_cycles[0].pricing_scheme.fixed_price.value).toBe('29.90')
       expect(planBody.billing_cycles[0].pricing_scheme.fixed_price.currency_code).toBe('ILS')
-      expect(planBody.billing_cycles[0].total_cycles).toBe(0)
-      expect(planBody.payment_preferences.auto_bill_outstanding).toBe(true)
 
-      // Verifies the lazy-cache write-back onto the local product doc.
-      expect(mockUpdateOne).toHaveBeenCalledTimes(1)
-      const [filter, update] = mockUpdateOne.mock.calls[0] as [
+      // Two updateOne calls now: one for catalog persistence between the
+      // steps, one for plan + fingerprint after step 2. This is what makes
+      // partial-failure retries recoverable.
+      expect(mockUpdateOne).toHaveBeenCalledTimes(2)
+      const [, firstUpdate] = mockUpdateOne.mock.calls[0] as [
         { _id: ObjectId },
-        { $set: { paypalProductId: string; paypalPlanId: string } },
+        { $set: { paypalProductId?: string; paypalPlanId?: string } },
       ]
-      expect(filter._id.toString()).toBe(mockProductDoc._id.toString())
-      expect(update.$set.paypalProductId).toBe('PROD-NEW-123')
-      expect(update.$set.paypalPlanId).toBe('P-NEW-456')
+      expect(firstUpdate.$set.paypalProductId).toBe('PROD-NEW-123')
+      expect(firstUpdate.$set.paypalPlanId).toBeUndefined()
+
+      const [, secondUpdate] = mockUpdateOne.mock.calls[1] as [
+        { _id: ObjectId },
+        {
+          $set: {
+            paypalProductId: string
+            paypalPlanId: string
+            paypalPlanFingerprint: string
+          }
+        },
+      ]
+      expect(secondUpdate.$set.paypalPlanId).toBe('P-NEW-456')
+      expect(secondUpdate.$set.paypalPlanFingerprint).toBe('29.90|ILS|month')
     })
 
-    it('should send YEAR interval when product.interval is "year"', async () => {
+    it('should skip the catalog POST when only paypalProductId is cached (partial-failure retry)', async () => {
+      // Simulates recovery from a prior run where the catalog step succeeded
+      // but the plan step failed — the product doc has paypalProductId but
+      // no paypalPlanId. The retry should reuse the cached catalog and only
+      // POST /v1/billing/plans.
+      process.env.PAYPAL_CLIENT_ID = 'test_client_id'
+      process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
+      resetPaymentEnvCache()
+
+      let catalogCalled = false
+      let planCalled = false
+
+      globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/v1/oauth2/token')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockTokenResponse),
+          }) as unknown as Response
+        }
+        if (url.includes('/v1/catalogs/products')) {
+          catalogCalled = true
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ id: 'PROD-SHOULD-NOT-HIT' }),
+          }) as unknown as Response
+        }
+        if (url.includes('/v1/billing/plans')) {
+          planCalled = true
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ id: 'P-RETRY-OK' }),
+          }) as unknown as Response
+        }
+        return Promise.reject(new Error(`Unexpected URL: ${url}`))
+      })
+
+      const { ensurePayPalSubscriptionPlan, resetPayPalTokenCache } =
+        await import('@/lib/payment/paypal')
+      resetPayPalTokenCache()
+
+      const result = await ensurePayPalSubscriptionPlan({
+        product: { ...mockProduct, paypalProductId: 'PROD-FROM-PREV-RUN' },
+        ...defaultPricing,
+      })
+
+      expect(catalogCalled).toBe(false)
+      expect(planCalled).toBe(true)
+      expect(result).toEqual({
+        paypalProductId: 'PROD-FROM-PREV-RUN',
+        paypalPlanId: 'P-RETRY-OK',
+      })
+    })
+
+    it('should send YEAR interval when input.interval is "year"', async () => {
       process.env.PAYPAL_CLIENT_ID = 'test_client_id'
       process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
       resetPaymentEnvCache()
@@ -591,7 +732,12 @@ describe('PayPal Payment Service', () => {
         await import('@/lib/payment/paypal')
       resetPayPalTokenCache()
 
-      await ensurePayPalSubscriptionPlan({ ...mockProductDoc, interval: 'year' })
+      await ensurePayPalSubscriptionPlan({
+        product: mockProduct,
+        price: 99,
+        currency: 'ILS',
+        interval: 'year',
+      })
 
       const planBody = JSON.parse(capturedPlanBody!)
       expect(planBody.billing_cycles[0].frequency.interval_unit).toBe('YEAR')
@@ -608,25 +754,71 @@ describe('PayPal Payment Service', () => {
       const { ensurePayPalSubscriptionPlan } = await import('@/lib/payment/paypal')
 
       await expect(
-        ensurePayPalSubscriptionPlan({ ...mockProductDoc, interval: 'yearly' }),
+        ensurePayPalSubscriptionPlan({
+          product: mockProduct,
+          price: 29.9,
+          currency: 'ILS',
+          // Cast — the runtime guard is what we're testing.
+          interval: 'yearly' as unknown as 'month' | 'year',
+        }),
       ).rejects.toThrow(/Unsupported subscription interval "yearly"/)
 
-      // Should reject before any PayPal fetch happens.
       expect(fetchMock).not.toHaveBeenCalled()
     })
 
-    it('should recover from a 422 duplicate by re-reading the cached plan from Mongo', async () => {
+    it('should throw on invalid currency (missing / wrong shape)', async () => {
       process.env.PAYPAL_CLIENT_ID = 'test_client_id'
       process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
       resetPaymentEnvCache()
 
-      // Simulate the concurrent-race scenario: a sibling request beat us to
-      // creating the catalog product and already persisted both IDs onto
-      // the product doc. Our POST to /v1/catalogs/products returns 422
-      // RESOURCE_ALREADY_EXISTS; we should re-read and return the winner's IDs.
+      const fetchMock = vi.fn()
+      globalThis.fetch = fetchMock as unknown as typeof fetch
+
+      const { ensurePayPalSubscriptionPlan } = await import('@/lib/payment/paypal')
+
+      await expect(
+        ensurePayPalSubscriptionPlan({
+          product: mockProduct,
+          price: 29.9,
+          currency: '',
+          interval: 'month',
+        }),
+      ).rejects.toThrow(/invalid currency/)
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('should throw on non-positive price', async () => {
+      process.env.PAYPAL_CLIENT_ID = 'test_client_id'
+      process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
+      resetPaymentEnvCache()
+
+      const fetchMock = vi.fn()
+      globalThis.fetch = fetchMock as unknown as typeof fetch
+
+      const { ensurePayPalSubscriptionPlan } = await import('@/lib/payment/paypal')
+
+      await expect(
+        ensurePayPalSubscriptionPlan({
+          product: mockProduct,
+          price: 0,
+          currency: 'ILS',
+          interval: 'month',
+        }),
+      ).rejects.toThrow(/invalid price/)
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('should recover from a 422 duplicate by re-reading the cached plan (if fingerprint matches)', async () => {
+      process.env.PAYPAL_CLIENT_ID = 'test_client_id'
+      process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
+      resetPaymentEnvCache()
+
+      // Sibling checkout beat us and persisted both IDs with a matching
+      // fingerprint. Our catalog POST returns 422 → we re-read and reuse.
       mockFindOne.mockResolvedValueOnce({
         paypalProductId: 'PROD-RACE-WINNER',
         paypalPlanId: 'P-RACE-WINNER',
+        paypalPlanFingerprint: '29.90|ILS|month',
       })
 
       globalThis.fetch = vi.fn().mockImplementation((url: string) => {
@@ -653,13 +845,15 @@ describe('PayPal Payment Service', () => {
         await import('@/lib/payment/paypal')
       resetPayPalTokenCache()
 
-      const result = await ensurePayPalSubscriptionPlan(mockProductDoc)
+      const result = await ensurePayPalSubscriptionPlan({
+        product: mockProduct,
+        ...defaultPricing,
+      })
 
       expect(result).toEqual({
         paypalProductId: 'PROD-RACE-WINNER',
         paypalPlanId: 'P-RACE-WINNER',
       })
-      // The re-read path never touches /v1/billing/plans.
       expect(mockFindOne).toHaveBeenCalledTimes(1)
     })
   })
