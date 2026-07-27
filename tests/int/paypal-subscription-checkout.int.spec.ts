@@ -250,6 +250,10 @@ describe('PayPal Subscription Checkout', () => {
     expect(subscription!.status).toBe('pending')
     expect(subscription!.initialTransaction?.toString()).toBe(result.data.transactionId)
     expect(subscription!.paypalSubscriptionId).toBe(transaction!.providerTransactionId)
+    // Historical price snapshot: sub retains amount/currency independent of
+    // future product-price edits.
+    expect(subscription!.amount).toBe(transaction!.amount)
+    expect(subscription!.currency).toBe(transaction!.currency)
   })
 
   it('should reject Stripe subscriptions with 400 stripe_subscriptions_not_supported', async () => {
@@ -312,7 +316,7 @@ describe('PayPal Subscription Checkout', () => {
     expect(secondCallHitPlans).toBe(false)
   })
 
-  it('should call cancelPayPalSubscription when the post-provider insert fails', async () => {
+  it('should call cancelPayPalSubscription and leave no local rows when the transactions insert fails', async () => {
     const productId = await seedSubscriptionProduct()
 
     // Force the FIRST insertOne call to fail. In the subscription checkout
@@ -329,6 +333,64 @@ describe('PayPal Subscription Checkout', () => {
       expect(result.status).toBe(500)
       expect(result.data.error).toBe('checkout_failed')
       expect(cancelPayPalSubscriptionMock).toHaveBeenCalledTimes(1)
+
+      // Neither insert ever completed, so nothing to reap. Verify no
+      // pending row for this user+product is left behind.
+      const db = await getContentDb()
+      const txCount = await db
+        .collection('transactions')
+        .countDocuments({ user: mockUserId, product: productId })
+      const subCount = await db
+        .collection('subscriptions')
+        .countDocuments({ user: mockUserId, product: productId })
+      expect(txCount).toBe(0)
+      expect(subCount).toBe(0)
+    } finally {
+      insertSpy.mockRestore()
+    }
+  })
+
+  it('should clean up the partial transaction row and cancel PayPal when the subscriptions insert fails', async () => {
+    const productId = await seedSubscriptionProduct()
+
+    // Let the FIRST insertOne (transactions) succeed and reject the SECOND
+    // (subscriptions). This is the "partial insert" path that the review
+    // flagged — before the fix a dangling `pending` transactions row would
+    // leak here.
+    const originalInsertOne = Collection.prototype.insertOne
+    let insertCallCount = 0
+    const insertSpy = vi.spyOn(Collection.prototype, 'insertOne').mockImplementation(function (
+      this: Collection,
+      ...args: any[]
+    ) {
+      insertCallCount++
+      if (insertCallCount === 2) {
+        return Promise.reject(new Error('simulated DB failure on second insert'))
+      }
+      return originalInsertOne.apply(this, args as any) as any
+    })
+
+    try {
+      const result = await callCheckoutEndpoint(productId)
+
+      expect(result.status).toBe(500)
+      expect(result.data.error).toBe('checkout_failed')
+      expect(cancelPayPalSubscriptionMock).toHaveBeenCalledTimes(1)
+      // Sanity check that both inserts were attempted (transactions succeeded,
+      // subscriptions rejected).
+      expect(insertCallCount).toBe(2)
+
+      // The critical assertion: the recovery path deleted the partial
+      // transactions row so nothing dangles as `pending`.
+      const db = await getContentDb()
+      const txCount = await db
+        .collection('transactions')
+        .countDocuments({ user: mockUserId, product: productId })
+      const subCount = await db
+        .collection('subscriptions')
+        .countDocuments({ user: mockUserId, product: productId })
+      expect(txCount).toBe(0)
+      expect(subCount).toBe(0)
     } finally {
       insertSpy.mockRestore()
     }

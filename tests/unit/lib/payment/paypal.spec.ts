@@ -14,9 +14,10 @@ import { resetPaymentEnvCache } from '@/lib/payment/env'
 // need a real Mongo — we only care that fetch is invoked the expected number
 // of times, not that the update actually round-trips.
 const mockUpdateOne = vi.fn(async () => ({ acknowledged: true, modifiedCount: 1 }))
+const mockFindOne = vi.fn(async () => null as Record<string, unknown> | null)
 vi.mock('@/infra/db/content-db', () => ({
   getContentDb: vi.fn(async () => ({
-    collection: () => ({ updateOne: mockUpdateOne }),
+    collection: () => ({ updateOne: mockUpdateOne, findOne: mockFindOne }),
   })),
 }))
 
@@ -594,6 +595,72 @@ describe('PayPal Payment Service', () => {
 
       const planBody = JSON.parse(capturedPlanBody!)
       expect(planBody.billing_cycles[0].frequency.interval_unit).toBe('YEAR')
+    })
+
+    it('should throw on unknown interval instead of silently defaulting to MONTH', async () => {
+      process.env.PAYPAL_CLIENT_ID = 'test_client_id'
+      process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
+      resetPaymentEnvCache()
+
+      const fetchMock = vi.fn()
+      globalThis.fetch = fetchMock as unknown as typeof fetch
+
+      const { ensurePayPalSubscriptionPlan } = await import('@/lib/payment/paypal')
+
+      await expect(
+        ensurePayPalSubscriptionPlan({ ...mockProductDoc, interval: 'yearly' }),
+      ).rejects.toThrow(/Unsupported subscription interval "yearly"/)
+
+      // Should reject before any PayPal fetch happens.
+      expect(fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('should recover from a 422 duplicate by re-reading the cached plan from Mongo', async () => {
+      process.env.PAYPAL_CLIENT_ID = 'test_client_id'
+      process.env.PAYPAL_CLIENT_SECRET = 'test_secret'
+      resetPaymentEnvCache()
+
+      // Simulate the concurrent-race scenario: a sibling request beat us to
+      // creating the catalog product and already persisted both IDs onto
+      // the product doc. Our POST to /v1/catalogs/products returns 422
+      // RESOURCE_ALREADY_EXISTS; we should re-read and return the winner's IDs.
+      mockFindOne.mockResolvedValueOnce({
+        paypalProductId: 'PROD-RACE-WINNER',
+        paypalPlanId: 'P-RACE-WINNER',
+      })
+
+      globalThis.fetch = vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/v1/oauth2/token')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve(mockTokenResponse),
+          }) as unknown as Response
+        }
+        if (url.includes('/v1/catalogs/products')) {
+          return Promise.resolve({
+            ok: false,
+            status: 422,
+            text: () =>
+              Promise.resolve(
+                '{"name":"UNPROCESSABLE_ENTITY","details":[{"issue":"RESOURCE_ALREADY_EXISTS"}]}',
+              ),
+          }) as unknown as Response
+        }
+        return Promise.reject(new Error(`Unexpected URL: ${url}`))
+      })
+
+      const { ensurePayPalSubscriptionPlan, resetPayPalTokenCache } =
+        await import('@/lib/payment/paypal')
+      resetPayPalTokenCache()
+
+      const result = await ensurePayPalSubscriptionPlan(mockProductDoc)
+
+      expect(result).toEqual({
+        paypalProductId: 'PROD-RACE-WINNER',
+        paypalPlanId: 'P-RACE-WINNER',
+      })
+      // The re-read path never touches /v1/billing/plans.
+      expect(mockFindOne).toHaveBeenCalledTimes(1)
     })
   })
 

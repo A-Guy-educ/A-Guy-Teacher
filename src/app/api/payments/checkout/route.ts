@@ -139,8 +139,8 @@ async function createSubscriptionCheckout({
   // leak recurring billing state.
   const now = new Date()
   const userRef = ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id
-  let transactionId: ObjectId | string
-  let localSubscriptionId: ObjectId | string
+  let transactionId: ObjectId | null = null
+  let localSubscriptionId: ObjectId | null = null
   try {
     // Order matters: transaction first, then subscription with
     // initialTransaction populated. An ACTIVATED webhook arriving in the gap
@@ -171,6 +171,12 @@ async function createSubscriptionCheckout({
       provider: 'paypal',
       paypalSubscriptionId: subscriptionId,
       status: 'pending',
+      // Snapshot amount + currency so the sub retains historical pricing if
+      // the product's price is edited later. The transaction row already
+      // records the same values for the initial charge; the snapshot on the
+      // sub is what future renewals compare against for auditing.
+      amount,
+      currency,
       initialTransaction: transactionId,
       createdAt: now,
       updatedAt: now,
@@ -182,7 +188,7 @@ async function createSubscriptionCheckout({
     await db
       .collection('transactions')
       .updateOne(
-        { _id: transactionId as ObjectId },
+        { _id: transactionId },
         { $set: { subscription: localSubscriptionId, updatedAt: new Date() } },
       )
   } catch (insertErr) {
@@ -196,9 +202,49 @@ async function createSubscriptionCheckout({
         subscriptionId,
         productId,
         userId: user.id,
+        partialTransactionId: transactionId?.toString() ?? null,
+        partialSubscriptionId: localSubscriptionId?.toString() ?? null,
       },
       'Failed to persist subscription rows after PayPal subscription was created — cancelling remote subscription',
     )
+
+    // Clean up any rows we already inserted before the failure. Without this
+    // a partial insert leaves a dangling `pending` transactions (and possibly
+    // subscriptions) row that reapers / checkout-history UI would treat as an
+    // in-flight checkout even though the PayPal side has been cancelled.
+    if (localSubscriptionId) {
+      try {
+        await db.collection('subscriptions').deleteOne({ _id: localSubscriptionId })
+      } catch (cleanupErr) {
+        logger.error(
+          {
+            err:
+              cleanupErr instanceof Error
+                ? { message: cleanupErr.message, stack: cleanupErr.stack }
+                : cleanupErr,
+            subscriptionRowId: localSubscriptionId.toString(),
+          },
+          'Failed to delete partial subscription row during recovery — manual reconciliation required',
+        )
+      }
+    }
+    if (transactionId) {
+      try {
+        await db.collection('transactions').deleteOne({ _id: transactionId })
+      } catch (cleanupErr) {
+        logger.error(
+          {
+            err:
+              cleanupErr instanceof Error
+                ? { message: cleanupErr.message, stack: cleanupErr.stack }
+                : cleanupErr,
+            transactionRowId: transactionId.toString(),
+          },
+          'Failed to delete partial transaction row during recovery — manual reconciliation required',
+        )
+      }
+    }
+
     try {
       await cancelPayPalSubscription(subscriptionId)
     } catch (cancelErr) {
@@ -217,11 +263,13 @@ async function createSubscriptionCheckout({
     return NextResponse.json({ success: false, error: 'checkout_failed' }, { status: 500 })
   }
 
+  // Both inserts succeeded — non-null assertions are safe here (either we
+  // return in the catch above or both IDs are set by the end of the try).
   return NextResponse.json({
     success: true,
     checkoutUrl: approvalUrl,
-    transactionId: transactionId.toString(),
-    subscriptionId: localSubscriptionId.toString(),
+    transactionId: transactionId!.toString(),
+    subscriptionId: localSubscriptionId!.toString(),
   })
 }
 

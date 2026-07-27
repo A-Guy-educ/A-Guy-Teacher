@@ -297,9 +297,10 @@ export interface PayPalPlanProductDoc {
  *
  * Idempotent: if the product already carries both IDs, returns them without
  * touching PayPal. If PayPal returns 422 with a duplicate-resource signal
- * (RESOURCE_ALREADY_EXISTS / IDEMPOTENCY_CONFLICT), that's treated as a benign
- * race — a concurrent request already created the resource. In that case we
- * fall back to the current product doc; the caller should re-read.
+ * (RESOURCE_ALREADY_EXISTS / IDEMPOTENCY_CONFLICT), that's a concurrent-race
+ * hint — another request beat us to creating the resource and already wrote
+ * the IDs onto the local product doc. We re-read from Mongo and return the
+ * winning writer's IDs.
  */
 export async function ensurePayPalSubscriptionPlan(
   product: PayPalPlanProductDoc,
@@ -311,8 +312,7 @@ export async function ensurePayPalSubscriptionPlan(
   const productName = String(product.name || product.title || 'Product')
   const currency = String(product.currency || 'USD').toUpperCase()
   const price = Number(product.price || 0)
-  const interval = String(product.interval || 'month').toLowerCase()
-  const intervalUnit = interval === 'year' ? 'YEAR' : 'MONTH'
+  const intervalUnit = normalizePayPalInterval(product.interval)
 
   const token = await getPayPalAccessToken()
 
@@ -338,9 +338,11 @@ export async function ensurePayPalSubscriptionPlan(
   } else {
     const errorText = await catalogProductResponse.text()
     if (catalogProductResponse.status === 422 && isDuplicatePayPalError(errorText)) {
-      // Concurrent race: another request already created the catalog product.
-      // Without a lookup-by-name API we cannot recover the ID here — surface
-      // the situation to the caller so it can re-read the product doc.
+      // Concurrent race: another checkout for the same product beat us to
+      // creating the catalog product. The winning writer will have (or is
+      // about to) persist both IDs onto the product doc — re-read and reuse.
+      const cached = await readCachedPayPalPlan(product._id)
+      if (cached) return cached
       throw new Error(`PayPal catalog product already exists (concurrent race): ${errorText}`)
     }
     throw new Error(
@@ -386,6 +388,8 @@ export async function ensurePayPalSubscriptionPlan(
   } else {
     const errorText = await planResponse.text()
     if (planResponse.status === 422 && isDuplicatePayPalError(errorText)) {
+      const cached = await readCachedPayPalPlan(product._id)
+      if (cached) return cached
       throw new Error(`PayPal billing plan already exists (concurrent race): ${errorText}`)
     }
     throw new Error(`PayPal billing plan creation failed: ${planResponse.status} ${errorText}`)
@@ -401,6 +405,37 @@ export async function ensurePayPalSubscriptionPlan(
     )
 
   return { paypalProductId, paypalPlanId }
+}
+
+/**
+ * Map the local product's `interval` field to PayPal's `interval_unit` enum.
+ * Rejects unknown values instead of silently defaulting to MONTH — a product
+ * with `interval: 'yearly'` (typo) or `'quarter'` (unsupported) would
+ * otherwise get billed monthly with no warning.
+ */
+function normalizePayPalInterval(interval: unknown): 'MONTH' | 'YEAR' {
+  const normalized = String(interval ?? '')
+    .trim()
+    .toLowerCase()
+  if (normalized === 'month') return 'MONTH'
+  if (normalized === 'year') return 'YEAR'
+  throw new Error(
+    `Unsupported subscription interval "${String(interval)}" — expected "month" or "year"`,
+  )
+}
+
+async function readCachedPayPalPlan(productId: ObjectId): Promise<EnsuredPayPalPlan | null> {
+  const db = await getContentDb()
+  const fresh = await db
+    .collection('products')
+    .findOne({ _id: productId }, { projection: { paypalProductId: 1, paypalPlanId: 1 } })
+  if (fresh?.paypalProductId && fresh?.paypalPlanId) {
+    return {
+      paypalProductId: String(fresh.paypalProductId),
+      paypalPlanId: String(fresh.paypalPlanId),
+    }
+  }
+  return null
 }
 
 function isDuplicatePayPalError(errorText: string): boolean {
@@ -437,6 +472,12 @@ export async function createPayPalSubscription(
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
+      // Include Date.now() intentionally: PayPal's server-side idempotency
+      // would otherwise return the original subscription for a repeat submit,
+      // but a user who abandoned an approval flow and clicks Buy again should
+      // get a fresh subscription. Concurrent duplicate submits from the same
+      // user for the same product are rare in practice; if that becomes a
+      // real problem we can add a short-window in-process guard.
       'PayPal-Request-Id': `subscription-${userId}-${productId}-${Date.now()}`,
     },
     body: JSON.stringify({
