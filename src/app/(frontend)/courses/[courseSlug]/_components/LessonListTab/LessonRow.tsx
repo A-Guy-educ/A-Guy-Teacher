@@ -68,23 +68,29 @@ export function LessonRow({ node, courseSlug, purchaseHref }: LessonRowProps) {
       ? 'border-success/20 bg-success/[0.03] hover:border-success/30'
       : isActiveTone
         ? 'border-primary/40 bg-primary/[0.03] ring-1 ring-primary/20'
-        : status === 'locked' || status === 'soon'
-          ? 'border-border/60 bg-muted/20 opacity-70'
-          : 'border-border bg-card hover:border-border/80'
+        : status === 'locked'
+          ? 'border-warning/30 bg-warning/[0.05] hover:border-warning/40'
+          : status === 'soon'
+            ? 'border-border/60 bg-muted/20 opacity-70'
+            : 'border-border bg-card hover:border-border/80'
 
   const numberTone =
     status === 'completed'
       ? 'text-success/80 font-semibold'
       : isActiveTone
         ? 'text-foreground font-extrabold'
-        : 'text-muted-foreground/60'
+        : status === 'locked'
+          ? 'text-warning/70'
+          : 'text-muted-foreground/60'
 
   const dotTone =
     status === 'completed'
       ? 'bg-success ring-4 ring-success/10'
       : isActiveTone
         ? 'bg-primary ring-4 ring-primary/20 animate-pulse'
-        : 'bg-muted border border-border'
+        : status === 'locked'
+          ? 'bg-warning/60 ring-4 ring-warning/10'
+          : 'bg-muted border border-border'
 
   return (
     <div
@@ -112,7 +118,7 @@ export function LessonRow({ node, courseSlug, purchaseHref }: LessonRowProps) {
         <div className="flex items-center gap-content-gap-sm text-start w-full sm:w-auto">
           <div
             className={cn(
-              'text-2xl md:text-3xl font-mono tracking-tight shrink-0 select-none transition-colors duration-normal tabular-nums',
+              'text-display-xl md:text-display-sm font-mono tracking-tight shrink-0 select-none transition-colors duration-normal tabular-nums',
               numberTone,
             )}
           >
@@ -164,7 +170,7 @@ function renderStatusControl({
   }
   if (status === 'locked') {
     return (
-      <span className="text-body-xs text-muted-foreground flex items-center gap-1.5">
+      <span className="text-body-xs text-warning font-medium flex items-center gap-1.5">
         <Lock className="w-3 h-3" />
         <span className="hidden sm:inline">{t('roadmapLessonLocked')}</span>
       </span>
