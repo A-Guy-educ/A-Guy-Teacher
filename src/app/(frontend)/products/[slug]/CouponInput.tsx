@@ -77,7 +77,7 @@ export function CouponInput({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-content-gap-xs sm:flex-row sm:items-end">
         <div className="w-full sm:flex-1 min-w-0 space-y-1.5">
           <Label htmlFor="coupon-code">{t('couponLabel')}</Label>
           <Input
@@ -107,7 +107,7 @@ export function CouponInput({
       </div>
 
       {status === 'success' && (
-        <div className="flex items-center gap-2 text-body-sm text-success">
+        <div className="flex items-center gap-content-gap-xs text-body-sm text-success">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>
             {t('couponApplied')
@@ -124,7 +124,7 @@ export function CouponInput({
       )}
 
       {status === 'error' && (
-        <div className="flex items-center gap-2 text-body-sm text-destructive">
+        <div className="flex items-center gap-content-gap-xs text-body-sm text-destructive">
           <XCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
