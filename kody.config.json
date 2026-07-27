@@ -103,7 +103,8 @@
       "agency-operating-loop"
     ],
     "activeWorkflows": [
-      "refresh-knowledge-system"
+      "refresh-knowledge-system",
+      "web-release"
     ]
   },
   "fly": {
