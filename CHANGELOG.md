@@ -1885,6 +1885,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix(ui): Yellow-tint locked lesson rows in course roadmap ([#978](https://github.com/A-Guy-educ/A-Guy-Web/pull/978)) — @aguyshayb
 - feat: Show only PayPal on the product buy button ([#979](https://github.com/A-Guy-educ/A-Guy-Web/pull/979)) — @aharonyaircohen
 - fix(vercel): Unignore scripts/ so build can invoke validate-env.ts ([#975](https://github.com/A-Guy-educ/A-Guy-Web/pull/975)) — @aguyshayb
 - #930: Build: TypeScript and ESLint errors are silenced at build time ([#971](https://github.com/A-Guy-educ/A-Guy-Web/pull/971)) — @aguyaharonyair
