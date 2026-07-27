@@ -99,20 +99,14 @@ const nextConfig = {
     // Tree-shake barrel exports to avoid parsing entire packages on each import
     optimizePackageImports: ['lucide-react', 'framer-motion', 'date-fns', 'react-hook-form'],
   },
-  eslint: { ignoreDuringBuilds: true },
-  typescript: { ignoreBuildErrors: true },
   outputFileTracingExcludes: {
     '*': ['**/node_modules/@swc/core*/**/*'],
   },
   // Include prompt files in serverless bundles (they're loaded via readFileSync).
-  // Any route that may end up invoking the lesson-duplication variation service
-  // (directly, or via the jobs runner) needs the prompts folder shipped with
-  // its function bundle.
+  // The agent chat route can invoke the lesson-duplication variation service,
+  // so it needs the prompts folder shipped with its function bundle.
   outputFileTracingIncludes: {
     '/api/agent/chat': ['./src/infra/llm/prompts/**/*'],
-    '/api/lessons/[id]/duplicate-variation': ['./src/infra/llm/prompts/**/*'],
-    '/api/jobs/run-immediate': ['./src/infra/llm/prompts/**/*'],
-    '/api/lesson-duplications/[id]/resolve': ['./src/infra/llm/prompts/**/*'],
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {

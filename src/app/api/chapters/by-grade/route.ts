@@ -6,6 +6,7 @@ import { prefetchStudyData } from '@/server/repos/queries/study-page'
 const VALID_LESSON_TYPES = ['learning', 'practice', 'exam'] as const
 
 export async function GET(request: NextRequest) {
+  // public endpoint: published chapter discovery
   const searchParams = request.nextUrl.searchParams
   const grade = searchParams.get('grade')
 

@@ -4,7 +4,7 @@ import { headers } from 'next/headers'
 import { cn } from '@/infra/utils/ui'
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
-import { Assistant, STIX_Two_Text } from 'next/font/google'
+import { STIX_Two_Text } from 'next/font/google'
 import React from 'react'
 
 import { isPasswordLoginEnabled } from '@/infra/config/system-params'
@@ -25,13 +25,6 @@ import { LayoutClient } from './LayoutClient'
 import { NavigationBar } from '@/ui/web/homepage/NavigationBar'
 import { ActiveTimeProvider } from '@/client/providers/ActiveTimeProvider'
 import { getBrand } from '@/brands'
-
-const assistant = Assistant({
-  subsets: ['latin', 'hebrew'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  display: 'swap',
-  variable: '--font-assistant',
-})
 
 const stixTwoText = STIX_Two_Text({
   subsets: ['latin'],
@@ -63,12 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html
-      className={cn(
-        GeistSans.variable,
-        GeistMono.variable,
-        assistant.variable,
-        stixTwoText.variable,
-      )}
+      className={cn(GeistSans.variable, GeistMono.variable, stixTwoText.variable)}
       dir={dir}
       lang={locale}
       suppressHydrationWarning

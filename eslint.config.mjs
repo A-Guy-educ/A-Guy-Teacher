@@ -72,6 +72,13 @@ const eslintConfig = [
       'aguy/prefer-design-tokens': 'warn',
     },
   },
+  {
+    plugins: { aguy: aguyPlugin },
+    files: ['src/app/api/**/route.ts', 'src/server/payload/endpoints/**/*.ts'],
+    rules: {
+      'aguy/require-auth-endpoints': 'error',
+    },
+  },
 
   {
     ignores: [
@@ -89,6 +96,20 @@ const eslintConfig = [
       '.claude/scripts/**',
       'next-env.d.ts',
     ],
+  },
+
+  // =============================================================================
+  // Console Hygiene Rule
+  // =============================================================================
+  // Forbid `console.log` in source code — analytics and other modules must use
+  // the debug-logger helper or proper warning/error reporting. `console.warn`
+  // and `console.error` remain allowed for legitimate error reporting.
+  {
+    name: 'no-console',
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
   },
 
   // =============================================================================

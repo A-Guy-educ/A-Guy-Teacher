@@ -1,5 +1,6 @@
 import { GET } from '@/app/api/health/route'
 import { describe, expect, it } from 'vitest'
+import packageJson from '../../package.json'
 
 // Check if DATABASE_URL is set to Atlas (testcontainers don't work with Atlas)
 const dbUrl = process.env.DATABASE_URL || ''
@@ -48,6 +49,13 @@ describe.skipIf(isAtlasUrl)('GET /api/health', () => {
     expect(typeof data.gitSha).toBe('string')
     expect(typeof data.version).toBe('string')
     expect(typeof data.timestamp).toBe('string')
+  })
+
+  it('returns the package version even without npm runtime variables', async () => {
+    const response = await GET()
+    const data = (await response.json()) as { version: string }
+
+    expect(data.version).toBe(packageJson.version)
   })
 
   it('returns valid ISO-8601 timestamp', async () => {

@@ -57,9 +57,6 @@ const retiredPayloadRuntimeTests = [
   'tests/unit/mongodb-pool-config.test.ts',
   'tests/unit/payload-plugins-blob-enforcement.test.ts',
   'tests/unit/server/services/api-service.test.ts',
-  'tests/unit/server/services/guest-session-types.test.ts',
-  'tests/unit/server/services/guest-session-upgrade.test.ts',
-  'tests/unit/server/services/guest-session.test.ts',
   'tests/unit/server/services/lesson-context-conversion/context-extractions.test.ts',
   'tests/unit/services/v3-diagram-richtext.test.ts',
   'tests/unit/services/v3-transform.test.ts',
@@ -118,10 +115,8 @@ export default defineConfig({
        * ~27.2% functions. The previous aspirational targets (50/45) were above
        * reality. Raise these numbers incrementally as real coverage grows.
        *
-       * Note: CI currently runs `pnpm test:unit -- --coverage`, which vitest
-       * parses as a file filter after `--`, so unit coverage is NOT actually
-       * enforced on CI today. These thresholds still apply to local
-       * `pnpm test:unit:coverage` runs.
+       * CI runs `pnpm test:unit:coverage` (the dedicated script that passes
+       * `--coverage` directly to vitest), so these thresholds gate CI too.
        */
       thresholds: {
         statements: 22,

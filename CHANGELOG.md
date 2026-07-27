@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.29.0 — 2026-07-19
+
+### Features
+
+- **exam-lessons**: swap scroll tab for test tab on exam lessons (#920)
+- **exercises**: unify test-view check-all button across all exercises (#889)
+- **lessons**: add Test-view renderer with batch answer checking (#885)
+- **mcq**: auto-check 2-option MCQ on button click (#887)
+- **mcq**: render 2-option single-select as side-by-side buttons (#882)
+- **course-lessons**: redesign lessons view with chapter accordions and timeline (#874)
+- **courses**: track course selections in Admin from every call site (#845)
+
+### Bug Fixes
+
+- **exercises**: drop section headers and separate exercises in scroll view (#907)
+- **exercises**: join sections via reverse relationship (#888)
+- **exercises**: render own blocks + sections with localized a/b/c headers (#880)
+- **course-lessons**: address review feedback + regression fix (#874)
+
+### Docs
+
+- **exercises**: refresh `ExerciseRendererProps.groups` docstring
+
 ## v0.28.0 — 2026-07-10
 
 ### Features
@@ -49,33 +72,6 @@
 
 - Remove `course.pageAccessType` readers ahead of Admin schema drop (#782)
 
-## v0.26.9 — 2026-07-06
-
-_No notable commits since the last release._
-## v0.26.8 — 2026-07-05
-
-_No notable commits since the last release._
-## v0.26.7 — 2026-07-04
-
-_No notable commits since the last release._
-## v0.26.6 — 2026-07-03
-
-_No notable commits since the last release._
-## v0.26.5 — 2026-07-02
-
-_No notable commits since the last release._
-## v0.26.4 — 2026-06-30
-
-_No notable commits since the last release._
-## v0.26.3 — 2026-06-30
-
-_No notable commits since the last release._
-## v0.26.2 — 2026-06-25
-
-_No notable commits since the last release._
-## v0.26.1 — 2026-06-24
-
-_No notable commits since the last release._
 ## [0.26.0] - 2026-06-17
 
 ### Features
@@ -1889,6 +1885,25 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix(vercel): Unignore scripts/ so build can invoke validate-env.ts ([#975](https://github.com/A-Guy-educ/A-Guy-Web/pull/975)) — @aguyshayb
+- #930: Build: TypeScript and ESLint errors are silenced at build time ([#971](https://github.com/A-Guy-educ/A-Guy-Web/pull/971)) — @aguyaharonyair
+- #936: Deploy: env validation never runs in CI or the build path ([#955](https://github.com/A-Guy-educ/A-Guy-Web/pull/955)) — @kodyade[bot]
+- fix(ui): Restore soft yellow tint on locked lesson card CTA ([#952](https://github.com/A-Guy-educ/A-Guy-Web/pull/952)) — @aguyshayb
+- #938: Cleanup: console.log statements ship in production client bundle … ([#956](https://github.com/A-Guy-educ/A-Guy-Web/pull/956)) — @kodyade[bot]
+- chore(security): Bump next 15.5.18 -> 15.5.21 + format kody.yml ([#969](https://github.com/A-Guy-educ/A-Guy-Web/pull/969)) — @aguyshayb
+- #932: CI: pnpm audit failures are swallowed with '|| true' ([#951](https://github.com/A-Guy-educ/A-Guy-Web/pull/951)) — @kodyade[bot]
+- #935: API: unvalidated ObjectId causes unhandled 500 in chat-assets/fin… ([#950](https://github.com/A-Guy-educ/A-Guy-Web/pull/950)) — @kodyade[bot]
+- #940: Security: move Gemini API key from URL query string to header ([#949](https://github.com/A-Guy-educ/A-Guy-Web/pull/949)) — @kodyade[bot]
+- #933: Cleanup: delete 37 dead '410 Gone' stub API routes ([#948](https://github.com/A-Guy-educ/A-Guy-Web/pull/948)) — @kodyade[bot]
+- #931: CI: coverage flag is silently ignored (test:unit -- --coverage) ([#943](https://github.com/A-Guy-educ/A-Guy-Web/pull/943)) — @kodyade[bot]
+- #937: Security: replace in-memory rate limiter with durable per-user li… ([#946](https://github.com/A-Guy-educ/A-Guy-Web/pull/946)) — @kodyade[bot]
+- #929: Payments: race condition can double-grant entitlements on duplica… ([#947](https://github.com/A-Guy-educ/A-Guy-Web/pull/947)) — @kodyade[bot]
+- #939: Stats: streak calculation uses server timezone instead of user ti… ([#945](https://github.com/A-Guy-educ/A-Guy-Web/pull/945)) — @kodyade[bot]
+- #934: Security: unescaped user input in $regex in shared Mongo query tr… ([#944](https://github.com/A-Guy-educ/A-Guy-Web/pull/944)) — @kodyade[bot]
+- #928: Security: AI/paid-API endpoints are unauthenticated and unthrottl… ([#941](https://github.com/A-Guy-educ/A-Guy-Web/pull/941)) — @kodyade[bot]
+- #923: Redirect logged-in users with a picked course from /home to /cour… ([#924](https://github.com/A-Guy-educ/A-Guy-Web/pull/924)) — @kodyade[bot]
+- promote: dev -> main (v0.29.0) ([#922](https://github.com/A-Guy-educ/A-Guy-Web/pull/922)) — @aguyshayb
+- chore: release v0.29.0 ([#921](https://github.com/A-Guy-educ/A-Guy-Web/pull/921)) — @aguyshayb
 - feat(lessons): Swap scroll tab for test tab on exam lessons ([#920](https://github.com/A-Guy-educ/A-Guy-Web/pull/920)) — @aguyshayb
 - fix(exercises): drop section headers, separate exercises in scroll view ([#907](https://github.com/A-Guy-educ/A-Guy-Web/pull/907)) — @aguyshayb
 - feat(test-view): Single lesson-wide Check all button ([#889](https://github.com/A-Guy-educ/A-Guy-Web/pull/889)) — @aguyshayb

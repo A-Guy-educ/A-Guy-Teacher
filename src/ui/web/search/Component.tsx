@@ -3,17 +3,24 @@ import { Input } from '@/ui/web/components/input'
 import { Label } from '@/ui/web/components/label'
 import React, { useState, useEffect } from 'react'
 import { useDebounce } from '@/client/hooks/useDebounce'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export const Search: React.FC = () => {
-  const [value, setValue] = useState('')
+  const searchParams = useSearchParams()
+  const query = searchParams.get('q') ?? ''
+  const [value, setValue] = useState(query)
   const router = useRouter()
 
   const debouncedValue = useDebounce(value)
 
   useEffect(() => {
-    router.push(`/search${debouncedValue ? `?q=${debouncedValue}` : ''}`)
-  }, [debouncedValue, router])
+    setValue(query)
+  }, [query])
+
+  useEffect(() => {
+    if (debouncedValue === query) return
+    router.push(`/search${debouncedValue ? `?q=${encodeURIComponent(debouncedValue)}` : ''}`)
+  }, [debouncedValue, query, router])
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

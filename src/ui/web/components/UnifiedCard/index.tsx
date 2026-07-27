@@ -156,10 +156,10 @@ export function UnifiedCard({
             {isLocked && lockedPurchaseLabel && (
               <span
                 data-testid="unified-card-paywall-cta"
-                className="inline-flex items-center gap-1.5 bg-warning text-warning-foreground border border-warning/40 text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-elevation-1"
+                className="inline-flex items-center gap-1.5 bg-warning/10 text-warning border border-warning/30 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
                 aria-label={lockedPurchaseLabel}
               >
-                <ShoppingCart className="w-3.5 h-3.5" aria-hidden="true" />
+                <ShoppingCart className="w-3 h-3" aria-hidden="true" />
                 {lockedPurchaseLabel}
               </span>
             )}

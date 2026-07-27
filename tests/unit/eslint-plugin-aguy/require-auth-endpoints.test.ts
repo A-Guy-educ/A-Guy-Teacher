@@ -6,7 +6,7 @@
 
 import { describe } from 'vitest'
 import { RuleTester } from 'eslint'
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+
 const rule = require('../../../eslint-plugin-aguy/rules/require-auth-endpoints.mjs')
 
 const ruleTester = new RuleTester({
@@ -257,6 +257,68 @@ describe('require-auth-endpoints ESLint rule', () => {
           }
         `,
         filename: '/app/api/settings/route.ts',
+      },
+    ],
+    invalid: [],
+  })
+
+  ruleTester.run('accepts project auth helpers', rule.default ?? rule, {
+    valid: [
+      {
+        code: `
+          export async function POST(request) {
+            const auth = await requireUser(request)
+            if (!auth.ok) return auth.response
+            return Response.json({ userId: auth.value.id })
+          }
+        `,
+        filename: '/app/api/protected/route.ts',
+      },
+      {
+        code: `
+          export async function PATCH(request) {
+            const user = await getWebUser(request.headers)
+            if (!user?.id) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+            return Response.json({ updated: true })
+          }
+        `,
+        filename: '/app/api/settings/route.ts',
+      },
+    ],
+    invalid: [],
+  })
+
+  ruleTester.run('accepts session guards and signed webhooks', rule.default ?? rule, {
+    valid: [
+      {
+        code: `
+          export async function POST(request) {
+            const user = await getWebUser(request.headers)
+            if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+            return Response.json({ ownerId: user.id })
+          }
+        `,
+        filename: '/app/api/conversations/route.ts',
+      },
+      {
+        code: `
+          export async function POST(request) {
+            const quota = await requireUserWithChatQuota(request)
+            if (!quota.ok) return quota.response
+            return Response.json({ allowed: true })
+          }
+        `,
+        filename: '/app/api/chat/route.ts',
+      },
+      {
+        code: `
+          export async function POST(request) {
+            const verified = await verifyPayPalWebhook(request.headers)
+            if (!verified) return Response.json({ error: 'invalid_signature' }, { status: 400 })
+            return Response.json({ received: true })
+          }
+        `,
+        filename: '/app/api/webhooks/paypal/route.ts',
       },
     ],
     invalid: [],

@@ -7,6 +7,7 @@ import type { TransactionWithProduct } from '@/app/(frontend)/account/purchases/
 export interface CheckoutSuccessTransaction {
   id: string
   status: TransactionWithProduct['status']
+  entitlementsGrantedAt: string | null
   productName: string | null
   /**
    * First course granted by the purchased product's `contents` blocks — used by
@@ -22,6 +23,7 @@ interface TransactionDoc extends Document {
   user?: ObjectId | string
   product?: ObjectId | string
   status?: TransactionWithProduct['status']
+  entitlementsGrantedAt?: Date | string | null
   provider?: TransactionWithProduct['provider']
   amount?: number
   currency?: string
@@ -97,6 +99,9 @@ export const queryTransactionByProviderId = cache(
     return {
       id: doc._id.toString(),
       status,
+      entitlementsGrantedAt: doc.entitlementsGrantedAt
+        ? toIsoString(doc.entitlementsGrantedAt, '')
+        : null,
       productName: product?.name ?? product?.title ?? null,
       firstCourse,
     }

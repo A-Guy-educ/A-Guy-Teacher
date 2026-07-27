@@ -1,5 +1,5 @@
 import { handleUpload } from '@vercel/blob/client'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import {
@@ -9,12 +9,7 @@ import {
 } from '@/server/chat-assets/constants'
 import { buildChatAssetPathname } from '@/server/chat-assets/pathname'
 import { getContentDb } from '@/infra/db/content-db'
-import {
-  getOrCreateGuestId,
-  getWebUser,
-  publicUserId,
-  withGuestCookie,
-} from '@/infra/web-api/mongo-payload'
+import { requireUser } from '@/server/auth/api-auth'
 
 const ClientPayloadSchema = z.object({
   originalFilename: z.string().min(1).max(255),
@@ -31,11 +26,12 @@ async function defaultTenantId() {
   return tenant?._id?.toString() || 'default'
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+
   const db = await getContentDb()
-  const user = await getWebUser(request.headers)
-  const guestId = getOrCreateGuestId(request)
-  const ownerId = publicUserId(user, guestId)
+  const ownerId = auth.value.id
   const tenantId = await defaultTenantId()
 
   const result = await handleUpload({
@@ -68,7 +64,7 @@ export async function POST(request: Request) {
       })
       const pathname = buildChatAssetPathname({
         tenantId,
-        userId: ownerId.replace(/^guest:/, 'guest-'),
+        userId: ownerId,
         uploadSessionId: session.insertedId.toString(),
         filename: payload.originalFilename,
       })
@@ -108,5 +104,5 @@ export async function POST(request: Request) {
     },
   })
 
-  return withGuestCookie(NextResponse.json(result), guestId)
+  return NextResponse.json(result)
 }

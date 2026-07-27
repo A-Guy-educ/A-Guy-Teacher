@@ -9,6 +9,7 @@
  */
 
 import type { AnalyticsConfig } from './types'
+import { analyticsDebugLog as debugLog } from './utils/debug-logger'
 
 // Extend Window for E2E test override — set via Playwright addInitScript
 declare global {
@@ -77,17 +78,13 @@ export const analyticsConfig: AnalyticsConfig = new Proxy({} as AnalyticsConfig,
  */
 export function validateConfig(): void {
   if (!analyticsConfig.enabled) {
-    if (analyticsConfig.debugMode) {
-      console.log('[Analytics] Disabled - no platform credentials configured')
-    }
+    debugLog.log('Disabled - no platform credentials configured')
     return
   }
 
-  if (analyticsConfig.debugMode) {
-    console.log('[Analytics] Configuration:', {
-      enabled: analyticsConfig.enabled,
-      ga4Enabled: analyticsConfig.ga4.enabled,
-      mixpanelEnabled: analyticsConfig.mixpanel.enabled,
-    })
-  }
+  debugLog.log('Configuration:', {
+    enabled: analyticsConfig.enabled,
+    ga4Enabled: analyticsConfig.ga4.enabled,
+    mixpanelEnabled: analyticsConfig.mixpanel.enabled,
+  })
 }

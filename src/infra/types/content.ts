@@ -391,16 +391,21 @@ export interface Tenant {
   name?: string | null
 }
 
+/*
+ * Placeholder aliases left over from the removed Payload runtime. They exist so
+ * legacy imports keep compiling; narrow them as each shape gets a real type.
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type Config = any
 export type ContextExtraction = any
 export type Conversation = any
 export type ExerciseAsset = any
 export type Form = any
 export type FormSubmission = any
-export type GuestSession = any
 export type MemoryItem = any
 export type PricingPlan = any
 export type Prompt = any
 export type Redirect = { from: string; to?: { url?: string | null } | null }
 export type Search = any
 export type UserSetting = any
+/* eslint-enable @typescript-eslint/no-explicit-any */

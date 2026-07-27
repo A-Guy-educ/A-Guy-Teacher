@@ -41,20 +41,27 @@ const rule = {
     }
 
     /**
-     * Check if a function body contains an authentication check.
-     * Simple heuristic: look for payload.auth or req.user checks in the source text.
+     * Check whether a handler declares an access boundary. These names are the
+     * repository's reviewed auth, guest-ownership, and signed-webhook helpers.
      */
     function checkForAuthInBody(body) {
       const sourceCode = context.getSourceCode()
       const text = sourceCode.getText(body)
 
-      return (
-        text.includes('payload.auth') ||
-        text.includes('req.user') ||
-        text.includes('getPayload') ||
-        text.includes('// public endpoint') ||
-        text.includes('// no auth required')
-      )
+      const accessBoundaryPatterns = [
+        /\bpayload\.auth\s*\(/,
+        /\breq\.user\b/,
+        /\bgetPayload\s*\(/,
+        /\brequire(?:Auth|User|UserWithChatQuota|DashboardAuth|AdminOrTestSecret|CodyAuth)\s*\(/,
+        /\bgetWebUser\s*\(/,
+        /\bwith(?:ApiHandler|CronMiddleware)\s*\(/,
+        /\bverify[A-Za-z0-9_]*Webhook\s*\(/,
+        /\bCRON_SECRET\b/,
+        /\/\/\s*public endpoint\b/i,
+        /\/\/\s*no auth required\b/i,
+      ]
+
+      return accessBoundaryPatterns.some((pattern) => pattern.test(text))
     }
 
     return {

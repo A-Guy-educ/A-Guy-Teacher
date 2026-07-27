@@ -156,10 +156,13 @@ async function callGeminiWithSchema(args: {
   const schemaForGemini = zodToGeminiSchema(ExtractedPageSchema)
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CONFIG.modelName}:generateContent?key=${args.apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CONFIG.modelName}:generateContent`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': args.apiKey,
+      },
       body: JSON.stringify({
         contents: [
           {

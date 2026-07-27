@@ -6,10 +6,8 @@
  * Pinned behavior:
  *   - transaction === null → "Processing..." spinner (the old stuck state, which
  *     is now only reached when the lookup id genuinely doesn't match a row)
- *   - transaction.status === 'succeeded' → "Confirmed!" — does NOT require
- *     entitlementsGrantedAt (which is currently always null because
- *     grantProductEntitlements is a stub; the old check would have left every
- *     successful payment stuck on "Pending" forever)
+ *   - succeeded + entitlementsGrantedAt → "Confirmed!"
+ *   - succeeded without entitlementsGrantedAt → "Pending"
  *   - transaction.status === 'pending' → "Pending" with refresh button
  *   - transaction.status === 'failed' or 'refunded' → "Payment failed"
  */
@@ -38,7 +36,7 @@ describe('CheckoutSuccessContent', () => {
     render(
       <CheckoutSuccessContent
         sessionId="ORDER_X"
-        transaction={{ id: 'tx1', status: 'succeeded' }}
+        transaction={{ id: 'tx1', status: 'succeeded', entitlementsGrantedAt: '2026-07-22' }}
         productName="Course X"
       />,
     )
@@ -49,7 +47,7 @@ describe('CheckoutSuccessContent', () => {
     render(
       <CheckoutSuccessContent
         sessionId="ORDER_X"
-        transaction={{ id: 'tx1', status: 'pending' }}
+        transaction={{ id: 'tx1', status: 'pending', entitlementsGrantedAt: null }}
         productName=""
       />,
     )
@@ -66,26 +64,33 @@ describe('CheckoutSuccessContent', () => {
     expect(screen.getByRole('heading').textContent).toBe('success.processing')
   })
 
-  it('renders "confirmed" purely on status=succeeded — does NOT require entitlementsGrantedAt', () => {
-    // This is the regression we care about. Pre-this-PR the check was
-    // `succeeded && !!entitlementsGrantedAt`. Because grantProductEntitlements
-    // is a stub today, the latter half was always false, so the buyer saw
-    // "Pending" forever even after the webhook flipped status. Lock it down.
+  it('renders "confirmed" after succeeded entitlements are granted', () => {
     render(
       <CheckoutSuccessContent
         sessionId="ORDER_X"
-        transaction={{ id: 'tx1', status: 'succeeded' }}
+        transaction={{ id: 'tx1', status: 'succeeded', entitlementsGrantedAt: '2026-07-22' }}
         productName="Test Product"
       />,
     )
     expect(screen.getByRole('heading').textContent).toBe('success.confirmedTitle')
   })
 
+  it('keeps a succeeded payment pending until entitlement grant completes', () => {
+    render(
+      <CheckoutSuccessContent
+        sessionId="ORDER_X"
+        transaction={{ id: 'tx1', status: 'succeeded', entitlementsGrantedAt: null }}
+        productName="Test Product"
+      />,
+    )
+    expect(screen.getByRole('heading').textContent).toBe('success.pendingTitle')
+  })
+
   it('renders "pending" for status=pending', () => {
     render(
       <CheckoutSuccessContent
         sessionId="ORDER_X"
-        transaction={{ id: 'tx1', status: 'pending' }}
+        transaction={{ id: 'tx1', status: 'pending', entitlementsGrantedAt: null }}
         productName=""
       />,
     )
@@ -96,7 +101,7 @@ describe('CheckoutSuccessContent', () => {
     render(
       <CheckoutSuccessContent
         sessionId="ORDER_X"
-        transaction={{ id: 'tx1', status: 'failed' }}
+        transaction={{ id: 'tx1', status: 'failed', entitlementsGrantedAt: null }}
         productName=""
       />,
     )
@@ -107,7 +112,7 @@ describe('CheckoutSuccessContent', () => {
     render(
       <CheckoutSuccessContent
         sessionId="ORDER_X"
-        transaction={{ id: 'tx1', status: 'refunded' }}
+        transaction={{ id: 'tx1', status: 'refunded', entitlementsGrantedAt: null }}
         productName=""
       />,
     )

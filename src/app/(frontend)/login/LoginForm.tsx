@@ -43,6 +43,18 @@ function LoginFormContent() {
         return
       }
       const formData = new FormData(formEl)
+      const email = String(formData.get('email') ?? '').trim()
+      const password = String(formData.get('password') ?? '')
+
+      if (!/^\S+@\S+\.\S+$/.test(email)) {
+        setError(t('errors.invalidEmail'))
+        return
+      }
+      if (!password) {
+        setError(t('errors.passwordRequired'))
+        return
+      }
+
       const result = await loginAction(formData)
       if (result.success) {
         window.location.href = returnTo

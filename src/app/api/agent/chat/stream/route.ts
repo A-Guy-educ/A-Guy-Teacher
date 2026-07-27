@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
+import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
+import { logger } from '@/infra/utils/logger'
+import { requireUserWithChatQuota } from '@/server/auth/api-auth'
 import {
   appendMessage,
   generateAssistantReply,
@@ -8,61 +11,92 @@ import {
   resolveContextKey,
   toSse,
 } from '@/server/web-api/chat'
-import {
-  GUEST_SESSION_COOKIE,
-  getOrCreateGuestId,
-  getWebUser,
-  publicUserId,
-} from '@/infra/web-api/mongo-payload'
+
+const MAX_MESSAGE_LENGTH = 4000
+const MAX_CONTEXT_KEY_LENGTH = 200
 
 const BodySchema = z.object({
-  message: z.string().min(1),
-  acknowledgment: z.string().optional(),
+  message: z.string().min(1).max(MAX_MESSAGE_LENGTH),
+  acknowledgment: z.string().max(MAX_MESSAGE_LENGTH).optional(),
   exerciseId: z.string().optional(),
   lessonId: z.string().optional(),
   chapterId: z.string().optional(),
   courseId: z.string().optional(),
   categoryId: z.string().optional(),
-  contextKeyOverride: z.string().optional(),
+  contextKeyOverride: z.string().max(MAX_CONTEXT_KEY_LENGTH).optional(),
+  hidden: z.boolean().optional(),
+  hidePromptOnly: z.boolean().optional(),
 })
+
+const CHAT_STREAM_RATE_LIMIT_MAX = 20
+const CHAT_STREAM_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+const CHUNK_SIZE = 80
+
+/**
+ * Split a reply into fixed-size pieces for incremental delivery.
+ * Slicing by index (rather than a regex match) guarantees the concatenated
+ * chunks equal the original reply — a regex over `.` silently drops newlines
+ * and any run longer than the chunk size without whitespace.
+ */
+function chunkReply(reply: string): string[] {
+  if (!reply) return []
+  const chunks: string[] = []
+  for (let i = 0; i < reply.length; i += CHUNK_SIZE) {
+    chunks.push(reply.slice(i, i + CHUNK_SIZE))
+  }
+  return chunks
+}
 
 export async function POST(request: NextRequest) {
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return Response.json({ error: 'Invalid request' }, { status: 400 })
 
+  const quota = await requireUserWithChatQuota(request)
+  if (!quota.ok) return quota.response
+
+  const rate = await rateLimit({
+    key: `chat:${quota.value.ownerId}:agent-chat-stream`,
+    limit: CHAT_STREAM_RATE_LIMIT_MAX,
+    windowMs: CHAT_STREAM_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!rate.allowed) return rateLimitExceededResponse(rate)
+
   const body = parsed.data
   const contextKey = resolveContextKey(body, body.contextKeyOverride)
   if (!contextKey) return Response.json({ error: 'Missing context ID' }, { status: 400 })
 
-  const guestId = getOrCreateGuestId(request)
-  const user = await getWebUser(request.headers)
-  const ownerId = publicUserId(user, guestId)
+  const ownerId = quota.value.ownerId
   const conversation = await getOrCreateConversation(ownerId, contextKey)
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder()
       try {
-        await appendMessage(String(conversation.id), { role: 'user', content: body.message })
+        await appendMessage(String(conversation.id), {
+          role: 'user',
+          content: body.message,
+          hidden: body.hidden,
+        })
         const reply = await generateAssistantReply({
+          ownerId,
           message: body.message,
           acknowledgment: body.acknowledgment,
           history: Array.isArray(conversation.messages) ? conversation.messages : [],
         })
-        await appendMessage(String(conversation.id), { role: 'assistant', content: reply })
+        await appendMessage(String(conversation.id), {
+          role: 'assistant',
+          content: reply,
+          hidden: body.hidden && !body.hidePromptOnly,
+        })
 
-        const chunks = reply.match(/.{1,80}(\s|$)/g) || [reply]
-        for (const chunk of chunks)
+        for (const chunk of chunkReply(reply))
           controller.enqueue(encoder.encode(toSse('chunk', { text: chunk })))
         controller.enqueue(
           encoder.encode(toSse('done', { conversationId: conversation.id, contextKey })),
         )
       } catch (error) {
-        controller.enqueue(
-          encoder.encode(
-            toSse('error', { error: error instanceof Error ? error.message : 'Chat failed' }),
-          ),
-        )
+        logger.error({ err: error, contextKey }, 'Chat stream failed')
+        controller.enqueue(encoder.encode(toSse('error', { error: 'Chat failed' })))
       } finally {
         controller.close()
       }
@@ -73,7 +107,6 @@ export async function POST(request: NextRequest) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-store',
-      'Set-Cookie': `${GUEST_SESSION_COOKIE}=${guestId}; Path=/; Max-Age=2592000; SameSite=Lax`,
     },
   })
 }

@@ -28,6 +28,7 @@ const googleUserSchema = z.object({
 export const runtime = 'nodejs'
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
+  // public endpoint: OAuth callback validates provider state before creating a session
   const res = new NextResponse(null, { status: 302 })
   const correlationId = crypto.randomUUID()
   const code = req.nextUrl.searchParams.get('code')

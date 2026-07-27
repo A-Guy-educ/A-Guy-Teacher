@@ -56,14 +56,12 @@
       "chore",
       "spec",
       "review",
-      "fix",
       "fix-ci",
       "ci-health",
       "dev-ci-health",
       "pr-health-triage",
       "redispatch",
       "sync",
-      "resolve",
       "merge",
       "revert",
       "release-prepare",
@@ -78,7 +76,12 @@
       "qa-sweep",
       "qa-verify",
       "quality-watch",
-      "ui-review"
+      "ui-review",
+      "fix",
+      "resolve",
+      "build-knowledge-graph",
+      "create-knowledge-report",
+      "publish-knowledge-system"
     ],
     "activeAgents": [
       "ceo",
@@ -98,6 +101,9 @@
       "product-quality",
       "agency-observer",
       "agency-operating-loop"
+    ],
+    "activeWorkflows": [
+      "refresh-knowledge-system"
     ]
   },
   "fly": {
