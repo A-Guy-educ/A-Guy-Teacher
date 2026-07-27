@@ -6,7 +6,14 @@ import { getContentDb, relationId } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
 import { logger } from '@/infra/utils/logger/logger'
 import { MissingPaymentEnvError } from '@/lib/payment/env'
-import { cancelPayPalOrder, createPayPalOrder } from '@/lib/payment/paypal'
+import {
+  cancelPayPalOrder,
+  cancelPayPalSubscription,
+  createPayPalOrder,
+  createPayPalSubscription,
+  ensurePayPalSubscriptionPlan,
+  type PayPalPlanProductDoc,
+} from '@/lib/payment/paypal'
 import { cancelStripeCheckout, createStripeCheckout } from '@/lib/payment/stripe'
 
 const BodySchema = z.object({
@@ -43,6 +50,181 @@ async function resolveProductItems(itemValues: unknown[]) {
   }
 }
 
+interface SubscriptionCheckoutParams {
+  request: NextRequest
+  db: Awaited<ReturnType<typeof getContentDb>>
+  user: { id: string }
+  product: PayPalPlanProductDoc & Record<string, unknown>
+  productId: string
+  provider: 'stripe' | 'paypal'
+  couponCode?: string
+}
+
+async function createSubscriptionCheckout({
+  request,
+  db,
+  user,
+  product,
+  productId,
+  provider,
+  couponCode,
+}: SubscriptionCheckoutParams): Promise<NextResponse> {
+  if (provider !== 'paypal') {
+    return NextResponse.json(
+      { success: false, error: 'stripe_subscriptions_not_supported' },
+      { status: 400 },
+    )
+  }
+  if (couponCode) {
+    return NextResponse.json(
+      { success: false, error: 'coupons_not_supported_on_subscriptions' },
+      { status: 400 },
+    )
+  }
+  if (!product.interval) {
+    return NextResponse.json({ success: false, error: 'product_missing_interval' }, { status: 400 })
+  }
+
+  const currency = parseCurrency(product.currency)
+  if (!currency) {
+    return NextResponse.json({ success: false, error: 'invalid_currency' }, { status: 400 })
+  }
+  const amount = Math.round(Number(product.price || 0) * 100)
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SERVER_URL ||
+    new URL(request.url).origin
+  const cancelParams = new URLSearchParams({ product_id: productId })
+  const cancelUrl = `${baseUrl}/checkout/cancel?${cancelParams.toString()}`
+  const paypalSuccessUrl = `${baseUrl}/checkout/success`
+
+  let paypalPlanId: string
+  let approvalUrl: string
+  let subscriptionId: string
+  try {
+    const ensured = await ensurePayPalSubscriptionPlan(product)
+    paypalPlanId = ensured.paypalPlanId
+    const subscription = await createPayPalSubscription({
+      planId: paypalPlanId,
+      productId,
+      userId: user.id,
+      returnUrl: paypalSuccessUrl,
+      cancelUrl,
+    })
+    approvalUrl = subscription.approvalUrl
+    subscriptionId = subscription.subscriptionId
+  } catch (err) {
+    if (err instanceof MissingPaymentEnvError) {
+      return NextResponse.json(
+        { success: false, error: 'payment_provider_not_configured' },
+        { status: 503 },
+      )
+    }
+    logger.error(
+      {
+        err: err instanceof Error ? { message: err.message, stack: err.stack } : err,
+        provider,
+        productId,
+        userId: user.id,
+      },
+      'Subscription provider helper threw a non-env error',
+    )
+    return NextResponse.json({ success: false, error: 'checkout_failed' }, { status: 500 })
+  }
+
+  // From this point on we hold a live PayPal subscription. If we fail to
+  // persist the local transaction/subscription rows, the subscription would
+  // continue to bill on approval — cancel it before returning so we don't
+  // leak recurring billing state.
+  const now = new Date()
+  const userRef = ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id
+  let transactionId: ObjectId | string
+  let localSubscriptionId: ObjectId | string
+  try {
+    // Order matters: transaction first, then subscription with
+    // initialTransaction populated. An ACTIVATED webhook arriving in the gap
+    // between the two inserts could otherwise see initialTransaction=null and
+    // fall back to an entitlement-grant path whose grants can't be cleanly
+    // revoked later. See task #976 for the rationale.
+    const transactionInsert = await db.collection('transactions').insertOne({
+      tenant: product.tenant ?? null,
+      user: userRef,
+      product: product._id,
+      provider: 'paypal',
+      providerTransactionId: subscriptionId,
+      isRenewal: false,
+      status: 'pending',
+      amount,
+      currency,
+      successUrl: paypalSuccessUrl,
+      cancelUrl,
+      createdAt: now,
+      updatedAt: now,
+    })
+    transactionId = transactionInsert.insertedId
+
+    const subscriptionInsert = await db.collection('subscriptions').insertOne({
+      tenant: product.tenant ?? null,
+      user: userRef,
+      product: product._id,
+      provider: 'paypal',
+      paypalSubscriptionId: subscriptionId,
+      status: 'pending',
+      initialTransaction: transactionId,
+      createdAt: now,
+      updatedAt: now,
+    })
+    localSubscriptionId = subscriptionInsert.insertedId
+
+    // Reverse pointer on the transaction — the webhook handler doesn't need
+    // this for correctness, so it's fine to backfill after the sub insert.
+    await db
+      .collection('transactions')
+      .updateOne(
+        { _id: transactionId as ObjectId },
+        { $set: { subscription: localSubscriptionId, updatedAt: new Date() } },
+      )
+  } catch (insertErr) {
+    logger.error(
+      {
+        err:
+          insertErr instanceof Error
+            ? { message: insertErr.message, stack: insertErr.stack }
+            : insertErr,
+        provider: 'paypal',
+        subscriptionId,
+        productId,
+        userId: user.id,
+      },
+      'Failed to persist subscription rows after PayPal subscription was created — cancelling remote subscription',
+    )
+    try {
+      await cancelPayPalSubscription(subscriptionId)
+    } catch (cancelErr) {
+      logger.error(
+        {
+          err:
+            cancelErr instanceof Error
+              ? { message: cancelErr.message, stack: cancelErr.stack }
+              : cancelErr,
+          provider: 'paypal',
+          subscriptionId,
+        },
+        'Failed to cancel remote subscription after local insert failed — manual reconciliation required',
+      )
+    }
+    return NextResponse.json({ success: false, error: 'checkout_failed' }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    success: true,
+    checkoutUrl: approvalUrl,
+    transactionId: transactionId.toString(),
+    subscriptionId: localSubscriptionId.toString(),
+  })
+}
+
 export async function POST(request: NextRequest) {
   const user = await getWebUser(request.headers)
   if (!user?.id) {
@@ -62,6 +244,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'product_not_found' }, { status: 404 })
   if (product.isActive === false) {
     return NextResponse.json({ success: false, error: 'product_not_active' }, { status: 404 })
+  }
+
+  if (product.billingType === 'subscription') {
+    return createSubscriptionCheckout({
+      request,
+      db,
+      user,
+      product: product as unknown as PayPalPlanProductDoc & Record<string, unknown>,
+      productId: parsed.data.productId,
+      provider: parsed.data.provider,
+      couponCode: parsed.data.couponCode,
+    })
   }
 
   let amount = Math.round(Number(product.price || 0) * 100)

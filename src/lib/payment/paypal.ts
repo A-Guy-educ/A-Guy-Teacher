@@ -5,8 +5,17 @@
  * Uses getPayPalEnv() for environment variable access.
  */
 
+import { ObjectId } from 'mongodb'
+
+import { getContentDb } from '@/infra/db/content-db'
 import { getPayPalEnv } from './env'
-import type { CreateCheckoutOptions, CheckoutResult } from './types'
+import type {
+  CheckoutResult,
+  CreateCheckoutOptions,
+  CreateSubscriptionOptions,
+  EnsuredPayPalPlan,
+  SubscriptionResult,
+} from './types'
 
 const PAYPAL_SANDBOX_BASE = 'https://api-m.sandbox.paypal.com'
 const PAYPAL_PRODUCTION_BASE = 'https://api-m.paypal.com'
@@ -263,6 +272,231 @@ export async function refundPayPal(
     const error = await response.text()
     throw new Error(`PayPal refund failed: ${response.status} ${error}`)
   }
+}
+
+/**
+ * Product doc shape read from the raw `products` Mongo collection. Kept narrow
+ * — only fields the subscription helpers actually read.
+ */
+export interface PayPalPlanProductDoc {
+  _id: ObjectId
+  name?: string | null
+  title?: string | null
+  price?: number | null
+  currency?: string | null
+  interval?: string | null
+  paypalProductId?: string | null
+  paypalPlanId?: string | null
+}
+
+/**
+ * Ensure a PayPal Catalog Product + Billing Plan exist for a given local
+ * Product, creating them lazily on the first subscription checkout and
+ * persisting the returned IDs onto the Product doc so subsequent checkouts
+ * skip the PayPal round-trips.
+ *
+ * Idempotent: if the product already carries both IDs, returns them without
+ * touching PayPal. If PayPal returns 422 with a duplicate-resource signal
+ * (RESOURCE_ALREADY_EXISTS / IDEMPOTENCY_CONFLICT), that's treated as a benign
+ * race — a concurrent request already created the resource. In that case we
+ * fall back to the current product doc; the caller should re-read.
+ */
+export async function ensurePayPalSubscriptionPlan(
+  product: PayPalPlanProductDoc,
+): Promise<EnsuredPayPalPlan> {
+  if (product.paypalProductId && product.paypalPlanId) {
+    return { paypalProductId: product.paypalProductId, paypalPlanId: product.paypalPlanId }
+  }
+
+  const productName = String(product.name || product.title || 'Product')
+  const currency = String(product.currency || 'USD').toUpperCase()
+  const price = Number(product.price || 0)
+  const interval = String(product.interval || 'month').toLowerCase()
+  const intervalUnit = interval === 'year' ? 'YEAR' : 'MONTH'
+
+  const token = await getPayPalAccessToken()
+
+  // 1) Catalog product — required parent for a Billing Plan.
+  const catalogProductResponse = await fetch(`${getPayPalApiBase()}/v1/catalogs/products`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'PayPal-Request-Id': `catalog-product-${product._id.toString()}`,
+    },
+    body: JSON.stringify({
+      name: productName,
+      type: 'SERVICE',
+      category: 'EDUCATIONAL_AND_TEXTBOOKS',
+    }),
+  })
+
+  let paypalProductId: string
+  if (catalogProductResponse.ok) {
+    const body = (await catalogProductResponse.json()) as { id: string }
+    paypalProductId = body.id
+  } else {
+    const errorText = await catalogProductResponse.text()
+    if (catalogProductResponse.status === 422 && isDuplicatePayPalError(errorText)) {
+      // Concurrent race: another request already created the catalog product.
+      // Without a lookup-by-name API we cannot recover the ID here — surface
+      // the situation to the caller so it can re-read the product doc.
+      throw new Error(`PayPal catalog product already exists (concurrent race): ${errorText}`)
+    }
+    throw new Error(
+      `PayPal catalog product creation failed: ${catalogProductResponse.status} ${errorText}`,
+    )
+  }
+
+  // 2) Billing plan attached to the catalog product.
+  const planResponse = await fetch(`${getPayPalApiBase()}/v1/billing/plans`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'PayPal-Request-Id': `billing-plan-${product._id.toString()}`,
+    },
+    body: JSON.stringify({
+      product_id: paypalProductId,
+      name: productName,
+      status: 'ACTIVE',
+      billing_cycles: [
+        {
+          frequency: { interval_unit: intervalUnit, interval_count: 1 },
+          tenure_type: 'REGULAR',
+          sequence: 1,
+          total_cycles: 0,
+          pricing_scheme: {
+            fixed_price: { value: price.toFixed(2), currency_code: currency },
+          },
+        },
+      ],
+      payment_preferences: {
+        auto_bill_outstanding: true,
+        setup_fee_failure_action: 'CONTINUE',
+        payment_failure_threshold: 3,
+      },
+    }),
+  })
+
+  let paypalPlanId: string
+  if (planResponse.ok) {
+    const body = (await planResponse.json()) as { id: string }
+    paypalPlanId = body.id
+  } else {
+    const errorText = await planResponse.text()
+    if (planResponse.status === 422 && isDuplicatePayPalError(errorText)) {
+      throw new Error(`PayPal billing plan already exists (concurrent race): ${errorText}`)
+    }
+    throw new Error(`PayPal billing plan creation failed: ${planResponse.status} ${errorText}`)
+  }
+
+  // 3) Persist onto the local Product doc so subsequent checkouts skip PayPal.
+  const db = await getContentDb()
+  await db
+    .collection('products')
+    .updateOne(
+      { _id: product._id },
+      { $set: { paypalProductId, paypalPlanId, updatedAt: new Date() } },
+    )
+
+  return { paypalProductId, paypalPlanId }
+}
+
+function isDuplicatePayPalError(errorText: string): boolean {
+  return /RESOURCE_ALREADY_EXISTS|IDEMPOTENCY_CONFLICT|DUPLICATE/.test(errorText)
+}
+
+interface PayPalSubscriptionResponse {
+  id: string
+  status: string
+  links: Array<{ href: string; rel: string }>
+}
+
+/**
+ * Create a PayPal Billing Subscription against an existing Plan and return the
+ * approval URL for the buyer to consent to recurring billing. On approval,
+ * PayPal fires BILLING.SUBSCRIPTION.ACTIVATED which the Admin webhook handler
+ * turns into an active local subscription + first Transaction row.
+ */
+export async function createPayPalSubscription(
+  options: CreateSubscriptionOptions,
+): Promise<SubscriptionResult> {
+  const { planId, productId, userId, returnUrl, cancelUrl, brandName } = options
+  const token = await getPayPalAccessToken()
+
+  const applicationContext: Record<string, unknown> = {
+    return_url: returnUrl,
+    cancel_url: cancelUrl,
+    user_action: 'SUBSCRIBE_NOW',
+  }
+  if (brandName) applicationContext.brand_name = brandName
+
+  const response = await fetch(`${getPayPalApiBase()}/v1/billing/subscriptions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'PayPal-Request-Id': `subscription-${userId}-${productId}-${Date.now()}`,
+    },
+    body: JSON.stringify({
+      plan_id: planId,
+      custom_id: userId,
+      application_context: applicationContext,
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`PayPal subscription creation failed: ${response.status} ${error}`)
+  }
+
+  const subscription = (await response.json()) as PayPalSubscriptionResponse
+  const approvalLink = subscription.links.find((link) => link.rel === 'approve')
+  if (!approvalLink) {
+    throw new Error('PayPal subscription missing approval URL')
+  }
+
+  return { approvalUrl: approvalLink.href, subscriptionId: subscription.id }
+}
+
+/**
+ * Cancel an active PayPal subscription. Used both by the user-facing cancel
+ * flow and by the checkout route's post-provider failure recovery — if we
+ * created a subscription but couldn't persist the local rows, we cancel it
+ * to avoid orphaned recurring billing.
+ *
+ * Idempotent: PayPal returns 422 SUBSCRIPTION_STATUS_INVALID if the
+ * subscription is already cancelled/expired. Treated as a benign no-op, mirror
+ * of how capturePayPalOrder handles ORDER_ALREADY_CAPTURED.
+ */
+export async function cancelPayPalSubscription(
+  subscriptionId: string,
+  reason?: string,
+): Promise<void> {
+  const token = await getPayPalAccessToken()
+
+  const response = await fetch(
+    `${getPayPalApiBase()}/v1/billing/subscriptions/${subscriptionId}/cancel`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ reason: reason ?? 'User requested cancellation' }),
+    },
+  )
+
+  // 204 No Content on success.
+  if (response.ok) return
+
+  const errorText = await response.text()
+  if (response.status === 422 && /SUBSCRIPTION_STATUS_INVALID/.test(errorText)) {
+    return
+  }
+
+  throw new Error(`PayPal subscription cancel failed: ${response.status} ${errorText}`)
 }
 
 /**
