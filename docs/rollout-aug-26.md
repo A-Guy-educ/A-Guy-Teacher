@@ -20,3 +20,4 @@
 
 ## Additional Features
 - **conversion**: add step for format the result (exercise hook)
+- test scenario for full user subscription plan
