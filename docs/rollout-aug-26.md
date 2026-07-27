@@ -14,6 +14,6 @@
 - ✅ marketing - 2 meetings - what + how (ilan)
 
 
-- auto deploy web dev branch
+- auto deploy web dev branch (yair)
 
 
