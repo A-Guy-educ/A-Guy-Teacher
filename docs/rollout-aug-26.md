@@ -6,8 +6,11 @@
 ## First Milestone
 - remove *pay with credit*
 - promo landing page leads to aguy landing page
+- add payapl subscription
 
-## 
+## Sencond Milestone
+- connect grow
+- 
 
 
 - ✅ chat improvements (yair)   
