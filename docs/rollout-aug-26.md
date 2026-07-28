@@ -14,6 +14,7 @@
 - add grow subscription (shai)
 - deployment (Yair)
 - unified user login cross domain (yair)
+- user calendar for lessons
 
 
 - ✅ chat improvements (yair)   
