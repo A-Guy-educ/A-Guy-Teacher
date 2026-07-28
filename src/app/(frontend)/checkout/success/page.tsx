@@ -23,7 +23,13 @@ import { CheckoutSuccessContent } from './CheckoutSuccessContent'
 export const dynamic = 'force-dynamic'
 
 type Props = {
-  searchParams: Promise<{ session_id?: string; token?: string; provider?: string }>
+  searchParams: Promise<{
+    session_id?: string
+    token?: string
+    subscription_id?: string
+    ba_token?: string
+    provider?: string
+  }>
 }
 
 export async function generateMetadata({
@@ -39,10 +45,18 @@ export async function generateMetadata({
 }
 
 export default async function CheckoutSuccessPage({ searchParams: searchParamsPromise }: Props) {
-  // session_id is Stripe; token is PayPal. Either way it maps to the same
-  // providerTransactionId field we wrote at checkout time.
-  const { session_id, token } = await searchParamsPromise
-  const lookupId = session_id ?? token
+  // Provider-return query params map to our stored providerTransactionId:
+  //   • Stripe            → session_id
+  //   • PayPal Orders     → token           (the order id — CAPTURE flow)
+  //   • PayPal Subs       → subscription_id (the I-XXX sub id; ba_token/token
+  //                         also present but are approval tokens, not our ids)
+  //
+  // Prefer subscription_id when present — otherwise a PayPal-sub return URL
+  // like ?subscription_id=I-...&token=61R... would be looked up by the token,
+  // hit no row, and leave the buyer stuck on the pending screen forever even
+  // though the sub is already Active in Mongo.
+  const { session_id, token, subscription_id } = await searchParamsPromise
+  const lookupId = session_id ?? subscription_id ?? token
 
   // PayPal orders are created with intent: 'CAPTURE', which does NOT auto-capture
   // on buyer approval — someone has to POST /v2/checkout/orders/{token}/capture
@@ -51,13 +65,19 @@ export default async function CheckoutSuccessPage({ searchParams: searchParamsPr
   // back to /checkout/success is the trigger; the buyer is here, the order token
   // is in the URL, so we call capture from the server component before rendering.
   //
+  // Skip capture for the subscription return path — subscription approval flows
+  // don't have an equivalent "capture" step; the buyer's approval alone triggers
+  // BILLING.SUBSCRIPTION.ACTIVATED → PAYMENT.SALE.COMPLETED which admin's webhook
+  // handler consumes to flip the transaction to succeeded. Calling capture on a
+  // sub's approval token would 404 at PayPal.
+  //
   // capturePayPalOrder is idempotent — ORDER_ALREADY_CAPTURED is treated as a
   // benign no-op — so buyer reloads and PayPal's own retry on the return URL are
   // both safe. Errors are logged but do NOT block rendering: the buyer still sees
   // the Pending state, the entitlement poll runs, and the manual refresh button
   // remains as an escape. Blocking here would trap someone who paid successfully
   // behind a page crash if PayPal's API had a transient issue at capture time.
-  if (token) {
+  if (token && !subscription_id) {
     try {
       await capturePayPalOrder(token)
     } catch (error) {
