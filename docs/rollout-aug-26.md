@@ -5,6 +5,7 @@
 
 ## First Milestone
 - connect guykoren to aguy prop product (guy)
+- create one month expiry product (shai)
 
 
 ## Second Milestone
