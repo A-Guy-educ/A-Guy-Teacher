@@ -11,7 +11,7 @@ import { resolveAuthCookieDomain } from './oauth_constants'
 
 /**
  * Origins allowed as absolute `returnTo` targets, on top of the sibling
- * subdomains implied by `AUTH_COOKIE_DOMAIN`.
+ * subdomains implied by `ROOT_DOMAIN`.
  *
  * Comma-separated, exact origins including scheme and any port, e.g.
  * `AUTH_ALLOWED_RETURN_ORIGINS=https://labs.a-guy.co.il,http://app2.lvh.me:3001`.

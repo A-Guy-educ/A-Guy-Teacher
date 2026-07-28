@@ -26,35 +26,29 @@ describe('resolveAuthCookieDomain', () => {
   })
 
   it('normalises to a leading dot', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
-    expect(resolveAuthCookieDomain()).toBe('.a-guy.co.il')
-  })
-
-  it('accepts a value that already has a leading dot', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', '.A-Guy.co.il')
-    expect(resolveAuthCookieDomain()).toBe('.a-guy.co.il')
-  })
-
-  it('falls back to ROOT_DOMAIN', () => {
     vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
     expect(resolveAuthCookieDomain()).toBe('.a-guy.co.il')
   })
 
-  it('prefers AUTH_COOKIE_DOMAIN over ROOT_DOMAIN', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'other.co.il')
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+  it('accepts a value that already has a leading dot', () => {
+    vi.stubEnv('ROOT_DOMAIN', '.A-Guy.co.il')
+    expect(resolveAuthCookieDomain()).toBe('.a-guy.co.il')
+  })
+
+  it('ignores surrounding whitespace', () => {
+    vi.stubEnv('ROOT_DOMAIN', '  a-guy.co.il  ')
     expect(resolveAuthCookieDomain()).toBe('.a-guy.co.il')
   })
 
   it('rejects single-label hosts (browsers refuse Domain=.localhost)', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'localhost')
+    vi.stubEnv('ROOT_DOMAIN', 'localhost')
     expect(resolveAuthCookieDomain()).toBeUndefined()
   })
 
   it.each(['vercel.app', 'my-app.vercel.app', 'preview.fly.dev', 'x.pages.dev'])(
     'rejects the shared platform domain %s',
     (domain) => {
-      vi.stubEnv('AUTH_COOKIE_DOMAIN', domain)
+      vi.stubEnv('ROOT_DOMAIN', domain)
       expect(resolveAuthCookieDomain()).toBeUndefined()
     },
   )
@@ -67,7 +61,7 @@ describe('getAuthCookieOptionsForRequest with a shared domain', () => {
 
   it('scopes top-level logins to the parent domain', () => {
     vi.stubEnv('NODE_ENV', 'production')
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     const options = getAuthCookieOptionsForRequest(new Headers({ 'Sec-Fetch-Dest': 'document' }))
 
@@ -78,7 +72,7 @@ describe('getAuthCookieOptionsForRequest with a shared domain', () => {
 
   it('omits the domain for partitioned iframe cookies, which cannot be shared anyway', () => {
     vi.stubEnv('NODE_ENV', 'production')
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     const options = getAuthCookieOptionsForRequest(new Headers({ 'Sec-Fetch-Dest': 'iframe' }))
 
@@ -118,7 +112,7 @@ describe('logout clears the shared cookie', () => {
   })
 
   it('emits a Domain-scoped clear so sibling apps are logged out too', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
     const headers = new Headers()
 
     appendAuthCookieClearHeaders(headers)
@@ -137,7 +131,7 @@ describe('logout clears the shared cookie', () => {
   })
 
   it('mirrors the write scope in the cookie-store delete options', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     expect(authCookieDeleteOptions()).toEqual({
       name: 'payload-token',

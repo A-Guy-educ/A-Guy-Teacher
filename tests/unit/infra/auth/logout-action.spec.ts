@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { logoutAction } from '@/app/(frontend)/actions/auth-action'
-
 const mockCookieStore = vi.hoisted(() => ({
   set: vi.fn(),
   get: vi.fn(),
@@ -12,6 +10,7 @@ const mockRevokeSession = vi.hoisted(() => vi.fn())
 
 vi.mock('next/headers', () => ({
   cookies: () => mockCookieStore,
+  headers: vi.fn(),
 }))
 
 vi.mock('@/infra/auth/web-auth', async (importOriginal) => {
@@ -22,7 +21,7 @@ vi.mock('@/infra/auth/web-auth', async (importOriginal) => {
   }
 })
 
-describe('Logout Action', () => {
+describe('logoutAction', () => {
   beforeEach(() => {
     mockCookieStore.delete.mockClear()
     mockCookieStore.get.mockReturnValue({ value: 'a-token' })
@@ -34,7 +33,9 @@ describe('Logout Action', () => {
     vi.unstubAllEnvs()
   })
 
-  it('deletes payload-token cookie', async () => {
+  it('deletes the host-only cookie when shared login is off', async () => {
+    const { logoutAction } = await import('@/app/(frontend)/actions/auth-action')
+
     const result = await logoutAction()
 
     expect(result.success).toBe(true)
@@ -42,16 +43,23 @@ describe('Logout Action', () => {
   })
 
   it('revokes the session server-side, not just the cookie', async () => {
+    const { logoutAction } = await import('@/app/(frontend)/actions/auth-action')
+
     await logoutAction()
 
+    // Without this a copied token keeps working, and sibling apps that verify
+    // against the database would still see the user as signed in.
     expect(mockRevokeSession).toHaveBeenCalledWith('a-token')
   })
 
-  it('deletes the domain-scoped cookie when shared login is configured', async () => {
+  it('deletes the domain-scoped cookie when shared login is on', async () => {
     vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    const { logoutAction } = await import('@/app/(frontend)/actions/auth-action')
 
     await logoutAction()
 
+    // A delete without Domain cannot remove a domain-scoped cookie, so the
+    // user would stay signed in on every sibling app.
     expect(mockCookieStore.delete).toHaveBeenCalledWith({
       name: 'payload-token',
       path: '/',

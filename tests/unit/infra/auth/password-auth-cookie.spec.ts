@@ -114,7 +114,7 @@ describe('password auth cookies', () => {
 
   it('scopes the login cookie to the shared domain when configured', async () => {
     vi.stubEnv('NODE_ENV', 'production')
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
     noRequestScope()
     mockLoginWithPassword.mockResolvedValue({
       token: 'session-token',

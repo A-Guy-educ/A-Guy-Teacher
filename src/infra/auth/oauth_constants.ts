@@ -34,16 +34,16 @@ const UNSHAREABLE_SUFFIXES = ['vercel.app', 'fly.dev', 'netlify.app', 'pages.dev
  * Parent domain the auth cookie is scoped to, e.g. `.a-guy.co.il`, enabling
  * one login across every `*.a-guy.co.il` app.
  *
- * Configure with `AUTH_COOKIE_DOMAIN` (falls back to `ROOT_DOMAIN`, which the
- * locale cookie in `middleware.ts` already uses). Leave it unset — previews,
- * local HTTP dev, single-app deployments — and the cookie stays host-only,
- * exactly as it behaved before subdomain SSO existed.
+ * Read from `ROOT_DOMAIN`, the variable the locale cookie in `middleware.ts`
+ * already uses — shared login deliberately introduces no setting of its own.
+ * Leave it unset — previews, local HTTP dev, single-app deployments — and the
+ * cookie stays host-only, exactly as it behaved before subdomain SSO existed.
  *
  * `Domain=.localhost` is rejected by Chromium, so single-label hosts return
  * `undefined`; use a wildcard dev domain such as `.lvh.me` instead.
  */
 export function resolveAuthCookieDomain(): string | undefined {
-  const raw = (process.env.AUTH_COOKIE_DOMAIN ?? process.env.ROOT_DOMAIN)?.trim()
+  const raw = process.env.ROOT_DOMAIN?.trim()
   if (!raw) return undefined
 
   const domain = raw.replace(/^\.+/, '').toLowerCase()

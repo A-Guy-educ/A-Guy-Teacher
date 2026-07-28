@@ -2,7 +2,7 @@
 
 Hand this page to whoever builds a new app on `*.a-guy.co.il`. It is the whole contract.
 
-> **Status:** the platform side is implemented. It stays dormant until `AUTH_COOKIE_DOMAIN` is set on the A-Guy-Web deployment — without it the cookie is host-only and nothing below works.
+> **Status:** the platform side is implemented. It stays dormant until `ROOT_DOMAIN` is set on the A-Guy-Web deployment — without it the cookie is host-only and nothing below works.
 
 ---
 

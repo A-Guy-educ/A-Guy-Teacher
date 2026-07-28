@@ -12,7 +12,7 @@ Building the second app? Hand its author [SHARED-LOGIN-APP-GUIDE.md](./SHARED-LO
 
 ## Status
 
-Implemented in A-Guy-Web and **off by default**. With `AUTH_COOKIE_DOMAIN` unset, every cookie stays host-only and behaviour is identical to before. Setting it is what turns SSO on.
+Implemented in A-Guy-Web and **off by default**. With `ROOT_DOMAIN` unset, every cookie stays host-only and behaviour is identical to before. Setting it is what turns SSO on.
 
 ---
 
@@ -29,19 +29,21 @@ A second app authenticates a user by (a) receiving the cookie — automatic once
 ## Enabling it
 
 ```bash
-AUTH_COOKIE_DOMAIN=a-guy.co.il          # falls back to ROOT_DOMAIN
-API_ALLOWED_ORIGINS=...                 # only for browser-side callers in dev
-AUTH_ALLOWED_RETURN_ORIGINS=...         # only for non-HTTPS dev siblings
+ROOT_DOMAIN=a-guy.co.il           # the only switch; already used by the locale cookie
+API_ALLOWED_ORIGINS=...           # only for browser-side callers in dev
+AUTH_ALLOWED_RETURN_ORIGINS=...   # only for non-HTTPS dev siblings
 ```
 
-Siblings of `AUTH_COOKIE_DOMAIN` are trusted automatically for both CORS and post-login redirects, so a new subdomain needs no config — it can read the cookie regardless, so listing it would grant nothing extra.
+Shared login deliberately adds **no setting of its own** — `ROOT_DOMAIN` already existed for the locale cookie, so turning SSO on is one variable, not a new concept.
+
+Siblings of `ROOT_DOMAIN` are trusted automatically for both CORS and post-login redirects, so a new subdomain needs no config — it can read the cookie regardless, so listing it would grant nothing extra.
 
 Ignored (deliberately) for `*.vercel.app`, `*.fly.dev`, `*.netlify.app`, `*.pages.dev` — those apexes are shared with strangers and browsers reject `Domain=` cookies on them. Also ignored for single-label hosts, since Chromium rejects `Domain=.localhost`.
 
 **Local development:** use `lvh.me`, which resolves to `127.0.0.1`:
 
 ```bash
-AUTH_COOKIE_DOMAIN=lvh.me
+ROOT_DOMAIN=lvh.me
 API_ALLOWED_ORIGINS=http://app2.lvh.me:3001
 AUTH_ALLOWED_RETURN_ORIGINS=http://app2.lvh.me:3001
 ```

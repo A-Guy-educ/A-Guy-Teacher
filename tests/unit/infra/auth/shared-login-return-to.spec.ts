@@ -8,7 +8,7 @@ describe('sanitizeReturnTo with shared login configured', () => {
   })
 
   it('allows returning to a sibling app on the shared-login domain', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     expect(sanitizeReturnTo('https://app2.a-guy.co.il/dashboard')).toBe(
       'https://app2.a-guy.co.il/dashboard',
@@ -16,13 +16,13 @@ describe('sanitizeReturnTo with shared login configured', () => {
   })
 
   it('allows the apex domain itself', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     expect(sanitizeReturnTo('https://a-guy.co.il/home')).toBe('https://a-guy.co.il/home')
   })
 
   it('preserves query strings and fragments on sibling URLs', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     expect(sanitizeReturnTo('https://app2.a-guy.co.il/x?ref=login#top')).toBe(
       'https://app2.a-guy.co.il/x?ref=login#top',
@@ -30,19 +30,19 @@ describe('sanitizeReturnTo with shared login configured', () => {
   })
 
   it('still rejects unrelated origins', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     expect(sanitizeReturnTo('https://evil.com/steal')).toBe('/')
   })
 
   it('rejects a lookalike domain that merely ends with the same letters', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     expect(sanitizeReturnTo('https://not-a-guy.co.il/steal')).toBe('/')
   })
 
   it('rejects plain HTTP siblings, since the shared cookie is Secure', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     expect(sanitizeReturnTo('http://app2.a-guy.co.il/dashboard')).toBe('/')
   })
@@ -62,7 +62,7 @@ describe('sanitizeReturnTo with shared login configured', () => {
   })
 
   it('keeps relative paths working exactly as before', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     expect(sanitizeReturnTo('/courses?ref=header#section')).toBe('/courses?ref=header#section')
     expect(sanitizeReturnTo('//evil.com')).toBe('/')

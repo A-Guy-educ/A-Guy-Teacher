@@ -20,7 +20,7 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('allows an API call from a sibling app on the shared-login domain', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     const response = middleware(
       createRequest('/api/users/me', { origin: 'https://app2.a-guy.co.il' }),
@@ -32,7 +32,7 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('never answers with a wildcard, which browsers reject alongside credentials', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     const response = middleware(
       createRequest('/api/users/me', { origin: 'https://app2.a-guy.co.il' }),
@@ -42,7 +42,7 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('denies an unrelated origin', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     const response = middleware(createRequest('/api/users/me', { origin: 'https://evil.com' }))
 
@@ -50,7 +50,7 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('denies a lookalike domain', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     const response = middleware(
       createRequest('/api/users/me', { origin: 'https://not-a-guy.co.il' }),
@@ -68,7 +68,7 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('answers the preflight without running the request', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     const response = middleware(
       createRequest('/api/users/me', { origin: 'https://app2.a-guy.co.il', method: 'OPTIONS' }),
@@ -90,7 +90,7 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('leaves non-API routes untouched', () => {
-    vi.stubEnv('AUTH_COOKIE_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
 
     const response = middleware(createRequest('/start', { origin: 'https://app2.a-guy.co.il' }))
 
