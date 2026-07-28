@@ -6,6 +6,7 @@ import {
   locales,
   getLocaleFromSubdomain,
 } from './i18n/config'
+import { resolveAuthCookieDomain } from './infra/auth/oauth_constants'
 import { contentSecurityPolicy } from './infra/security/content-security-policy.js'
 
 /**
@@ -68,6 +69,50 @@ function resolveCookieDomain(host: string): string | undefined {
   return `.${apex}`
 }
 
+/**
+ * Echo-back origin for a cross-origin API caller, or `undefined` to deny.
+ *
+ * Sibling apps on the shared-login domain are trusted automatically — they
+ * already receive the session cookie — plus any origin listed explicitly in
+ * `API_ALLOWED_ORIGINS` (comma-separated, used for local dev over HTTP).
+ *
+ * The exact origin is echoed rather than `*` because `*` is invalid alongside
+ * `Access-Control-Allow-Credentials`, and credentials are the whole point here.
+ */
+function resolveAllowedApiOrigin(originHeader: string | null): string | undefined {
+  if (!originHeader) return undefined
+
+  const explicit = (process.env.API_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim().toLowerCase())
+    .filter(Boolean)
+
+  if (explicit.includes(originHeader.toLowerCase())) return originHeader
+
+  const cookieDomain = resolveAuthCookieDomain()
+  if (!cookieDomain) return undefined
+
+  try {
+    const url = new URL(originHeader)
+    if (url.protocol !== 'https:') return undefined
+
+    const host = url.hostname.toLowerCase()
+    if (host === cookieDomain.slice(1) || host.endsWith(cookieDomain)) return originHeader
+  } catch {
+    return undefined
+  }
+
+  return undefined
+}
+
+const CORS_MAX_AGE_SECONDS = '600'
+
+function applyCorsHeaders(headers: Headers, allowedOrigin: string): void {
+  headers.set('Access-Control-Allow-Origin', allowedOrigin)
+  headers.set('Access-Control-Allow-Credentials', 'true')
+  headers.append('Vary', 'Origin')
+}
+
 // Media CDN redirects are handled by next.config.js redirects (baked in at build time).
 // This avoids Edge middleware env var availability issues.
 
@@ -84,6 +129,32 @@ export function middleware(request: NextRequest) {
 
   if (!pathname.startsWith('/api/pdfjs-viewer')) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicy)
+  }
+
+  // Cross-origin API access for sibling apps that share the login cookie.
+  // Without these headers the browser discards the response, even though the
+  // cookie itself was sent (see docs/architecture/SHARED-LOGIN-APP-GUIDE.md).
+  if (pathname.startsWith('/api')) {
+    const allowedOrigin = resolveAllowedApiOrigin(request.headers.get('origin'))
+
+    if (allowedOrigin) {
+      if (request.method === 'OPTIONS') {
+        const preflight = new NextResponse(null, { status: 204 })
+        applyCorsHeaders(preflight.headers, allowedOrigin)
+        preflight.headers.set(
+          'Access-Control-Allow-Methods',
+          'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        )
+        preflight.headers.set(
+          'Access-Control-Allow-Headers',
+          request.headers.get('access-control-request-headers') ?? 'Content-Type, Authorization',
+        )
+        preflight.headers.set('Access-Control-Max-Age', CORS_MAX_AGE_SECONDS)
+        return preflight
+      }
+
+      applyCorsHeaders(response.headers, allowedOrigin)
+    }
   }
 
   // Exclude paths from locale handling (double safety, even though matcher already excludes many)

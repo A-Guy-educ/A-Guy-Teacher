@@ -15,7 +15,12 @@ import type { Document, ObjectId } from 'mongodb'
 
 import { getContentDb, objectIdFromString, relationId, serializeDoc } from '@/infra/db/content-db'
 import type { User } from '@/infra/types/content'
-import { AUTH_COOKIE_OPTIONS, getAuthCookieOptionsForRequest } from './oauth_constants'
+import type { AuthCookieOptions } from './oauth_constants'
+import {
+  AUTH_COOKIE_OPTIONS,
+  getAuthCookieOptionsForRequest,
+  resolveAuthCookieDomain,
+} from './oauth_constants'
 import { encrypt, generateSecret } from './oauth_crypto'
 
 const pbkdf2Async = promisify(pbkdf2)
@@ -42,6 +47,28 @@ type AuthUser = User & { collection: 'users' }
 export const AUTH_COOKIE = {
   ...AUTH_COOKIE_OPTIONS,
   maxAge: TOKEN_MAX_AGE,
+}
+
+/**
+ * Cookie flags for writers that have no request headers to inspect.
+ *
+ * Always the top-level variant (`SameSite=Lax`, no `Partitioned`) plus the
+ * shared `Domain` when configured — a `Partitioned` cookie cannot be read by
+ * sibling subdomains, so defaulting to it would silently break SSO.
+ */
+function defaultAuthCookieOptions(): AuthCookieOptions {
+  const isProd = process.env.NODE_ENV === 'production'
+  const domain = resolveAuthCookieDomain()
+
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: TOKEN_MAX_AGE,
+    partitioned: false,
+    ...(domain ? { domain } : {}),
+  }
 }
 
 async function users() {
@@ -253,7 +280,7 @@ export async function createGoogleUser(google: {
 export function setAuthCookie(
   res: {
     cookies: {
-      set: (name: string, value: string, options: typeof AUTH_COOKIE) => void
+      set: (name: string, value: string, options: AuthCookieOptions) => void
     }
   },
   token: string,
@@ -267,8 +294,21 @@ export function setAuthCookie(
    */
   requestHeaders?: { get(name: string): string | null },
 ) {
-  const options = requestHeaders ? getAuthCookieOptionsForRequest(requestHeaders) : AUTH_COOKIE
+  const options = requestHeaders
+    ? getAuthCookieOptionsForRequest(requestHeaders)
+    : defaultAuthCookieOptions()
   res.cookies.set(AUTH_COOKIE_NAME, token, options)
+}
+
+/**
+ * Options for deleting the auth cookie from a cookie store.
+ *
+ * A `Set-Cookie` that omits `Domain` will not remove a cookie that has one,
+ * so logout must mirror whatever scope was used when the cookie was written.
+ */
+export function authCookieDeleteOptions(): { name: string; path: string; domain?: string } {
+  const domain = resolveAuthCookieDomain()
+  return { name: AUTH_COOKIE_NAME, path: '/', ...(domain ? { domain } : {}) }
 }
 
 export function appendAuthCookieClearHeaders(headers: Headers): void {
@@ -285,5 +325,43 @@ export function appendAuthCookieClearHeaders(headers: Headers): void {
 
   if (isProd) {
     headers.append('Set-Cookie', [...baseParts, 'SameSite=None', 'Partitioned'].join('; '))
+  }
+
+  // Domain-scoped variant: a host-only clear leaves the shared SSO cookie
+  // intact, which would keep the user signed in on every sibling app.
+  const domain = resolveAuthCookieDomain()
+  if (domain) {
+    headers.append(
+      'Set-Cookie',
+      [...baseParts, `Domain=${domain}`, `SameSite=${isProd ? 'None' : 'Lax'}`].join('; '),
+    )
+  }
+}
+
+/**
+ * Remove a session from the user document so the token stops authenticating.
+ *
+ * Clearing the cookie only logs out the browser that asked; revoking the
+ * session id is what makes logout effective for every app that shares this
+ * database, and what invalidates a token that was copied elsewhere.
+ */
+export async function revokeSession(token?: string | null): Promise<void> {
+  if (!token) return
+
+  try {
+    const { payload } = await jwtVerify(token, secretKey())
+    if (typeof payload.id !== 'string' || typeof payload.sid !== 'string') return
+
+    await (
+      await users()
+    ).updateOne(
+      { _id: objectIdFromString(payload.id) } as Document,
+      {
+        $pull: { sessions: { id: payload.sid } },
+        $set: { updatedAt: new Date() },
+      } as Document,
+    )
+  } catch {
+    // Invalid, expired, or forged token — there is nothing to revoke.
   }
 }

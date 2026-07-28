@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers'
 
+import { getRequestHeadersSafe } from '@/infra/auth/request-headers'
 import { createPasswordUser, setAuthCookie } from '@/infra/auth/web-auth'
 import { checkRateLimit } from './signup_rateLimit-action'
 import { SignupSchema, type SignupResult } from '../signup_schemas'
@@ -70,7 +71,7 @@ export async function signupAction(
   }
 
   const store = _cookieStore ?? (await cookies())
-  setAuthCookie({ cookies: store }, session.token)
+  setAuthCookie({ cookies: store }, session.token, await getRequestHeadersSafe())
 
   return { success: true, userId: session.user.id, data: { userId: session.user.id } }
 }
