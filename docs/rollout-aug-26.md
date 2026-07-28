@@ -13,8 +13,9 @@
 - add payapl subscription (shai)
 - add grow subscription (shai)
 - deployment (Yair)
-- unified user login cross domain (yair)
-- user calendar for lessons
+- user calendar for lessons:
+  - aguy web / new platform
+  - unified user login cross domain (yair)
 
 
 - ✅ chat improvements (yair)   
