@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { SignupForm } from './SignupForm'
 
-export function SignupPageContent() {
+export function SignupPageContent({ returnTo }: { returnTo: string }) {
   const t = useTranslations('auth.signup')
 
   return (
@@ -29,7 +29,7 @@ export function SignupPageContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <SignupForm />
+          <SignupForm returnTo={returnTo} />
         </motion.div>
       </div>
     </div>

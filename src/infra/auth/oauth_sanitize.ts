@@ -1,72 +1,74 @@
 /**
- * OAuth URL Sanitizer
+ * Return-URL Sanitizer
  *
  * @fileType utility
- * @domain oauth
+ * @domain auth
  * @pattern oauth
- * @ai-summary Sanitize returnTo URLs to prevent open redirect vulnerabilities. Relative paths are always allowed; absolute URLs only for sibling apps on the shared-login domain.
+ * @ai-summary Turns an untrusted returnTo parameter into a destination safe to redirect to. Pure — the trust boundary arrives as an argument, never from the environment.
  */
 
-import { resolveAuthCookieDomain } from './oauth_constants'
+import { isTrustedOrigin, SINGLE_APP_POLICY, type SharedLoginPolicy } from './shared-login/policy'
 
 /**
- * Origins allowed as absolute `returnTo` targets, on top of the sibling
- * subdomains implied by `ROOT_DOMAIN`.
+ * A safe redirect destination derived from an untrusted `returnTo`.
  *
- * Comma-separated, exact origins including scheme and any port, e.g.
- * `AUTH_ALLOWED_RETURN_ORIGINS=https://labs.a-guy.co.il,http://app2.lvh.me:3001`.
- * Needed for local development, where the sibling rule requires HTTPS.
+ * Relative paths are always allowed. Absolute URLs are allowed only for apps
+ * named by `policy`; anything else — other sites, `javascript:`, protocol-
+ * relative `//evil.com` — collapses to the site root. Falling back rather than
+ * throwing keeps a tampered link from breaking login.
+ *
+ * `policy` is a parameter, not an environment read, because this function also
+ * runs in the browser: a client bundle cannot see server variables, so reading
+ * one here would silently evaluate to "trust nothing" and drop legitimate
+ * sibling redirects. Client callers pass `SINGLE_APP_POLICY` and get
+ * relative-only behaviour, honestly — or better, receive an
+ * already-sanitized destination from their server component.
  */
-function explicitAllowedOrigins(): string[] {
-  return (process.env.AUTH_ALLOWED_RETURN_ORIGINS ?? '')
-    .split(',')
-    .map((origin) => origin.trim().toLowerCase())
-    .filter(Boolean)
+export function sanitizeReturnTo(
+  returnTo: string | undefined | null,
+  policy: SharedLoginPolicy = SINGLE_APP_POLICY,
+): string {
+  const siteRoot = '/'
+  const trimmed = returnTo?.trim()
+  if (!trimmed) return siteRoot
+
+  if (trimmed.startsWith('//') || /^(data|javascript|mailto):/i.test(trimmed)) {
+    return siteRoot
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return sanitizeAbsolute(trimmed, policy) ?? siteRoot
+  }
+
+  return trimmed.startsWith('/') ? trimmed : siteRoot
+}
+
+function sanitizeAbsolute(candidate: string, policy: SharedLoginPolicy): string | undefined {
+  try {
+    const url = new URL(candidate)
+    return isTrustedOrigin(url, policy.returnOrigins, policy.cookieDomain)
+      ? url.toString()
+      : undefined
+  } catch {
+    return undefined
+  }
 }
 
 /**
- * True when `url` points at an app that already shares our login cookie.
+ * The path part of a sanitized destination, for comparisons that must hold
+ * whether the destination is relative or absolute.
  *
- * Sibling apps are matched against the configured cookie domain rather than a
- * hardcoded list, so a new subdomain inherits the permission automatically —
- * it can read the session cookie anyway, so redirecting to it grants nothing
- * extra. HTTPS is required because the shared cookie is `Secure`.
+ * A redirect-loop guard written as `startsWith('/onboarding')` silently stops
+ * working once absolute sibling URLs are permitted; this keeps such checks
+ * honest.
  */
-function isAllowedReturnOrigin(url: URL): boolean {
-  const origin = url.origin.toLowerCase()
-  if (explicitAllowedOrigins().includes(origin)) return true
+export function returnToPath(returnTo: string): string {
+  if (!/^https?:\/\//i.test(returnTo)) return returnTo
 
-  if (url.protocol !== 'https:') return false
-
-  const cookieDomain = resolveAuthCookieDomain()
-  if (!cookieDomain) return false
-
-  const host = url.hostname.toLowerCase()
-  return host === cookieDomain.slice(1) || host.endsWith(cookieDomain)
-}
-
-export function sanitizeReturnTo(returnTo: string | undefined | null): string {
-  const defaultRedirect = '/'
-  if (!returnTo) return defaultRedirect
-
-  const trimmed = returnTo.trim()
-
-  if (trimmed.startsWith('//') || trimmed.match(/^(data|javascript|mailto):/i)) {
-    return defaultRedirect
+  try {
+    const url = new URL(returnTo)
+    return `${url.pathname}${url.search}${url.hash}`
+  } catch {
+    return returnTo
   }
-
-  // Absolute URL: only sibling apps on the shared-login domain. Anything else
-  // is an open redirect, so it falls back to our own root.
-  if (trimmed.match(/^https?:\/\//i)) {
-    try {
-      const url = new URL(trimmed)
-      return isAllowedReturnOrigin(url) ? url.toString() : defaultRedirect
-    } catch {
-      return defaultRedirect
-    }
-  }
-
-  if (!trimmed.startsWith('/')) return defaultRedirect
-
-  return trimmed
 }

@@ -12,6 +12,7 @@ import {
   linkGoogleUser,
   setAuthCookie,
 } from '@/infra/auth/web-auth'
+import { getSharedLoginPolicy } from '@/infra/auth/shared-login/policy.env'
 import { getOnboardingRedirect, START_WIZARD_COMPLETED_COOKIE } from '@/infra/onboarding/redirect'
 
 const googleUserSchema = z.object({
@@ -77,7 +78,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     })
 
     const destination = isNewUser
-      ? getOnboardingRedirect(returnTo, { skipPersona: wizardCompleted })
+      ? getOnboardingRedirect(returnTo, {
+          skipPersona: wizardCompleted,
+          policy: getSharedLoginPolicy(),
+        })
       : returnTo
 
     res.headers.set('Location', new URL(destination, req.url).toString())

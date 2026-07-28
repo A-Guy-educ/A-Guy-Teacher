@@ -4,12 +4,19 @@
  * @fileType utility
  * @domain auth
  * @pattern oauth
- * @ai-summary Cookie read/write/delete utilities for OAuth flow
+ * @ai-summary Read/write/delete helpers for the short-lived cookies of the OAuth handshake (state nonce, returnTo). The session cookie itself is owned by `shared-login/auth-cookie`.
  */
 
 import type { NextRequest, NextResponse } from 'next/server'
-import type { Payload } from '@/infra/types/backend'
-import { AUTH_COOKIE_OPTIONS, STATE_COOKIE_OPTIONS, getCookieName } from './oauth_constants'
+
+/** CSRF state and returnTo live only for the duration of the handshake. */
+export const STATE_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  path: '/',
+  maxAge: 60 * 10,
+}
 
 export function readCookie(req: NextRequest, name: string): string | undefined {
   return req.cookies.get(name)?.value
@@ -47,46 +54,6 @@ export function deleteCookie(res: NextResponse, name: string): void {
       ].join('; '),
     )
   }
-}
-
-export function setAuthCookie(res: NextResponse, payload: Payload, value: string): void {
-  const cookieName = getCookieName(payload)
-  const usersCollection = payload.collections?.users
-  const authCookies = usersCollection?.config?.auth?.cookies as
-    | { domain?: string; secure?: boolean; sameSite?: string }
-    | undefined
-
-  const cookieOptions = {
-    ...AUTH_COOKIE_OPTIONS,
-    ...(authCookies?.domain ? { domain: authCookies.domain } : {}),
-  }
-
-  // Set cookie using both methods to ensure it works
-  res.cookies.set(cookieName, value, cookieOptions)
-
-  // Also set Set-Cookie header directly (backup method for redirects)
-  const sameSiteValue =
-    cookieOptions.sameSite === 'lax' ? 'Lax' : cookieOptions.sameSite === 'none' ? 'None' : 'Strict'
-  // CHIPS: the manual Set-Cookie path mirrors AUTH_COOKIE_OPTIONS so the
-  // backup write also produces a partitioned cookie. Required for the
-  // cookie to be honored inside the Kody dashboard's cross-origin
-  // preview iframe (3PC deprecation).
-  const partitioned =
-    'partitioned' in cookieOptions && (cookieOptions as { partitioned?: boolean }).partitioned
-  const cookieString = [
-    `${cookieName}=${value}`,
-    `Path=${cookieOptions.path}`,
-    `Max-Age=${cookieOptions.maxAge}`,
-    cookieOptions.httpOnly ? 'HttpOnly' : '',
-    cookieOptions.secure ? 'Secure' : '',
-    `SameSite=${sameSiteValue}`,
-    partitioned ? 'Partitioned' : '',
-    cookieOptions.domain ? `Domain=${cookieOptions.domain}` : '',
-  ]
-    .filter(Boolean)
-    .join('; ')
-
-  res.headers.append('Set-Cookie', cookieString)
 }
 
 export function setShortLivedCookie(res: NextResponse, name: string, value: string): void {

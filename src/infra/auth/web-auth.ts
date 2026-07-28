@@ -15,20 +15,25 @@ import type { Document, ObjectId } from 'mongodb'
 
 import { getContentDb, objectIdFromString, relationId, serializeDoc } from '@/infra/db/content-db'
 import type { User } from '@/infra/types/content'
-import type { AuthCookieOptions } from './oauth_constants'
-import {
-  AUTH_COOKIE_OPTIONS,
-  getAuthCookieOptionsForRequest,
-  resolveAuthCookieDomain,
-} from './oauth_constants'
 import { encrypt, generateSecret } from './oauth_crypto'
+import {
+  AUTH_COOKIE_MAX_AGE_SECONDS,
+  AUTH_COOKIE_NAME,
+  type AuthCookieOptions,
+} from './shared-login/auth-cookie'
+import { authCookieOptionsFor } from './shared-login/auth-cookie.env'
+import type { ReadableHeaders } from './shared-login/embedded-request'
+
+export { AUTH_COOKIE_NAME }
+export {
+  appendAuthCookieClearHeaders,
+  authCookieDeleteOptions,
+} from './shared-login/auth-cookie.env'
 
 const pbkdf2Async = promisify(pbkdf2)
-const TOKEN_MAX_AGE = 60 * 60 * 24 * 7
+const TOKEN_MAX_AGE = AUTH_COOKIE_MAX_AGE_SECONDS
 const HASH_ITERATIONS = 25000
 const HASH_LENGTH = 512
-
-export const AUTH_COOKIE_NAME = 'payload-token'
 
 type UserDoc = Document & {
   _id?: ObjectId
@@ -43,33 +48,6 @@ type UserDoc = Document & {
 }
 
 type AuthUser = User & { collection: 'users' }
-
-export const AUTH_COOKIE = {
-  ...AUTH_COOKIE_OPTIONS,
-  maxAge: TOKEN_MAX_AGE,
-}
-
-/**
- * Cookie flags for writers that have no request headers to inspect.
- *
- * Always the top-level variant (`SameSite=Lax`, no `Partitioned`) plus the
- * shared `Domain` when configured — a `Partitioned` cookie cannot be read by
- * sibling subdomains, so defaulting to it would silently break SSO.
- */
-function defaultAuthCookieOptions(): AuthCookieOptions {
-  const isProd = process.env.NODE_ENV === 'production'
-  const domain = resolveAuthCookieDomain()
-
-  return {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: TOKEN_MAX_AGE,
-    partitioned: false,
-    ...(domain ? { domain } : {}),
-  }
-}
 
 async function users() {
   return (await getContentDb()).collection<UserDoc>('users')
@@ -285,57 +263,13 @@ export function setAuthCookie(
   },
   token: string,
   /**
-   * Optional request headers. When provided, the cookie flags are
-   * tailored to the request context: iframe (Kody preview) keeps
-   * `SameSite=None` + `Partitioned`; top-level (mobile / desktop OAuth)
-   * falls back to `SameSite=Lax` so the cookie is honored on the
-   * follow-up same-site request. Omit for server actions (login/signup)
-   * which are inherently top-level form posts.
+   * Incoming request headers, when the caller has them. They decide whether
+   * the cookie is written in its shareable or its partitioned form — see
+   * `isEmbeddedRequest`. Omitting them yields the shareable form.
    */
-  requestHeaders?: { get(name: string): string | null },
+  requestHeaders?: ReadableHeaders,
 ) {
-  const options = requestHeaders
-    ? getAuthCookieOptionsForRequest(requestHeaders)
-    : defaultAuthCookieOptions()
-  res.cookies.set(AUTH_COOKIE_NAME, token, options)
-}
-
-/**
- * Options for deleting the auth cookie from a cookie store.
- *
- * A `Set-Cookie` that omits `Domain` will not remove a cookie that has one,
- * so logout must mirror whatever scope was used when the cookie was written.
- */
-export function authCookieDeleteOptions(): { name: string; path: string; domain?: string } {
-  const domain = resolveAuthCookieDomain()
-  return { name: AUTH_COOKIE_NAME, path: '/', ...(domain ? { domain } : {}) }
-}
-
-export function appendAuthCookieClearHeaders(headers: Headers): void {
-  const isProd = process.env.NODE_ENV === 'production'
-  const baseParts = [
-    `${AUTH_COOKIE_NAME}=`,
-    'Path=/',
-    'Max-Age=0',
-    'HttpOnly',
-    isProd ? 'Secure' : '',
-  ].filter(Boolean)
-
-  headers.append('Set-Cookie', [...baseParts, `SameSite=${isProd ? 'None' : 'Lax'}`].join('; '))
-
-  if (isProd) {
-    headers.append('Set-Cookie', [...baseParts, 'SameSite=None', 'Partitioned'].join('; '))
-  }
-
-  // Domain-scoped variant: a host-only clear leaves the shared SSO cookie
-  // intact, which would keep the user signed in on every sibling app.
-  const domain = resolveAuthCookieDomain()
-  if (domain) {
-    headers.append(
-      'Set-Cookie',
-      [...baseParts, `Domain=${domain}`, `SameSite=${isProd ? 'None' : 'Lax'}`].join('; '),
-    )
-  }
+  res.cookies.set(AUTH_COOKIE_NAME, token, authCookieOptionsFor(requestHeaders))
 }
 
 /**

@@ -52,11 +52,27 @@ Then browse `app.lvh.me:3000` and `app2.lvh.me:3001`. The two `*_ALLOWED_*` vars
 
 ---
 
-## What changed
+## Where the code lives
 
-### Cookie domain
+Everything sits under [src/infra/auth/shared-login/](../../src/infra/auth/shared-login/), split so that the rules are pure and the configuration is read in exactly one place.
 
-`resolveAuthCookieDomain()` in [oauth_constants.ts](../../src/infra/auth/oauth_constants.ts) is the single source of truth; every writer and both clear paths use it.
+| File | Responsibility |
+|---|---|
+| `policy.ts` | The `SharedLoginPolicy` value and the predicates over it (`toCookieDomain`, `isSiblingOrigin`, `isTrustedOrigin`). Pure — no environment, no framework. Runs on the server, in edge middleware, and in the browser. |
+| `policy.env.ts` | The **only** place the environment is read. Everything else takes a policy as an argument. |
+| `embedded-request.ts` | Classifies a request as embedded or top-level. One decision, one unit, its own tests. |
+| `auth-cookie.ts` | The cookie as a value: its name, its attributes, and the headers that clear it. Pure. |
+| `auth-cookie.env.ts` | Binds the two together for a real request. |
+
+`web-auth.ts` keeps sessions, passwords and tokens; it no longer knows how a cookie is scoped. `middleware.ts` delegates CORS to [infra/security/cors.ts](../../src/infra/security/cors.ts), which is likewise pure.
+
+The split is not ceremony — it is what keeps the trust boundary out of the browser bundle. See "The client boundary" below.
+
+### The client boundary
+
+`sanitizeReturnTo` takes the policy as an argument and never reads the environment, because it runs in client components too. A client bundle cannot see server variables: an environment read there evaluates to `undefined`, the function concludes it trusts nobody, and every sibling redirect silently collapses to the home page.
+
+So the login and signup **pages** (server components) resolve `returnTo` and pass it down as a prop; the forms no longer decide. A unit test walks every `'use client'` file and fails if one imports `policy.env` or reads those variables directly.
 
 ### The `Partitioned` trap
 
@@ -65,7 +81,8 @@ Password login and signup previously wrote `SameSite=None` + `Partitioned` in pr
 That flag exists for the Kody preview iframe, so it could not simply be deleted. Instead:
 
 - login and signup now pass the request headers to `setAuthCookie`, so flags are chosen per request
-- `isEmbeddedOAuthContext()` additionally treats a cross-site `fetch` as embedded — that is what a server action posted from inside the preview iframe looks like — while still treating a cross-site *top-level navigation* as non-embedded, which keeps the Google OAuth redirect on `SameSite=Lax` (issue #783)
+- `isEmbeddedRequest()` treats a cross-site subresource request as embedded — that is what a server action posted from inside the preview iframe looks like — while still treating a cross-site *top-level navigation* as non-embedded, which keeps the Google OAuth redirect on `SameSite=Lax` (issue #783)
+- when the `Sec-Fetch-*` headers are missing entirely (Safari before 16.4), `Origin` is compared with `Host` instead, so those browsers still get a working cookie inside the preview pane
 - `Domain` is attached only to the non-embedded variant
 
 Net effect: normal logins are shareable; preview-iframe sessions stay app-local by design.
@@ -74,12 +91,14 @@ Net effect: normal logins are shareable; preview-iframe sessions stay app-local 
 
 Two bugs, both harmless with one app and not with several:
 
-1. A `Set-Cookie` without `Domain` cannot delete a cookie that has one, so logout would have left the shared cookie intact. Both clear paths now emit the domain-scoped variant.
+1. A `Set-Cookie` without `Domain` cannot delete a cookie that has one, so logout would have left the shared cookie intact. Both clear paths now emit every scope — host-only, partitioned and domain-scoped — because all three can coexist under the same name during a rollout.
 2. Logout only cleared the cookie; the session stayed valid in the database, so a copied token kept working. `revokeSession()` now `$pull`s the `sid`.
 
 ### `returnTo`
 
 `sanitizeReturnTo()` rejected every absolute URL. It now accepts HTTPS siblings of the cookie domain, plus explicitly listed origins, and still rejects everything else — including lookalikes such as `not-a-guy.co.il`.
+
+Redirect-loop guards compare `returnToPath()` rather than the raw destination: a check like `startsWith('/onboarding')` silently stops matching once the destination can be an absolute sibling URL.
 
 ### CORS
 

@@ -5,7 +5,8 @@
  * with returnTo sanitization and loop prevention.
  */
 
-import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import { returnToPath, sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import type { SharedLoginPolicy } from '@/infra/auth/shared-login/policy'
 
 const ONBOARDING_PERSONA_PATH = '/onboarding/persona'
 
@@ -33,11 +34,13 @@ export const START_WIZARD_COMPLETED_COOKIE = 'start_wizard_completed'
  */
 export function getOnboardingRedirect(
   returnTo: string | undefined | null,
-  options: { skipPersona?: boolean } = {},
+  options: { skipPersona?: boolean; policy?: SharedLoginPolicy } = {},
 ): string {
-  const sanitized = sanitizeReturnTo(returnTo)
+  const sanitized = sanitizeReturnTo(returnTo, options.policy)
 
-  if (sanitized.startsWith(ONBOARDING_PERSONA_PATH)) {
+  // Compared by path: once a sibling app may be returned to, `returnTo` can be
+  // an absolute URL, and a prefix check against it would silently never match.
+  if (returnToPath(sanitized).startsWith(ONBOARDING_PERSONA_PATH)) {
     return sanitized
   }
 

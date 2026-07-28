@@ -1,71 +1,84 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import { returnToPath, sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import type { SharedLoginPolicy } from '@/infra/auth/shared-login/policy'
+
+const SHARED: SharedLoginPolicy = {
+  cookieDomain: '.a-guy.co.il',
+  returnOrigins: [],
+  apiOrigins: [],
+}
+
+const DEV: SharedLoginPolicy = {
+  returnOrigins: ['http://app2.lvh.me:3001'],
+  apiOrigins: [],
+}
 
 describe('sanitizeReturnTo with shared login configured', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs()
-  })
-
   it('allows returning to a sibling app on the shared-login domain', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
-
-    expect(sanitizeReturnTo('https://app2.a-guy.co.il/dashboard')).toBe(
+    expect(sanitizeReturnTo('https://app2.a-guy.co.il/dashboard', SHARED)).toBe(
       'https://app2.a-guy.co.il/dashboard',
     )
   })
 
   it('allows the apex domain itself', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
-
-    expect(sanitizeReturnTo('https://a-guy.co.il/home')).toBe('https://a-guy.co.il/home')
+    expect(sanitizeReturnTo('https://a-guy.co.il/home', SHARED)).toBe('https://a-guy.co.il/home')
   })
 
   it('preserves query strings and fragments on sibling URLs', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
-
-    expect(sanitizeReturnTo('https://app2.a-guy.co.il/x?ref=login#top')).toBe(
+    expect(sanitizeReturnTo('https://app2.a-guy.co.il/x?ref=login#top', SHARED)).toBe(
       'https://app2.a-guy.co.il/x?ref=login#top',
     )
   })
 
   it('still rejects unrelated origins', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
-
-    expect(sanitizeReturnTo('https://evil.com/steal')).toBe('/')
+    expect(sanitizeReturnTo('https://evil.com/steal', SHARED)).toBe('/')
   })
 
   it('rejects a lookalike domain that merely ends with the same letters', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
-
-    expect(sanitizeReturnTo('https://not-a-guy.co.il/steal')).toBe('/')
+    expect(sanitizeReturnTo('https://not-a-guy.co.il/steal', SHARED)).toBe('/')
   })
 
   it('rejects plain HTTP siblings, since the shared cookie is Secure', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
-
-    expect(sanitizeReturnTo('http://app2.a-guy.co.il/dashboard')).toBe('/')
+    expect(sanitizeReturnTo('http://app2.a-guy.co.il/dashboard', SHARED)).toBe('/')
   })
 
   it('allows an explicitly listed origin, for local development over HTTP', () => {
-    vi.stubEnv('AUTH_ALLOWED_RETURN_ORIGINS', 'http://app2.lvh.me:3001')
-
-    expect(sanitizeReturnTo('http://app2.lvh.me:3001/dashboard')).toBe(
+    expect(sanitizeReturnTo('http://app2.lvh.me:3001/dashboard', DEV)).toBe(
       'http://app2.lvh.me:3001/dashboard',
     )
   })
 
   it('does not allow an unlisted port on an otherwise listed host', () => {
-    vi.stubEnv('AUTH_ALLOWED_RETURN_ORIGINS', 'http://app2.lvh.me:3001')
-
-    expect(sanitizeReturnTo('http://app2.lvh.me:4000/dashboard')).toBe('/')
+    expect(sanitizeReturnTo('http://app2.lvh.me:4000/dashboard', DEV)).toBe('/')
   })
 
   it('keeps relative paths working exactly as before', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    expect(sanitizeReturnTo('/courses?ref=header#section', SHARED)).toBe(
+      '/courses?ref=header#section',
+    )
+    expect(sanitizeReturnTo('//evil.com', SHARED)).toBe('/')
+    expect(sanitizeReturnTo('javascript:alert(1)', SHARED)).toBe('/')
+  })
+})
 
-    expect(sanitizeReturnTo('/courses?ref=header#section')).toBe('/courses?ref=header#section')
-    expect(sanitizeReturnTo('//evil.com')).toBe('/')
-    expect(sanitizeReturnTo('javascript:alert(1)')).toBe('/')
+describe('sanitizeReturnTo without a policy', () => {
+  it('is relative-only, so a client component degrades safely', () => {
+    expect(sanitizeReturnTo('https://app2.a-guy.co.il/dashboard')).toBe('/')
+    expect(sanitizeReturnTo('/courses')).toBe('/courses')
+  })
+})
+
+describe('returnToPath', () => {
+  it('returns a relative destination unchanged', () => {
+    expect(returnToPath('/onboarding/persona?returnTo=%2Fx')).toBe(
+      '/onboarding/persona?returnTo=%2Fx',
+    )
+  })
+
+  it('extracts the path from an absolute sibling destination', () => {
+    expect(returnToPath('https://app2.a-guy.co.il/onboarding/persona?a=1#b')).toBe(
+      '/onboarding/persona?a=1#b',
+    )
   })
 })

@@ -6,8 +6,15 @@ import {
   locales,
   getLocaleFromSubdomain,
 } from './i18n/config'
-import { resolveAuthCookieDomain } from './infra/auth/oauth_constants'
+import { AUTH_COOKIE_NAME } from './infra/auth/shared-login/auth-cookie'
+import { toCookieDomain } from './infra/auth/shared-login/policy'
+import { getSharedLoginPolicy } from './infra/auth/shared-login/policy.env'
 import { contentSecurityPolicy } from './infra/security/content-security-policy.js'
+import {
+  applyCorsHeaders,
+  applyPreflightHeaders,
+  resolveAllowedApiOrigin,
+} from './infra/security/cors'
 
 /**
  * Check if a path is a protected learning route that requires authentication.
@@ -36,8 +43,32 @@ function isCourseContentPath(pathname: string): boolean {
  * Checks for the payload-token cookie.
  */
 function hasAuthToken(request: NextRequest): boolean {
-  const cookieStore = request.cookies
-  return cookieStore.get('payload-token')?.value !== undefined
+  return request.cookies.get(AUTH_COOKIE_NAME)?.value !== undefined
+}
+
+/**
+ * Attach CORS headers for sibling apps, and answer their preflight.
+ *
+ * Returns a response only for a preflight, which must not fall through to the
+ * route. Otherwise the headers are added to `response` and the request
+ * continues normally.
+ */
+function handleApiCors(request: NextRequest, response: NextResponse): NextResponse | undefined {
+  const allowedOrigin = resolveAllowedApiOrigin(
+    request.headers.get('origin'),
+    getSharedLoginPolicy(),
+  )
+  if (!allowedOrigin) return undefined
+
+  if (request.method === 'OPTIONS') {
+    const preflight = new NextResponse(null, { status: 204 })
+    applyCorsHeaders(preflight.headers, allowedOrigin)
+    applyPreflightHeaders(preflight.headers, request.headers.get('access-control-request-headers'))
+    return preflight
+  }
+
+  applyCorsHeaders(response.headers, allowedOrigin)
+  return undefined
 }
 
 function isKodyFlyPreviewHost(host: string): boolean {
@@ -52,65 +83,26 @@ function allowsPreviewAuthBypass(request: NextRequest): boolean {
   return isKodyFlyPreviewHost(host)
 }
 
-function resolveCookieDomain(host: string): string | undefined {
-  // If you're on *.vercel.app, sharing cookies across subdomains via Domain=.vercel.app
-  // is typically blocked (public suffix). In that case, keep host-only cookie.
-  if (host.endsWith('.vercel.app')) return undefined
-
-  // Prefer explicit root domain if you set it (recommended)
-  // e.g. ROOT_DOMAIN=example.com -> cookie domain ".example.com"
-  const rootFromEnv = process.env.ROOT_DOMAIN?.trim()
-  if (rootFromEnv) return `.${rootFromEnv.replace(/^\./, '')}`
-
-  // Fallback: naive "apex" extraction (works for most .com/.net/.org cases)
-  const parts = host.split(':')[0].split('.').filter(Boolean)
-  if (parts.length < 2) return undefined
-  const apex = parts.slice(-2).join('.')
-  return `.${apex}`
-}
-
 /**
- * Echo-back origin for a cross-origin API caller, or `undefined` to deny.
+ * Cookie `Domain` for the locale cookie.
  *
- * Sibling apps on the shared-login domain are trusted automatically — they
- * already receive the session cookie — plus any origin listed explicitly in
- * `API_ALLOWED_ORIGINS` (comma-separated, used for local dev over HTTP).
- *
- * The exact origin is echoed rather than `*` because `*` is invalid alongside
- * `Access-Control-Allow-Credentials`, and credentials are the whole point here.
+ * Prefers the configured root domain — the same value that scopes the auth
+ * cookie — and otherwise guesses the apex from the host. The guess is safe
+ * enough for a language preference but deliberately not reused for the session
+ * cookie, where a wrong guess would leak a login: `toCookieDomain` only ever
+ * honours explicit configuration.
  */
-function resolveAllowedApiOrigin(originHeader: string | null): string | undefined {
-  if (!originHeader) return undefined
+function resolveLocaleCookieDomain(host: string): string | undefined {
+  const configured = toCookieDomain(process.env.ROOT_DOMAIN)
+  if (configured) return configured
 
-  const explicit = (process.env.API_ALLOWED_ORIGINS ?? '')
-    .split(',')
-    .map((origin) => origin.trim().toLowerCase())
-    .filter(Boolean)
+  const hostname = host.split(':')[0]
+  if (!toCookieDomain(hostname)) return undefined
 
-  if (explicit.includes(originHeader.toLowerCase())) return originHeader
+  const parts = hostname.split('.').filter(Boolean)
+  if (parts.length < 2) return undefined
 
-  const cookieDomain = resolveAuthCookieDomain()
-  if (!cookieDomain) return undefined
-
-  try {
-    const url = new URL(originHeader)
-    if (url.protocol !== 'https:') return undefined
-
-    const host = url.hostname.toLowerCase()
-    if (host === cookieDomain.slice(1) || host.endsWith(cookieDomain)) return originHeader
-  } catch {
-    return undefined
-  }
-
-  return undefined
-}
-
-const CORS_MAX_AGE_SECONDS = '600'
-
-function applyCorsHeaders(headers: Headers, allowedOrigin: string): void {
-  headers.set('Access-Control-Allow-Origin', allowedOrigin)
-  headers.set('Access-Control-Allow-Credentials', 'true')
-  headers.append('Vary', 'Origin')
+  return `.${parts.slice(-2).join('.')}`
 }
 
 // Media CDN redirects are handled by next.config.js redirects (baked in at build time).
@@ -135,26 +127,8 @@ export function middleware(request: NextRequest) {
   // Without these headers the browser discards the response, even though the
   // cookie itself was sent (see docs/architecture/SHARED-LOGIN-APP-GUIDE.md).
   if (pathname.startsWith('/api')) {
-    const allowedOrigin = resolveAllowedApiOrigin(request.headers.get('origin'))
-
-    if (allowedOrigin) {
-      if (request.method === 'OPTIONS') {
-        const preflight = new NextResponse(null, { status: 204 })
-        applyCorsHeaders(preflight.headers, allowedOrigin)
-        preflight.headers.set(
-          'Access-Control-Allow-Methods',
-          'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-        )
-        preflight.headers.set(
-          'Access-Control-Allow-Headers',
-          request.headers.get('access-control-request-headers') ?? 'Content-Type, Authorization',
-        )
-        preflight.headers.set('Access-Control-Max-Age', CORS_MAX_AGE_SECONDS)
-        return preflight
-      }
-
-      applyCorsHeaders(response.headers, allowedOrigin)
-    }
+    const corsResponse = handleApiCors(request, response)
+    if (corsResponse) return corsResponse
   }
 
   // Exclude paths from locale handling (double safety, even though matcher already excludes many)
@@ -208,7 +182,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (shouldSetCookie) {
-    const cookieDomain = resolveCookieDomain(host)
+    const cookieDomain = resolveLocaleCookieDomain(host)
     const isHttps = request.nextUrl.protocol === 'https:'
     const isProd = process.env.NODE_ENV === 'production'
 

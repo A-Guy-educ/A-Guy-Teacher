@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
-import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import { returnToPath, sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import { getSharedLoginPolicy } from '@/infra/auth/shared-login/policy.env'
 import { getMeUser } from '@/infra/utils/getMeUser'
 
 import { PersonaSelectionStep } from './PersonaSelectionStep'
@@ -19,10 +20,11 @@ export default async function PersonaSelectionPage({
   }
 
   const params = await searchParams
-  let returnTo = sanitizeReturnTo(params.returnTo)
+  let returnTo = sanitizeReturnTo(params.returnTo, getSharedLoginPolicy())
 
-  // Guard against redirect loops
-  if (returnTo.startsWith('/onboarding/persona')) {
+  // Guard against redirect loops. Compared by path so an absolute sibling URL
+  // pointing back at this step is caught too.
+  if (returnToPath(returnTo).startsWith('/onboarding/persona')) {
     returnTo = '/'
   }
 
