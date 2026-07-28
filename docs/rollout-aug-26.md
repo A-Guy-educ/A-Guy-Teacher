@@ -10,10 +10,11 @@
 
 
 ## Second Milestone
-- remove *pay with credit* (yair)
-- promo landing page leads to aguy landing page (guy)
 - add payapl subscription (shai)
+- add grow subscription (shai)
 - deployment (Yair)
+- unified user login cross domain (ysir)
+
 
 ## Sencond Milestone
 - connect grow
