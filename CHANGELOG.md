@@ -1885,6 +1885,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Refresh Kody workflow launcher ([#983](https://github.com/A-Guy-educ/A-Guy-Web/pull/983)) — @aharonyaircohen
 - fix(checkout): Resolve success page lookup for PayPal subscription returns ([#982](https://github.com/A-Guy-educ/A-Guy-Web/pull/982)) — @aguyshayb
 - feat(payments): Wire PayPal subscriptions into checkout flow ([#980](https://github.com/A-Guy-educ/A-Guy-Web/pull/980)) — @aguyshayb
 - test(products): Fix checkout responsive tests after paypal-only merge ([#981](https://github.com/A-Guy-educ/A-Guy-Web/pull/981)) — @aguyshayb
