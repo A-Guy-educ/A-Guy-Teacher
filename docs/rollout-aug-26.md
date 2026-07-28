@@ -4,6 +4,10 @@
 
 
 ## First Milestone
+- connect guykoren to aguy prop product (guy)
+
+
+## Second Milestone
 - remove *pay with credit* (yair)
 - promo landing page leads to aguy landing page (guy)
 - add payapl subscription (shai)
