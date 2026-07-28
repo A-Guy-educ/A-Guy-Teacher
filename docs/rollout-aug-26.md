@@ -13,7 +13,7 @@
 - add payapl subscription (shai)
 - add grow subscription (shai)
 - deployment (Yair)
-- unified user login cross domain (ysir)
+- unified user login cross domain (yair)
 
 
 ## Sencond Milestone
