@@ -8,7 +8,6 @@
 - create one month expiry product (shai)
 - promotions in social media (guy)
 
-
 ## Second Milestone
 - add payapl subscription (shai)
 - add grow subscription (shai)
