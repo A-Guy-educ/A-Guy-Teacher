@@ -120,6 +120,24 @@ Redirect-loop guards compare `returnToPath()` rather than the raw destination: a
 
 ---
 
+## What else we share across apps
+
+Shared login is one strand of a bigger question. The rest of the answer, recorded here so it is not re-litigated per app:
+
+**Rule of thumb: share what users can see is inconsistent, and what is dangerous to get wrong. Copy everything else.**
+
+**Share the design system** — [tailwind.tokens.mjs](../../tailwind.tokens.mjs), [globals.css](<../../src/app/(frontend)/globals.css>), [src/ui/web/components/](../../src/ui/web/components). Roughly 850 lines of tokens plus ~48 components, so rebuilding it per app is real duplicated work — and unlike most duplication, the drift is visible to users the moment they cross between two of our apps.
+
+**Share the auth client** — about thirty lines: who is this user, where do I send them to log in, how do I log them out. It is the only shared surface where a mistake is a security bug rather than a cosmetic one.
+
+**Never share** the signing secret or database credentials (a bug in any app holding them leaks every account), the policy code above (it reads server-only configuration), or business logic, routes and data models (each app owns its own domain; coupling them is how you get a distributed monolith). Sibling apps ask `/api/users/me` who the user is; they do not verify tokens themselves.
+
+**Copy, don't share, the architecture** — folder layout, naming, error handling, testing conventions travel as a starter template and these docs, not as a dependency. A shared `core` package that every app imports sounds tidy and becomes a bottleneck: every change needs a coordinated release across every app, and it accumulates whatever did not fit anywhere else.
+
+**Build the package at the third app**, not the second. For app two, copy the thirty lines and point at the design system by hand. Extracting earlier means designing an API for consumers who do not exist yet.
+
+---
+
 ## If apps must live on different domains
 
 Cookies cannot cross registrable domains. You would make A-Guy-Web a small identity provider: the app redirects to `/authorize`, A-Guy-Web (already holding the user's cookie) redirects back with a one-time code, the app exchanges it server-side for its own session cookie on its own domain. That is standard OIDC and meaningfully more work — prefer subdomains unless a separate domain is a business requirement.

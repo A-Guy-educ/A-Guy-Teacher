@@ -3,8 +3,7 @@
 Hand this page to whoever builds a new app on `*.aguy.co.il` — link them straight to it:
 <https://github.com/A-Guy-educ/A-Guy-Web/blob/dev/docs/architecture/SHARED-LOGIN-APP-GUIDE.md>
 
-It is the whole contract. What else is shared between our apps is in
-[SHARING-ACROSS-APPS.md](https://github.com/A-Guy-educ/A-Guy-Web/blob/dev/docs/architecture/SHARING-ACROSS-APPS.md).
+It is the whole contract.
 
 > **Status:** the platform side is implemented. It stays dormant until `ROOT_DOMAIN` is set on the A-Guy-Web deployment — without it the cookie is host-only and nothing below works.
 
