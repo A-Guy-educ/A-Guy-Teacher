@@ -1,40 +1,52 @@
-*rollout plan v2*
-## Target 10 direct subscribers
-### destination - 1.08
+# Rollout Plan v2
 
+## Target — 10 direct subscribers
 
-## First Milestone
-- connect guykoren to aguy prop product (guy)
-- create one month expiry product (shai)
-- promotions in social media (guy)
+**Destination:** 1.08
 
-## Second Milestone
-- add payapl subscription (shai)
-- add grow subscription (shai)
-- deployment (Yair)
-- user calendar for lessons:
-  - aguy web / new platform
-  - unified user login cross domain (yair)
+---
 
+### First Milestone
 
+- Connect `guykoren` to A-Guy prop product — **Guy**
+- Create one-month expiry product — **Shai**
+- Promotions on social media — **Guy**
 
+### Second Milestone
 
-- ✅ chat improvements (yair)   
-    - v1 use existing chat
-    - v2 migrate to kody
-    - v3 add widgets
-- ✅ architectual gap (yair)
-    - fix lesson exercise duplication
-- ✅ bugs - mostly security (shai)
-- ✅ content upload - 80% up, 20% more to go (kepp upload manually) (qa team)
-- ✅ content approval (create agent which will provide report) (agent ?)
-- ✅ marketing - 2 meetings - what + how (ilan)
+- Add PayPal subscription — **Shai**
+- Add Grow subscription — **Shai**
+- Deployment — **Yair**
+- User calendar for lessons (A-Guy Web / new platform; unified user login cross-domain) — **Yair**
 
-## Additional bugs
-- auto deploy web dev branch (yair)
-- admin runs on vercel preview (yair)
+### Other Tracks
 
+#### Chat improvements — Yair
+- ✅ **v1** — Use existing chat
+- ✅ **v2** — Migrate to Kody
+- ✅ **v3** — Add widgets
 
-## Additional Features
-- **conversion**: add step for format the result (exercise hook)
-- test scenario for full user subscription plan
+#### Architectual gap — Yair
+- ✅ Fix lesson exercise duplication
+
+#### Bugs (mostly security) — Shai
+- ✅
+
+#### Content upload — QA team
+- ✅ 80% uploaded; remaining 20% to go (keep uploading manually)
+
+#### Content approval — TBD
+- ✅ Create an agent to provide the report
+
+#### Marketing — Ilan
+- ✅ 2 meetings — what + how
+
+### Additional Bugs
+
+- Auto-deploy `web-dev` branch — **Yair**
+- Admin runs on Vercel preview — **Yair**
+
+### Additional Features
+
+- **Conversion:** add a step to format the result (exercise hook)
+- Test scenario for the full user subscription plan
