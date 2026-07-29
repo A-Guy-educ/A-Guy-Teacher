@@ -35,11 +35,7 @@
  * Shrink this list; never add to it. Removing an entry is the last step of
  * migrating that route. When it reaches zero, delete the list and this comment.
  */
-const KNOWN_EXCEPTIONS = new Set([
-  'entitlements/redeem/route.ts',
-  'payments/checkout/route.ts',
-  'webhooks/paypal/route.ts',
-])
+const KNOWN_EXCEPTIONS = new Set(['payments/checkout/route.ts', 'webhooks/paypal/route.ts'])
 
 /**
  * The imports that mean "I am about to query the database", by module.

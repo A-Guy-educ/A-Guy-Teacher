@@ -1,10 +1,13 @@
-import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { getContentDb } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
-import { idCandidates } from '@/server/web-api/progress'
+import {
+  consumeAccessCodeUse,
+  findAccessCode,
+  grantCourseByCode,
+  hasCourseGrant,
+} from '@/server/services/entitlement-grants'
 
 const BodySchema = z.object({
   code: z.string().trim().min(1),
@@ -21,14 +24,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'code_required' }, { status: 400 })
   }
 
-  const db = await getContentDb()
-  const code = parsed.data.code.trim().toUpperCase()
-  const accessCode = await db
-    .collection('access-codes')
-    .findOne({ code }, { collation: { locale: 'en', strength: 2 } })
+  const accessCode = await findAccessCode(parsed.data.code.trim().toUpperCase())
 
-  if (!accessCode)
+  if (!accessCode) {
     return NextResponse.json({ success: false, error: 'invalid_code' }, { status: 404 })
+  }
   if (!accessCode.isActive) {
     return NextResponse.json({ success: false, error: 'code_inactive' }, { status: 400 })
   }
@@ -37,71 +37,18 @@ export async function POST(request: NextRequest) {
   }
 
   const courseId = String(accessCode.course)
-  const userIds = idCandidates(user.id)
-  const courseIds = idCandidates(courseId)
-  const existing = await db.collection('user-entitlements').findOne({
-    user: { $in: userIds },
-    course: { $in: courseIds },
-  })
-  const existingEnrollment = await db.collection('enrollments').findOne({
-    user: { $in: userIds },
-    course: { $in: courseIds },
-    status: { $ne: 'cancelled' },
-  })
 
-  if (existing || existingEnrollment) {
+  if (await hasCourseGrant(user.id, courseId)) {
     return NextResponse.json({ success: false, error: 'already_entitled' }, { status: 409 })
   }
 
-  const maxUses = Number(accessCode.maxUses || 0)
-  const incrementFilter: Record<string, unknown> = {
-    _id: accessCode._id,
-    isActive: true,
-    $or: [
-      { expiresAt: { $exists: false } },
-      { expiresAt: null },
-      { expiresAt: { $gt: new Date() } },
-    ],
-  }
-  if (maxUses > 0) incrementFilter.currentUses = { $lt: maxUses }
-
-  const increment = await db.collection('access-codes').updateOne(incrementFilter, {
-    $inc: { currentUses: 1 },
-    $set: { updatedAt: new Date() },
-  })
-
-  if (!increment.modifiedCount) {
+  // Consume before granting: if the code turns out to be exhausted, nothing
+  // has been given away.
+  if (!(await consumeAccessCodeUse(accessCode))) {
     return NextResponse.json({ success: false, error: 'code_exhausted' }, { status: 409 })
   }
 
-  const now = new Date()
-  const userValue = ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id
-  const courseValue = ObjectId.isValid(courseId) ? new ObjectId(courseId) : courseId
-
-  await Promise.all([
-    db.collection('user-entitlements').insertOne({
-      tenant: accessCode.tenant,
-      user: userValue,
-      contentType: 'course',
-      course: courseValue,
-      grantMethod: 'code',
-      accessCode: accessCode._id,
-      createdAt: now,
-      updatedAt: now,
-    }),
-    db.collection('enrollments').insertOne({
-      tenant: accessCode.tenant,
-      user: userValue,
-      course: courseValue,
-      status: 'active',
-      grantMethod: 'code',
-      source: 'self',
-      enrolledAt: now,
-      metadata: { accessCodeId: accessCode._id.toString() },
-      createdAt: now,
-      updatedAt: now,
-    }),
-  ])
+  await grantCourseByCode(user.id, courseId, accessCode)
 
   return NextResponse.json({ success: true, courseId })
 }
