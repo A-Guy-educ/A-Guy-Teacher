@@ -6,6 +6,8 @@ A route's job is to translate HTTP into a call and the result back into a respon
 
 This is enforced by the `aguy/no-db-in-routes` lint rule, not left to memory.
 
+The rule bans the imports that open a connection — `getContentDb`, and `MongoClient` / `Db` / `Collection` — not the modules they live in. Pure helpers from the same files (`relationId`, `serializeDoc`, `objectIdFromString`, `ObjectId`) stay available: shaping a value you were handed is not a query, and banning them would only push people into re-implementing them locally.
+
 ---
 
 ## Why it is enforced

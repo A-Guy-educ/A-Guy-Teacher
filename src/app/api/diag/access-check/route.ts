@@ -22,15 +22,17 @@
  * issue supersedes this — do NOT let this route go stale in the codebase.
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { ObjectId, ReadPreference, type Document } from 'mongodb'
 
-import { getContentDb, relationId, serializeDoc } from '@/infra/db/content-db'
+import { relationId, serializeDoc } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import {
+  findCourseAccessGrants,
+  findCourseBySlug,
+  listEnrollmentsForUser,
+} from '@/server/services/course-access'
 import { idCandidates } from '@/server/web-api/progress'
 
 export const dynamic = 'force-dynamic'
-
-const READ_FROM_PRIMARY = { readPreference: ReadPreference.PRIMARY }
 
 export async function GET(request: NextRequest) {
   // Belt-and-suspenders expiration guard: this endpoint is off on the prod
@@ -59,11 +61,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'slug query param required' }, { status: 400 })
   }
 
-  const db = await getContentDb()
-
-  const courseDoc = await db
-    .collection('courses')
-    .findOne({ slug }, { readPreference: ReadPreference.PRIMARY })
+  const courseDoc = await findCourseBySlug(slug)
   if (!courseDoc) {
     return NextResponse.json({ error: `no course with slug "${slug}"` }, { status: 404 })
   }
@@ -72,44 +70,17 @@ export async function GET(request: NextRequest) {
   const userIds = idCandidates(user.id)
   const courseIds = idCandidates(courseId)
 
-  const [entitlement, enrollment, userDoc, allUserEnrollments] = await Promise.all([
-    db.collection('user-entitlements').findOne(
-      {
-        user: { $in: userIds },
-        course: { $in: courseIds },
-      },
-      READ_FROM_PRIMARY,
-    ),
-    db.collection('enrollments').findOne(
-      {
-        user: { $in: userIds },
-        course: { $in: courseIds },
-        status: { $ne: 'cancelled' },
-      },
-      READ_FROM_PRIMARY,
-    ),
-    db
-      .collection('users')
-      .findOne(
-        { _id: ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id } as Document,
-        READ_FROM_PRIMARY,
-      ),
-    db
-      .collection('enrollments')
-      .find({ user: { $in: userIds } }, READ_FROM_PRIMARY)
-      .limit(50)
-      .toArray(),
+  const [grants, allUserEnrollments] = await Promise.all([
+    findCourseAccessGrants(user.id, courseId),
+    listEnrollmentsForUser(user.id),
   ])
+  const { entitlement, enrollment } = grants
 
-  const legacy = Array.isArray(userDoc?.courseEntitlements)
-    ? userDoc.courseEntitlements
-        .filter((entry): entry is Record<string, unknown> => !!entry && typeof entry === 'object')
-        .map((entry) => ({
-          course: relationId(entry.course),
-          matchesQueryCourse: relationId(entry.course) === courseId,
-          raw: serializeDoc(entry),
-        }))
-    : []
+  const legacy = grants.legacyEntitlements.map((entry) => ({
+    course: entry.course,
+    matchesQueryCourse: entry.course === courseId,
+    raw: serializeDoc(entry.raw as Record<string, unknown>),
+  }))
 
   return NextResponse.json({
     user: {
