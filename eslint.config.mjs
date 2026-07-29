@@ -79,6 +79,13 @@ const eslintConfig = [
       'aguy/require-auth-endpoints': 'error',
     },
   },
+  {
+    plugins: { aguy: aguyPlugin },
+    files: ['src/app/api/**/*.ts'],
+    rules: {
+      'aguy/no-db-in-routes': 'error',
+    },
+  },
 
   {
     ignores: [

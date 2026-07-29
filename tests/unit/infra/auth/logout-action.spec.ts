@@ -34,6 +34,7 @@ describe('logoutAction', () => {
   })
 
   it('deletes the host-only cookie when shared login is off', async () => {
+    vi.stubEnv('ROOT_DOMAIN', '')
     const { logoutAction } = await import('@/app/(frontend)/actions/auth-action')
 
     const result = await logoutAction()

@@ -25,6 +25,7 @@ import requireAuthEndpoints from './rules/require-auth-endpoints.mjs'
 import fileLocation from './rules/file-location.mjs'
 import noExecSync from './rules/no-exec-sync.mjs'
 import preferDesignTokens from './rules/prefer-design-tokens.mjs'
+import noDbInRoutes from './rules/no-db-in-routes.mjs'
 
 const plugin = {
   meta: {
@@ -39,6 +40,7 @@ const plugin = {
     'file-location': fileLocation,
     'no-exec-sync': noExecSync,
     'prefer-design-tokens': preferDesignTokens,
+    'no-db-in-routes': noDbInRoutes,
   },
 }
 export default plugin

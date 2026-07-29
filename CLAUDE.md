@@ -117,6 +117,16 @@ See [.ai-docs/BOOTSTRAP.md](.ai-docs/BOOTSTRAP.md) for details.
 
 ---
 
+## Data Access (CRITICAL)
+
+**API routes never query the database.** Queries live in the service layer under `src/server/`; a route reads the request, checks who is asking, calls one function, and returns the result.
+
+Enforced by the `aguy/no-db-in-routes` lint rule. Some older routes are grandfathered in an exceptions list — **never add to that list to make a new error go away**; move the query instead.
+
+See [docs/architecture/DATA-ACCESS.md](./docs/architecture/DATA-ACCESS.md), including the five-step procedure for migrating a route without changing its behaviour.
+
+---
+
 ## Design System (CRITICAL)
 
 **NEVER create custom colors, design tokens, or visual styles that are not defined in the project's design system.**

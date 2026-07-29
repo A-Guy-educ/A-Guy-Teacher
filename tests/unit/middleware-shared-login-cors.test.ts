@@ -60,6 +60,7 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('adds no CORS headers when shared login is not configured', () => {
+    vi.stubEnv('ROOT_DOMAIN', '')
     const response = middleware(
       createRequest('/api/users/me', { origin: 'https://app2.aguy.co.il' }),
     )
