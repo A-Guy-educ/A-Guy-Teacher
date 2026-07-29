@@ -31,6 +31,7 @@ function rawMarkdownPlugin(): Plugin {
 
 const activeIntegrationTests = [
   'tests/int/analytics/**/*.int.spec.ts',
+  'tests/int/data-access-services.int.spec.ts',
   'tests/int/api/bug-report.int.spec.ts',
   'tests/int/api/durable-rate-limit.int.spec.ts',
   'tests/int/api/stats-streak-timezone-939.int.spec.ts',
