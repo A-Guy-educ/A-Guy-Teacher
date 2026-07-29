@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.30.0 — 2026-07-29
+
+### Features
+
+- **payments**: wire PayPal subscriptions into checkout flow (#980)
+- **payments**: show only PayPal on the product buy button (#979)
+- **build/ci**: gate build, CI, and Vercel deploy on env validation via a shared Zod schema (#955)
+- **security**: replace in-memory rate limiter with a durable Mongo TTL-backed helper (#946)
+- **home**: redirect logged-in users with a picked course to `/courses/{slug}` (#924)
+- **exercises**: unify test-view check-all button across all exercises
+
+### Bug Fixes
+
+- **checkout**: resolve success page lookup for PayPal subscription returns (#982)
+- **payments**: fix race condition that could double-grant entitlements (#947)
+- **security**: enforce auth + throttling on AI / paid-API endpoints (#941)
+- **security**: move `GEMINI_API_KEY` from URL query string to `x-goog-api-key` header (#949)
+- **security**: escape regex and reject object values in the shared Mongo `where` translator (#944)
+- **api**: enforce API access boundaries
+- **api**: validate ObjectId in `chat-assets/finalize` (400 instead of 500) (#950)
+- **stats**: calculate streaks in the user's timezone (#945)
+- **ui**: yellow-tint locked lesson rows in the course roadmap (#978)
+- **ui**: restore soft yellow tint on locked lesson card CTA (#952)
+- **ui,design-tokens**: restore lesson-row typography after review (#978)
+- **build**: enforce TypeScript and ESLint checks during builds (#971)
+- **vercel**: ignore test-only config files at repo root to unblock build (#977)
+- **vercel**: unignore `scripts/` so build can invoke `validate-env.ts` (#975)
+- **ci**: remove `|| true` from `pnpm audit` step so failures actually gate CI (#951)
+- **ci**: use `pnpm test:unit:coverage` instead of `test:unit -- --coverage` (#943)
+- **ci**: add `CRON_SECRET` and `PREVIEW_SECRET` fallbacks to Build job env
+- **db**: tolerate an equivalent Mongo index under a different name
+- **kody**: refresh Kody workflow launcher (#983, #984)
+
+### Refactor
+
+- remove guest chat identity and require a session for all chat routes
+
+### Chore
+
+- bump `next` `15.5.9` → `15.5.21` to patch 3 high CVEs (#969)
+- bump `js-yaml` and `brace-expansion` via pnpm overrides for 2 high CVEs
+- gate `console.log` calls behind debug logger and enable `no-console` lint rule (#956)
+
 ## v0.29.0 — 2026-07-19
 
 ### Features
