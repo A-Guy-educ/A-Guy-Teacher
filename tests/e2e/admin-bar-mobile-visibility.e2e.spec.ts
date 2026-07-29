@@ -8,8 +8,7 @@
  * @tags @bug
  */
 import { expect, test } from '@playwright/test'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+import { getWebPayload } from '@/infra/web-api/mongo-payload'
 
 import {
   cleanupTestUsers,
@@ -19,7 +18,7 @@ import {
 } from './helpers/auth'
 
 async function authenticateAsAdmin(page: import('@playwright/test').Page, user: TestUser) {
-  const payload = await getPayload({ config })
+  const payload = await getWebPayload()
   const loginResult = await payload.login({
     collection: 'users',
     data: {
