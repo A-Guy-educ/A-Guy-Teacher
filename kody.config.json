@@ -32,6 +32,9 @@
         "release_gate": true
       }
     },
+    "deployment": {
+      "workflow": "vercel-deploy.yml"
+    },
     "versionFiles": [
       "package.json"
     ],
@@ -71,9 +74,9 @@
       "merge",
       "revert",
       "release-prepare",
+      "release-deploy",
       "release-merge",
       "release-promote",
-      "vercel-production-deploy",
       "design-review",
       "preview-health",
       "qa",
