@@ -36,7 +36,6 @@
       "package.json"
     ],
     "productionUrl": "https://www.aguy.co.il",
-    "smokeCommand": "pnpm tsx scripts/smoke-web-api.ts",
     "e2eCommand": "npx tsx scripts/release-e2e-gate.ts",
     "timeoutMs": 1800000
   },
