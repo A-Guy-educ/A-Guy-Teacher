@@ -49,6 +49,7 @@ describe('login page resolves returnTo on the server', () => {
   })
 
   it('keeps relative destinations working when shared login is off', async () => {
+    vi.stubEnv('ROOT_DOMAIN', '')
     expect(await renderLoginPage('/courses/algebra')).toBe('/courses/algebra')
   })
 })
