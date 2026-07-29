@@ -101,6 +101,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ filename: string }> },
 ) {
+  // public endpoint: serves published media with path and range validation
   const { filename: rawFilename } = await params
   const filename = decodeFilename(rawFilename)
 

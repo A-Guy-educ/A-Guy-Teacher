@@ -32,6 +32,12 @@ function rawMarkdownPlugin(): Plugin {
 const activeIntegrationTests = [
   'tests/int/analytics/**/*.int.spec.ts',
   'tests/int/api/bug-report.int.spec.ts',
+  'tests/int/api/durable-rate-limit.int.spec.ts',
+  'tests/int/api/stats-streak-timezone-939.int.spec.ts',
+  'tests/int/api/ai-paid-api-auth-928.int.spec.ts',
+  'tests/int/api/ai-paid-api-auth-quota-928.int.spec.ts',
+  'tests/int/api/chat-assets-finalize-objectid-935.int.spec.ts',
+  'tests/int/api/generate-interactive-lesson-flow.int.spec.ts',
   'tests/int/checkAnswer.int.spec.ts',
   'tests/int/auth-middleware.int.spec.ts',
   'tests/int/courses-auth-gate-673.int.spec.ts',
@@ -44,7 +50,6 @@ const activeIntegrationTests = [
   'tests/int/guardrails/**/*.int.spec.ts',
   'tests/int/health.api.int.spec.ts',
   'tests/int/health-badge.int.spec.ts',
-  'tests/int/media-cleanup-workflow.int.spec.ts',
   'tests/int/middleware.int.spec.ts',
   'tests/int/openai-error-handling.int.spec.ts',
   'tests/int/pdf-conversion-cleanup-regression.int.spec.ts',
@@ -53,6 +58,8 @@ const activeIntegrationTests = [
   'tests/int/pdf-conversion-shadow-field.int.spec.ts',
   'tests/int/refactor-inline-styles.int.spec.ts',
   'tests/int/v2-vision-detection.int.spec.ts',
+  'tests/int/paypal-concurrent-webhook-race.int.spec.ts',
+  'tests/int/paypal-subscription-checkout.int.spec.ts',
 ]
 
 export default defineConfig({

@@ -43,14 +43,21 @@ function splitContextKey(contextKey: string) {
   return { relationTo, value: rest.join(':') }
 }
 
+/**
+ * Match a conversation owner. Historic rows store `user` as a plain string
+ * while `/api/conversations/by-context` writes an ObjectId, so reads have to
+ * accept both representations or the same user sees two separate histories.
+ */
+function ownerMatch(ownerId: string) {
+  return ObjectId.isValid(ownerId) ? { $in: [ownerId, new ObjectId(ownerId)] } : ownerId
+}
+
 export async function getOrCreateConversation(ownerId: string, contextKey: string) {
   const db = await getContentDb()
   const conversations = db.collection('conversations')
-  const ownerField = ownerId.startsWith('guest:') ? 'guestSession' : 'user'
-  const ownerValue = ownerId.startsWith('guest:') ? ownerId.slice('guest:'.length) : ownerId
 
   const existing = await conversations.findOne({
-    [ownerField]: ownerValue,
+    user: ownerMatch(ownerId),
     contextKey,
     archivedAt: { $exists: false },
   })
@@ -59,7 +66,7 @@ export async function getOrCreateConversation(ownerId: string, contextKey: strin
   const now = new Date()
   const contextRef = splitContextKey(contextKey)
   const doc = {
-    [ownerField]: ownerValue,
+    user: ownerId,
     contextKey,
     contextRef,
     preferredLocale: 'he',
@@ -77,10 +84,8 @@ export async function getOrCreateConversation(ownerId: string, contextKey: strin
 
 export async function findConversation(ownerId: string, contextKey: string) {
   const db = await getContentDb()
-  const ownerField = ownerId.startsWith('guest:') ? 'guestSession' : 'user'
-  const ownerValue = ownerId.startsWith('guest:') ? ownerId.slice('guest:'.length) : ownerId
   const doc = await db.collection('conversations').findOne({
-    [ownerField]: ownerValue,
+    user: ownerMatch(ownerId),
     contextKey,
     archivedAt: { $exists: false },
   })
@@ -113,12 +118,10 @@ export async function appendMessage(
 
 export async function resetConversation(ownerId: string, contextKey: string) {
   const db = await getContentDb()
-  const ownerField = ownerId.startsWith('guest:') ? 'guestSession' : 'user'
-  const ownerValue = ownerId.startsWith('guest:') ? ownerId.slice('guest:'.length) : ownerId
   await db
     .collection('conversations')
     .updateMany(
-      { [ownerField]: ownerValue, contextKey, archivedAt: { $exists: false } },
+      { user: ownerMatch(ownerId), contextKey, archivedAt: { $exists: false } },
       { $set: { archivedAt: new Date(), updatedAt: new Date() } },
     )
   return getOrCreateConversation(ownerId, contextKey)
@@ -151,7 +154,6 @@ export function formatConversationResponse(
     conversationId: conversation.id,
     contextKey,
     messages: visibleMessages(conversation),
-    isGuestMode: !conversation.user,
   }
 }
 
@@ -217,34 +219,42 @@ export function buildGeminiUserParts(prompt: string, attachmentParts: GeminiPart
   return attachmentParts.length > 0 ? [...attachmentParts, { text: prompt }] : [{ text: prompt }]
 }
 
-async function loadAttachments(chatAssetIds?: string[], mediaIds?: string[]) {
+async function loadAttachments(ownerId: string, chatAssetIds?: string[], mediaIds?: string[]) {
   const db = await getContentDb()
   const lines: string[] = []
   const parts: GeminiPart[] = []
-  let loadedCount = 0
+  let attemptedCount = 0
 
   async function addAttachment(attachment: AttachmentDoc, label: string) {
     lines.push(`${label}: ${attachmentName(attachment)}`)
-    if (typeof attachment.url === 'string' && attachment.url)
-      lines.push(`File URL: ${attachment.url}`)
 
-    if (loadedCount >= CHAT_ASSET_MAX_ATTACHMENTS) return
+    // Count attempts, not successes: a failing fetch must still consume budget,
+    // otherwise a list of unreachable ids becomes an unbounded fetch loop.
+    if (attemptedCount >= CHAT_ASSET_MAX_ATTACHMENTS) return
+    attemptedCount += 1
 
     try {
       const part = await attachmentToInlinePart(attachment)
-      if (part) {
-        parts.push(part)
-        loadedCount += 1
-      }
+      if (part) parts.push(part)
     } catch {
       lines.push(`Attachment vision data unavailable: ${attachmentName(attachment)}`)
     }
   }
 
+  const ids = (values: string[]) => ({
+    $in: values.filter(ObjectId.isValid).map((id) => new ObjectId(id)),
+  })
+
   if (chatAssetIds?.length) {
+    // Owner-scoped: an asset id alone must never grant access to another
+    // user's upload, and expired assets are no longer readable.
     const assets = await db
       .collection('chat-assets')
-      .find({ _id: { $in: chatAssetIds.filter(ObjectId.isValid).map((id) => new ObjectId(id)) } })
+      .find({
+        _id: ids(chatAssetIds),
+        createdBy: ownerId,
+        $or: [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }],
+      })
       .toArray()
     for (const asset of assets) {
       await addAttachment(asset, 'Attached file')
@@ -253,7 +263,7 @@ async function loadAttachments(chatAssetIds?: string[], mediaIds?: string[]) {
   if (mediaIds?.length) {
     const media = await db
       .collection('media')
-      .find({ _id: { $in: mediaIds.filter(ObjectId.isValid).map((id) => new ObjectId(id)) } })
+      .find({ _id: ids(mediaIds), createdBy: ownerId })
       .toArray()
     for (const item of media) {
       await addAttachment(item, 'Attached media')
@@ -264,13 +274,14 @@ async function loadAttachments(chatAssetIds?: string[], mediaIds?: string[]) {
 }
 
 export async function generateAssistantReply(args: {
+  ownerId: string
   message: string
   acknowledgment?: string
   history?: WebChatMessage[]
   chatAssetIds?: string[]
   mediaIds?: string[]
 }) {
-  const attachments = await loadAttachments(args.chatAssetIds, args.mediaIds)
+  const attachments = await loadAttachments(args.ownerId, args.chatAssetIds, args.mediaIds)
   const system =
     'You are A-Guy, a concise math tutor. Help the student with clear steps, in the same language they use when possible.'
   const history = (args.history ?? [])
@@ -287,10 +298,13 @@ export async function generateAssistantReply(args: {
 
   const model = process.env.LLM_MODEL_OVERRIDE_EXERCISE_CHAT || 'gemini-2.5-flash'
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': process.env.GEMINI_API_KEY,
+      },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: 'user', parts: buildGeminiUserParts(prompt, attachments.parts) }],

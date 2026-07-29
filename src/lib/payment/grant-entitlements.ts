@@ -16,6 +16,27 @@ interface ProductDoc {
   contents?: ProductContentBlock[] | null
 }
 
+function isDuplicateKeyError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 11000
+  )
+}
+
+async function upsertEntitlement(
+  collection: ReturnType<Awaited<ReturnType<typeof getContentDb>>['collection']>,
+  filter: Record<string, unknown>,
+  document: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await collection.updateOne(filter, { $setOnInsert: document }, { upsert: true })
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) throw error
+  }
+}
+
 function toObjectIdOrValue(id: string): ObjectId | string {
   return ObjectId.isValid(id) ? new ObjectId(id) : id
 }
@@ -89,46 +110,82 @@ export async function grantProductEntitlements(
     const userMatch = { $in: [userValue] }
     const courseMatch = { $in: [courseValue] }
 
-    const existingEntitlement = await db
-      .collection('user-entitlements')
-      .findOne({ user: userMatch, course: courseMatch })
-    const existingEnrollment = await db.collection('enrollments').findOne({
+    await upsertEntitlement(
+      db.collection('user-entitlements'),
+      { user: userMatch, course: courseMatch },
+      {
+        tenant: tenantValue,
+        user: userValue,
+        contentType: 'course',
+        course: courseValue,
+        grantMethod: 'purchase',
+        transaction: transactionValue,
+        createdAt: now,
+        updatedAt: now,
+      },
+    )
+
+    // For enrollments we can't fully use $setOnInsert because we want to
+    // re-activate a previously cancelled enrollment on a fresh purchase. The
+    // unique (user, course) index still guarantees at most one enrollment
+    // document per (user, course) pair, so concurrent granters are safe.
+    const enrollments = db.collection('enrollments')
+    const existingEnrollment = await enrollments.findOne({
       user: userMatch,
       course: courseMatch,
-      status: { $ne: 'cancelled' },
     })
 
-    if (existingEntitlement || existingEnrollment) {
-      logger.info(
-        { userId, courseId, transactionId },
-        'grantProductEntitlements: already entitled — skipping insert',
-      )
+    if (existingEnrollment) {
+      if (existingEnrollment.status === 'cancelled') {
+        await enrollments.updateOne(
+          { _id: existingEnrollment._id },
+          {
+            $set: {
+              status: 'active',
+              grantMethod: 'purchase',
+              source: 'self',
+              enrolledAt: now,
+              cancelledAt: null,
+              'metadata.transactionId': transactionId,
+              updatedAt: now,
+            },
+            $unset: { cancelledAt: '' },
+          },
+        )
+        logger.info(
+          { userId, courseId, transactionId },
+          'grantProductEntitlements: re-activated previously cancelled enrollment',
+        )
+      } else {
+        logger.info(
+          { userId, courseId, transactionId },
+          'grantProductEntitlements: already entitled — skipping insert',
+        )
+      }
       continue
     }
 
-    await db.collection('user-entitlements').insertOne({
-      tenant: tenantValue,
-      user: userValue,
-      contentType: 'course',
-      course: courseValue,
-      grantMethod: 'purchase',
-      transaction: transactionValue,
-      createdAt: now,
-      updatedAt: now,
-    })
-
-    await db.collection('enrollments').insertOne({
-      tenant: tenantValue,
-      user: userValue,
-      course: courseValue,
-      status: 'active',
-      grantMethod: 'purchase',
-      source: 'self',
-      enrolledAt: now,
-      metadata: { transactionId },
-      createdAt: now,
-      updatedAt: now,
-    })
+    try {
+      await enrollments.insertOne({
+        tenant: tenantValue,
+        user: userValue,
+        course: courseValue,
+        status: 'active',
+        grantMethod: 'purchase',
+        source: 'self',
+        enrolledAt: now,
+        metadata: { transactionId },
+        createdAt: now,
+        updatedAt: now,
+      })
+    } catch (error) {
+      if (!isDuplicateKeyError(error)) throw error
+      logger.info(
+        { userId, courseId, transactionId },
+        'grantProductEntitlements: enrollment already exists (concurrent grant) — skipping',
+      )
+      continue
+    }
 
     logger.info(
       { userId, productId, courseId, transactionId },

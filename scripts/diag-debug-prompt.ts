@@ -1,8 +1,7 @@
 /**
- * Local mirror of /api/agent/chat/debug-prompt — runs the same code path
- * (fetchLessonContextForContext + composeFullSystemInstructions) against
- * the dev DB and dumps a comprehensive snapshot of what reaches Gemini for
- * a given lesson/exercise context.
+ * Local diagnostic mirror of the agent chat prompt composition path. It runs
+ * the same context and instruction code against the dev DB and dumps a
+ * comprehensive snapshot of what reaches Gemini for a given lesson/exercise.
  *
  * Usage:
  *   pnpm tsx scripts/diag-debug-prompt.ts --lessonId 69a01f6bc774d3c6ad807afd

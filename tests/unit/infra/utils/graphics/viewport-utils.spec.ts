@@ -96,6 +96,33 @@ describe('viewport-utils', () => {
       expect(result.yMin).toBeLessThanOrEqual(0)
       expect(result.yMax).toBeGreaterThanOrEqual(100)
     })
+
+    it('does not execute JavaScript supplied as a graph expression', () => {
+      const marker = '__viewportExpressionExecuted'
+      Reflect.deleteProperty(globalThis, marker)
+
+      calculateAutoViewport({
+        version: 1,
+        viewport: { mode: 'auto' },
+        axes: {
+          x: { visible: true },
+          y: { visible: true },
+        },
+        elements: {
+          points: [],
+          graphs: [
+            {
+              id: 'unsafe',
+              fn: `globalThis.${marker}=1`,
+              style: 'solid',
+              thickness: 2,
+            },
+          ],
+        },
+      })
+
+      expect(Reflect.has(globalThis, marker)).toBe(false)
+    })
   })
 
   // FR-004: Min-Max Validation

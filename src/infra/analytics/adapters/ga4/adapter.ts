@@ -9,6 +9,7 @@
 
 import { analyticsConfig } from '../../config'
 import type { EventPayload } from '../../types'
+import { analyticsDebugLog as debugLog } from '../../utils/debug-logger'
 import { transformToGA4 } from './transform'
 
 /**
@@ -50,9 +51,7 @@ export function sendToGA4(payload: EventPayload): void {
     // Send to GA4
     gtag('event', ga4Event.name, ga4Event.params)
 
-    if (analyticsConfig.debugMode) {
-      console.log('[Analytics/GA4] Sent:', ga4Event)
-    }
+    debugLog.log('Sent:', ga4Event)
   } catch (err) {
     console.error('[Analytics/GA4] Send failed:', err)
   }
@@ -89,9 +88,7 @@ export function initializeGA4(): void {
       send_page_view: false, // We handle page views manually
     })
 
-    if (analyticsConfig.debugMode) {
-      console.log('[Analytics/GA4] Initialized:', measurementId)
-    }
+    debugLog.log('Initialized:', measurementId)
   } catch (err) {
     console.error('[Analytics/GA4] Initialization failed:', err)
   }

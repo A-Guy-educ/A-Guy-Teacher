@@ -26,7 +26,6 @@ export const ConfigDomain = {
   Chat: 'chat',
   PdfConversion: 'pdf_conversion',
   Global: 'global',
-  GuestChat: 'guest_chat',
   LatexConversion: 'latex_conversion',
 } as const
 

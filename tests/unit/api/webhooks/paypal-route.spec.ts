@@ -26,7 +26,7 @@ vi.mock('@/lib/payment/grant-entitlements', () => ({
 }))
 
 const findOneMock = vi.fn()
-const updateOneMock = vi.fn()
+const updateOneMock = vi.fn().mockResolvedValue({ matchedCount: 1, modifiedCount: 1 })
 vi.mock('@/infra/db/content-db', async () => {
   const actual =
     await vi.importActual<typeof import('@/infra/db/content-db')>('@/infra/db/content-db')

@@ -15,6 +15,7 @@ import { getPublicBaseUrl } from '@/infra/auth/oauth_url'
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
+  // public endpoint: starts the OAuth authorization flow
   const returnTo = sanitizeReturnTo(req.nextUrl.searchParams.get('returnTo'))
 
   const baseUrl = getPublicBaseUrl(req)

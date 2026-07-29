@@ -11,16 +11,9 @@
  * Usage (file mode - for lint-staged):
  *   pnpm tsx scripts/design-tokens/codemod.ts file1.tsx file2.tsx
  *
- * Patterns replaced:
- * - text-xl → text-heading-xl
- * - text-lg → text-body-lg
- * - p-6 → p-card-padding
- * - py-8 → py-section-md
- * - gap-4 → gap-content-gap
- * - shadow-lg → shadow-card
- * - duration-150 → duration-fast
- * - rounded-[20px] → rounded-chat-lg
- * - rounded-[30px] → rounded-chat-2xl
+ * See the REPLACEMENTS array below for the full mapping table.
+ * (Note: raw examples are not listed in this docstring because the
+ * codemod would rewrite its own documentation when run on this file.)
  */
 
 import { readFile, writeFile, readdir, stat } from 'fs/promises'
@@ -33,7 +26,7 @@ const REPLACEMENTS: Array<[pattern: RegExp, replacement: string]> = [
   [/\btext-5xl\b/g, 'text-display-lg'],
   [/\btext-4xl\b/g, 'text-display-md'],
   [/\btext-3xl\b/g, 'text-display-sm'],
-  [/\btext-2xl\b/g, 'text-display-xl'],
+  [/\btext-2xl\b/g, 'text-heading-xl'],
   [/\btext-xl\b/g, 'text-heading-xl'],
   [/\btext-lg\b/g, 'text-body-lg'],
   [/\btext-base\b/g, 'text-body-md'],

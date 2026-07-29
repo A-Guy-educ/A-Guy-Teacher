@@ -6,6 +6,7 @@
  */
 
 import type { AxisSpecV1 } from '@/infra/contracts/graphics/axis.v1'
+import { parse } from 'mathjs'
 
 /**
  * Viewport bounds
@@ -39,10 +40,24 @@ export interface GraphVisibilityResult {
  */
 function evaluateMathExpression(fn: string, x: number): number | null {
   try {
-    // Replace ^ with ** for JavaScript exponentiation
-    const jsFn = fn.replace(/\^/g, '**')
-    const fnWithX = new Function('x', `return ${jsFn}`)
-    const result = fnWithX(x)
+    const compiled = parse(fn.toLowerCase().replace(/\s+/g, '')).compile()
+    const result = compiled.evaluate({
+      x,
+      sin: Math.sin,
+      cos: Math.cos,
+      tan: Math.tan,
+      sqrt: Math.sqrt,
+      abs: Math.abs,
+      log: Math.log,
+      log10: Math.log10,
+      exp: Math.exp,
+      pow: Math.pow,
+      floor: Math.floor,
+      ceil: Math.ceil,
+      round: Math.round,
+      PI: Math.PI,
+      E: Math.E,
+    })
     if (!Number.isFinite(result)) return null
     return result
   } catch {

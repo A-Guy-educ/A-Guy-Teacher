@@ -302,7 +302,9 @@
         "heroSubtitle": "A-Guy Your Personal Tutor"
       },
       "errors": {
-        "invalidCredentials": "Invalid email or password"
+        "invalidCredentials": "Invalid email or password",
+        "invalidEmail": "Enter a valid email address",
+        "passwordRequired": "Password is required"
       }
     },
     "account": {
@@ -340,12 +342,7 @@
     "purchases": {
       "title": "My Purchases",
       "refresh": "Refresh",
-      "status": {
-        "pending": "Pending",
-        "succeeded": "Succeeded",
-        "failed": "Failed",
-        "refunded": "Refunded"
-      },
+      "status": "Status",
       "couponApplied": "Coupon: {code}",
       "unknownProduct": "Unknown Product",
       "empty": {
@@ -358,7 +355,6 @@
       "amount": "Amount",
       "provider": "Provider",
       "transactionId": "Transaction ID",
-      "status": "Status",
       "coupon": "Coupon",
       "pendingHelpText": "Your payment is being processed. This may take a few moments.",
       "refreshStatus": "Refresh Status",
@@ -497,7 +493,6 @@
     "chatAuthRequired": "Please sign in to use the AI helper",
     "chatAuthRequiredLogin": "Log in",
     "chatAuthRequiredCTA": "Sign up to continue",
-    "chatGuestLimitMessage": "Guest message limit reached. Sign up for unlimited access.",
     "chatErrorDismiss": "Dismiss error",
     "chatHintPrompt": "Can you give me a hint to help me solve this?",
     "chatSolutionPrompt": "Can you explain the solution approach?",
@@ -916,6 +911,8 @@
     "examDate": "When is the exam?",
     "topicsTitle": "Topics to Focus On",
     "addTopicPlaceholder": "Add a topic...",
+    "addTopic": "Add topic",
+    "removeTopic": "Remove topic",
     "mastery": {
       "weak": "Weak",
       "medium": "Medium",
@@ -1047,7 +1044,15 @@
       "productNotActive": "This product is no longer available.",
       "invalidCoupon": "This coupon code is invalid or expired.",
       "checkoutFailed": "Unable to start checkout. Please try again.",
-      "providerNotConfigured": "This payment provider is not configured. Please contact support."
+      "providerNotConfigured": "This payment provider is not configured. Please contact support.",
+      "subscriptionCheckoutDisabled": "Subscriptions are coming soon. Please check back shortly.",
+      "inFlightSubscriptionExists": "You already have a checkout in progress for this subscription. Please finish or cancel it before starting a new one.",
+      "stripeSubscriptionsNotSupported": "Subscriptions can only be paid via PayPal.",
+      "couponsNotSupportedOnSubscriptions": "Coupon codes cannot be used on subscription plans.",
+      "productMissingInterval": "This subscription is misconfigured. Please contact support.",
+      "productInvalidInterval": "This subscription is misconfigured. Please contact support.",
+      "productMissingPrice": "This product is misconfigured. Please contact support.",
+      "invalidCurrency": "This product is misconfigured. Please contact support."
     },
     "payWithCard": "Pay with Credit Card",
     "payWithPaypal": "Pay with PayPal"

@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
+import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
+import { enforceUserChatQuota, requireUser } from '@/server/auth/api-auth'
+
+const VALIDATE_ANSWER_RATE_LIMIT_MAX = 30
+const VALIDATE_ANSWER_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+
 const BodySchema = z.object({
   questionId: z.string().min(1),
   questionText: z.string().min(1),
@@ -53,10 +59,13 @@ async function semanticMatch(input: z.infer<typeof BodySchema>) {
   ].join('\n')
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': process.env.GEMINI_API_KEY,
+      },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
@@ -83,10 +92,23 @@ async function semanticMatch(input: z.infer<typeof BodySchema>) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
+
+  const rate = await rateLimit({
+    key: `user:${auth.value.id}:exercises-validate-answer`,
+    limit: VALIDATE_ANSWER_RATE_LIMIT_MAX,
+    windowMs: VALIDATE_ANSWER_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!rate.allowed) return rateLimitExceededResponse(rate)
+
   const parsed = BodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) {
     return Response.json({ success: false, error: 'Validation failed' }, { status: 400 })
   }
+
+  const quota = await enforceUserChatQuota(auth.value.id)
+  if (!quota.ok) return quota.response
 
   const exact = localMatch(parsed.data.studentAnswer, parsed.data.acceptedAnswers)
   if (exact.matched) {

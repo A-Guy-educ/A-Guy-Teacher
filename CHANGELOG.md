@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.30.0 — 2026-07-29
+
+### Features
+
+- **payments**: wire PayPal subscriptions into checkout flow (#980)
+- **payments**: show only PayPal on the product buy button (#979)
+- **build/ci**: gate build, CI, and Vercel deploy on env validation via a shared Zod schema (#955)
+- **security**: replace in-memory rate limiter with a durable Mongo TTL-backed helper (#946)
+- **home**: redirect logged-in users with a picked course to `/courses/{slug}` (#924)
+- **exercises**: unify test-view check-all button across all exercises
+
+### Bug Fixes
+
+- **checkout**: resolve success page lookup for PayPal subscription returns (#982)
+- **payments**: fix race condition that could double-grant entitlements (#947)
+- **security**: enforce auth + throttling on AI / paid-API endpoints (#941)
+- **security**: move `GEMINI_API_KEY` from URL query string to `x-goog-api-key` header (#949)
+- **security**: escape regex and reject object values in the shared Mongo `where` translator (#944)
+- **api**: enforce API access boundaries
+- **api**: validate ObjectId in `chat-assets/finalize` (400 instead of 500) (#950)
+- **stats**: calculate streaks in the user's timezone (#945)
+- **ui**: yellow-tint locked lesson rows in the course roadmap (#978)
+- **ui**: restore soft yellow tint on locked lesson card CTA (#952)
+- **ui,design-tokens**: restore lesson-row typography after review (#978)
+- **build**: enforce TypeScript and ESLint checks during builds (#971)
+- **vercel**: ignore test-only config files at repo root to unblock build (#977)
+- **vercel**: unignore `scripts/` so build can invoke `validate-env.ts` (#975)
+- **ci**: remove `|| true` from `pnpm audit` step so failures actually gate CI (#951)
+- **ci**: use `pnpm test:unit:coverage` instead of `test:unit -- --coverage` (#943)
+- **ci**: add `CRON_SECRET` and `PREVIEW_SECRET` fallbacks to Build job env
+- **db**: tolerate an equivalent Mongo index under a different name
+- **kody**: refresh Kody workflow launcher (#983, #984)
+
+### Refactor
+
+- remove guest chat identity and require a session for all chat routes
+
+### Chore
+
+- bump `next` `15.5.9` → `15.5.21` to patch 3 high CVEs (#969)
+- bump `js-yaml` and `brace-expansion` via pnpm overrides for 2 high CVEs
+- gate `console.log` calls behind debug logger and enable `no-console` lint rule (#956)
+
 ## v0.29.0 — 2026-07-19
 
 ### Features
@@ -72,33 +115,6 @@
 
 - Remove `course.pageAccessType` readers ahead of Admin schema drop (#782)
 
-## v0.26.9 — 2026-07-06
-
-_No notable commits since the last release._
-## v0.26.8 — 2026-07-05
-
-_No notable commits since the last release._
-## v0.26.7 — 2026-07-04
-
-_No notable commits since the last release._
-## v0.26.6 — 2026-07-03
-
-_No notable commits since the last release._
-## v0.26.5 — 2026-07-02
-
-_No notable commits since the last release._
-## v0.26.4 — 2026-06-30
-
-_No notable commits since the last release._
-## v0.26.3 — 2026-06-30
-
-_No notable commits since the last release._
-## v0.26.2 — 2026-06-25
-
-_No notable commits since the last release._
-## v0.26.1 — 2026-06-24
-
-_No notable commits since the last release._
 ## [0.26.0] - 2026-06-17
 
 ### Features
@@ -1912,6 +1928,32 @@ _No notable commits since the last release._
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: Release v0.30.0 ([#986](https://github.com/A-Guy-educ/A-Guy-Web/pull/986)) — @aguyshayb
+- fix: refresh Kody workflow launcher ([#984](https://github.com/A-Guy-educ/A-Guy-Web/pull/984)) — @aguyaharonyair
+- fix: Refresh Kody workflow launcher ([#983](https://github.com/A-Guy-educ/A-Guy-Web/pull/983)) — @aharonyaircohen
+- fix(checkout): Resolve success page lookup for PayPal subscription returns ([#982](https://github.com/A-Guy-educ/A-Guy-Web/pull/982)) — @aguyshayb
+- feat(payments): Wire PayPal subscriptions into checkout flow ([#980](https://github.com/A-Guy-educ/A-Guy-Web/pull/980)) — @aguyshayb
+- test(products): Fix checkout responsive tests after paypal-only merge ([#981](https://github.com/A-Guy-educ/A-Guy-Web/pull/981)) — @aguyshayb
+- fix(ui): Yellow-tint locked lesson rows in course roadmap ([#978](https://github.com/A-Guy-educ/A-Guy-Web/pull/978)) — @aguyshayb
+- feat: Show only PayPal on the product buy button ([#979](https://github.com/A-Guy-educ/A-Guy-Web/pull/979)) — @aharonyaircohen
+- fix(vercel): Unignore scripts/ so build can invoke validate-env.ts ([#975](https://github.com/A-Guy-educ/A-Guy-Web/pull/975)) — @aguyshayb
+- #930: Build: TypeScript and ESLint errors are silenced at build time ([#971](https://github.com/A-Guy-educ/A-Guy-Web/pull/971)) — @aguyaharonyair
+- #936: Deploy: env validation never runs in CI or the build path ([#955](https://github.com/A-Guy-educ/A-Guy-Web/pull/955)) — @kodyade[bot]
+- fix(ui): Restore soft yellow tint on locked lesson card CTA ([#952](https://github.com/A-Guy-educ/A-Guy-Web/pull/952)) — @aguyshayb
+- #938: Cleanup: console.log statements ship in production client bundle … ([#956](https://github.com/A-Guy-educ/A-Guy-Web/pull/956)) — @kodyade[bot]
+- chore(security): Bump next 15.5.18 -> 15.5.21 + format kody.yml ([#969](https://github.com/A-Guy-educ/A-Guy-Web/pull/969)) — @aguyshayb
+- #932: CI: pnpm audit failures are swallowed with '|| true' ([#951](https://github.com/A-Guy-educ/A-Guy-Web/pull/951)) — @kodyade[bot]
+- #935: API: unvalidated ObjectId causes unhandled 500 in chat-assets/fin… ([#950](https://github.com/A-Guy-educ/A-Guy-Web/pull/950)) — @kodyade[bot]
+- #940: Security: move Gemini API key from URL query string to header ([#949](https://github.com/A-Guy-educ/A-Guy-Web/pull/949)) — @kodyade[bot]
+- #933: Cleanup: delete 37 dead '410 Gone' stub API routes ([#948](https://github.com/A-Guy-educ/A-Guy-Web/pull/948)) — @kodyade[bot]
+- #931: CI: coverage flag is silently ignored (test:unit -- --coverage) ([#943](https://github.com/A-Guy-educ/A-Guy-Web/pull/943)) — @kodyade[bot]
+- #937: Security: replace in-memory rate limiter with durable per-user li… ([#946](https://github.com/A-Guy-educ/A-Guy-Web/pull/946)) — @kodyade[bot]
+- #929: Payments: race condition can double-grant entitlements on duplica… ([#947](https://github.com/A-Guy-educ/A-Guy-Web/pull/947)) — @kodyade[bot]
+- #939: Stats: streak calculation uses server timezone instead of user ti… ([#945](https://github.com/A-Guy-educ/A-Guy-Web/pull/945)) — @kodyade[bot]
+- #934: Security: unescaped user input in $regex in shared Mongo query tr… ([#944](https://github.com/A-Guy-educ/A-Guy-Web/pull/944)) — @kodyade[bot]
+- #928: Security: AI/paid-API endpoints are unauthenticated and unthrottl… ([#941](https://github.com/A-Guy-educ/A-Guy-Web/pull/941)) — @kodyade[bot]
+- #923: Redirect logged-in users with a picked course from /home to /cour… ([#924](https://github.com/A-Guy-educ/A-Guy-Web/pull/924)) — @kodyade[bot]
+- promote: dev -> main (v0.29.0) ([#922](https://github.com/A-Guy-educ/A-Guy-Web/pull/922)) — @aguyshayb
 - chore: release v0.29.0 ([#921](https://github.com/A-Guy-educ/A-Guy-Web/pull/921)) — @aguyshayb
 - feat(lessons): Swap scroll tab for test tab on exam lessons ([#920](https://github.com/A-Guy-educ/A-Guy-Web/pull/920)) — @aguyshayb
 - fix(exercises): drop section headers, separate exercises in scroll view ([#907](https://github.com/A-Guy-educ/A-Guy-Web/pull/907)) — @aguyshayb

@@ -9,6 +9,7 @@
 
 import { analyticsConfig } from '../../config'
 import type { EventPayload } from '../../types'
+import { analyticsDebugLog as debugLog } from '../../utils/debug-logger'
 import { transformToMixpanel } from './transform'
 import { clearAnonymousIdCookie } from '../../utils/anonymous-id'
 
@@ -90,16 +91,12 @@ export function sendToMixpanel(payload: EventPayload): void {
         if (Object.keys(userProperties).length > 0) {
           mixpanel.people.set(userProperties)
 
-          if (analyticsConfig.debugMode) {
-            console.log('[Analytics/Mixpanel] People.set:', { userId, userProperties })
-          }
+          debugLog.log('People.set:', { userId, userProperties })
         }
       }
     }
 
-    if (analyticsConfig.debugMode) {
-      console.log('[Analytics/Mixpanel] Sent:', mixpanelEvent)
-    }
+    debugLog.log('Sent:', mixpanelEvent)
   } catch (err) {
     console.error('[Analytics/Mixpanel] Send failed:', err)
   }
@@ -131,9 +128,7 @@ export function identifyUser(userId: string, properties?: Record<string, unknown
       mixpanel.people.set(properties)
     }
 
-    if (analyticsConfig.debugMode) {
-      console.log('[Analytics/Mixpanel] Identified:', { userId, properties })
-    }
+    debugLog.log('Identified:', { userId, properties })
   } catch (err) {
     console.error('[Analytics/Mixpanel] Identify failed:', err)
   }
@@ -163,9 +158,7 @@ export function aliasUser(userId: string, anonymousId?: string): void {
     // Check if already aliased (prevent duplicate aliasing)
     const aliasedFlag = localStorage.getItem('mixpanel_aliased')
     if (aliasedFlag === 'true') {
-      if (analyticsConfig.debugMode) {
-        console.log('[Analytics/Mixpanel] Already aliased - skipping')
-      }
+      debugLog.log('Already aliased - skipping')
       return
     }
 
@@ -175,9 +168,7 @@ export function aliasUser(userId: string, anonymousId?: string): void {
     // Mark as aliased
     localStorage.setItem('mixpanel_aliased', 'true')
 
-    if (analyticsConfig.debugMode) {
-      console.log('[Analytics/Mixpanel] Aliased:', { userId, anonymousId })
-    }
+    debugLog.log('Aliased:', { userId, anonymousId })
   } catch (err) {
     console.error('[Analytics/Mixpanel] Alias failed:', err)
   }
@@ -206,9 +197,7 @@ export function resetUser(): void {
     // Clear anonymous ID cookie
     clearAnonymousIdCookie()
 
-    if (analyticsConfig.debugMode) {
-      console.log('[Analytics/Mixpanel] Reset (new anonymous session via $device_id)')
-    }
+    debugLog.log('Reset (new anonymous session via $device_id)')
   } catch (err) {
     console.error('[Analytics/Mixpanel] Reset failed:', err)
   }

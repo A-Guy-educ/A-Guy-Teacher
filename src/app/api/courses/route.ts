@@ -6,6 +6,7 @@ import { getPublishedCourseList } from '@/server/services/course-list-service'
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
+  // public endpoint: published course catalog
   const searchParams = request.nextUrl.searchParams
   const id = searchParams.get('id')
   const courseLabel = searchParams.get('where[courseLabel][equals]')

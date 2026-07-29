@@ -16,6 +16,7 @@ const QuerySchema = z.object({
 })
 
 export async function GET(request: NextRequest) {
+  // public endpoint: published course syllabus
   try {
     const courseIdParam = request.nextUrl.searchParams.get('courseId')
     const parsed = QuerySchema.safeParse({ courseId: courseIdParam })

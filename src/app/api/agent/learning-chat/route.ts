@@ -1,30 +1,41 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
+import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
+import { requireUserWithChatQuota } from '@/server/auth/api-auth'
 import {
   appendMessage,
   generateAssistantReply,
   getOrCreateConversation,
   type WebChatMessage,
 } from '@/server/web-api/chat'
-import {
-  GUEST_SESSION_COOKIE,
-  getOrCreateGuestId,
-  getWebUser,
-  publicUserId,
-} from '@/infra/web-api/mongo-payload'
+
+const MAX_MESSAGE_LENGTH = 4000
 
 const BodySchema = z.object({
-  message: z.string().trim().min(1),
-  acknowledgment: z.string().optional(),
+  message: z.string().trim().min(1).max(MAX_MESSAGE_LENGTH),
+  acknowledgment: z.string().max(MAX_MESSAGE_LENGTH).optional(),
   conversationId: z.string().optional().nullable(),
-  gradeLevel: z.string().trim().min(1),
-  locale: z.string().optional(),
+  gradeLevel: z.string().trim().min(1).max(50),
+  locale: z.string().max(10).optional(),
 })
 
-function chunkText(text: string) {
-  const chunks = text.match(/.{1,80}(\s|$)/g)
-  return chunks?.map((chunk) => chunk.trimEnd()).filter(Boolean) ?? [text]
+const LEARNING_CHAT_RATE_LIMIT_MAX = 20
+const LEARNING_CHAT_RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
+const CHUNK_SIZE = 80
+
+/**
+ * Split a reply into fixed-size pieces for incremental delivery. Slicing by
+ * index keeps the concatenated chunks byte-identical to the original reply;
+ * the previous regex-and-trim approach glued words together at every boundary.
+ */
+function chunkText(text: string): string[] {
+  if (!text) return []
+  const chunks: string[] = []
+  for (let i = 0; i < text.length; i += CHUNK_SIZE) {
+    chunks.push(text.slice(i, i + CHUNK_SIZE))
+  }
+  return chunks
 }
 
 export async function POST(request: NextRequest) {
@@ -33,9 +44,17 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Missing message or gradeLevel' }, { status: 400 })
   }
 
-  const user = await getWebUser(request.headers)
-  const guestId = getOrCreateGuestId(request)
-  const ownerId = publicUserId(user, guestId)
+  const quota = await requireUserWithChatQuota(request)
+  if (!quota.ok) return quota.response
+
+  const rate = await rateLimit({
+    key: `chat:${quota.value.ownerId}:agent-learning-chat`,
+    limit: LEARNING_CHAT_RATE_LIMIT_MAX,
+    windowMs: LEARNING_CHAT_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!rate.allowed) return rateLimitExceededResponse(rate)
+
+  const ownerId = quota.value.ownerId
   const contextKey = `learning:${parsed.data.gradeLevel}`
   const conversation = await getOrCreateConversation(ownerId, contextKey)
   const messages = Array.isArray(conversation.messages)
@@ -48,6 +67,7 @@ export async function POST(request: NextRequest) {
   })
 
   const reply = await generateAssistantReply({
+    ownerId,
     message: parsed.data.message,
     acknowledgment: parsed.data.acknowledgment,
     history: messages,
@@ -75,14 +95,11 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  const response = new Response(stream, {
+  return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
       Connection: 'keep-alive',
-      'Set-Cookie': `${GUEST_SESSION_COOKIE}=${guestId}; Path=/; Max-Age=2592000; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}; HttpOnly`,
     },
   })
-
-  return response
 }

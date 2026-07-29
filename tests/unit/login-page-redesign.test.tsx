@@ -279,4 +279,34 @@ describe('LoginForm - submit button wires through to loginAction (issue #780)', 
 
     await waitFor(() => expect(mockLoginAction).toHaveBeenCalled())
   })
+
+  it('shows an inline email error without calling loginAction for an empty form', async () => {
+    renderWithPasswordEnabled(<LoginForm />)
+
+    fireEvent.click(screen.getByRole('button', { name: /התחבר/ }))
+
+    expect(await screen.findByText('נדרש אימייל תקין')).toBeTruthy()
+    expect(mockLoginAction).not.toHaveBeenCalled()
+  })
+
+  it('shows an inline email error without calling loginAction for malformed email', async () => {
+    renderWithPasswordEnabled(<LoginForm />)
+
+    fireEvent.change(screen.getByLabelText(/אימייל/), { target: { value: 'not-an-email' } })
+    fireEvent.change(screen.getByLabelText(/סיסמה/), { target: { value: 'password' } })
+    fireEvent.click(screen.getByRole('button', { name: /התחבר/ }))
+
+    expect(await screen.findByText('נדרש אימייל תקין')).toBeTruthy()
+    expect(mockLoginAction).not.toHaveBeenCalled()
+  })
+
+  it('shows an inline password error without calling loginAction when password is empty', async () => {
+    renderWithPasswordEnabled(<LoginForm />)
+
+    fireEvent.change(screen.getByLabelText(/אימייל/), { target: { value: 'student@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /התחבר/ }))
+
+    expect(await screen.findByText('נדרשת סיסמה')).toBeTruthy()
+    expect(mockLoginAction).not.toHaveBeenCalled()
+  })
 })

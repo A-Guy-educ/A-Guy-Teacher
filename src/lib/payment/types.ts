@@ -25,3 +25,24 @@ export interface CheckoutResult {
   checkoutUrl: string
   providerSessionId: string // stripe session ID or paypal order ID
 }
+
+export type SubscriptionInterval = 'month' | 'year'
+
+export interface EnsuredPayPalPlan {
+  paypalProductId: string
+  paypalPlanId: string
+}
+
+export interface CreateSubscriptionOptions {
+  planId: string
+  productId: string
+  userId: string
+  returnUrl: string
+  cancelUrl: string
+  brandName?: string
+}
+
+export interface SubscriptionResult {
+  approvalUrl: string
+  subscriptionId: string
+}

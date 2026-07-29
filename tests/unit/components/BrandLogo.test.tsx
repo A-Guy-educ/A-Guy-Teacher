@@ -42,19 +42,18 @@ describe('A-Guy Logo component', () => {
     const { container } = render(<Logo />)
     const svg = container.querySelector('svg')
     const classes = svg?.getAttribute('class') ?? ''
-    expect(classes).toContain('h-28')
+    expect(classes).toContain('h-8')
     expect(classes).toContain('w-auto')
   })
 
-  it('forwards className to the wrapper', () => {
-    const { container } = render(<Logo className="h-8 w-auto" />)
-    const wrapper = container.firstChild as HTMLElement
-    expect(wrapper.classList.contains('h-8')).toBe(true)
-    expect(wrapper.classList.contains('w-auto')).toBe(true)
-    // Wrapper preserves the existing flex layout classes.
-    expect(wrapper.classList.contains('flex')).toBe(true)
-    expect(wrapper.classList.contains('flex-row')).toBe(true)
-    expect(wrapper.classList.contains('items-center')).toBe(true)
+  it('forwards className onto the svg', () => {
+    const { container } = render(<Logo className="custom-class h-12" />)
+    const svg = container.firstChild as HTMLElement
+    expect(svg.tagName.toLowerCase()).toBe('svg')
+    expect(svg.classList.contains('custom-class')).toBe(true)
+    expect(svg.classList.contains('h-12')).toBe(true)
+    // The component's own defaults are still merged in via cn().
+    expect(svg.classList.contains('w-auto')).toBe(true)
   })
 
   it('does not render a separate "Aguy" text wordmark (it is baked into the svg)', () => {

@@ -38,7 +38,7 @@ export interface FullPipelineResult {
 }
 
 /**
- * Stage 3 invocation per exercise. Reuses the existing endpoint handler
+ * Stage 3 invocation per exercise. Reuses the existing conversion service
  * (which already has retry/fallback logic) by synthesizing a minimal
  * PayloadRequest. Failures are surfaced as warnings rather than aborting
  * the pipeline — the exercise still exists with its raw LaTeX block.
@@ -49,8 +49,7 @@ async function convertLatexBlocksOnExercises(
   exerciseIds: string[],
   warnings: string[],
   /** Real request — required so Stage 3's AI fallback can derive a working
-   *  origin for its internal /api/exercises/import-latex-ai fetch and forward
-   *  the admin's auth cookie. Without these, every fallback call fails. */
+   *  origin and forward the admin's auth cookie when needed. */
   request: { url: string; headers: Headers },
 ): Promise<{ converted: number; failed: number }> {
   let converted = 0
