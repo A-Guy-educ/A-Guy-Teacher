@@ -113,7 +113,8 @@
     ],
     "activeWorkflows": [
       "refresh-knowledge-system",
-      "web-release"
+      "web-release",
+      "build-chat-knowledge-graph"
     ]
   },
   "fly": {
