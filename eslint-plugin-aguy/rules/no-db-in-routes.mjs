@@ -41,7 +41,6 @@ const KNOWN_EXCEPTIONS = new Set([
   'agent/generate-interactive-lesson/route.ts',
   'blob/upload-token/route.ts',
   'chat-assets/finalize/route.ts',
-  'conversations/by-context/route.ts',
   'entitlements/redeem/route.ts',
   'media/file/[filename]/route.ts',
   'media/route.ts',
