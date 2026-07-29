@@ -10,9 +10,9 @@
  * which kind it is. One rule — "data access lives in the service layer" — is
  * only useful if it is actually true everywhere.
  *
- * This rule ratchets. Files already doing it are listed in KNOWN_EXCEPTIONS and
- * are migrated over time; the list may shrink and must never grow. A new route
- * fails immediately.
+ * The rule shipped with an exceptions list for the twenty routes that predated
+ * it. Every one has since been migrated, so the list is gone and the rule now
+ * holds everywhere without qualification. Do not reintroduce it.
  *
  * @example
  * // ❌ BAD — the query lives in the route
@@ -28,14 +28,6 @@
  *   return NextResponse.json(await listUsers())
  * }
  */
-
-/**
- * Routes that predate this rule, as paths relative to `src/app/api/`.
- *
- * Shrink this list; never add to it. Removing an entry is the last step of
- * migrating that route. When it reaches zero, delete the list and this comment.
- */
-const KNOWN_EXCEPTIONS = new Set(['payments/checkout/route.ts', 'webhooks/paypal/route.ts'])
 
 /**
  * The imports that mean "I am about to query the database", by module.
@@ -76,10 +68,7 @@ const rule = {
 
   create(context) {
     const filename = context.filename ?? context.getFilename()
-    const routePath = routePathOf(filename)
-
-    if (routePath === undefined) return {}
-    if (KNOWN_EXCEPTIONS.has(routePath)) return {}
+    if (routePathOf(filename) === undefined) return {}
 
     return {
       ImportDeclaration(node) {

@@ -2,7 +2,16 @@ import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { getContentDb, relationId } from '@/infra/db/content-db'
+import {
+  createSubscription,
+  createTransaction,
+  deleteSubscriptionRow,
+  deleteTransactionRow,
+  findActiveCoupon,
+  findProductById,
+  linkTransactionToSubscription,
+  resolveProductItems,
+} from '@/server/services/checkout'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
 import { logger } from '@/infra/utils/logger/logger'
 import { MissingPaymentEnvError } from '@/lib/payment/env'
@@ -33,26 +42,8 @@ function parseCurrency(raw: unknown): string | null {
   return CURRENCY_SHAPE.test(upper) ? upper : null
 }
 
-async function resolveProductItems(itemValues: unknown[]) {
-  const ids = itemValues.map(relationId).filter((id): id is string => Boolean(id))
-  if (!ids.length) return { itemIds: [], featureKeys: [] }
-
-  const db = await getContentDb()
-  const docs = await db
-    .collection('product-items')
-    .find({ _id: { $in: ids.map((id) => new ObjectId(id)) } })
-    .toArray()
-  return {
-    itemIds: docs.map((doc) => relationId(doc.lesson)).filter((id): id is string => Boolean(id)),
-    featureKeys: docs
-      .map((doc) => doc.featureKey)
-      .filter((key): key is string => typeof key === 'string'),
-  }
-}
-
 interface SubscriptionCheckoutParams {
   request: NextRequest
-  db: Awaited<ReturnType<typeof getContentDb>>
   user: { id: string }
   product: PayPalPlanProductDoc & Record<string, unknown>
   productId: string
@@ -67,7 +58,6 @@ function isPayPalSubscriptionsEnabled(): boolean {
 
 async function createSubscriptionCheckout({
   request,
-  db,
   user,
   product,
   productId,
@@ -178,7 +168,6 @@ async function createSubscriptionCheckout({
   // persist the local transaction/subscription rows, the subscription would
   // continue to bill on approval — cancel it before returning so we don't
   // leak recurring billing state.
-  const now = new Date()
   const userRef = ObjectId.isValid(user.id) ? new ObjectId(user.id) : user.id
   let transactionId: ObjectId | null = null
   let localSubscriptionId: ObjectId | null = null
@@ -189,7 +178,7 @@ async function createSubscriptionCheckout({
     // the two inserts could otherwise see initialTransaction=null and fall
     // back to an entitlement-grant path whose grants can't be cleanly
     // revoked later. See task #976 for the rationale.
-    const transactionInsert = await db.collection('transactions').insertOne({
+    const transactionInsert = await createTransaction({
       tenant: product.tenant ?? null,
       user: userRef,
       product: product._id,
@@ -202,12 +191,10 @@ async function createSubscriptionCheckout({
       metadata: { itemIds, featureKeys },
       successUrl: paypalSuccessUrl,
       cancelUrl,
-      createdAt: now,
-      updatedAt: now,
     })
     transactionId = transactionInsert.insertedId
 
-    const subscriptionInsert = await db.collection('subscriptions').insertOne({
+    const subscriptionInsert = await createSubscription({
       tenant: product.tenant ?? null,
       user: userRef,
       product: product._id,
@@ -221,19 +208,12 @@ async function createSubscriptionCheckout({
       amount,
       currency,
       initialTransaction: transactionId,
-      createdAt: now,
-      updatedAt: now,
     })
     localSubscriptionId = subscriptionInsert.insertedId
 
     // Reverse pointer on the transaction — the webhook handler doesn't need
     // this for correctness, so it's fine to backfill after the sub insert.
-    await db
-      .collection('transactions')
-      .updateOne(
-        { _id: transactionId },
-        { $set: { subscription: localSubscriptionId, updatedAt: new Date() } },
-      )
+    await linkTransactionToSubscription(transactionId, localSubscriptionId)
   } catch (insertErr) {
     // Distinguish the "another checkout for the same (user, product) is
     // already pending/active" race from a generic DB failure. The partial
@@ -268,7 +248,7 @@ async function createSubscriptionCheckout({
     // in-flight checkout even though the PayPal side has been cancelled.
     if (localSubscriptionId) {
       try {
-        await db.collection('subscriptions').deleteOne({ _id: localSubscriptionId })
+        await deleteSubscriptionRow(localSubscriptionId)
       } catch (cleanupErr) {
         logger.error(
           {
@@ -284,7 +264,7 @@ async function createSubscriptionCheckout({
     }
     if (transactionId) {
       try {
-        await db.collection('transactions').deleteOne({ _id: transactionId })
+        await deleteTransactionRow(transactionId)
       } catch (cleanupErr) {
         logger.error(
           {
@@ -367,10 +347,7 @@ export async function POST(request: NextRequest) {
   // branch's later trim() silently accepts it.
   const normalizedCouponCode = parsed.data.couponCode?.trim() || undefined
 
-  const db = await getContentDb()
-  const product = await db
-    .collection('products')
-    .findOne({ _id: new ObjectId(parsed.data.productId) })
+  const product = await findProductById(parsed.data.productId)
   if (!product)
     return NextResponse.json({ success: false, error: 'product_not_found' }, { status: 404 })
   if (product.isActive === false) {
@@ -380,7 +357,6 @@ export async function POST(request: NextRequest) {
   if (product.billingType === 'subscription') {
     return createSubscriptionCheckout({
       request,
-      db,
       user,
       product: product as unknown as PayPalPlanProductDoc & Record<string, unknown>,
       productId: parsed.data.productId,
@@ -392,10 +368,7 @@ export async function POST(request: NextRequest) {
   let amount = Math.round(Number(product.price || 0) * 100)
   let appliedCoupon: Record<string, unknown> | null = null
   if (normalizedCouponCode) {
-    const coupon = await db.collection('coupons').findOne({
-      code: normalizedCouponCode.toUpperCase(),
-      isActive: true,
-    })
+    const coupon = await findActiveCoupon(normalizedCouponCode)
     if (!coupon)
       return NextResponse.json({ success: false, error: 'invalid_coupon' }, { status: 400 })
     const originalAmount = amount
@@ -488,10 +461,9 @@ export async function POST(request: NextRequest) {
   // fail to persist the local transaction record, the order would be
   // orphaned — buyer could still pay it (PayPal) or it would sit unbillable
   // (Stripe). Cancel the remote order before returning so we don't leak state.
-  const now = new Date()
   let transaction: { insertedId: { toString(): string } }
   try {
-    transaction = await db.collection('transactions').insertOne({
+    transaction = await createTransaction({
       // Align with subscription branch shape — always a value, `null` when the
       // product is tenant-less. Reporting queries then don't have to match on
       // both `undefined` and `null` for the same field.
@@ -506,8 +478,6 @@ export async function POST(request: NextRequest) {
       metadata: { itemIds, featureKeys, ...(appliedCoupon ? { appliedCoupon } : {}) },
       successUrl,
       cancelUrl,
-      createdAt: now,
-      updatedAt: now,
     })
   } catch (insertErr) {
     logger.error(

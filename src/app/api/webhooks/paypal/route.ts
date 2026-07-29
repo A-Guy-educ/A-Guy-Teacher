@@ -29,10 +29,16 @@
  *  - 200 — event accepted (handled, deduped, or intentionally ignored).
  */
 
-import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getContentDb, relationId } from '@/infra/db/content-db'
+import { relationId } from '@/infra/db/content-db'
+import {
+  claimTransactionSucceeded,
+  findTransactionByCaptureId,
+  findTransactionByProviderId,
+  markEntitlementsGranted,
+  markTransactionRefunded,
+} from '@/server/services/transactions'
 import { logger } from '@/infra/utils/logger/logger'
 import { grantProductEntitlements } from '@/lib/payment/grant-entitlements'
 import { capturePayPalOrder, verifyPayPalWebhook } from '@/lib/payment/paypal'
@@ -164,13 +170,7 @@ async function maybeGrantEntitlements(transaction: {
   const grantedAt = new Date()
   await grantProductEntitlements(userId, productId, transactionId)
 
-  const db = await getContentDb()
-  await db
-    .collection('transactions')
-    .updateOne(
-      { _id: new ObjectId(transactionId) },
-      { $set: { entitlementsGrantedAt: grantedAt, updatedAt: grantedAt } },
-    )
+  await markEntitlementsGranted(transactionId, grantedAt)
 
   logger.info({ transactionId, userId, productId }, 'PayPal webhook: entitlements granted')
 }
@@ -270,10 +270,7 @@ async function handleEvent(event: PayPalWebhookEvent): Promise<void> {
 
 async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
   const orderId = event.resource.id
-  const db = await getContentDb()
-  const transactions = db.collection('transactions')
-
-  const transaction = await transactions.findOne({ providerTransactionId: orderId })
+  const transaction = await findTransactionByProviderId(orderId)
   if (!transaction) {
     logger.warn(
       { orderId, eventId: event.id },
@@ -308,25 +305,12 @@ async function handleOrderApproved(event: PayPalWebhookEvent): Promise<void> {
   // they're independently idempotent (atomic upsert on entitlements +
   // atomic claim on the receipt), so a losing webhook can safely re-enter
   // the path in case the winning webhook crashed mid-flight.
-  const claim = await transactions.updateOne(
-    {
-      _id: new ObjectId(String(transaction._id)),
-      status: { $in: ['pending', 'failed'] },
-    },
-    {
-      $set: {
-        status: 'succeeded',
-        // Only overwrite captureId if we actually got one back. Older /capture
-        // replies on already-captured orders return null; PAYMENT.CAPTURE.COMPLETED
-        // will fill it in on the follow-up event.
-        ...(captureId ? { captureId } : {}),
-        capturedAt,
-        updatedAt: capturedAt,
-      },
-    },
-  )
+  const claimed = await claimTransactionSucceeded(String(transaction._id), {
+    captureId,
+    capturedAt,
+  })
 
-  if (claim.modifiedCount !== 1) {
+  if (!claimed) {
     logger.info(
       { transactionId: String(transaction._id), eventId: event.id, orderId },
       'PayPal webhook: ORDER.APPROVED lost the race to flip status — re-entering side effects',
@@ -350,10 +334,7 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
     return
   }
 
-  const db = await getContentDb()
-  const transactions = db.collection('transactions')
-
-  const transaction = await transactions.findOne({ providerTransactionId: orderId })
+  const transaction = await findTransactionByProviderId(orderId)
   if (!transaction) {
     logger.warn(
       { orderId, captureId, eventId: event.id },
@@ -387,22 +368,12 @@ async function handleCaptureCompleted(event: PayPalWebhookEvent): Promise<void> 
   // Same atomic-claim pattern as handleOrderApproved: only one webhook flips
   // the status out of pending. Concurrent losers still re-enter the side
   // effects — those are independently idempotent.
-  const claim = await transactions.updateOne(
-    {
-      _id: new ObjectId(String(transaction._id)),
-      status: { $in: ['pending', 'failed'] },
-    },
-    {
-      $set: {
-        status: 'succeeded',
-        captureId,
-        capturedAt,
-        updatedAt: capturedAt,
-      },
-    },
-  )
+  const claimed = await claimTransactionSucceeded(String(transaction._id), {
+    captureId,
+    capturedAt,
+  })
 
-  if (claim.modifiedCount !== 1) {
+  if (!claimed) {
     logger.info(
       { transactionId: String(transaction._id), eventId: event.id, orderId, captureId },
       'PayPal webhook: CAPTURE.COMPLETED lost the race to flip status — re-entering side effects',
@@ -426,10 +397,7 @@ async function handleCaptureRefunded(event: PayPalWebhookEvent): Promise<void> {
     return
   }
 
-  const db = await getContentDb()
-  const transactions = db.collection('transactions')
-
-  const transaction = await transactions.findOne({ captureId })
+  const transaction = await findTransactionByCaptureId(captureId)
   if (!transaction) {
     logger.warn(
       { captureId, eventId: event.id },
@@ -442,15 +410,5 @@ async function handleCaptureRefunded(event: PayPalWebhookEvent): Promise<void> {
     return
   }
 
-  const refundedAt = new Date()
-  await transactions.updateOne(
-    { _id: new ObjectId(String(transaction._id)) },
-    {
-      $set: {
-        status: 'refunded',
-        refundedAt,
-        updatedAt: refundedAt,
-      },
-    },
-  )
+  await markTransactionRefunded(String(transaction._id), new Date())
 }
