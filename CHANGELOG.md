@@ -1928,6 +1928,8 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+## [v0.30.0] - 2026-07-29
+
 - promote: dev -> main (v0.30.0) ([#987](https://github.com/A-Guy-educ/A-Guy-Web/pull/987)) — @aguyshayb
 - chore: Release v0.30.0 ([#986](https://github.com/A-Guy-educ/A-Guy-Web/pull/986)) — @aguyshayb
 - fix: refresh Kody workflow launcher ([#984](https://github.com/A-Guy-educ/A-Guy-Web/pull/984)) — @aguyaharonyair
