@@ -26,6 +26,12 @@
   "release": {
     "releaseBranch": "main",
     "allowAdminMerge": true,
+    "validation": {
+      "workflow": "ci.yml",
+      "inputs": {
+        "release_gate": true
+      }
+    },
     "versionFiles": [
       "package.json"
     ],
