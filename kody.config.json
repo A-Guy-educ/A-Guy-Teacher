@@ -91,7 +91,9 @@
       "build-knowledge-graph",
       "create-knowledge-report",
       "publish-knowledge-system",
-      "release-validate"
+      "release-validate",
+      "build-chat-knowledge-graph",
+      "publish-chat-knowledge-tool"
     ],
     "activeAgents": [
       "ceo",
@@ -114,7 +116,8 @@
     ],
     "activeWorkflows": [
       "refresh-knowledge-system",
-      "web-release"
+      "web-release",
+      "build-chat-knowledge-graph"
     ]
   },
   "fly": {
