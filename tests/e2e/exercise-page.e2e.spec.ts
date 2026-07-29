@@ -1,13 +1,19 @@
 import { test, expect } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+
 test.describe('Exercise Page', () => {
   test.describe('Exercise Page Navigation', () => {
     test('navigates from lesson page to exercise page', async ({ page }) => {
-      // This test assumes the courses route exists with at least one exercise
-      // You may need to seed data or adjust the URL based on your test data
+      // The course catalogue is behind a session: middleware sends anonymous
+      // visitors to /start, which is what this used to trip over.
+      await setupAuthenticatedUser(page, {
+        email: generateTestUserEmail('exercise-page'),
+        password: 'TestPassword123!',
+      })
+
       await page.goto('/courses')
 
-      // Wait for page to load
       await expect(page).toHaveURL(/\/courses/)
     })
 
