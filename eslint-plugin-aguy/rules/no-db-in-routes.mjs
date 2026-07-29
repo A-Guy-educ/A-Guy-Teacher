@@ -54,7 +54,6 @@ const KNOWN_EXCEPTIONS = new Set([
   'stats/streak/route.ts',
   'stats/track-activity/route.ts',
   'teacher-profiles/route.ts',
-  'user-settings/route.ts',
   'webhooks/paypal/route.ts',
 ])
 

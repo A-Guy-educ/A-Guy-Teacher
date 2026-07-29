@@ -8,7 +8,8 @@
  * MongoDB implementation, and should not grow into one.
  *
  * It supports exactly the operators the migrated routes use — `$in`, `$ne`,
- * `$gt`, `$lt`, `$exists`, top-level `$or`, and `$set` / `$inc` / `$push`
+ * `$gt`, `$lt`, `$exists`, top-level `$or`, and `$set` / `$setOnInsert` /
+ * `$inc` / `$push`
  * updates. That list is deliberately closed: anything richer is a sign the
  * query belongs in an integration test against a real database, not that this
  * file should grow toward being MongoDB.
@@ -162,6 +163,7 @@ export function fakeContentDb(seed: Record<string, Doc[]> = {}) {
 
         if (options.upsert) {
           const created: Doc = { ...filter, _id: `generated-${nextId++}` }
+          Object.assign(created, (update.$setOnInsert as Doc) ?? {})
           applyUpdate(created, update)
           docsOf(name).push(created)
           return { matchedCount: 0, modifiedCount: 0, upsertedId: created._id, acknowledged: true }
