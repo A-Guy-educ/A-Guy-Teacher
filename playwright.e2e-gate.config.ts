@@ -1,11 +1,8 @@
 /**
  * E2E Gate Playwright Configuration
  *
- * Narrow scope: only stable, passing tests that should block PRs to main.
- * The tests here are known to pass reliably in CI. Tests with known
- * pre-existing failures (broken locators, fragile seeding) are excluded.
- *
- * Current gate: homepage layout, brand metadata, and release-version footer.
+ * Narrow scope: deterministic smoke coverage for the exact production build.
+ * Feature-specific browser suites run separately and do not block releases.
  */
 import { defineConfig, devices } from '@playwright/test'
 
@@ -39,11 +36,7 @@ export default defineConfig({
     {
       name: 'chromium',
       testDir: './tests/e2e',
-      testMatch: [
-        'homepage-top-gap.e2e.spec.ts',
-        'seo-metadata-brand-driven.e2e.spec.ts',
-        'version-footer.e2e.spec.ts',
-      ],
+      testMatch: 'release-smoke.e2e.spec.ts',
       use: { ...devices['Desktop Chrome'], channel: 'chromium' },
     },
   ],
