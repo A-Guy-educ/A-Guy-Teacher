@@ -7,7 +7,7 @@ function createRequest(
   pathname: string,
   { origin, method = 'GET' }: { origin?: string; method?: string } = {},
 ) {
-  const url = new URL(pathname, 'https://www.a-guy.co.il')
+  const url = new URL(pathname, 'https://www.aguy.co.il')
   const headers = new Headers({ host: url.host })
   if (origin) headers.set('origin', origin)
 
@@ -20,29 +20,29 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('allows an API call from a sibling app on the shared-login domain', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
     const response = middleware(
-      createRequest('/api/users/me', { origin: 'https://app2.a-guy.co.il' }),
+      createRequest('/api/users/me', { origin: 'https://app2.aguy.co.il' }),
     )
 
-    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app2.a-guy.co.il')
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app2.aguy.co.il')
     expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true')
     expect(response.headers.get('Vary')).toContain('Origin')
   })
 
   it('never answers with a wildcard, which browsers reject alongside credentials', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
     const response = middleware(
-      createRequest('/api/users/me', { origin: 'https://app2.a-guy.co.il' }),
+      createRequest('/api/users/me', { origin: 'https://app2.aguy.co.il' }),
     )
 
     expect(response.headers.get('Access-Control-Allow-Origin')).not.toBe('*')
   })
 
   it('denies an unrelated origin', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
     const response = middleware(createRequest('/api/users/me', { origin: 'https://evil.com' }))
 
@@ -50,10 +50,10 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('denies a lookalike domain', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
     const response = middleware(
-      createRequest('/api/users/me', { origin: 'https://not-a-guy.co.il' }),
+      createRequest('/api/users/me', { origin: 'https://not-aguy.co.il' }),
     )
 
     expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
@@ -61,21 +61,21 @@ describe('middleware CORS for sibling apps', () => {
 
   it('adds no CORS headers when shared login is not configured', () => {
     const response = middleware(
-      createRequest('/api/users/me', { origin: 'https://app2.a-guy.co.il' }),
+      createRequest('/api/users/me', { origin: 'https://app2.aguy.co.il' }),
     )
 
     expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
   })
 
   it('answers the preflight without running the request', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
     const response = middleware(
-      createRequest('/api/users/me', { origin: 'https://app2.a-guy.co.il', method: 'OPTIONS' }),
+      createRequest('/api/users/me', { origin: 'https://app2.aguy.co.il', method: 'OPTIONS' }),
     )
 
     expect(response.status).toBe(204)
-    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app2.a-guy.co.il')
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app2.aguy.co.il')
     expect(response.headers.get('Access-Control-Allow-Methods')).toContain('POST')
   })
 
@@ -90,9 +90,9 @@ describe('middleware CORS for sibling apps', () => {
   })
 
   it('leaves non-API routes untouched', () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
-    const response = middleware(createRequest('/start', { origin: 'https://app2.a-guy.co.il' }))
+    const response = middleware(createRequest('/start', { origin: 'https://app2.aguy.co.il' }))
 
     expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
   })

@@ -39,14 +39,12 @@ describe('isEmbeddedRequest', () => {
     // silently dropped by the browser.
     expect(
       isEmbeddedRequest(
-        new Headers({ origin: 'https://dashboard.example.com', host: 'www.a-guy.co.il' }),
+        new Headers({ origin: 'https://dashboard.example.com', host: 'www.aguy.co.il' }),
       ),
     ).toBe(true)
 
     expect(
-      isEmbeddedRequest(
-        new Headers({ origin: 'https://www.a-guy.co.il', host: 'www.a-guy.co.il' }),
-      ),
+      isEmbeddedRequest(new Headers({ origin: 'https://www.aguy.co.il', host: 'www.aguy.co.il' })),
     ).toBe(false)
   })
 
@@ -54,7 +52,7 @@ describe('isEmbeddedRequest', () => {
     // The shareable variant is the safer default: it is readable by siblings,
     // whereas a needless partition would break them silently.
     expect(isEmbeddedRequest(new Headers())).toBe(false)
-    expect(isEmbeddedRequest(new Headers({ origin: 'not-a-url', host: 'www.a-guy.co.il' }))).toBe(
+    expect(isEmbeddedRequest(new Headers({ origin: 'not-a-url', host: 'www.aguy.co.il' }))).toBe(
       false,
     )
   })

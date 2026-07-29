@@ -9,7 +9,7 @@ import {
 import { SINGLE_APP_POLICY, type SharedLoginPolicy } from '@/infra/auth/shared-login/policy'
 
 const SHARED: SharedLoginPolicy = {
-  cookieDomain: '.a-guy.co.il',
+  cookieDomain: '.aguy.co.il',
   returnOrigins: [],
   apiOrigins: [],
 }
@@ -19,7 +19,7 @@ describe('buildAuthCookieOptions', () => {
     const options = buildAuthCookieOptions(SHARED, { embedded: false, secure: true })
 
     expect(options).toMatchObject({
-      domain: '.a-guy.co.il',
+      domain: '.aguy.co.il',
       sameSite: 'lax',
       partitioned: false,
       httpOnly: true,
@@ -55,7 +55,7 @@ describe('authCookieIdentity', () => {
     expect(authCookieIdentity(SHARED)).toEqual({
       name: AUTH_COOKIE_NAME,
       path: '/',
-      domain: '.a-guy.co.il',
+      domain: '.aguy.co.il',
     })
   })
 
@@ -80,7 +80,7 @@ describe('authCookieClearHeaders', () => {
 
   it('also clears the domain-scoped variant, or siblings stay signed in', () => {
     expect(authCookieClearHeaders(SHARED, true)).toContain(
-      'payload-token=; Path=/; Max-Age=0; HttpOnly; Secure; Domain=.a-guy.co.il; SameSite=None',
+      'payload-token=; Path=/; Max-Age=0; HttpOnly; Secure; Domain=.aguy.co.il; SameSite=None',
     )
   })
 

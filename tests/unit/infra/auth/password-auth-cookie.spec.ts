@@ -114,7 +114,7 @@ describe('password auth cookies', () => {
 
   it('scopes the login cookie to the shared domain when configured', async () => {
     vi.stubEnv('NODE_ENV', 'production')
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
     noRequestScope()
     mockLoginWithPassword.mockResolvedValue({
       token: 'session-token',
@@ -128,7 +128,7 @@ describe('password auth cookies', () => {
     expect(cookieStore.set).toHaveBeenCalledWith(
       'payload-token',
       'session-token',
-      expect.objectContaining({ domain: '.a-guy.co.il' }),
+      expect.objectContaining({ domain: '.aguy.co.il' }),
     )
   })
 

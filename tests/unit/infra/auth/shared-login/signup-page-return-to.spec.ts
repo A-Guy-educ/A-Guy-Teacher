@@ -39,18 +39,18 @@ describe('signup keeps a sibling destination end to end', () => {
   })
 
   it('carries a trusted sibling destination through onboarding', async () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
-    const destination = await renderSignupPage('https://app2.a-guy.co.il/dashboard')
+    const destination = await renderSignupPage('https://app2.aguy.co.il/dashboard')
 
-    expect(destination).toBe('https://app2.a-guy.co.il/dashboard')
+    expect(destination).toBe('https://app2.aguy.co.il/dashboard')
     expect(getOnboardingRedirect(destination)).toBe(
-      '/onboarding/persona?returnTo=https%3A%2F%2Fapp2.a-guy.co.il%2Fdashboard',
+      '/onboarding/persona?returnTo=https%3A%2F%2Fapp2.aguy.co.il%2Fdashboard',
     )
   })
 
   it('drops an untrusted destination before it reaches the form', async () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
     expect(await renderSignupPage('https://evil.com/steal')).toBe('/')
   })

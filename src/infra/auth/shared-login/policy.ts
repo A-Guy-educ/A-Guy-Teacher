@@ -17,7 +17,7 @@
  * environment variable that does not exist in the browser.
  */
 export type SharedLoginPolicy = {
-  /** Cookie `Domain`, always dot-prefixed (`.a-guy.co.il`). Absent = host-only. */
+  /** Cookie `Domain`, always dot-prefixed (`.aguy.co.il`). Absent = host-only. */
   readonly cookieDomain?: string
   /** Extra origins accepted as post-login redirect targets. */
   readonly returnOrigins: readonly string[]
@@ -67,7 +67,7 @@ export function toCookieDomain(rawDomain: string | undefined | null): string | u
  * because the shared cookie is `Secure`.
  *
  * The leading dot in `cookieDomain` is load-bearing: it is what stops
- * `not-a-guy.co.il` from matching `a-guy.co.il`.
+ * `not-aguy.co.il` from matching `aguy.co.il`.
  */
 export function isSiblingOrigin(url: URL, cookieDomain: string | undefined): boolean {
   if (!cookieDomain || url.protocol !== 'https:') return false

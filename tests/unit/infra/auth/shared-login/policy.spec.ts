@@ -16,9 +16,9 @@ describe('toCookieDomain', () => {
   })
 
   it('normalises to a lowercase, dot-prefixed domain', () => {
-    expect(toCookieDomain('a-guy.co.il')).toBe('.a-guy.co.il')
-    expect(toCookieDomain('.A-Guy.co.il')).toBe('.a-guy.co.il')
-    expect(toCookieDomain('  a-guy.co.il  ')).toBe('.a-guy.co.il')
+    expect(toCookieDomain('aguy.co.il')).toBe('.aguy.co.il')
+    expect(toCookieDomain('.AGuy.co.il')).toBe('.aguy.co.il')
+    expect(toCookieDomain('  aguy.co.il  ')).toBe('.aguy.co.il')
   })
 
   it('rejects single-label hosts, which browsers refuse as a cookie Domain', () => {
@@ -34,26 +34,26 @@ describe('toCookieDomain', () => {
 })
 
 describe('isSiblingOrigin', () => {
-  const cookieDomain = '.a-guy.co.il'
+  const cookieDomain = '.aguy.co.il'
 
   it('accepts a subdomain of the cookie domain', () => {
-    expect(isSiblingOrigin(new URL('https://app2.a-guy.co.il/x'), cookieDomain)).toBe(true)
+    expect(isSiblingOrigin(new URL('https://app2.aguy.co.il/x'), cookieDomain)).toBe(true)
   })
 
   it('accepts the apex itself', () => {
-    expect(isSiblingOrigin(new URL('https://a-guy.co.il/x'), cookieDomain)).toBe(true)
+    expect(isSiblingOrigin(new URL('https://aguy.co.il/x'), cookieDomain)).toBe(true)
   })
 
   it('rejects a lookalike that merely ends with the same letters', () => {
-    expect(isSiblingOrigin(new URL('https://not-a-guy.co.il/x'), cookieDomain)).toBe(false)
+    expect(isSiblingOrigin(new URL('https://not-aguy.co.il/x'), cookieDomain)).toBe(false)
   })
 
   it('rejects plain HTTP, since the shared cookie is Secure', () => {
-    expect(isSiblingOrigin(new URL('http://app2.a-guy.co.il/x'), cookieDomain)).toBe(false)
+    expect(isSiblingOrigin(new URL('http://app2.aguy.co.il/x'), cookieDomain)).toBe(false)
   })
 
   it('rejects everything when no cookie domain is configured', () => {
-    expect(isSiblingOrigin(new URL('https://app2.a-guy.co.il/x'), undefined)).toBe(false)
+    expect(isSiblingOrigin(new URL('https://app2.aguy.co.il/x'), undefined)).toBe(false)
   })
 })
 
@@ -73,7 +73,7 @@ describe('isTrustedOrigin', () => {
   it('trusts nothing under the single-app policy', () => {
     expect(
       isTrustedOrigin(
-        new URL('https://app2.a-guy.co.il/x'),
+        new URL('https://app2.aguy.co.il/x'),
         SINGLE_APP_POLICY.returnOrigins,
         SINGLE_APP_POLICY.cookieDomain,
       ),
@@ -89,6 +89,6 @@ describe('parseOrigin', () => {
   })
 
   it('parses a valid origin', () => {
-    expect(parseOrigin('https://app2.a-guy.co.il')?.hostname).toBe('app2.a-guy.co.il')
+    expect(parseOrigin('https://app2.aguy.co.il')?.hostname).toBe('app2.aguy.co.il')
   })
 })

@@ -35,15 +35,15 @@ describe('login page resolves returnTo on the server', () => {
   })
 
   it('passes a trusted sibling destination through to the form', async () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
-    expect(await renderLoginPage('https://app2.a-guy.co.il/dashboard')).toBe(
-      'https://app2.a-guy.co.il/dashboard',
+    expect(await renderLoginPage('https://app2.aguy.co.il/dashboard')).toBe(
+      'https://app2.aguy.co.il/dashboard',
     )
   })
 
   it('falls back to the site root for an untrusted destination', async () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
 
     expect(await renderLoginPage('https://evil.com/steal')).toBe('/')
   })

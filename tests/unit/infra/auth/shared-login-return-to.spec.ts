@@ -4,7 +4,7 @@ import { returnToPath, sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
 import { SINGLE_APP_POLICY, type SharedLoginPolicy } from '@/infra/auth/shared-login/policy'
 
 const SHARED: SharedLoginPolicy = {
-  cookieDomain: '.a-guy.co.il',
+  cookieDomain: '.aguy.co.il',
   returnOrigins: [],
   apiOrigins: [],
 }
@@ -16,18 +16,18 @@ const DEV: SharedLoginPolicy = {
 
 describe('sanitizeReturnTo with shared login configured', () => {
   it('allows returning to a sibling app on the shared-login domain', () => {
-    expect(sanitizeReturnTo('https://app2.a-guy.co.il/dashboard', SHARED)).toBe(
-      'https://app2.a-guy.co.il/dashboard',
+    expect(sanitizeReturnTo('https://app2.aguy.co.il/dashboard', SHARED)).toBe(
+      'https://app2.aguy.co.il/dashboard',
     )
   })
 
   it('allows the apex domain itself', () => {
-    expect(sanitizeReturnTo('https://a-guy.co.il/home', SHARED)).toBe('https://a-guy.co.il/home')
+    expect(sanitizeReturnTo('https://aguy.co.il/home', SHARED)).toBe('https://aguy.co.il/home')
   })
 
   it('preserves query strings and fragments on sibling URLs', () => {
-    expect(sanitizeReturnTo('https://app2.a-guy.co.il/x?ref=login#top', SHARED)).toBe(
-      'https://app2.a-guy.co.il/x?ref=login#top',
+    expect(sanitizeReturnTo('https://app2.aguy.co.il/x?ref=login#top', SHARED)).toBe(
+      'https://app2.aguy.co.il/x?ref=login#top',
     )
   })
 
@@ -36,11 +36,11 @@ describe('sanitizeReturnTo with shared login configured', () => {
   })
 
   it('rejects a lookalike domain that merely ends with the same letters', () => {
-    expect(sanitizeReturnTo('https://not-a-guy.co.il/steal', SHARED)).toBe('/')
+    expect(sanitizeReturnTo('https://not-aguy.co.il/steal', SHARED)).toBe('/')
   })
 
   it('rejects plain HTTP siblings, since the shared cookie is Secure', () => {
-    expect(sanitizeReturnTo('http://app2.a-guy.co.il/dashboard', SHARED)).toBe('/')
+    expect(sanitizeReturnTo('http://app2.aguy.co.il/dashboard', SHARED)).toBe('/')
   })
 
   it('allows an explicitly listed origin, for local development over HTTP', () => {
@@ -64,7 +64,7 @@ describe('sanitizeReturnTo with shared login configured', () => {
 
 describe('sanitizeReturnTo under the single-app policy', () => {
   it('is relative-only', () => {
-    expect(sanitizeReturnTo('https://app2.a-guy.co.il/dashboard', SINGLE_APP_POLICY)).toBe('/')
+    expect(sanitizeReturnTo('https://app2.aguy.co.il/dashboard', SINGLE_APP_POLICY)).toBe('/')
     expect(sanitizeReturnTo('/courses', SINGLE_APP_POLICY)).toBe('/courses')
   })
 })
@@ -77,7 +77,7 @@ describe('returnToPath', () => {
   })
 
   it('extracts the path from an absolute sibling destination', () => {
-    expect(returnToPath('https://app2.a-guy.co.il/onboarding/persona?a=1#b')).toBe(
+    expect(returnToPath('https://app2.aguy.co.il/onboarding/persona?a=1#b')).toBe(
       '/onboarding/persona?a=1#b',
     )
   })

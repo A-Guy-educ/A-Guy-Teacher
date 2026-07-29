@@ -44,15 +44,15 @@ describe('getOnboardingRedirect', () => {
   it('leaves an already-safe sibling destination intact', () => {
     // Regression: this used to be re-sanitized inside, under the browser's
     // empty policy, which reset it to the home page.
-    expect(getOnboardingRedirect(safe('https://app2.a-guy.co.il/dashboard'))).toBe(
-      '/onboarding/persona?returnTo=https%3A%2F%2Fapp2.a-guy.co.il%2Fdashboard',
+    expect(getOnboardingRedirect(safe('https://app2.aguy.co.il/dashboard'))).toBe(
+      '/onboarding/persona?returnTo=https%3A%2F%2Fapp2.aguy.co.il%2Fdashboard',
     )
   })
 
   it('does not double-wrap an absolute sibling URL already pointing at onboarding', () => {
     expect(
-      getOnboardingRedirect(safe('https://app2.a-guy.co.il/onboarding/persona?returnTo=/x')),
-    ).toBe('https://app2.a-guy.co.il/onboarding/persona?returnTo=/x')
+      getOnboardingRedirect(safe('https://app2.aguy.co.il/onboarding/persona?returnTo=/x')),
+    ).toBe('https://app2.aguy.co.il/onboarding/persona?returnTo=/x')
   })
 
   it('exposes the wizard completion cookie name', () => {

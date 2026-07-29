@@ -53,7 +53,7 @@ describe('logoutAction', () => {
   })
 
   it('deletes the domain-scoped cookie when shared login is on', async () => {
-    vi.stubEnv('ROOT_DOMAIN', 'a-guy.co.il')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
     const { logoutAction } = await import('@/app/(frontend)/actions/auth-action')
 
     await logoutAction()
@@ -63,7 +63,7 @@ describe('logoutAction', () => {
     expect(mockCookieStore.delete).toHaveBeenCalledWith({
       name: 'payload-token',
       path: '/',
-      domain: '.a-guy.co.il',
+      domain: '.aguy.co.il',
     })
   })
 })

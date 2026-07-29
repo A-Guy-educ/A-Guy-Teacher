@@ -1,10 +1,10 @@
 # Shared Login Across Apps (Subdomain SSO)
 
-**Goal:** run several web apps (`app2.a-guy.co.il`, `labs.a-guy.co.il`, …) where logging into one logs you into all of them.
+**Goal:** run several web apps (`app2.aguy.co.il`, `labs.aguy.co.il`, …) where logging into one logs you into all of them.
 
 **Approach:** one login cookie scoped to the parent domain, one user database, one JWT secret. No new auth server, no OAuth dance between apps.
 
-**Hard requirement:** every app must live on a subdomain of the same registrable domain. Cookies cannot be shared across `a-guy.co.il` and `something-else.com` — see "If apps must live on different domains" at the end.
+**Hard requirement:** every app must live on a subdomain of the same registrable domain. Cookies cannot be shared across `aguy.co.il` and `something-else.com` — see "If apps must live on different domains" at the end.
 
 Building the second app? Hand its author [SHARED-LOGIN-APP-GUIDE.md](./SHARED-LOGIN-APP-GUIDE.md) — this page is the platform side.
 
@@ -12,7 +12,11 @@ Building the second app? Hand its author [SHARED-LOGIN-APP-GUIDE.md](./SHARED-LO
 
 ## Status
 
-Implemented in A-Guy-Web and **off by default**. With `ROOT_DOMAIN` unset, every cookie stays host-only and behaviour is identical to before. Setting it is what turns SSO on.
+Implemented, and `ROOT_DOMAIN=aguy.co.il` is set on the production project — so shared login switches on with the next production deploy of this code.
+
+Where it is unset (preview, development, local), every cookie stays host-only and behaviour is identical to before.
+
+**During rollout** a browser can hold two `payload-token` cookies at once: the old host-only one and the new domain-scoped one. Both are cleared on logout, and the old one expires within seven days.
 
 ---
 
@@ -29,7 +33,7 @@ A second app authenticates a user by (a) receiving the cookie — automatic once
 ## Enabling it
 
 ```bash
-ROOT_DOMAIN=a-guy.co.il           # the only switch; already used by the locale cookie
+ROOT_DOMAIN=aguy.co.il           # the only switch; already used by the locale cookie
 API_ALLOWED_ORIGINS=...           # only for browser-side callers in dev
 AUTH_ALLOWED_RETURN_ORIGINS=...   # only for non-HTTPS dev siblings
 ```
@@ -96,7 +100,7 @@ Two bugs, both harmless with one app and not with several:
 
 ### `returnTo`
 
-`sanitizeReturnTo()` rejected every absolute URL. It now accepts HTTPS siblings of the cookie domain, plus explicitly listed origins, and still rejects everything else — including lookalikes such as `not-a-guy.co.il`.
+`sanitizeReturnTo()` rejected every absolute URL. It now accepts HTTPS siblings of the cookie domain, plus explicitly listed origins, and still rejects everything else — including lookalikes such as `not-aguy.co.il`.
 
 Redirect-loop guards compare `returnToPath()` rather than the raw destination: a check like `startsWith('/onboarding')` silently stops matching once the destination can be an absolute sibling URL.
 
@@ -108,7 +112,7 @@ Redirect-loop guards compare `returnToPath()` rather than the raw destination: a
 
 ## Security notes
 
-- **Any subdomain can read the cookie.** Never host untrusted or user-controlled content on a subdomain of `a-guy.co.il`. One XSS anywhere on the domain compromises every account.
+- **Any subdomain can read the cookie.** Never host untrusted or user-controlled content on a subdomain of `aguy.co.il`. One XSS anywhere on the domain compromises every account.
 - Keep `HttpOnly` and `Secure`. `SameSite=Lax` survives top-level navigation between apps, which is all that is needed.
 - State-changing endpoints must be POST/PUT/DELETE, since `Lax` sends the cookie on cross-site top-level GETs.
 - Prefer having sibling apps call `/api/users/me` over handing them `PAYLOAD_SECRET` and database credentials.
