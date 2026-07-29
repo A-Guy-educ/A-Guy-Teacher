@@ -65,7 +65,22 @@ The rule shipped with a list of twenty grandfathered routes. All twenty have bee
 
 Step four is not ceremony. During the migration it caught a service that converted an identifier to text and back, which the database had not asked for, and it caught a completed exercise being scored on the wrong field.
 
-`tests/unit/api/helpers/fake-content-db.ts` is an in-memory stand-in for the database that makes these tests cheap to write. It supports only the operators the routes actually use, deliberately.
+---
+
+## What the fake database does not prove
+
+`tests/unit/api/helpers/fake-content-db.ts` is an in-memory stand-in that makes route tests cheap to write. It supports only the operators the routes actually use, deliberately — but it is a plain JavaScript object, so anything that is really a **database** behaviour is invisible to it:
+
+| Not covered by the fake | Where it matters |
+|---|---|
+| Collation — case- and accent-insensitive matching | Access-code lookup. Its test passes because the route upper-cases the input, **not** because case-insensitive matching works. |
+| Read preference (primary vs secondary) | Entitlement checks pin reads to the primary so a check straight after a purchase is not served stale. |
+| Unique indexes and duplicate-key errors | Subscription checkout distinguishes a double-click race from a real failure by catching error 11000. |
+| Real concurrency | The conditional updates that let exactly one duplicate webhook win. |
+
+A green unit test therefore means "the route's logic is unchanged", not "the query is correct". For those four, the integration tests against a real database are the only real evidence — so **do not delete an integration test because a unit test appears to cover the same route.**
+
+If a change turns on one of the behaviours above, write or extend an integration test. Growing the fake to imitate them would produce confident tests that prove nothing.
 
 ---
 

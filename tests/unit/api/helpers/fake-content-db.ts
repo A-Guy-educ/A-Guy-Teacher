@@ -8,11 +8,14 @@
  * MongoDB implementation, and should not grow into one.
  *
  * It supports exactly the operators the migrated routes use — `$in`, `$ne`,
- * `$gt`, `$lt`, `$exists`, `$regex`, top-level `$or`, and `$set` / `$setOnInsert` /
- * `$inc` / `$push`
- * updates. That list is deliberately closed: anything richer is a sign the
- * query belongs in an integration test against a real database, not that this
- * file should grow toward being MongoDB.
+ * `$gt`, `$lt`, `$exists`, `$regex`, top-level `$or`, and `$set` /
+ * `$setOnInsert` / `$inc` / `$push` updates. That list is deliberately closed.
+ *
+ * What it cannot show you, because it is a plain object rather than a
+ * database: collation (case-insensitive matching), read preference, unique
+ * indexes and duplicate-key errors, and real concurrency. A route whose
+ * correctness rests on one of those needs an integration test — a green test
+ * here would be confident and meaningless. See docs/architecture/DATA-ACCESS.md.
  */
 
 import { vi } from 'vitest'
