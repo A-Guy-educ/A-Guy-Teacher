@@ -1,9 +1,21 @@
 /**
- * Test helpers for authentication and user management
+ * Test helpers for authentication and user management.
+ *
+ * These used to drive Payload's Local API. Payload was removed from the
+ * project, which left every helper here throwing on import — and with it every
+ * browser test that needs a signed-in user. They now use the same functions the
+ * application itself uses to create users and issue sessions, so a test session
+ * is a real one rather than a lookalike.
  */
 import { Page } from '@playwright/test'
-import { getPayload } from 'payload'
-import config from '@payload-config'
+
+import { getContentDb, objectIdFromString } from '@/infra/db/content-db'
+import {
+  AUTH_COOKIE_NAME,
+  createPasswordUser,
+  findUserByEmail,
+  loginWithPassword,
+} from '@/infra/auth/web-auth'
 
 export interface TestUser {
   email: string
@@ -21,81 +33,44 @@ export function generateTestUserEmail(prefix = 'e2e-test'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}@example.com`
 }
 
+async function setRole(userId: string, role: 'admin' | 'student'): Promise<void> {
+  const db = await getContentDb()
+  await db.collection('users').updateOne({ _id: objectIdFromString(userId) } as never, {
+    $set: { role, updatedAt: new Date() },
+  })
+}
+
 /**
- * Create a test user via Payload Local API
- * Automatically registers the user for cleanup
- * @param user - User data including email and password
- * @param role - User role (defaults to 'student')
+ * Create a test user, or reuse one that already exists, and register it for
+ * cleanup. Passwords are hashed by `createPasswordUser`, exactly as a real
+ * signup would.
  */
 export async function createTestUser(
   user: TestUser,
   role: 'admin' | 'student' = 'student',
 ): Promise<TestUser> {
-  const payload = await getPayload({ config })
+  const existing = await findUserByEmail(user.email)
 
-  // Check if user already exists
-  const existing = await payload.find({
-    collection: 'users',
-    where: {
-      email: {
-        equals: user.email,
-      },
-    },
-    limit: 1,
+  if (existing) {
+    const id = String(existing._id)
+    if (existing.role !== role) await setRole(id, role)
+    testUserRegistry.add(id)
+    return { ...user, id }
+  }
+
+  const created = await createPasswordUser({
+    name: user.email.split('@')[0] || 'Test User',
+    email: user.email,
+    password: user.password,
   })
 
-  if (existing.docs.length > 0) {
-    if (existing.docs[0].role !== role) {
-      await payload.update({
-        collection: 'users',
-        id: existing.docs[0].id,
-        data: { role },
-        overrideAccess: true,
-      })
-    }
+  if (!created) throw new Error(`Could not create test user ${user.email}`)
 
-    const existingUser = {
-      ...user,
-      id: existing.docs[0].id,
-    }
-    // Register for cleanup even if it already existed
-    if (existingUser.id) {
-      testUserRegistry.add(existingUser.id)
-    }
-    return existingUser
-  }
+  const id = created.user.id
+  if (created.user.role !== role) await setRole(id, role)
+  testUserRegistry.add(id)
 
-  // Create new user
-  // Payload automatically hashes passwords when creating via Local API
-  // Add name field (required by some hooks)
-  let created = await payload.create({
-    collection: 'users',
-    data: {
-      name: user.email.split('@')[0] || 'Test User', // Extract name from email
-      email: user.email,
-      password: user.password, // Payload will hash this automatically
-      role,
-    },
-  })
-
-  if (created.role !== role) {
-    created = await payload.update({
-      collection: 'users',
-      id: created.id,
-      data: { role },
-      overrideAccess: true,
-    })
-  }
-
-  // Register for cleanup
-  if (created.id) {
-    testUserRegistry.add(created.id)
-  }
-
-  return {
-    ...user,
-    id: created.id,
-  }
+  return { ...user, id }
 }
 
 /**
@@ -148,105 +123,58 @@ export async function authenticateViaSignup(page: Page, user: TestUser): Promise
 }
 
 /**
- * Authenticate a user via Payload's login API and set cookie
- * This is more reliable than browser-based login
+ * Sign a user in by minting a real session and setting its cookie.
+ *
+ * More reliable than driving the login form, and it exercises the same token
+ * the application issues — so a session that would not work in the browser
+ * does not work here either.
  */
 export async function authenticateViaAPI(page: Page, user: TestUser): Promise<void> {
-  const payload = await getPayload({ config })
+  const session = await loginWithPassword(user.email, user.password)
+  if (!session?.token) throw new Error('Invalid credentials')
 
-  try {
-    // Use Payload's login method to get a token
-    const loginResult = await payload.login({
-      collection: 'users',
-      data: {
-        email: user.email,
-        password: user.password,
-      },
-    })
+  await page.context().addCookies([
+    {
+      name: AUTH_COOKIE_NAME,
+      value: session.token,
+      domain: 'localhost',
+      path: '/',
+      httpOnly: true,
+      secure: false, // localhost doesn't need secure
+      sameSite: 'Lax',
+    },
+  ])
 
-    if (!loginResult || !('token' in loginResult) || !loginResult.token) {
-      throw new Error('Login failed - no token returned')
-    }
-
-    // Set the auth cookie in the browser context
-    await page.context().addCookies([
-      {
-        name: 'payload-token',
-        value: loginResult.token,
-        domain: 'localhost',
-        path: '/',
-        httpOnly: true,
-        secure: false, // localhost doesn't need secure
-        sameSite: 'Lax',
-      },
-    ])
-
-    // Verify cookie was set
-    const cookies = await page.context().cookies()
-    const hasAuthCookie = cookies.some((c) => c.name === 'payload-token')
-    if (!hasAuthCookie) {
-      throw new Error('Failed to set auth cookie')
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('Invalid')) {
-      throw new Error('Invalid credentials')
-    }
-    throw error
+  const cookies = await page.context().cookies()
+  if (!cookies.some((cookie) => cookie.name === AUTH_COOKIE_NAME)) {
+    throw new Error('Failed to set auth cookie')
   }
 }
 
 /**
- * Authenticate a user via admin login (Payload's built-in auth)
- * This requires the user to already exist
+ * Authenticate a user via admin login
  * @deprecated Use authenticateViaAPI instead - more reliable
  */
 export async function authenticateViaAdminLogin(page: Page, user: TestUser): Promise<void> {
-  // Use API-based authentication instead
   return authenticateViaAPI(page, user)
 }
 
 /**
- * Delete a test user and all associated data
+ * Delete a test user and the rows that hang off it.
+ *
+ * Best-effort: a failure here should not fail the test that already passed.
  */
 export async function deleteTestUser(userId: string): Promise<void> {
   if (!userId) return
 
-  const payload = await getPayload({ config })
-
   try {
-    // Delete associated memory items
-    const memories = await payload.find({
-      collection: 'memory_items',
-      where: { userId: { equals: userId } },
-      limit: 1000, // Adjust if needed
-    })
-    for (const mem of memories.docs) {
-      await payload.delete({
-        collection: 'memory_items',
-        id: mem.id,
-      })
-    }
+    const db = await getContentDb()
+    const userIds = [userId, objectIdFromString(userId)]
 
-    // Delete associated conversations
-    const conversations = await payload.find({
-      collection: 'conversations',
-      where: { user: { equals: userId } },
-      limit: 1000,
-    })
-    for (const conv of conversations.docs) {
-      await payload.delete({
-        collection: 'conversations',
-        id: conv.id,
-      })
-    }
+    await db.collection('memory_items').deleteMany({ userId: { $in: userIds } } as never)
+    await db.collection('conversations').deleteMany({ user: { $in: userIds } } as never)
+    await db.collection('users').deleteOne({ _id: objectIdFromString(userId) } as never)
 
-    // Delete the user
-    await payload.delete({
-      collection: 'users',
-      id: userId,
-    })
-
-    // Remove from registry
     testUserRegistry.delete(userId)
   } catch (error) {
     console.warn(`Failed to delete test user ${userId}:`, error)
@@ -264,77 +192,40 @@ export async function cleanupTestUsers(): Promise<void> {
   await Promise.all(userIds.map((id) => deleteTestUser(id)))
 }
 
+/** Middleware picks Hebrew by default, so tests see the same content users do. */
+async function setHebrewLocale(page: Page): Promise<void> {
+  await page.context().addCookies([
+    {
+      name: 'NEXT_LOCALE',
+      value: 'he',
+      domain: 'localhost',
+      path: '/',
+      httpOnly: false,
+      secure: false,
+      sameSite: 'Lax',
+    },
+  ])
+}
+
 /**
- * Get or create a test user and authenticate them via browser
- * @param page - Playwright page
- * @param user - User data
- * @param role - User role (defaults to 'student')
+ * Get or create a test user and sign them in.
+ *
+ * Falls back to the signup form if minting a session fails — usually because
+ * the account exists from an earlier run with a different password.
  */
 export async function setupAuthenticatedUser(
   page: Page,
   user: TestUser,
   role: 'admin' | 'student' = 'student',
 ): Promise<TestUser> {
-  // Create user if needed (via Local API) - this ensures user exists
   const testUser = await createTestUser(user, role)
 
-  // Use API-based authentication (most reliable)
   try {
     await authenticateViaAPI(page, testUser)
-
-    // Set Hebrew locale cookie so middleware uses Hebrew by default
-    // This ensures i18n content renders correctly in tests
-    await page.context().addCookies([
-      {
-        name: 'NEXT_LOCALE',
-        value: 'he',
-        domain: 'localhost',
-        path: '/',
-        httpOnly: false,
-        secure: false,
-        sameSite: 'Lax',
-      },
-    ])
-
-    return testUser
-  } catch (_error) {
-    // If API login fails, the user might have been created but password doesn't match
-    // Try signup to recreate with correct password
-    try {
-      await authenticateViaSignup(page, testUser)
-
-      // Set Hebrew locale cookie so middleware uses Hebrew by default
-      await page.context().addCookies([
-        {
-          name: 'NEXT_LOCALE',
-          value: 'he',
-          domain: 'localhost',
-          path: '/',
-          httpOnly: false,
-          secure: false,
-          sameSite: 'Lax',
-        },
-      ])
-
-      return testUser
-    } catch (_signupError) {
-      // If signup also fails, try API login one more time (user might have been created by signup)
-      await authenticateViaAPI(page, testUser)
-
-      // Set Hebrew locale cookie so middleware uses Hebrew by default
-      await page.context().addCookies([
-        {
-          name: 'NEXT_LOCALE',
-          value: 'he',
-          domain: 'localhost',
-          path: '/',
-          httpOnly: false,
-          secure: false,
-          sameSite: 'Lax',
-        },
-      ])
-
-      return testUser
-    }
+  } catch {
+    await authenticateViaSignup(page, testUser)
   }
+
+  await setHebrewLocale(page)
+  return testUser
 }

@@ -8,10 +8,14 @@
  * MongoDB implementation, and should not grow into one.
  *
  * It supports exactly the operators the migrated routes use — `$in`, `$ne`,
- * `$gt`, `$lt`, `$exists`, top-level `$or`, and `$set` / `$inc` / `$push`
- * updates. That list is deliberately closed: anything richer is a sign the
- * query belongs in an integration test against a real database, not that this
- * file should grow toward being MongoDB.
+ * `$gt`, `$lt`, `$exists`, `$regex`, top-level `$or`, and `$set` /
+ * `$setOnInsert` / `$inc` / `$push` updates. That list is deliberately closed.
+ *
+ * What it cannot show you, because it is a plain object rather than a
+ * database: collation (case-insensitive matching), read preference, unique
+ * indexes and duplicate-key errors, and real concurrency. A route whose
+ * correctness rests on one of those needs an integration test — a green test
+ * here would be confident and meaningless. See docs/architecture/DATA-ACCESS.md.
  */
 
 import { vi } from 'vitest'
@@ -41,6 +45,10 @@ function matchesCondition(value: unknown, condition: unknown): boolean {
     if ('$exists' in operators) return (value !== undefined) === Boolean(operators.$exists)
     if ('$gt' in operators) return value != null && asTime(value) > asTime(operators.$gt)
     if ('$lt' in operators) return value != null && Number(value) < Number(operators.$lt)
+    if ('$regex' in operators) {
+      const flags = typeof operators.$options === 'string' ? operators.$options : ''
+      return new RegExp(String(operators.$regex), flags).test(String(value ?? ''))
+    }
   }
 
   return sameId(value, condition)
@@ -162,6 +170,7 @@ export function fakeContentDb(seed: Record<string, Doc[]> = {}) {
 
         if (options.upsert) {
           const created: Doc = { ...filter, _id: `generated-${nextId++}` }
+          Object.assign(created, (update.$setOnInsert as Doc) ?? {})
           applyUpdate(created, update)
           docsOf(name).push(created)
           return { matchedCount: 0, modifiedCount: 0, upsertedId: created._id, acknowledged: true }

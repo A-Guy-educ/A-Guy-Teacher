@@ -1,13 +1,12 @@
 import fs from 'fs/promises'
 
-import type { Document } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { resolveMediaFilePath } from '@/infra/config/storage'
 import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { enforceUserChatQuota, requireUser } from '@/server/auth/api-auth'
-import { getContentDb, objectIdFromString } from '@/infra/db/content-db'
+import { findMediaByAnyId } from '@/server/services/media'
 import {
   callGeminiResiliently,
   GEMINI_CONFIG,
@@ -74,10 +73,7 @@ function fallbackLesson(locale: 'he' | 'en'): InteractiveLesson {
 }
 
 async function loadMedia(mediaId: string) {
-  const db = await getContentDb()
-  const media = await db
-    .collection('media')
-    .findOne({ _id: objectIdFromString(mediaId) } as Document)
+  const media = await findMediaByAnyId(mediaId)
   if (!media) return null
 
   if (typeof media.url === 'string' && media.url) {

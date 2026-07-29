@@ -1,8 +1,7 @@
-import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getContentDb } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import { findActiveConversations, findLessonTitles } from '@/server/services/dashboard-stats'
 import {
   findUserProgress,
   getOrCreateUserStats,
@@ -23,18 +22,6 @@ function emptyDashboard() {
   }
 }
 
-async function lessonTitles(ids: string[]) {
-  if (!ids.length) return new Map<string, string>()
-  const db = await getContentDb()
-  const queryIds = ids.filter(ObjectId.isValid).map((id) => new ObjectId(id))
-  if (!queryIds.length) return new Map<string, string>()
-  const docs = await db
-    .collection('lessons')
-    .find({ _id: { $in: queryIds } }, { projection: { title: 1 } })
-    .toArray()
-  return new Map(docs.map((doc) => [doc._id.toString(), String(doc.title || 'Lesson')]))
-}
-
 export async function GET(request: NextRequest) {
   const user = await getWebUser(request.headers)
   if (!user?.id) return NextResponse.json(emptyDashboard())
@@ -52,18 +39,13 @@ export async function GET(request: NextRequest) {
       )
     : 0
 
-  const db = await getContentDb()
-  const conversationQuery = {
-    user: ObjectId.isValid(user.id) ? { $in: [user.id, new ObjectId(user.id)] } : user.id,
-    archivedAt: { $exists: false },
-  }
-  const conversations = await db.collection('conversations').find(conversationQuery).toArray()
+  const conversations = await findActiveConversations(user.id)
   const questionsAsked = conversations.reduce((sum, conversation) => {
     const messages = Array.isArray(conversation.messages) ? conversation.messages : []
     return sum + messages.filter((message) => message?.role === 'user' && !message.hidden).length
   }, 0)
 
-  const titleMap = await lessonTitles(lessonRecords.map((record) => record.recordId))
+  const titleMap = await findLessonTitles(lessonRecords.map((record) => record.recordId))
   const practicedLessons = lessonRecords
     .filter((record) => (record.timeSpentSeconds || 0) > 0 || record.status === 'completed')
     .sort((a, b) => String(b.lastAccessedAt || '').localeCompare(String(a.lastAccessedAt || '')))

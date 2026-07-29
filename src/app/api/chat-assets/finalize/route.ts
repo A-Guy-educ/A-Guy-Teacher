@@ -8,7 +8,13 @@ import {
   CHAT_ASSET_MAX_BYTES,
   CHAT_ASSET_RETENTION_DAYS,
 } from '@/server/chat-assets/constants'
-import { getContentDb, serializeDoc } from '@/infra/db/content-db'
+import { serializeDoc } from '@/infra/db/content-db'
+import { createChatAsset, findChatAssetById } from '@/server/services/chat-assets'
+import {
+  finalizeUploadSession,
+  findOwnUploadSessionByBlob,
+  findUploadSessionById,
+} from '@/server/services/upload-sessions'
 import { requireUser } from '@/server/auth/api-auth'
 
 const BodySchema = z
@@ -44,30 +50,22 @@ export async function POST(request: NextRequest) {
   const auth = await requireUser(request)
   if (!auth.ok) return auth.response
 
-  const db = await getContentDb()
   const ownerId = auth.value.id
   const { uploadSessionId, blobUrl, originalFilename } = parsed.data
 
-  let session = uploadSessionId
-    ? await db.collection('upload-sessions').findOne({ _id: new ObjectId(uploadSessionId) })
-    : null
+  let session = uploadSessionId ? await findUploadSessionById(uploadSessionId) : null
 
   // Resolve by blobUrl only within the caller's own sessions. Matching on
   // blobUrl alone would let one user finalize another user's upload session.
   if (!session && blobUrl) {
-    session = await db.collection('upload-sessions').findOne({
-      createdBy: ownerId,
-      $or: [{ blobUrl }, { originalFilename, status: { $in: ['initiated', 'uploaded'] } }],
-    })
+    session = await findOwnUploadSessionByBlob(ownerId, blobUrl, originalFilename)
   }
 
   if (!session) return Response.json({ error: 'Upload session not found' }, { status: 404 })
   if (session.createdBy !== ownerId) return Response.json({ error: 'Forbidden' }, { status: 403 })
 
   if (session.status === 'finalized' && session.chatAssetId) {
-    const existing = await db
-      .collection('chat-assets')
-      .findOne({ _id: new ObjectId(String(session.chatAssetId)) })
+    const existing = await findChatAssetById(String(session.chatAssetId))
     if (existing) {
       return NextResponse.json({
         chatAssetId: existing._id.toString(),
@@ -108,9 +106,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Content type not allowed' }, { status: 415 })
   }
 
-  const expiresAt = new Date(Date.now() + CHAT_ASSET_RETENTION_DAYS * 24 * 60 * 60 * 1000)
-  const now = new Date()
-  const asset = await db.collection('chat-assets').insertOne({
+  const asset = await createChatAsset({
     tenant: session.tenant,
     createdBy: ownerId,
     url: resolvedUrl,
@@ -118,26 +114,11 @@ export async function POST(request: NextRequest) {
     originalFilename: session.originalFilename || originalFilename,
     mimeType,
     filesize: size,
-    retentionPolicy: 'ephemeral',
-    expiresAt,
+    expiresAt: new Date(Date.now() + CHAT_ASSET_RETENTION_DAYS * 24 * 60 * 60 * 1000),
     uploadSessionId: session._id.toString(),
-    createdAt: now,
-    updatedAt: now,
   })
-  await db.collection('upload-sessions').updateOne(
-    { _id: session._id },
-    {
-      $set: {
-        status: 'finalized',
-        chatAssetId: asset.insertedId.toString(),
-        blobUrl: resolvedUrl,
-        updatedAt: now,
-      },
-    },
-  )
-  const doc = await db.collection('chat-assets').findOne({ _id: asset.insertedId })
-  return NextResponse.json({
-    chatAssetId: asset.insertedId.toString(),
-    chatAsset: serializeDoc(doc),
-  })
+
+  await finalizeUploadSession(session._id, { chatAssetId: asset.id, blobUrl: resolvedUrl })
+
+  return NextResponse.json({ chatAssetId: asset.id, chatAsset: serializeDoc(asset.doc) })
 }

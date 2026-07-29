@@ -2,19 +2,18 @@ import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { getContentDb, serializeDoc } from '@/infra/db/content-db'
+import { serializeDoc } from '@/infra/db/content-db'
 import { requireUser } from '@/server/auth/api-auth'
+import {
+  archiveConversation,
+  createConversation,
+  findConversationsByContext,
+} from '@/server/services/conversations'
 
 const CreateConversationSchema = z.object({
   courseId: z.string().min(1),
   locale: z.enum(['he', 'en']).optional(),
 })
-
-function ownerFilter(ownerId: string) {
-  return {
-    user: ObjectId.isValid(ownerId) ? { $in: [ownerId, new ObjectId(ownerId)] } : ownerId,
-  }
-}
 
 function previewTitle(messages: unknown) {
   if (!Array.isArray(messages)) return ''
@@ -27,23 +26,12 @@ function previewTitle(messages: unknown) {
   return first.content.slice(0, 50) + (first.content.length > 50 ? '...' : '')
 }
 
-function contextFilter(contextKey: string | null, contextKeyPrefix: string | null) {
-  if (contextKey) return { contextKey }
-  return { contextKey: { $regex: `^${escapeRegex(contextKeyPrefix ?? '')}`, $options: 'i' } }
-}
-
-function escapeRegex(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request)
   if (!auth.ok) return auth.response
-  const ownerId = auth.value.id
   const searchParams = request.nextUrl.searchParams
   const contextKey = searchParams.get('contextKey')
   const contextKeyPrefix = searchParams.get('contextKeyPrefix')
-  const limit = Math.min(Number(searchParams.get('limit') ?? 100), 100)
 
   if (!contextKey && !contextKeyPrefix) {
     return NextResponse.json(
@@ -52,19 +40,12 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const db = await getContentDb()
-  const query = {
-    ...ownerFilter(ownerId),
-    ...contextFilter(contextKey, contextKeyPrefix),
-    archivedAt: { $exists: false },
-  }
-  const docs = await db
-    .collection('conversations')
-    .find(query)
-    .sort({ lastMessageAt: -1, updatedAt: -1 })
-    .limit(limit)
-    .toArray()
-  const total = await db.collection('conversations').countDocuments(query)
+  const { docs, total } = await findConversationsByContext({
+    ownerId: auth.value.id,
+    contextKey,
+    contextKeyPrefix,
+    limit: Math.min(Number(searchParams.get('limit') ?? 100), 100),
+  })
 
   const conversations = docs.map((doc) => {
     const serialized = serializeDoc<Record<string, unknown>>(doc)
@@ -95,24 +76,14 @@ export async function POST(request: NextRequest) {
 
   const auth = await requireUser(request)
   if (!auth.ok) return auth.response
-  const ownerId = auth.value.id
-  const db = await getContentDb()
-  const now = new Date()
-  const contextKey = `ask:${parsed.data.courseId}:${now.getTime()}`
 
-  const result = await db.collection('conversations').insertOne({
-    user: ObjectId.isValid(ownerId) ? new ObjectId(ownerId) : ownerId,
-    contextRef: { relationTo: 'courses', value: parsed.data.courseId },
-    contextKey,
-    preferredLocale: parsed.data.locale ?? 'he',
-    messages: [],
-    lastMessageAt: now,
-    contextPolicyVersion: 'web-v1',
-    createdAt: now,
-    updatedAt: now,
+  const created = await createConversation({
+    ownerId: auth.value.id,
+    courseId: parsed.data.courseId,
+    locale: parsed.data.locale ?? 'he',
   })
 
-  return NextResponse.json({ id: result.insertedId.toString(), contextKey })
+  return NextResponse.json(created)
 }
 
 export async function DELETE(request: NextRequest) {
@@ -123,16 +94,10 @@ export async function DELETE(request: NextRequest) {
 
   const auth = await requireUser(request)
   if (!auth.ok) return auth.response
-  const ownerId = auth.value.id
-  const db = await getContentDb()
 
-  const result = await db
-    .collection('conversations')
-    .updateOne(
-      { _id: new ObjectId(id), ...ownerFilter(ownerId) },
-      { $set: { archivedAt: new Date(), updatedAt: new Date() } },
-    )
+  if (!(await archiveConversation(auth.value.id, id))) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
 
-  if (!result.matchedCount) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json({ success: true })
 }
