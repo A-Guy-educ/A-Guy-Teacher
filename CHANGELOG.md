@@ -1928,6 +1928,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: Release v0.30.0 ([#986](https://github.com/A-Guy-educ/A-Guy-Web/pull/986)) — @aguyshayb
 - fix: refresh Kody workflow launcher ([#984](https://github.com/A-Guy-educ/A-Guy-Web/pull/984)) — @aguyaharonyair
 - fix: Refresh Kody workflow launcher ([#983](https://github.com/A-Guy-educ/A-Guy-Web/pull/983)) — @aharonyaircohen
 - fix(checkout): Resolve success page lookup for PayPal subscription returns ([#982](https://github.com/A-Guy-educ/A-Guy-Web/pull/982)) — @aguyshayb
