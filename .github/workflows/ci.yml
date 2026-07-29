@@ -7,6 +7,10 @@ on:
     branches: [dev, main]
   workflow_dispatch:
     inputs:
+      release_gate:
+        type: boolean
+        default: false
+        description: 'Run the release E2E gate'
       run_e2e_tests:
         type: boolean
         default: false
@@ -198,10 +202,15 @@ jobs:
         run: pnpm build
 
   e2e-gate:
-    name: E2E Gate (PR to dev)
+    name: E2E Gate (release)
     runs-on: ubuntu-latest
     needs: [build]
-    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref != 'dev' && needs.build.result == 'success'
+    if: >-
+      needs.build.result == 'success' &&
+      (
+        (github.event_name == 'pull_request' && github.event.pull_request.base.ref != 'dev') ||
+        (github.event_name == 'workflow_dispatch' && inputs.release_gate == true)
+      )
     timeout-minutes: 20
     env:
       DATABASE_URL: mongodb://localhost:27017/test
