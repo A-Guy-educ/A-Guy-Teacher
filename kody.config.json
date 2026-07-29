@@ -89,8 +89,7 @@
       "create-knowledge-report",
       "publish-knowledge-system",
       "release-validate",
-      "build-chat-knowledge-graph",
-      "publish-chat-knowledge-tool"
+      "build-chat-knowledge-graph"
     ],
     "activeAgents": [
       "ceo",
