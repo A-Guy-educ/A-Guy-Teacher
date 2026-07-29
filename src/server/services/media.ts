@@ -9,7 +9,7 @@
 
 import { ObjectId, type Document } from 'mongodb'
 
-import { getContentDb } from '@/infra/db/content-db'
+import { getContentDb, objectIdFromString } from '@/infra/db/content-db'
 
 export type MediaRecord = {
   filename: string
@@ -49,4 +49,13 @@ export async function findMediaByFilename(filename: string): Promise<Document | 
 export async function listRecentMedia(limit = 50): Promise<Document[]> {
   const db = await getContentDb()
   return db.collection('media').find({}).sort({ createdAt: -1 }).limit(limit).toArray()
+}
+
+/**
+ * One media document by an id that may be either an ObjectId or a plain
+ * string key, or `null`. Older records were written with string ids.
+ */
+export async function findMediaByAnyId(id: string): Promise<Document | null> {
+  const db = await getContentDb()
+  return db.collection('media').findOne({ _id: objectIdFromString(id) } as Document)
 }

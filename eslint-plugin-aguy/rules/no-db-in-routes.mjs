@@ -36,9 +36,6 @@
  * migrating that route. When it reaches zero, delete the list and this comment.
  */
 const KNOWN_EXCEPTIONS = new Set([
-  'admin/lessons/import-intro/route.ts',
-  'agent/generate-interactive-lesson/route.ts',
-  'chat-assets/finalize/route.ts',
   'entitlements/redeem/route.ts',
   'payments/checkout/route.ts',
   'webhooks/paypal/route.ts',

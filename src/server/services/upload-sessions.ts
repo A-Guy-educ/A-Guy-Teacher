@@ -87,3 +87,41 @@ export async function completeUploadSession(
     },
   })
 }
+
+/** One upload session by id, or `null`. */
+export async function findUploadSessionById(sessionId: string): Promise<Document | null> {
+  const db = await getContentDb()
+  return db.collection('upload-sessions').findOne({ _id: new ObjectId(sessionId) } as Document)
+}
+
+/**
+ * Find a caller's unfinished session by the blob it produced, or by the
+ * filename it was opened for.
+ *
+ * Scoped to the owner deliberately: matching on the blob URL alone would let
+ * one user finalize another user's upload.
+ */
+export async function findOwnUploadSessionByBlob(
+  ownerId: string,
+  blobUrl: string,
+  originalFilename?: string,
+): Promise<Document | null> {
+  const db = await getContentDb()
+
+  return db.collection('upload-sessions').findOne({
+    createdBy: ownerId,
+    $or: [{ blobUrl }, { originalFilename, status: { $in: ['initiated', 'uploaded'] } }],
+  })
+}
+
+/** Mark a session finished and point it at the asset it produced. */
+export async function finalizeUploadSession(
+  sessionId: unknown,
+  asset: { chatAssetId: string; blobUrl: string },
+): Promise<void> {
+  const db = await getContentDb()
+
+  await db.collection('upload-sessions').updateOne({ _id: sessionId } as Document, {
+    $set: { status: 'finalized', ...asset, updatedAt: new Date() },
+  })
+}
