@@ -19,6 +19,7 @@ import { Spinner } from '@/infra/loading/components/Spinner'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { useRouterWithLoading } from '@/infra/loading/hooks/useRouterWithLoading'
 import { LOADING_KEYS } from '@/infra/loading/keys'
+import type { SafeDestination } from '@/infra/auth/oauth_sanitize'
 import { getOnboardingRedirect } from '@/infra/onboarding/redirect'
 
 /**
@@ -26,7 +27,7 @@ import { getOnboardingRedirect } from '@/infra/onboarding/redirect'
  * `signup/page.tsx`. The browser cannot see which sibling apps this
  * deployment trusts, so it must not decide that itself.
  */
-function SignupFormContent({ returnTo }: { returnTo: string }) {
+function SignupFormContent({ returnTo }: { returnTo: SafeDestination }) {
   const t = useTranslations('auth.signup')
   const tOauth = useTranslations('auth.oauth')
   const router = useRouterWithLoading()
@@ -168,7 +169,7 @@ function SignupFormContent({ returnTo }: { returnTo: string }) {
   )
 }
 
-export function SignupForm({ returnTo }: { returnTo: string }) {
+export function SignupForm({ returnTo }: { returnTo: SafeDestination }) {
   return (
     <Suspense fallback={<SignupFormSkeleton />}>
       <SignupFormContent returnTo={returnTo} />

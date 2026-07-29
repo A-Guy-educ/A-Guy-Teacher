@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { returnToPath, sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
-import type { SharedLoginPolicy } from '@/infra/auth/shared-login/policy'
+import { SINGLE_APP_POLICY, type SharedLoginPolicy } from '@/infra/auth/shared-login/policy'
 
 const SHARED: SharedLoginPolicy = {
   cookieDomain: '.a-guy.co.il',
@@ -62,10 +62,10 @@ describe('sanitizeReturnTo with shared login configured', () => {
   })
 })
 
-describe('sanitizeReturnTo without a policy', () => {
-  it('is relative-only, so a client component degrades safely', () => {
-    expect(sanitizeReturnTo('https://app2.a-guy.co.il/dashboard')).toBe('/')
-    expect(sanitizeReturnTo('/courses')).toBe('/courses')
+describe('sanitizeReturnTo under the single-app policy', () => {
+  it('is relative-only', () => {
+    expect(sanitizeReturnTo('https://app2.a-guy.co.il/dashboard', SINGLE_APP_POLICY)).toBe('/')
+    expect(sanitizeReturnTo('/courses', SINGLE_APP_POLICY)).toBe('/courses')
   })
 })
 

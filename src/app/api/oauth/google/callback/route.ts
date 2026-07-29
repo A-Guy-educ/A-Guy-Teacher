@@ -12,6 +12,7 @@ import {
   linkGoogleUser,
   setAuthCookie,
 } from '@/infra/auth/web-auth'
+import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
 import { getSharedLoginPolicy } from '@/infra/auth/shared-login/policy.env'
 import { getOnboardingRedirect, START_WIZARD_COMPLETED_COOKIE } from '@/infra/onboarding/redirect'
 
@@ -77,12 +78,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       googleSub: google.sub,
     })
 
+    // Re-sanitized rather than trusted: `returnTo` comes back from a cookie,
+    // and the policy may have changed since the handshake began.
+    const safeReturnTo = sanitizeReturnTo(returnTo, getSharedLoginPolicy())
     const destination = isNewUser
-      ? getOnboardingRedirect(returnTo, {
-          skipPersona: wizardCompleted,
-          policy: getSharedLoginPolicy(),
-        })
-      : returnTo
+      ? getOnboardingRedirect(safeReturnTo, { skipPersona: wizardCompleted })
+      : safeReturnTo
 
     res.headers.set('Location', new URL(destination, req.url).toString())
     return res

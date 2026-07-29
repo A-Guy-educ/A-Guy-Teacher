@@ -7,7 +7,24 @@
  * @ai-summary Turns an untrusted returnTo parameter into a destination safe to redirect to. Pure — the trust boundary arrives as an argument, never from the environment.
  */
 
-import { isTrustedOrigin, SINGLE_APP_POLICY, type SharedLoginPolicy } from './shared-login/policy'
+import { isTrustedOrigin, type SharedLoginPolicy } from './shared-login/policy'
+
+declare const safeDestinationBrand: unique symbol
+
+/**
+ * A destination that has passed `sanitizeReturnTo`.
+ *
+ * A plain `string` cannot be assigned to it, so a value can only reach a
+ * redirect by going through sanitization once — and code that already holds a
+ * `SafeDestination` cannot accidentally re-sanitize it under a weaker policy.
+ * That second mistake is not hypothetical: it silently reset every sibling
+ * redirect to the home page on the signup path.
+ *
+ * At runtime this is just the string; the brand exists only for the compiler.
+ */
+export type SafeDestination = string & { readonly [safeDestinationBrand]: true }
+
+export const SITE_ROOT = '/' as SafeDestination
 
 /**
  * A safe redirect destination derived from an untrusted `returnTo`.
@@ -17,18 +34,17 @@ import { isTrustedOrigin, SINGLE_APP_POLICY, type SharedLoginPolicy } from './sh
  * relative `//evil.com` — collapses to the site root. Falling back rather than
  * throwing keeps a tampered link from breaking login.
  *
- * `policy` is a parameter, not an environment read, because this function also
- * runs in the browser: a client bundle cannot see server variables, so reading
- * one here would silently evaluate to "trust nothing" and drop legitimate
- * sibling redirects. Client callers pass `SINGLE_APP_POLICY` and get
- * relative-only behaviour, honestly — or better, receive an
- * already-sanitized destination from their server component.
+ * `policy` is a required parameter, never an environment read. This function
+ * also runs in the browser, where server variables are invisible: reading one
+ * here would quietly evaluate to "trust nothing" and drop legitimate sibling
+ * redirects. Requiring it means the compiler asks every caller which trust
+ * boundary applies, instead of a default answering wrongly on their behalf.
  */
 export function sanitizeReturnTo(
   returnTo: string | undefined | null,
-  policy: SharedLoginPolicy = SINGLE_APP_POLICY,
-): string {
-  const siteRoot = '/'
+  policy: SharedLoginPolicy,
+): SafeDestination {
+  const siteRoot = SITE_ROOT
   const trimmed = returnTo?.trim()
   if (!trimmed) return siteRoot
 
@@ -40,14 +56,17 @@ export function sanitizeReturnTo(
     return sanitizeAbsolute(trimmed, policy) ?? siteRoot
   }
 
-  return trimmed.startsWith('/') ? trimmed : siteRoot
+  return trimmed.startsWith('/') ? (trimmed as SafeDestination) : siteRoot
 }
 
-function sanitizeAbsolute(candidate: string, policy: SharedLoginPolicy): string | undefined {
+function sanitizeAbsolute(
+  candidate: string,
+  policy: SharedLoginPolicy,
+): SafeDestination | undefined {
   try {
     const url = new URL(candidate)
     return isTrustedOrigin(url, policy.returnOrigins, policy.cookieDomain)
-      ? url.toString()
+      ? (url.toString() as SafeDestination)
       : undefined
   } catch {
     return undefined
@@ -62,7 +81,7 @@ function sanitizeAbsolute(candidate: string, policy: SharedLoginPolicy): string 
  * working once absolute sibling URLs are permitted; this keeps such checks
  * honest.
  */
-export function returnToPath(returnTo: string): string {
+export function returnToPath(returnTo: SafeDestination): string {
   if (!/^https?:\/\//i.test(returnTo)) return returnTo
 
   try {

@@ -5,9 +5,10 @@ import { motion } from 'framer-motion'
 
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { useTranslations } from '@/ui/web/providers/I18n'
+import type { SafeDestination } from '@/infra/auth/oauth_sanitize'
 import { LoginForm } from './LoginForm'
 
-export function LoginPageContent({ returnTo }: { returnTo: string }) {
+export function LoginPageContent({ returnTo }: { returnTo: SafeDestination }) {
   const t = useTranslations('auth.login')
 
   return (

@@ -11,6 +11,7 @@ import { Input } from '@/ui/web/components/input'
 import { Label } from '@/ui/web/components/label'
 import { usePasswordLogin } from '@/ui/web/providers/PasswordLoginProvider'
 import { useI18n, useTranslations } from '@/ui/web/providers/I18n'
+import type { SafeDestination } from '@/infra/auth/oauth_sanitize'
 import { loginAction } from './login_authenticate-action'
 import telescopeSvg from '@/brands/aguy/assets/telescope.svg'
 
@@ -19,7 +20,7 @@ import telescopeSvg from '@/brands/aguy/assets/telescope.svg'
  * which sibling apps are trustworthy needs deployment configuration the
  * browser cannot see.
  */
-export function LoginForm({ returnTo }: { returnTo: string }) {
+export function LoginForm({ returnTo }: { returnTo: SafeDestination }) {
   const { t: tBrand } = useI18n()
   const t = useTranslations('auth.login')
   const tOauth = useTranslations('auth.oauth')

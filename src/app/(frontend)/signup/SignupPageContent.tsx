@@ -3,9 +3,10 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { useTranslations } from '@/ui/web/providers/I18n'
+import type { SafeDestination } from '@/infra/auth/oauth_sanitize'
 import { SignupForm } from './SignupForm'
 
-export function SignupPageContent({ returnTo }: { returnTo: string }) {
+export function SignupPageContent({ returnTo }: { returnTo: SafeDestination }) {
   const t = useTranslations('auth.signup')
 
   return (
