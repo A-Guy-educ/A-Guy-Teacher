@@ -1,5 +1,78 @@
 # Changelog
 
+## v0.30.4 — 2026-07-29
+
+### Features
+- Shared login across sibling subdomain apps (b028973e6)
+
+### Fixes
+- use deterministic release smoke gate (52a425736)
+- run current release smoke tests (c96534005)
+- run the release validation gate (02e2782b1)
+- configure explicit validation (c9fe86bdf)
+- validate release pull requests (6e0b5dbff)
+- Make the return destination a type the compiler can check (a3ee4faec)
+- Resolve returnTo on the server, and split shared login into units (7e320d628)
+
+### Refactoring
+- Drop AUTH_COOKIE_DOMAIN in favour of ROOT_DOMAIN (54085881a)
+
+### Docs
+- Fold the sharing note into the platform doc (c632b0202)
+- Record what we share across apps (dc01eca2b)
+- Use the real domain in shared-login examples (4a5852a3f)
+
+### Chores
+- add #993 (28cdcffec)
+- add store workflow web-release (f1f4d314c)
+- add #992 (4cdef4d12)
+- add #991 (af5491503)
+- allow automated release promotion (9600c4562)
+- add #990 (fb7c3f58e)
+- add #989 (4384f5d5d)
+- add #988 (7a9358261)
+- add #985 (97d2de758)
+- update docs/rollout-aug-26.md (54db515e4)
+- update docs/rollout-aug-26.md (3baabdafa)
+- update docs/rollout-aug-26.md (7e1693b99)
+- release v0.30.0 (211b2ce7f)
+- add #987 (8f81a68b3)
+
+### Other
+- add deterministic release smoke (ab84cdbe6)
+- dev -> main (v0.30.1) (#990) (8ff4e5991)
+## v0.30.3 — 2026-07-29
+
+### Features
+- Shared login across sibling subdomain apps (b028973e6)
+
+### Fixes
+- Make the return destination a type the compiler can check (a3ee4faec)
+- Resolve returnTo on the server, and split shared login into units (7e320d628)
+
+### Refactoring
+- Drop AUTH_COOKIE_DOMAIN in favour of ROOT_DOMAIN (54085881a)
+
+### Docs
+- Fold the sharing note into the platform doc (c632b0202)
+- Record what we share across apps (dc01eca2b)
+- Use the real domain in shared-login examples (4a5852a3f)
+
+### Chores
+- add #991 (af5491503)
+- allow automated release promotion (9600c4562)
+- add #990 (fb7c3f58e)
+- add #989 (4384f5d5d)
+- add #988 (7a9358261)
+- add #985 (97d2de758)
+- update docs/rollout-aug-26.md (54db515e4)
+- update docs/rollout-aug-26.md (3baabdafa)
+- update docs/rollout-aug-26.md (7e1693b99)
+- release v0.30.0 (211b2ce7f)
+- add #987 (8f81a68b3)
+
+### Other
+- dev -> main (v0.30.1) (#990) (8ff4e5991)
 ## v0.30.2 — 2026-07-29
 
 ### Features
@@ -2486,6 +2559,9 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.30.4 ([#994](https://github.com/A-Guy-educ/A-Guy-Web/pull/994)) — @aguyaharonyair
+- chore: release v0.30.3 ([#993](https://github.com/A-Guy-educ/A-Guy-Web/pull/993)) — @aguyaharonyair
+- promote: dev -> main (v0.30.2) ([#992](https://github.com/A-Guy-educ/A-Guy-Web/pull/992)) — @aguyaharonyair
 - chore: release v0.30.2 ([#991](https://github.com/A-Guy-educ/A-Guy-Web/pull/991)) — @aguyaharonyair
 - promote: dev -> main (v0.30.1) ([#990](https://github.com/A-Guy-educ/A-Guy-Web/pull/990)) — @aguyaharonyair
 - docs(architecture): Record what we share across apps ([#989](https://github.com/A-Guy-educ/A-Guy-Web/pull/989)) — @aharonyaircohen

@@ -26,6 +26,12 @@
   "release": {
     "releaseBranch": "main",
     "allowAdminMerge": true,
+    "validation": {
+      "workflow": "ci.yml",
+      "inputs": {
+        "release_gate": true
+      }
+    },
     "versionFiles": [
       "package.json"
     ],
@@ -82,7 +88,8 @@
       "resolve",
       "build-knowledge-graph",
       "create-knowledge-report",
-      "publish-knowledge-system"
+      "publish-knowledge-system",
+      "release-validate"
     ],
     "activeAgents": [
       "ceo",
