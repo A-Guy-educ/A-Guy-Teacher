@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const mockLoginWithPassword = vi.hoisted(() => vi.fn())
 const mockCreatePasswordUser = vi.hoisted(() => vi.fn())
+const mockHeaders = vi.hoisted(() => vi.fn())
 
 vi.mock('@/infra/auth/web-auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/infra/auth/web-auth')>()
@@ -12,6 +13,11 @@ vi.mock('@/infra/auth/web-auth', async (importOriginal) => {
     loginWithPassword: mockLoginWithPassword,
   }
 })
+
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(),
+  headers: mockHeaders,
+}))
 
 function loginFormData() {
   const data = new FormData()
@@ -30,16 +36,28 @@ function signupFormData() {
   return data
 }
 
+/**
+ * Outside a request scope `headers()` throws — the same thing that happens when
+ * these actions are invoked directly, as the non-embedded cases here do.
+ */
+function noRequestScope() {
+  mockHeaders.mockImplementation(() => {
+    throw new Error('headers() was called outside a request scope')
+  })
+}
+
 describe('password auth cookies', () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.resetModules()
     mockLoginWithPassword.mockReset()
     mockCreatePasswordUser.mockReset()
+    mockHeaders.mockReset()
   })
 
-  it('uses the partitioned production auth cookie for password login', async () => {
+  it('writes a shareable (non-partitioned) cookie for a top-level password login', async () => {
     vi.stubEnv('NODE_ENV', 'production')
+    noRequestScope()
     mockLoginWithPassword.mockResolvedValue({
       token: 'session-token',
       user: { id: 'user-1' },
@@ -56,16 +74,19 @@ describe('password auth cookies', () => {
       expect.objectContaining({
         httpOnly: true,
         maxAge: 60 * 60 * 24 * 7,
-        partitioned: true,
+        // Partitioned cookies are keyed to the embedding top-level site, so a
+        // partitioned login cookie can never be read by a sibling app.
+        partitioned: false,
         path: '/',
-        sameSite: 'none',
+        sameSite: 'lax',
         secure: true,
       }),
     )
   })
 
-  it('uses the partitioned production auth cookie for password signup', async () => {
+  it('writes a shareable (non-partitioned) cookie for a top-level password signup', async () => {
     vi.stubEnv('NODE_ENV', 'production')
+    noRequestScope()
     mockCreatePasswordUser.mockResolvedValue({
       token: 'session-token',
       user: { id: 'user-1' },
@@ -83,11 +104,52 @@ describe('password auth cookies', () => {
       expect.objectContaining({
         httpOnly: true,
         maxAge: 60 * 60 * 24 * 7,
-        partitioned: true,
+        partitioned: false,
         path: '/',
-        sameSite: 'none',
+        sameSite: 'lax',
         secure: true,
       }),
+    )
+  })
+
+  it('scopes the login cookie to the shared domain when configured', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('ROOT_DOMAIN', 'aguy.co.il')
+    noRequestScope()
+    mockLoginWithPassword.mockResolvedValue({
+      token: 'session-token',
+      user: { id: 'user-1' },
+    })
+    const cookieStore = { set: vi.fn() }
+    const { loginAction } = await import('@/app/(frontend)/login/login_authenticate-action')
+
+    await loginAction(loginFormData(), cookieStore)
+
+    expect(cookieStore.set).toHaveBeenCalledWith(
+      'payload-token',
+      'session-token',
+      expect.objectContaining({ domain: '.aguy.co.il' }),
+    )
+  })
+
+  it('keeps the partitioned cookie for a login posted from inside the preview iframe', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    mockHeaders.mockResolvedValue(
+      new Headers({ 'sec-fetch-dest': 'empty', 'sec-fetch-site': 'cross-site' }),
+    )
+    mockLoginWithPassword.mockResolvedValue({
+      token: 'session-token',
+      user: { id: 'user-1' },
+    })
+    const cookieStore = { set: vi.fn() }
+    const { loginAction } = await import('@/app/(frontend)/login/login_authenticate-action')
+
+    await loginAction(loginFormData(), cookieStore)
+
+    expect(cookieStore.set).toHaveBeenCalledWith(
+      'payload-token',
+      'session-token',
+      expect.objectContaining({ partitioned: true, sameSite: 'none' }),
     )
   })
 })

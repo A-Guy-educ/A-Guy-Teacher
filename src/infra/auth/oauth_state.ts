@@ -11,12 +11,13 @@ import type { NextRequest, NextResponse } from 'next/server'
 import { generateNonce } from './oauth_nonce'
 import { readCookie, deleteCookie, setShortLivedCookie } from './oauth_cookies'
 import { sanitizeReturnTo } from './oauth_sanitize'
+import { getSharedLoginPolicy } from './shared-login/policy.env'
 
 const STATE_COOKIE = 'oauth_state'
 const RETURN_TO_COOKIE = 'oauth_return_to'
 
 export async function storeOAuthState(res: NextResponse, returnTo: string): Promise<string> {
-  const sanitizedReturnTo = sanitizeReturnTo(returnTo)
+  const sanitizedReturnTo = sanitizeReturnTo(returnTo, getSharedLoginPolicy())
   setShortLivedCookie(res, RETURN_TO_COOKIE, sanitizedReturnTo)
 
   const state = await generateNonce()

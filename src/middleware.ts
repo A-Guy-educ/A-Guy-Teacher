@@ -6,7 +6,15 @@ import {
   locales,
   getLocaleFromSubdomain,
 } from './i18n/config'
+import { AUTH_COOKIE_NAME } from './infra/auth/shared-login/auth-cookie'
+import { toCookieDomain } from './infra/auth/shared-login/policy'
+import { getSharedLoginPolicy } from './infra/auth/shared-login/policy.env'
 import { contentSecurityPolicy } from './infra/security/content-security-policy.js'
+import {
+  applyCorsHeaders,
+  applyPreflightHeaders,
+  resolveAllowedApiOrigin,
+} from './infra/security/cors'
 
 /**
  * Check if a path is a protected learning route that requires authentication.
@@ -35,8 +43,32 @@ function isCourseContentPath(pathname: string): boolean {
  * Checks for the payload-token cookie.
  */
 function hasAuthToken(request: NextRequest): boolean {
-  const cookieStore = request.cookies
-  return cookieStore.get('payload-token')?.value !== undefined
+  return request.cookies.get(AUTH_COOKIE_NAME)?.value !== undefined
+}
+
+/**
+ * Attach CORS headers for sibling apps, and answer their preflight.
+ *
+ * Returns a response only for a preflight, which must not fall through to the
+ * route. Otherwise the headers are added to `response` and the request
+ * continues normally.
+ */
+function handleApiCors(request: NextRequest, response: NextResponse): NextResponse | undefined {
+  const allowedOrigin = resolveAllowedApiOrigin(
+    request.headers.get('origin'),
+    getSharedLoginPolicy(),
+  )
+  if (!allowedOrigin) return undefined
+
+  if (request.method === 'OPTIONS') {
+    const preflight = new NextResponse(null, { status: 204 })
+    applyCorsHeaders(preflight.headers, allowedOrigin)
+    applyPreflightHeaders(preflight.headers, request.headers.get('access-control-request-headers'))
+    return preflight
+  }
+
+  applyCorsHeaders(response.headers, allowedOrigin)
+  return undefined
 }
 
 function isKodyFlyPreviewHost(host: string): boolean {
@@ -51,21 +83,26 @@ function allowsPreviewAuthBypass(request: NextRequest): boolean {
   return isKodyFlyPreviewHost(host)
 }
 
-function resolveCookieDomain(host: string): string | undefined {
-  // If you're on *.vercel.app, sharing cookies across subdomains via Domain=.vercel.app
-  // is typically blocked (public suffix). In that case, keep host-only cookie.
-  if (host.endsWith('.vercel.app')) return undefined
+/**
+ * Cookie `Domain` for the locale cookie.
+ *
+ * Prefers the configured root domain — the same value that scopes the auth
+ * cookie — and otherwise guesses the apex from the host. The guess is safe
+ * enough for a language preference but deliberately not reused for the session
+ * cookie, where a wrong guess would leak a login: `toCookieDomain` only ever
+ * honours explicit configuration.
+ */
+function resolveLocaleCookieDomain(host: string): string | undefined {
+  const configured = toCookieDomain(process.env.ROOT_DOMAIN)
+  if (configured) return configured
 
-  // Prefer explicit root domain if you set it (recommended)
-  // e.g. ROOT_DOMAIN=example.com -> cookie domain ".example.com"
-  const rootFromEnv = process.env.ROOT_DOMAIN?.trim()
-  if (rootFromEnv) return `.${rootFromEnv.replace(/^\./, '')}`
+  const hostname = host.split(':')[0]
+  if (!toCookieDomain(hostname)) return undefined
 
-  // Fallback: naive "apex" extraction (works for most .com/.net/.org cases)
-  const parts = host.split(':')[0].split('.').filter(Boolean)
+  const parts = hostname.split('.').filter(Boolean)
   if (parts.length < 2) return undefined
-  const apex = parts.slice(-2).join('.')
-  return `.${apex}`
+
+  return `.${parts.slice(-2).join('.')}`
 }
 
 // Media CDN redirects are handled by next.config.js redirects (baked in at build time).
@@ -84,6 +121,14 @@ export function middleware(request: NextRequest) {
 
   if (!pathname.startsWith('/api/pdfjs-viewer')) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicy)
+  }
+
+  // Cross-origin API access for sibling apps that share the login cookie.
+  // Without these headers the browser discards the response, even though the
+  // cookie itself was sent (see docs/architecture/SHARED-LOGIN-APP-GUIDE.md).
+  if (pathname.startsWith('/api')) {
+    const corsResponse = handleApiCors(request, response)
+    if (corsResponse) return corsResponse
   }
 
   // Exclude paths from locale handling (double safety, even though matcher already excludes many)
@@ -137,7 +182,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (shouldSetCookie) {
-    const cookieDomain = resolveCookieDomain(host)
+    const cookieDomain = resolveLocaleCookieDomain(host)
     const isHttps = request.nextUrl.protocol === 'https:'
     const isProd = process.env.NODE_ENV === 'production'
 
