@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.30.3 — 2026-07-29
+
+### Features
+- Shared login across sibling subdomain apps (b028973e6)
+
+### Fixes
+- Make the return destination a type the compiler can check (a3ee4faec)
+- Resolve returnTo on the server, and split shared login into units (7e320d628)
+
+### Refactoring
+- Drop AUTH_COOKIE_DOMAIN in favour of ROOT_DOMAIN (54085881a)
+
+### Docs
+- Fold the sharing note into the platform doc (c632b0202)
+- Record what we share across apps (dc01eca2b)
+- Use the real domain in shared-login examples (4a5852a3f)
+
+### Chores
+- add #991 (af5491503)
+- allow automated release promotion (9600c4562)
+- add #990 (fb7c3f58e)
+- add #989 (4384f5d5d)
+- add #988 (7a9358261)
+- add #985 (97d2de758)
+- update docs/rollout-aug-26.md (54db515e4)
+- update docs/rollout-aug-26.md (3baabdafa)
+- update docs/rollout-aug-26.md (7e1693b99)
+- release v0.30.0 (211b2ce7f)
+- add #987 (8f81a68b3)
+
+### Other
+- dev -> main (v0.30.1) (#990) (8ff4e5991)
 ## v0.30.2 — 2026-07-29
 
 ### Features
