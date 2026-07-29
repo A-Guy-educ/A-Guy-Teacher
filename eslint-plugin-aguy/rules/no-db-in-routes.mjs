@@ -46,11 +46,8 @@ const KNOWN_EXCEPTIONS = new Set([
   'media/file/[filename]/route.ts',
   'media/route.ts',
   'payments/checkout/route.ts',
-  'stats/dashboard/route.ts',
   'stats/heartbeat/route.ts',
-  'stats/streak/route.ts',
   'stats/track-activity/route.ts',
-  'teacher-profiles/route.ts',
   'webhooks/paypal/route.ts',
 ])
 

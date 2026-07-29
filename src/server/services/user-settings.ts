@@ -120,3 +120,21 @@ export async function setTeacherProfile(
   const settings = await findSettingsDoc(userId)
   return settings?._id?.toString() ?? null
 }
+
+/** Every enabled teacher profile offered in the given language. */
+export async function listTeacherProfiles(locale: string) {
+  const db = await getContentDb()
+
+  return (
+    db
+      .collection('teacher_profiles')
+      .find({
+        isEnabled: true,
+        $or: [{ locale }, { locale: { $exists: false } }],
+      })
+      // Language-specific rows sort ahead of language-neutral ones, so the
+      // de-duplication by slug downstream keeps the localized variant.
+      .sort({ locale: -1, createdAt: 1 })
+      .toArray()
+  )
+}
