@@ -38,12 +38,9 @@
 const KNOWN_EXCEPTIONS = new Set([
   'admin/lessons/import-intro/route.ts',
   'agent/generate-interactive-lesson/route.ts',
-  'blob/upload-token/route.ts',
   'chat-assets/finalize/route.ts',
   'entitlements/redeem/route.ts',
   'payments/checkout/route.ts',
-  'stats/heartbeat/route.ts',
-  'stats/track-activity/route.ts',
   'webhooks/paypal/route.ts',
 ])
 

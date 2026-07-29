@@ -62,3 +62,34 @@ export async function saveStreak(
     .collection('user-stats')
     .updateOne({ _id: statsId } as Document, { $set: { ...streak, updatedAt: new Date() } })
 }
+
+/** Add to a user's accumulated study time and stamp the heartbeat. */
+export async function recordStudyTime(
+  statsId: unknown,
+  totalTimeSpentSeconds: number,
+): Promise<void> {
+  const db = await getContentDb()
+  const now = new Date()
+
+  await db.collection('user-stats').updateOne({ _id: statsId } as Document, {
+    $set: { totalTimeSpentSeconds, lastHeartbeatAt: now, updatedAt: now },
+  })
+}
+
+/**
+ * Put an activity at the head of the user's log.
+ *
+ * The log is capped at 100 entries — it feeds a "recent activity" list, so
+ * older entries are of no use and would grow the document without limit.
+ */
+export async function pushActivity(statsId: unknown, activity: Document): Promise<void> {
+  const db = await getContentDb()
+
+  await db.collection('user-stats').updateOne(
+    { _id: statsId } as Document,
+    {
+      $push: { activityLog: { $each: [activity], $position: 0, $slice: 100 } },
+      $set: { updatedAt: new Date() },
+    } as never,
+  )
+}

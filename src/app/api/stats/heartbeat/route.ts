@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
-import { getContentDb } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import { recordStudyTime } from '@/server/services/dashboard-stats'
 import {
   findUserProgress,
   getOrCreateUserStats,
@@ -29,17 +29,7 @@ export async function POST(request: NextRequest) {
 
   const stats = await getOrCreateUserStats(user.id)
   const totalTimeSpentSeconds = Number(stats?.totalTimeSpentSeconds || 0) + parsed.data.seconds
-  const contentDb = await getContentDb()
-  await contentDb.collection('user-stats').updateOne(
-    { _id: stats?._id },
-    {
-      $set: {
-        totalTimeSpentSeconds,
-        lastHeartbeatAt: new Date(),
-        updatedAt: new Date(),
-      },
-    },
-  )
+  await recordStudyTime(stats?._id, totalTimeSpentSeconds)
 
   if (parsed.data.lessonId) {
     const gradeLevel = 'default'

@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
-import { getContentDb } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import { pushActivity } from '@/server/services/dashboard-stats'
 import {
   findUserProgress,
   getOrCreateUserStats,
@@ -90,11 +90,7 @@ export async function POST(request: NextRequest) {
   }
 
   const stats = await getOrCreateUserStats(user.id)
-  const db = await getContentDb()
-  await db.collection('user-stats').updateOne({ _id: stats?._id }, {
-    $push: { activityLog: { $each: [activityFor(parsed.data)], $position: 0, $slice: 100 } },
-    $set: { updatedAt: new Date() },
-  } as never)
+  await pushActivity(stats?._id, activityFor(parsed.data))
 
   const gradeLevel = 'default'
   const progress = await findUserProgress(user.id, gradeLevel)
