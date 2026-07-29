@@ -9,7 +9,6 @@ import { GoogleLoginButton } from '@/ui/web/auth/GoogleLoginButton'
 import { Button } from '@/ui/web/components/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/ui/web/components/card'
 import { useTranslations } from '@/ui/web/providers/I18n'
-import { useSearchParams } from 'next/navigation'
 import React, { Suspense, useState } from 'react'
 import { toast } from 'sonner'
 import { SignupFormFields } from './SignupFormFields'
@@ -20,14 +19,18 @@ import { Spinner } from '@/infra/loading/components/Spinner'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { useRouterWithLoading } from '@/infra/loading/hooks/useRouterWithLoading'
 import { LOADING_KEYS } from '@/infra/loading/keys'
+import type { SafeDestination } from '@/infra/auth/oauth_sanitize'
 import { getOnboardingRedirect } from '@/infra/onboarding/redirect'
 
-function SignupFormContent() {
+/**
+ * `returnTo` arrives already sanitized from the server component — see
+ * `signup/page.tsx`. The browser cannot see which sibling apps this
+ * deployment trusts, so it must not decide that itself.
+ */
+function SignupFormContent({ returnTo }: { returnTo: SafeDestination }) {
   const t = useTranslations('auth.signup')
   const tOauth = useTranslations('auth.oauth')
   const router = useRouterWithLoading()
-  const searchParams = useSearchParams()
-  const returnTo = searchParams?.get('returnTo') || '/'
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { execute: executeSignup, isLoading } = useAsyncAction(
@@ -166,10 +169,10 @@ function SignupFormContent() {
   )
 }
 
-export function SignupForm() {
+export function SignupForm({ returnTo }: { returnTo: SafeDestination }) {
   return (
     <Suspense fallback={<SignupFormSkeleton />}>
-      <SignupFormContent />
+      <SignupFormContent returnTo={returnTo} />
     </Suspense>
   )
 }

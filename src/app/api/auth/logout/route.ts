@@ -1,9 +1,17 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-import { appendAuthCookieClearHeaders } from '@/infra/auth/web-auth'
+import {
+  appendAuthCookieClearHeaders,
+  revokeSession,
+  tokenFromHeaders,
+} from '@/infra/auth/web-auth'
 
-export async function POST(): Promise<NextResponse> {
-  // public endpoint: logout only clears the caller's own authentication cookies
+export const runtime = 'nodejs'
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // public endpoint: logout only revokes the caller's own session
+  await revokeSession(tokenFromHeaders(request.headers))
+
   const res = NextResponse.json({ success: true })
   appendAuthCookieClearHeaders(res.headers)
   return res

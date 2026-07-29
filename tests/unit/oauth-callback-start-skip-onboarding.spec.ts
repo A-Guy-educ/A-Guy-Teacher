@@ -140,34 +140,36 @@ describe('OAuth callback — /start wizard skip-persona flow (issue #783)', () =
   })
 
   it('skips /onboarding/persona for new users when start_wizard_completed cookie is present', async () => {
-    const { req, res } = buildRequest({ wizardCookie: '1' })
+    const { req } = buildRequest({ wizardCookie: '1' })
     const { GET } = await import('@/app/api/oauth/google/callback/route')
 
     const nextRes = await GET(req as never)
 
-    expect(mockGetOnboardingRedirect).toHaveBeenCalledWith('/courses/algebra', {
-      skipPersona: true,
-    })
+    expect(mockGetOnboardingRedirect).toHaveBeenCalledWith(
+      '/courses/algebra',
+      expect.objectContaining({ skipPersona: true }),
+    )
     expect(nextRes.headers.get('Location')).toBe('https://app.example.com/courses/algebra')
     expect(nextRes.headers.get('Location')).not.toContain('/onboarding/persona')
   })
 
   it('wraps in /onboarding/persona for new users when the wizard cookie is missing (legacy flow preserved)', async () => {
-    const { req, res } = buildRequest()
+    const { req } = buildRequest()
     const { GET } = await import('@/app/api/oauth/google/callback/route')
 
     const nextRes = await GET(req as never)
 
-    expect(mockGetOnboardingRedirect).toHaveBeenCalledWith('/courses/algebra', {
-      skipPersona: false,
-    })
+    expect(mockGetOnboardingRedirect).toHaveBeenCalledWith(
+      '/courses/algebra',
+      expect.objectContaining({ skipPersona: false }),
+    )
     expect(nextRes.headers.get('Location')).toBe(
       'https://app.example.com/onboarding/persona?returnTo=%2Fcourses%2Falgebra',
     )
   })
 
   it('passes the request headers to setAuthCookie so the top-level OAuth context uses lax cookies', async () => {
-    const { req, res } = buildRequest({ wizardCookie: '1' })
+    const { req } = buildRequest({ wizardCookie: '1' })
     const { GET } = await import('@/app/api/oauth/google/callback/route')
 
     await GET(req as never)

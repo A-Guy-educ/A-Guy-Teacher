@@ -10,13 +10,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { storeOAuthState } from '@/infra/auth/oauth_state'
 import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import { getSharedLoginPolicy } from '@/infra/auth/shared-login/policy.env'
 import { getPublicBaseUrl } from '@/infra/auth/oauth_url'
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   // public endpoint: starts the OAuth authorization flow
-  const returnTo = sanitizeReturnTo(req.nextUrl.searchParams.get('returnTo'))
+  const returnTo = sanitizeReturnTo(
+    req.nextUrl.searchParams.get('returnTo'),
+    getSharedLoginPolicy(),
+  )
 
   const baseUrl = getPublicBaseUrl(req)
   const callbackUrl = `${baseUrl}/api/oauth/google/callback`

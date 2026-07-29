@@ -5,9 +5,10 @@ import { motion } from 'framer-motion'
 
 import { SystemLink } from '@/infra/loading/components/SystemLink'
 import { useTranslations } from '@/ui/web/providers/I18n'
+import type { SafeDestination } from '@/infra/auth/oauth_sanitize'
 import { LoginForm } from './LoginForm'
 
-export function LoginPageContent() {
+export function LoginPageContent({ returnTo }: { returnTo: SafeDestination }) {
   const t = useTranslations('auth.login')
 
   return (
@@ -34,7 +35,7 @@ export function LoginPageContent() {
         transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="relative w-full max-w-md px-4"
       >
-        <LoginForm />
+        <LoginForm returnTo={returnTo} />
       </motion.div>
 
       {/* Help Link */}
@@ -46,7 +47,7 @@ export function LoginPageContent() {
       >
         <SystemLink
           href="mailto:support@aguy.co.il"
-          className="inline-flex items-center gap-2 text-body-sm text-muted-foreground hover:text-foreground transition-colors duration-normal"
+          className="inline-flex items-center gap-content-gap-xs text-body-sm text-muted-foreground hover:text-foreground transition-colors duration-normal"
         >
           <HelpCircle className="w-4 h-4" />
           {t('needHelp')}

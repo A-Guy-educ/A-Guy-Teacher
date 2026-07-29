@@ -1,7 +1,6 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
-import { Suspense, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import Image from 'next/image'
 
@@ -12,17 +11,20 @@ import { Input } from '@/ui/web/components/input'
 import { Label } from '@/ui/web/components/label'
 import { usePasswordLogin } from '@/ui/web/providers/PasswordLoginProvider'
 import { useI18n, useTranslations } from '@/ui/web/providers/I18n'
-import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import type { SafeDestination } from '@/infra/auth/oauth_sanitize'
 import { loginAction } from './login_authenticate-action'
 import telescopeSvg from '@/brands/aguy/assets/telescope.svg'
 
-function LoginFormContent() {
+/**
+ * `returnTo` arrives already sanitized from the server component: deciding
+ * which sibling apps are trustworthy needs deployment configuration the
+ * browser cannot see.
+ */
+export function LoginForm({ returnTo }: { returnTo: SafeDestination }) {
   const { t: tBrand } = useI18n()
   const t = useTranslations('auth.login')
   const tOauth = useTranslations('auth.oauth')
   const passwordEnabled = usePasswordLogin()
-  const searchParams = useSearchParams()
-  const returnTo = sanitizeReturnTo(searchParams?.get('returnTo'))
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
@@ -149,35 +151,6 @@ function LoginFormContent() {
             </p>
           </>
         )}
-      </CardContent>
-    </Card>
-  )
-}
-
-export function LoginForm() {
-  return (
-    <Suspense fallback={<LoginFormSkeleton />}>
-      <LoginFormContent />
-    </Suspense>
-  )
-}
-
-function LoginFormSkeleton() {
-  return (
-    <Card className="rounded-2xl shadow-elevation-4 border border-primary/10 bg-card/80 backdrop-blur-xl px-8 py-section-sm">
-      <CardHeader className="pb-3">
-        <div className="flex flex-col items-center gap-1">
-          <div className="h-24 w-24 bg-muted animate-pulse rounded-full" />
-          <div className="h-4 w-40 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="flex flex-col items-center mt-4">
-          <div className="w-8 h-px bg-border mb-3" />
-          <div className="h-4 w-24 mx-auto bg-muted animate-pulse rounded" />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="w-full h-14 bg-muted animate-pulse rounded-xl" />
-        <div className="h-8 w-32 mx-auto bg-muted animate-pulse rounded-full" />
       </CardContent>
     </Card>
   )

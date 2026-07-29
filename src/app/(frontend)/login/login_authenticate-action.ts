@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 
+import { getRequestHeadersSafe } from '@/infra/auth/request-headers'
 import { loginWithPassword, setAuthCookie } from '@/infra/auth/web-auth'
 import { logger } from '@/infra/utils/logger'
 
@@ -25,7 +26,7 @@ export async function loginAction(_formData: FormData, _cookieStore?: CookieStor
     const session = await loginWithPassword(parsed.data.email, parsed.data.password)
     if (!session) return { success: false, error: 'invalidCredentials' }
     const store = _cookieStore ?? (await cookies())
-    setAuthCookie({ cookies: store }, session.token)
+    setAuthCookie({ cookies: store }, session.token, await getRequestHeadersSafe())
     return { success: true }
   } catch (error) {
     logger.error({ err: error }, 'Login failed')

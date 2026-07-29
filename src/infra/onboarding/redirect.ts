@@ -1,11 +1,12 @@
 /**
  * Onboarding Redirect Utility
  *
- * Constructs the onboarding redirect URL for new users,
- * with returnTo sanitization and loop prevention.
+ * Decides where a newly registered user lands, wrapping their destination in
+ * the persona step unless it is redundant. Sanitization happens at the trust
+ * boundary, not here — this takes a destination that has already passed it.
  */
 
-import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
+import { returnToPath, type SafeDestination } from '@/infra/auth/oauth_sanitize'
 
 const ONBOARDING_PERSONA_PATH = '/onboarding/persona'
 
@@ -21,29 +22,32 @@ const ONBOARDING_PERSONA_PATH = '/onboarding/persona'
 export const START_WIZARD_COMPLETED_COOKIE = 'start_wizard_completed'
 
 /**
- * Returns the appropriate redirect destination after user registration.
+ * Where to send a user straight after registration.
  *
  * - When `skipPersona` is true (set from the `/start` flow), returns the
- *   sanitized returnTo verbatim — the wizard already collected the
- *   persona data, so wrapping in `/onboarding/persona` would bounce the
- *   user into a redundant step and (on mobile) trigger the cookie-loss
- *   round-trip described in #783.
- * - Otherwise, wraps the original returnTo in an onboarding URL unless
- *   it already points to onboarding.
+ *   destination verbatim — the wizard already collected the persona data, so
+ *   wrapping in `/onboarding/persona` would bounce the user into a redundant
+ *   step and (on mobile) trigger the cookie-loss round-trip described in #783.
+ * - Otherwise, wraps it in the onboarding URL unless it already points there.
+ *
+ * Takes a `SafeDestination` rather than a raw string on purpose. It used to
+ * sanitize internally, which meant the signup form — running in the browser,
+ * with no view of the trust policy — re-checked an already-safe sibling URL,
+ * rejected it, and silently sent every such user to the home page.
  */
 export function getOnboardingRedirect(
-  returnTo: string | undefined | null,
+  destination: SafeDestination,
   options: { skipPersona?: boolean } = {},
-): string {
-  const sanitized = sanitizeReturnTo(returnTo)
-
-  if (sanitized.startsWith(ONBOARDING_PERSONA_PATH)) {
-    return sanitized
+): SafeDestination {
+  // Compared by path: a sibling destination is an absolute URL, which a prefix
+  // check against the raw value would silently never match.
+  if (returnToPath(destination).startsWith(ONBOARDING_PERSONA_PATH)) {
+    return destination
   }
 
   if (options.skipPersona) {
-    return sanitized
+    return destination
   }
 
-  return `${ONBOARDING_PERSONA_PATH}?returnTo=${encodeURIComponent(sanitized)}`
+  return `${ONBOARDING_PERSONA_PATH}?returnTo=${encodeURIComponent(destination)}` as SafeDestination
 }
