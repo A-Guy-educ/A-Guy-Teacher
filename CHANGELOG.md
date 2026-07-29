@@ -2204,6 +2204,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.30.1 ([#988](https://github.com/A-Guy-educ/A-Guy-Web/pull/988)) — @aguyaharonyair
 - feat(auth): Shared login across sibling subdomain apps ([#985](https://github.com/A-Guy-educ/A-Guy-Web/pull/985)) — @aharonyaircohen
 ## [v0.30.0] - 2026-07-29
 
