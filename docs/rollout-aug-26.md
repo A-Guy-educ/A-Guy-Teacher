@@ -3,12 +3,12 @@
 ###### destination - 1.08
 
 
-## First Milestone
+#### First Milestone
 - connect guykoren to aguy prop product (guy)
 - create one month expiry product (shai)
 - promotions in social media (guy)
 
-## Second Milestone
+#### Second Milestone
 - add payapl subscription (shai)
 - add grow subscription (shai)
 - deployment (Yair)
@@ -30,11 +30,11 @@
 - ✅ content approval (create agent which will provide report) (agent ?)
 - ✅ marketing - 2 meetings - what + how (ilan)
 
-## Additional bugs
+#### Additional bugs
 - auto deploy web dev branch (yair)
 - admin runs on vercel preview (yair)
 
 
-## Additional Features
+#### Additional Features
 - **conversion**: add step for format the result (exercise hook)
 - test scenario for full user subscription plan
