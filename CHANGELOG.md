@@ -2706,6 +2706,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.30.7 ([#1002](https://github.com/A-Guy-educ/A-Guy-Web/pull/1002)) — @aguyaharonyair
 - promote: dev -> main (v0.30.6) ([#1001](https://github.com/A-Guy-educ/A-Guy-Web/pull/1001)) — @aguyaharonyair
 - chore: release v0.30.6 ([#1000](https://github.com/A-Guy-educ/A-Guy-Web/pull/1000)) — @aguyaharonyair
 - chore(lint): Keep database queries out of API routes ([#998](https://github.com/A-Guy-educ/A-Guy-Web/pull/998)) — @aharonyaircohen
