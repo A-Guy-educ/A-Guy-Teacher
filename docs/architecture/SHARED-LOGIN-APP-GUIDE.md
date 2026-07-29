@@ -1,6 +1,9 @@
 # Integration Guide for New Apps
 
-Hand this page to whoever builds a new app on `*.aguy.co.il`. It is the whole contract.
+Hand this page to whoever builds a new app on `*.aguy.co.il` — link them straight to it:
+<https://github.com/A-Guy-educ/A-Guy-Web/blob/dev/docs/architecture/SHARED-LOGIN-APP-GUIDE.md>
+
+It is the whole contract.
 
 > **Status:** the platform side is implemented. It stays dormant until `ROOT_DOMAIN` is set on the A-Guy-Web deployment — without it the cookie is host-only and nothing below works.
 
@@ -106,6 +109,16 @@ A 401 from any A-Guy-Web endpoint means the session is gone or expired. Clear wh
 | Store the token in localStorage, a log, an analytics event, or a URL | It is a full session credential |
 | Host user-uploaded HTML/JS on your subdomain | One XSS there compromises every account on the domain |
 | Trust `role` for permissions without checking | Shared login is authentication, not authorization — enforce your own rules |
+
+---
+
+## Running it locally
+
+Both apps must sit on one parent domain, and `localhost` cannot be one — `localhost:3000` and `localhost:3001` are the same host, and browsers reject a shared-domain cookie on it outright.
+
+Use `lvh.me`, a public domain that resolves to `127.0.0.1`, so no host file editing is needed. A-Guy-Web runs at `http://app.lvh.me:3000`; run yours at `http://app2.lvh.me:3001`. Ask for your origin to be added to `AUTH_ALLOWED_RETURN_ORIGINS` and `API_ALLOWED_ORIGINS`, which exist because the automatic sibling rule requires HTTPS.
+
+You cannot test against production from your machine: the real cookie only travels to `aguy.co.il` addresses.
 
 ---
 
