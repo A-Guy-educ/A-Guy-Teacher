@@ -90,7 +90,6 @@
       "publish-knowledge-system",
       "release-validate",
       "publish-chat-knowledge-tool",
-      "collect-chat-knowledge-evidence",
       "build-chat-knowledge-graph"
     ],
     "activeAgents": [
