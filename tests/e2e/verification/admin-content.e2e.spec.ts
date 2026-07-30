@@ -6,6 +6,8 @@
  * @tags @critical
  */
 import { expect, test } from '@playwright/test'
+
+import { generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
 import { getSeedPayload } from '../helpers/seed'
 
 import {
@@ -29,6 +31,15 @@ test.afterAll(async () => {
 })
 
 test.describe('Scenario #19 – Course Creation', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('admin-content'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test('new course created via API appears in catalog', async ({ page }) => {
     const payload = await getSeedPayload()
 

@@ -8,6 +8,7 @@
  * @tags @bug
  */
 import { expect, test } from '@playwright/test'
+
 import { getSeedPayload } from './helpers/seed'
 
 import {
@@ -43,6 +44,15 @@ async function authenticateAsAdmin(page: import('@playwright/test').Page, user: 
 }
 
 test.describe('Admin Bar Mobile Visibility', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('admin-bar-mobile-vis'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test.afterAll(async () => {
     await cleanupTestUsers()
   })

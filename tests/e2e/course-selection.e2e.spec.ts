@@ -1,6 +1,17 @@
 import { expect, test } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+
 test.describe('Course Selection', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('course-selection'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test.beforeEach(async ({ page }) => {
     // Clear localStorage before each test
     await page.goto('/courses')

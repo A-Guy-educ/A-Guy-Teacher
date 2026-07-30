@@ -5,6 +5,8 @@
  */
 import { expect, test } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
+
 import { buildExerciseUrl } from '../helpers/admin'
 import {
   cleanupVerificationData,
@@ -27,6 +29,15 @@ test.afterAll(async () => {
 })
 
 test.describe('Scenario #13 – Accessing Hints', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('student-support'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test('hint button reveals help text', async ({ page }) => {
     test.skip(!data, 'No test data available')
     const mcqEx = data!.exercises[0]

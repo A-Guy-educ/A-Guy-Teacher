@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+
 /**
  * Regression test for issue #595: Enable Ask button on /study route.
  *
@@ -9,6 +11,15 @@ import { expect, test } from '@playwright/test'
  * @tags @navigation @regression
  */
 test.describe('NavigationBar Ask Button', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('navigation-bar-ask-d'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test.beforeEach(async ({ page }) => {
     // Clear localStorage to ensure clean state
     await page.goto('/study')

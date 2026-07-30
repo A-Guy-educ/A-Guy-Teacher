@@ -11,6 +11,8 @@
  */
 import { expect, test } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
+
 import { getBrand } from '@/brands'
 
 test.setTimeout(60_000)
@@ -21,6 +23,15 @@ const brandName = brand.config.name
 const themeColorLight = brand.config.themeColor.light
 
 test.describe('brand identity smoke tests', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('brand-identity'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test.beforeEach(async ({ page }) => {
     await page.waitForLoadState('domcontentloaded')
   })

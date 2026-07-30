@@ -20,6 +20,8 @@
 
 import { test, expect, type Page } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+
 type CapturedEvent = { event: string; properties: Record<string, unknown> }
 
 /**
@@ -122,6 +124,15 @@ async function waitForCapturedEvent(page: Page, eventName: string): Promise<void
 }
 
 test.describe('Analytics Events E2E', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('analytics-events'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test('GA4 and Mixpanel scripts load without console errors', async ({ page }) => {
     const errors: string[] = []
     page.on('console', (msg) => {

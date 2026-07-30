@@ -5,6 +5,8 @@
  */
 import { expect, test } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
+
 import { cleanupTestUsers } from '../helpers/auth'
 import { loginAsAdmin, loginAsStudent } from '../helpers/verification-fixtures'
 
@@ -15,6 +17,15 @@ test.afterAll(async () => {
 })
 
 test.describe('Scenario #28 – Tagging & Categories', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('admin-settings'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test('categories collection is accessible in admin', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/admin/collections/categories')

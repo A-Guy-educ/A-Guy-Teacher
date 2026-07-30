@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+
 test.describe('Version Footer', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('version-footer'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/courses')
     // Wait for the page to fully load
