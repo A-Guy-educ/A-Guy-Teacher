@@ -1,0 +1,19 @@
+{
+  "slug": "question-select",
+  "name": "Teacher multiple-choice question",
+  "description": "Shows one teacher-owned multiple-choice question and returns whether the selected answer is correct.",
+  "purpose": "question-select",
+  "rule": "Use this renderer for an A-Guy Teacher multiple-choice question.",
+  "data": {
+    "question": {
+      "description": "Question title, prompt, and selectable answer options.",
+      "type": "value"
+    }
+  },
+  "type": "layout",
+  "ui": {
+    "type": "widget",
+    "widget": "question-select",
+    "data": "$question"
+  }
+}
