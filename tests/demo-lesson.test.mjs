@@ -48,9 +48,10 @@ function buttonsWithin(element) {
   ];
 }
 
-function mountQuestion(question) {
+function mountQuestion(question, overrides = {}) {
   const element = new FakeElement("root");
   const completions = [];
+  const replies = [];
   const previousDocument = globalThis.document;
   globalThis.document = {
     createElement: (tagName) => new FakeElement(tagName),
@@ -58,11 +59,18 @@ function mountQuestion(question) {
   const cleanup = mountQuestionSelect(element, {
     data: question,
     theme: "light",
+    cms: {
+      list: async () => ({ docs: [], total: 0, limit: 10, offset: 0 }),
+      get: async () => ({}),
+    },
+    reply: (message) => replies.push(message),
     complete: (actionId, result) => completions.push({ actionId, result }),
+    ...overrides,
   });
   return {
     element,
     completions,
+    replies,
     cleanup: () => {
       cleanup?.();
       globalThis.document = previousDocument;
@@ -165,6 +173,115 @@ test("question-select reports the correct option", () => {
     ]);
     correctButton.onclick();
     assert.equal(mounted.completions.length, 1);
+  } finally {
+    mounted.cleanup();
+  }
+});
+
+test("new widget-feedback lesson keeps incorrect feedback inside the widget", async () => {
+  const lesson = JSON.parse(
+    await readFile(
+      new URL(
+        "../guided-flows/demo-widget-feedback.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  const questionStep = lesson.steps.find((step) => step.id === "question");
+
+  assert.equal(lesson.id, "demo-widget-feedback");
+  assert.equal(questionStep.rendererSlug, "question-select");
+  assert.equal(questionStep.rendererData.question.retryIncorrect, true);
+  assert.equal(
+    questionStep.rendererData.question.cmsContext.collection,
+    "lessons",
+  );
+  assert.deepEqual(questionStep.allowedActions, ["continue"]);
+  assert.equal(questionStep.transitions, undefined);
+});
+
+test("question-select replies after a wrong answer and stays active", () => {
+  const mounted = mountQuestion({
+    prompt: "What is 3 + 4?",
+    retryIncorrect: true,
+    completionAction: "continue",
+    feedback: {
+      incorrect: "Not quite. Count forward four steps and try again.",
+      correct: "Correct — 3 + 4 is 7.",
+    },
+    options: [
+      { id: "six", label: "6" },
+      { id: "seven", label: "7", correct: true },
+    ],
+  });
+
+  try {
+    const buttons = buttonsWithin(mounted.element);
+    const wrongButton = buttons.find((button) => button.textContent === "6");
+    const correctButton = buttons.find((button) => button.textContent === "7");
+    assert.ok(wrongButton);
+    assert.ok(correctButton);
+
+    wrongButton.onclick();
+    assert.deepEqual(mounted.replies, [
+      "Not quite. Count forward four steps and try again.",
+    ]);
+    assert.deepEqual(mounted.completions, []);
+
+    correctButton.onclick();
+    assert.deepEqual(mounted.replies, [
+      "Not quite. Count forward four steps and try again.",
+      "Correct — 3 + 4 is 7.",
+    ]);
+    assert.deepEqual(mounted.completions, [
+      {
+        actionId: "continue",
+        result: { selectedOptionId: "seven" },
+      },
+    ]);
+  } finally {
+    mounted.cleanup();
+  }
+});
+
+test("question-select displays lesson context loaded through its CMS client", async () => {
+  const calls = [];
+  const mounted = mountQuestion(
+    {
+      prompt: "What is 3 + 4?",
+      options: [{ id: "seven", label: "7", correct: true }],
+      cmsContext: {
+        collection: "lessons",
+        labelField: "title",
+        prefix: "Lesson source",
+      },
+    },
+    {
+      cms: {
+        list: async (collection, query) => {
+          calls.push({ collection, query });
+          return {
+            docs: [{ _id: "lesson-1", title: "Adding whole numbers" }],
+            total: 1,
+            limit: 1,
+            offset: 0,
+          };
+        },
+        get: async () => ({}),
+      },
+    },
+  );
+
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.deepEqual(calls, [
+      { collection: "lessons", query: { limit: 1 } },
+    ]);
+    assert.match(
+      mounted.element.textContent,
+      /Lesson source: Adding whole numbers/,
+    );
   } finally {
     mounted.cleanup();
   }

@@ -16,3 +16,8 @@ It proves the consumer boundary:
 - Kody owns nesting, progress, branching, resume, and completion.
 - The question widget returns only `correct` or `incorrect`; the GuidedFlow
   decides which lesson step follows.
+
+`demo-widget-feedback.json` is the interactive widget demo. It loads a lesson
+title through Kody's repository-scoped CMS client, keeps the question open
+after a wrong answer, sends the widget's feedback into Chat, and completes the
+flow only after the correct answer.

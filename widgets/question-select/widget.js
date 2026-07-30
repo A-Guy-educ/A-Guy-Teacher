@@ -24,8 +24,21 @@ export default function mount(element, props) {
       ? props.data
       : {};
   const options = Array.isArray(question.options) ? question.options : [];
+  const feedback =
+    question.feedback &&
+    typeof question.feedback === "object" &&
+    !Array.isArray(question.feedback)
+      ? question.feedback
+      : {};
+  const cmsContext =
+    question.cmsContext &&
+    typeof question.cmsContext === "object" &&
+    !Array.isArray(question.cmsContext)
+      ? question.cmsContext
+      : null;
   const colors = props.theme === "light" ? COLORS.light : COLORS.dark;
   let completed = false;
+  let disposed = false;
 
   const container = createElement(
     "section",
@@ -50,6 +63,43 @@ export default function mount(element, props) {
     ),
   );
 
+  if (
+    cmsContext &&
+    typeof cmsContext.collection === "string" &&
+    typeof props.cms?.list === "function"
+  ) {
+    const contextLine = createElement(
+      "p",
+      "font-size:12px;line-height:1.5;margin:0;opacity:.75;",
+      "Loading lesson context…",
+    );
+    container.appendChild(contextLine);
+    props.cms
+      .list(cmsContext.collection, { limit: 1 })
+      .then((result) => {
+        if (disposed) return;
+        const document = result.docs[0];
+        const labelField =
+          typeof cmsContext.labelField === "string"
+            ? cmsContext.labelField
+            : "title";
+        const label =
+          document && typeof document[labelField] === "string"
+            ? document[labelField]
+            : null;
+        const prefix =
+          typeof cmsContext.prefix === "string"
+            ? cmsContext.prefix
+            : "Lesson source";
+        contextLine.textContent = label
+          ? `${prefix}: ${label}`
+          : `${prefix}: no matching lesson`;
+      })
+      .catch(() => {
+        if (!disposed) contextLine.textContent = "Lesson context unavailable.";
+      });
+  }
+
   const optionList = createElement(
     "div",
     "display:flex;flex-direction:column;gap:8px;",
@@ -64,9 +114,27 @@ export default function mount(element, props) {
     button.type = "button";
     button.onclick = () => {
       if (completed) return;
+      const isCorrect = option.correct === true;
+      if (!isCorrect && question.retryIncorrect === true) {
+        props.reply(
+          typeof feedback.incorrect === "string"
+            ? feedback.incorrect
+            : "Not quite. Try again.",
+        );
+        return;
+      }
       completed = true;
       for (const candidate of optionList.children) candidate.disabled = true;
-      props.complete(option.correct === true ? "correct" : "incorrect", {
+      if (isCorrect && typeof feedback.correct === "string") {
+        props.reply(feedback.correct);
+      }
+      const completionAction =
+        typeof question.completionAction === "string"
+          ? question.completionAction
+          : isCorrect
+            ? "correct"
+            : "incorrect";
+      props.complete(completionAction, {
         selectedOptionId: option.id,
       });
     };
@@ -85,5 +153,8 @@ export default function mount(element, props) {
   }
 
   element.replaceChildren(container);
-  return () => element.replaceChildren();
+  return () => {
+    disposed = true;
+    element.replaceChildren();
+  };
 }

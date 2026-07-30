@@ -1,0 +1,48 @@
+{
+  "id": "demo-widget-feedback",
+  "version": 1,
+  "title": "Demo widget feedback",
+  "steps": [
+    {
+      "id": "question",
+      "title": "Try an addition question",
+      "explanation": "Choose an answer. A wrong answer gives guidance in Chat without closing the question.",
+      "rendererSlug": "question-select",
+      "rendererData": {
+        "question": {
+          "title": "CMS-connected quick check",
+          "prompt": "What is 3 + 4?",
+          "options": [
+            {
+              "id": "six",
+              "label": "6"
+            },
+            {
+              "id": "seven",
+              "label": "7",
+              "correct": true
+            },
+            {
+              "id": "eight",
+              "label": "8"
+            }
+          ],
+          "retryIncorrect": true,
+          "completionAction": "continue",
+          "feedback": {
+            "incorrect": "Not quite. Start at 3, count forward four steps, and try again.",
+            "correct": "Correct — 3 + 4 is 7."
+          },
+          "cmsContext": {
+            "collection": "lessons",
+            "labelField": "title",
+            "prefix": "Lesson source"
+          }
+        }
+      },
+      "allowedActions": [
+        "continue"
+      ]
+    }
+  ]
+}
