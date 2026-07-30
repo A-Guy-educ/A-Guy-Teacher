@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { VercelBlobAdapter } from '@/infra/blob/vercel-blob-adapter'
 import { resolveMediaFilePath } from '@/infra/config/storage'
-import { getContentDb } from '@/infra/db/content-db'
+import { findMediaByFilename } from '@/server/services/media'
 
 type MediaFileRecord = {
   filename?: unknown
@@ -109,8 +109,7 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid filename' }, { status: 400 })
   }
 
-  const db = await getContentDb()
-  const media = (await db.collection('media').findOne({ filename })) as MediaFileRecord | null
+  const media = (await findMediaByFilename(filename)) as MediaFileRecord | null
 
   const redirectUrl = resolveRedirectUrl(media?.url, request)
   if (redirectUrl) {

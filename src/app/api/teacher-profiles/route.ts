@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getContentDb, serializeDoc } from '@/infra/db/content-db'
+import { serializeDoc } from '@/infra/db/content-db'
+import { listTeacherProfiles } from '@/server/services/user-settings'
 
 function localeFromRequest(request: NextRequest) {
   return (
@@ -28,16 +29,7 @@ export function isPublicTeacherProfile(profile: Record<string, unknown>) {
 
 export async function GET(request: NextRequest) {
   // public endpoint: published teacher profiles
-  const db = await getContentDb()
-  const locale = localeFromRequest(request)
-  const docs = await db
-    .collection('teacher_profiles')
-    .find({
-      isEnabled: true,
-      $or: [{ locale }, { locale: { $exists: false } }],
-    })
-    .sort({ locale: -1, createdAt: 1 })
-    .toArray()
+  const docs = await listTeacherProfiles(localeFromRequest(request))
 
   const seen = new Set<string>()
   const profiles = docs.flatMap((doc) => {

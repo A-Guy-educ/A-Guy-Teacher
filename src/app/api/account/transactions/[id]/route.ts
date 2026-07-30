@@ -1,8 +1,9 @@
 import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getContentDb, relationId, serializeDoc } from '@/infra/db/content-db'
+import { relationId, serializeDoc } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import { findTransactionById } from '@/server/services/transactions'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -16,8 +17,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   if (!ObjectId.isValid(id))
     return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
 
-  const db = await getContentDb()
-  const transaction = await db.collection('transactions').findOne({ _id: new ObjectId(id) })
+  const transaction = await findTransactionById(id)
   if (!transaction) return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
   if (relationId(transaction.user) !== user.id) {
     return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })

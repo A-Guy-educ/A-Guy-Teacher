@@ -4,11 +4,10 @@
  * @pattern admin-content-import
  * @ai-summary Admin-only structured import for lesson introduction text and rich-text/LaTeX blocks.
  */
-import { ObjectId } from 'mongodb'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { getContentDb } from '@/infra/db/content-db'
+import { updateLessonIntro } from '@/server/services/lessons'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
 
 const IntroBlockSchema = z.discriminatedUnion('type', [
@@ -67,19 +66,11 @@ export async function POST(request: NextRequest) {
   }
 
   const { lessonId, lessonSlug, lessonContextText, blocks } = parsed.data
-  const filter = lessonId ? { _id: new ObjectId(lessonId) } : { slug: lessonSlug }
-  const update: Record<string, unknown> = { updatedAt: new Date() }
+  const update: Record<string, unknown> = {}
   if (lessonContextText !== undefined) update.lessonContextText = lessonContextText
   if (blocks !== undefined) update.blocks = blocks
 
-  const db = await getContentDb()
-  const result = await db
-    .collection('lessons')
-    .findOneAndUpdate(
-      filter,
-      { $set: update },
-      { returnDocument: 'after', projection: { _id: 1, slug: 1, lessonContextText: 1, blocks: 1 } },
-    )
+  const result = await updateLessonIntro({ lessonId, lessonSlug }, update)
 
   if (!result) return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
 

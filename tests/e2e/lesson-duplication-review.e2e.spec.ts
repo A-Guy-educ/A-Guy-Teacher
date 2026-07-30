@@ -11,11 +11,10 @@
  * These tests use Playwright with a real browser to verify UI behavior.
  */
 import { test, expect } from '@playwright/test'
-import { getPayload, type Payload } from 'payload'
-import config from '@payload-config'
+import { getWebPayload, type WebPayload } from '@/infra/web-api/mongo-payload'
 import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
 
-async function ensureDefaultTenant(payload: Payload): Promise<string> {
+async function ensureDefaultTenant(payload: WebPayload): Promise<string> {
   const existing = await payload.find({
     collection: 'tenants',
     where: { slug: { equals: 'default' } },
@@ -34,7 +33,7 @@ async function ensureDefaultTenant(payload: Payload): Promise<string> {
   return tenant.id
 }
 
-async function createLessonHierarchy(payload: Payload) {
+async function createLessonHierarchy(payload: WebPayload) {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const tenant = await ensureDefaultTenant(payload)
   const category = await payload.create({
@@ -85,7 +84,7 @@ async function createLessonHierarchy(payload: Payload) {
 }
 
 // Create a needs_review duplication record via local API for testing
-async function createNeedsReviewRecord(payload: Payload) {
+async function createNeedsReviewRecord(payload: WebPayload) {
   const hierarchy = await createLessonHierarchy(payload)
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const sourceLesson = await payload.create({
@@ -191,7 +190,7 @@ async function createNeedsReviewRecord(payload: Payload) {
 
 // Clean up test data
 async function cleanupTestData(
-  payload: Payload,
+  payload: WebPayload,
   data: Awaited<ReturnType<typeof createNeedsReviewRecord>>,
 ) {
   await payload
@@ -257,13 +256,13 @@ test.describe('Lesson Duplication Review', () => {
   let testData: Awaited<ReturnType<typeof createNeedsReviewRecord>> | null = null
 
   test.beforeEach(async () => {
-    const payload = await getPayload({ config })
+    const payload = await getWebPayload()
     testData = await createNeedsReviewRecord(payload)
   })
 
   test.afterEach(async () => {
     if (testData) {
-      const payload = await getPayload({ config })
+      const payload = await getWebPayload()
       await cleanupTestData(payload, testData)
       testData = null
     }

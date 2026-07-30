@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { getContentDb } from '@/infra/db/content-db'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
+import { saveStreak } from '@/server/services/dashboard-stats'
 import { getOrCreateUserStats } from '@/server/web-api/progress'
 
 const SearchParamsSchema = z.object({
@@ -80,18 +80,7 @@ export async function POST(request: NextRequest) {
   const currentStreak =
     stats?.lastActiveDate === yesterday ? Number(stats.currentStreak || 0) + 1 : 1
   const longestStreak = Math.max(Number(stats?.longestStreak || 0), currentStreak)
-  const db = await getContentDb()
-  await db.collection('user-stats').updateOne(
-    { _id: stats?._id },
-    {
-      $set: {
-        currentStreak,
-        longestStreak,
-        lastActiveDate: today,
-        updatedAt: new Date(),
-      },
-    },
-  )
+  await saveStreak(stats?._id, { currentStreak, longestStreak, lastActiveDate: today })
 
   return Response.json({ success: true, currentStreak, longestStreak })
 }
