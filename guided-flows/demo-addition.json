@@ -1,6 +1,6 @@
 {
   "id": "demo-whole-number-addition",
-  "version": 2,
+  "version": 3,
   "title": "Whole-number addition",
   "steps": [
     {
@@ -33,31 +33,7 @@
       "title": "Addition exercise",
       "explanation": "Complete the guided addition exercise.",
       "flowId": "demo-whole-number-addition-exercise",
-      "flowVersion": 2,
-      "transitions": {
-        "complete": "complete"
-      }
-    },
-    {
-      "id": "complete",
-      "title": "Lesson complete",
-      "explanation": "Correct. Two plus two equals four.",
-      "rendererSlug": "approval-card",
-      "rendererData": {
-        "title": "Correct",
-        "body": "2 + 2 = 4",
-        "actions": [
-          {
-            "id": "finish",
-            "label": "Finish lesson",
-            "response": "finish",
-            "variant": "primary"
-          }
-        ]
-      },
-      "allowedActions": [
-        "finish"
-      ]
+      "flowVersion": 3
     }
   ]
 }

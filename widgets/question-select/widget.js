@@ -18,33 +18,11 @@ function createElement(tagName, styles, text) {
   return element;
 }
 
-function normalizeQuestion(data) {
-  if (!Array.isArray(data)) {
-    return data && typeof data === "object" ? data : {};
-  }
-  const fields = new Map(
-    data
-      .filter((field) => field && typeof field.name === "string")
-      .map((field) => [field.name, field]),
-  );
-  return {
-    title: fields.get("title")?.value,
-    prompt: fields.get("prompt")?.value,
-    options: data.flatMap((field) => {
-      if (!field?.name?.startsWith("option:")) return [];
-      return [
-        {
-          id: field.name.slice("option:".length),
-          label: field.label,
-          correct: field.value === "correct",
-        },
-      ];
-    }),
-  };
-}
-
 export default function mount(element, props) {
-  const question = normalizeQuestion(props.data);
+  const question =
+    props.data && typeof props.data === "object" && !Array.isArray(props.data)
+      ? props.data
+      : {};
   const options = Array.isArray(question.options) ? question.options : [];
   const colors = props.theme === "light" ? COLORS.light : COLORS.dark;
   let completed = false;
