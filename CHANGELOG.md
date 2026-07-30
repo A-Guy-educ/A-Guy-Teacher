@@ -2853,6 +2853,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- test(e2e): Get the browser suite running again, and add a working second app ([#1010](https://github.com/A-Guy-educ/A-Guy-Web/pull/1010)) — @aharonyaircohen
 - promote: dev -> main (v0.30.9) ([#1009](https://github.com/A-Guy-educ/A-Guy-Web/pull/1009)) — @aguyaharonyair
 - chore: release v0.30.9 ([#1008](https://github.com/A-Guy-educ/A-Guy-Web/pull/1008)) — @aguyaharonyair
 - refactor: Move all database queries out of API routes ([#1004](https://github.com/A-Guy-educ/A-Guy-Web/pull/1004)) — @aharonyaircohen
