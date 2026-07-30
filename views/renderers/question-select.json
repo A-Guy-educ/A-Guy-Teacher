@@ -7,7 +7,7 @@
   "data": {
     "question": {
       "description": "Question title, prompt, and selectable answer options.",
-      "type": "value"
+      "type": "fields"
     }
   },
   "type": "layout",

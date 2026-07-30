@@ -9,25 +9,33 @@
       "explanation": "Use the addition idea from the lesson.",
       "rendererSlug": "question-select",
       "rendererData": {
-        "question": {
-          "title": "Quick check",
-          "prompt": "What is 2 + 2?",
-          "options": [
-            {
-              "id": "three",
-              "label": "3"
-            },
-            {
-              "id": "four",
-              "label": "4",
-              "correct": true
-            },
-            {
-              "id": "five",
-              "label": "5"
-            }
-          ]
-        }
+        "question": [
+          {
+            "name": "title",
+            "label": "Title",
+            "value": "Quick check"
+          },
+          {
+            "name": "prompt",
+            "label": "Prompt",
+            "value": "What is 2 + 2?"
+          },
+          {
+            "name": "option:three",
+            "label": "3",
+            "value": "incorrect"
+          },
+          {
+            "name": "option:four",
+            "label": "4",
+            "value": "correct"
+          },
+          {
+            "name": "option:five",
+            "label": "5",
+            "value": "incorrect"
+          }
+        ]
       },
       "transitions": {
         "correct": "complete",

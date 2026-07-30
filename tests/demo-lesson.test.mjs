@@ -99,6 +99,13 @@ test("demo lesson uses the teacher question widget and branches on its result", 
     transitions: { complete: "complete" },
   });
   assert.equal(questionStep.rendererSlug, "question-select");
+  assert.ok(Array.isArray(questionStep.rendererData.question));
+  assert.equal(
+    questionStep.rendererData.question.find(
+      (field) => field.name === "option:four",
+    ).value,
+    "correct",
+  );
   assert.deepEqual(questionStep.transitions, {
     correct: "complete",
     incorrect: "hint",
@@ -136,13 +143,11 @@ test("question-select reports an incorrect option without choosing the next step
 });
 
 test("question-select reports the correct option", () => {
-  const mounted = mountQuestion({
-    prompt: "What is 2 + 2?",
-    options: [
-      { id: "three", label: "3" },
-      { id: "four", label: "4", correct: true },
-    ],
-  });
+  const mounted = mountQuestion([
+    { name: "prompt", label: "Prompt", value: "What is 2 + 2?" },
+    { name: "option:three", label: "3", value: "incorrect" },
+    { name: "option:four", label: "4", value: "correct" },
+  ]);
 
   try {
     const correctButton = buttonsWithin(mounted.element).find(
@@ -189,4 +194,5 @@ test("question renderer embeds the matching tenant widget", async () => {
     widget: "question-select",
     data: "$question",
   });
+  assert.equal(renderer.data.question.type, "fields");
 });
