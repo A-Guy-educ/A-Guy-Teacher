@@ -20,7 +20,7 @@
 
 import { test, expect, type Page } from '@playwright/test'
 
-import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
 
 type CapturedEvent = { event: string; properties: Record<string, unknown> }
 
@@ -131,6 +131,12 @@ test.describe('Analytics Events E2E', () => {
       email: generateTestUserEmail('analytics-events'),
       password: 'TestPassword123!',
     })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
   })
 
   test('GA4 and Mixpanel scripts load without console errors', async ({ page }) => {

@@ -7,7 +7,7 @@
  */
 import { expect, test } from '@playwright/test'
 
-import { generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
 import { getSeedPayload } from '../helpers/seed'
 
 import {
@@ -38,6 +38,12 @@ test.describe('Scenario #19 – Course Creation', () => {
       email: generateTestUserEmail('admin-content'),
       password: 'TestPassword123!',
     })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
   })
 
   test('new course created via API appears in catalog', async ({ page }) => {

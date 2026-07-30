@@ -5,7 +5,7 @@
  */
 import { expect, test } from '@playwright/test'
 
-import { generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
 
 import { buildExerciseUrl } from '../helpers/admin'
 import {
@@ -36,6 +36,12 @@ test.describe('Scenario #13 – Accessing Hints', () => {
       email: generateTestUserEmail('student-support'),
       password: 'TestPassword123!',
     })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
   })
 
   test('hint button reveals help text', async ({ page }) => {

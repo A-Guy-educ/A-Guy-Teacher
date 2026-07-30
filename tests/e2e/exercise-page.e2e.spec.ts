@@ -1,8 +1,14 @@
 import { test, expect } from '@playwright/test'
 
-import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
 
 test.describe('Exercise Page', () => {
+  test.afterAll(async () => {
+    // The navigation test creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
+  })
+
   test.describe('Exercise Page Navigation', () => {
     test('navigates from lesson page to exercise page', async ({ page }) => {
       // The course catalogue is behind a session: middleware sends anonymous

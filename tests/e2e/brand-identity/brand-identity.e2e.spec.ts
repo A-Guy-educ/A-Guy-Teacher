@@ -11,7 +11,7 @@
  */
 import { expect, test } from '@playwright/test'
 
-import { generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
 
 import { getBrand } from '@/brands'
 
@@ -30,6 +30,12 @@ test.describe('brand identity smoke tests', () => {
       email: generateTestUserEmail('brand-identity'),
       password: 'TestPassword123!',
     })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
   })
 
   test.beforeEach(async ({ page }) => {

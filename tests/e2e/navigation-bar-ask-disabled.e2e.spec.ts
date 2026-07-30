@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
 
 /**
  * Regression test for issue #595: Enable Ask button on /study route.
@@ -18,6 +18,12 @@ test.describe('NavigationBar Ask Button', () => {
       email: generateTestUserEmail('navigation-bar-ask-d'),
       password: 'TestPassword123!',
     })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
   })
 
   test.beforeEach(async ({ page }) => {

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
 
 test.describe('Version Footer', () => {
   // Learning pages are behind a session — middleware sends anonymous visitors
@@ -10,6 +10,12 @@ test.describe('Version Footer', () => {
       email: generateTestUserEmail('version-footer'),
       password: 'TestPassword123!',
     })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
   })
 
   test.beforeEach(async ({ page }) => {

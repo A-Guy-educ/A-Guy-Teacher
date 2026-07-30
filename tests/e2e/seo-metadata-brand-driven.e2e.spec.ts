@@ -10,7 +10,7 @@
  */
 import { test, expect, Page } from '@playwright/test'
 
-import { generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
 
 /** Brand values we expect to see in resolved metadata. */
 const BRAND = {
@@ -34,6 +34,12 @@ test.describe('Brand-driven metadata', () => {
       email: generateTestUserEmail('seo-metadata-brand-d'),
       password: 'TestPassword123!',
     })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
   })
 
   test.describe.configure({ mode: 'parallel' })
