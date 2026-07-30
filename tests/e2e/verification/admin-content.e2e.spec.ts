@@ -6,7 +6,9 @@
  * @tags @critical
  */
 import { expect, test } from '@playwright/test'
-import { getWebPayload } from '@/infra/web-api/mongo-payload'
+
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
+import { getSeedPayload } from '../helpers/seed'
 
 import {
   cleanupVerificationData,
@@ -29,8 +31,23 @@ test.afterAll(async () => {
 })
 
 test.describe('Scenario #19 – Course Creation', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('admin-content'),
+      password: 'TestPassword123!',
+    })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
+  })
+
   test('new course created via API appears in catalog', async ({ page }) => {
-    const payload = await getWebPayload()
+    const payload = await getSeedPayload()
 
     const slug = `verify-course-${Date.now()}`
     const course = await payload.create({
@@ -70,7 +87,7 @@ test.describe('Scenario #19 – Course Creation', () => {
 
 test.describe('Scenario #20 – Course Archiving', () => {
   test('unpublished course is hidden from student view', async ({ page }) => {
-    const payload = await getWebPayload()
+    const payload = await getSeedPayload()
 
     const slug = `archive-test-${Date.now()}`
     const course = await payload.create({
@@ -124,7 +141,7 @@ test.describe('Scenario #21 – Chapter Management', () => {
 test.describe('Scenario #22 – Content Updates', () => {
   test('changing lesson text via API updates the site', async ({ page }) => {
     test.skip(!data, 'No test data available')
-    const payload = await getWebPayload()
+    const payload = await getSeedPayload()
 
     const uniqueText = `Updated-${Date.now()}`
     await payload.update({

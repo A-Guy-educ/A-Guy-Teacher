@@ -4,6 +4,8 @@
  */
 import { expect, test } from '@playwright/test'
 
+import { generateTestUserEmail, setupAuthenticatedUser } from '../helpers/auth'
+
 import { cleanupTestUsers } from '../helpers/auth'
 import { loginAsStudent } from '../helpers/verification-fixtures'
 
@@ -14,6 +16,15 @@ test.afterAll(async () => {
 })
 
 test.describe('Scenario #3 – Site-wide Search', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('catalog-navigation'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test('searching for keywords returns relevant results', async ({ page }) => {
     await loginAsStudent(page)
     await page.goto('/search?q=test')

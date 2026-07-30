@@ -14,7 +14,7 @@ import {
   type VerificationData,
 } from './helpers/verification-fixtures'
 import { buildMcqExercise, buildFreeResponseExercise } from './helpers/exercise-builders'
-import { getWebPayload } from '@/infra/web-api/mongo-payload'
+import { getSeedPayload } from './helpers/seed'
 
 let data: VerificationData | null = null
 
@@ -29,7 +29,7 @@ async function seedLessonWithExercises(): Promise<{
 } | null> {
   if (!data) return null
 
-  const payload = await getWebPayload()
+  const payload = await getSeedPayload()
   const exerciseIds: string[] = []
   const lessonId = data.course.lessonId
 
@@ -88,7 +88,7 @@ test.setTimeout(60_000)
 test.afterAll(async () => {
   // Clean up exercises created for this test
   if (data) {
-    const payload = await getWebPayload()
+    const payload = await getSeedPayload()
     const lessonId = data.course.lessonId
     const blocks = JSON.parse(
       (

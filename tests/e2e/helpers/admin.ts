@@ -2,7 +2,7 @@
  * Admin helpers for pre-launch verification E2E tests.
  * Provides seeding and cleanup utilities for test exercises.
  */
-import { getWebPayload } from '@/infra/web-api/mongo-payload'
+import { getSeedPayload } from './seed'
 
 import type { TestCourseData } from './courses'
 import {
@@ -21,7 +21,7 @@ export interface TestExerciseData {
  * Seed exercises with various question types for a given lesson.
  */
 export async function seedTestExercises(courseData: TestCourseData): Promise<TestExerciseData[]> {
-  const payload = await getWebPayload()
+  const payload = await getSeedPayload()
   const exercises: TestExerciseData[] = []
 
   const configs = [
@@ -66,7 +66,7 @@ export function buildExerciseUrl(courseData: TestCourseData, exerciseSlug: strin
  */
 export async function cleanupTestExercisesById(ids: string[]): Promise<void> {
   if (ids.length === 0) return
-  const payload = await getWebPayload()
+  const payload = await getSeedPayload()
   for (const id of ids) {
     try {
       await payload.delete({ collection: 'exercises', id, overrideAccess: true })

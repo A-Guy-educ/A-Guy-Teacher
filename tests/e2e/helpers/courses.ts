@@ -1,11 +1,11 @@
 /**
  * Test helpers for course and lesson data.
  *
- * Payload was removed from the project, so these use `getWebPayload()` — the
+ * Payload was removed from the project, so these use `getSeedPayload()` — the
  * application's own stand-in for the Local API, backed by the Mongo driver.
  * Same call shapes, so the seeding logic below is unchanged.
  */
-import { getWebPayload, type WebPayload } from '@/infra/web-api/mongo-payload'
+import { getSeedPayload, type SeedPayload } from './seed'
 
 import { getDefaultTenantSlug } from '@/server/repos/tenant/get-default-tenant'
 import { logger } from '@/infra/utils/logger'
@@ -28,7 +28,7 @@ function generateUniqueSlug(prefix: string): string {
   return `${prefix}-${timestamp}-${random}`
 }
 
-async function ensureDefaultTenant(payload: WebPayload): Promise<string> {
+async function ensureDefaultTenant(payload: SeedPayload): Promise<string> {
   const slug = getDefaultTenantSlug()
   const existing = await payload.find({
     collection: 'tenants',
@@ -56,7 +56,7 @@ async function ensureDefaultTenant(payload: WebPayload): Promise<string> {
  */
 export async function seedTestCourseData(): Promise<TestCourseData | null> {
   try {
-    const payload = await getWebPayload()
+    const payload = await getSeedPayload()
 
     logger.info('Seeding test course data...')
 
@@ -167,7 +167,7 @@ export async function seedTestCourseData(): Promise<TestCourseData | null> {
 export async function cleanupTestCourseData(data: TestCourseData | null): Promise<void> {
   if (!data) return
 
-  const payload = await getWebPayload()
+  const payload = await getSeedPayload()
   for (const item of [
     { collection: 'lessons' as const, id: data.lessonId },
     { collection: 'chapters' as const, id: data.chapterId },
@@ -187,7 +187,7 @@ export async function cleanupTestCourseData(data: TestCourseData | null): Promis
  */
 export async function getTestCourseData(): Promise<TestCourseData | null> {
   try {
-    const payload = await getWebPayload()
+    const payload = await getSeedPayload()
 
     // Get first published course
     const courses = await payload.find({

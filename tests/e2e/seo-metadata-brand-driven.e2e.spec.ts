@@ -10,6 +10,8 @@
  */
 import { test, expect, Page } from '@playwright/test'
 
+import { cleanupTestUsers, generateTestUserEmail, setupAuthenticatedUser } from './helpers/auth'
+
 /** Brand values we expect to see in resolved metadata. */
 const BRAND = {
   name: 'A-Guy',
@@ -25,6 +27,21 @@ async function getMetaName(page: Page, name: string): Promise<string | null> {
 }
 
 test.describe('Brand-driven metadata', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('seo-metadata-brand-d'),
+      password: 'TestPassword123!',
+    })
+  })
+
+  test.afterAll(async () => {
+    // Every test here creates a user; without this they accumulate in the
+    // database run after run.
+    await cleanupTestUsers()
+  })
+
   test.describe.configure({ mode: 'parallel' })
 
   test('homepage has correct siteName in OpenGraph', async ({ page }) => {
