@@ -90,7 +90,8 @@
       "publish-knowledge-system",
       "release-validate",
       "build-chat-knowledge-graph",
-      "publish-chat-knowledge-tool"
+      "publish-chat-knowledge-tool",
+      "collect-chat-knowledge-evidence"
     ],
     "activeAgents": [
       "ceo",
