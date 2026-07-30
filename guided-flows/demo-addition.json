@@ -1,6 +1,6 @@
 {
   "id": "demo-whole-number-addition",
-  "version": 1,
+  "version": 2,
   "title": "Whole-number addition",
   "steps": [
     {
@@ -33,7 +33,7 @@
       "title": "Addition exercise",
       "explanation": "Complete the guided addition exercise.",
       "flowId": "demo-whole-number-addition-exercise",
-      "flowVersion": 1,
+      "flowVersion": 2,
       "transitions": {
         "complete": "complete"
       }
