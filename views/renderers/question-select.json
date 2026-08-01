@@ -1,12 +1,12 @@
 {
   "slug": "question-select",
-  "name": "Teacher multiple-choice question",
-  "description": "Shows one teacher-owned multiple-choice question and returns whether the selected answer is correct.",
+  "name": "Teacher selection question",
+  "description": "Loads one A-Guy question_select block from the CMS and handles its interaction.",
   "purpose": "question-select",
-  "rule": "Use this renderer for an A-Guy Teacher multiple-choice question.",
+  "rule": "Use this renderer for an A-Guy Teacher MCQ or true-false question.",
   "data": {
     "question": {
-      "description": "Question title, prompt, and selectable answer options.",
+      "description": "Opaque A-Guy reference containing exerciseId and questionId.",
       "type": "json"
     }
   },

@@ -1,12 +1,12 @@
 {
-  "id": "demo-widget-feedback",
-  "version": 1,
-  "title": "Demo widget feedback",
+  "id": "demo-correlation-coefficient-question",
+  "version": 3,
+  "title": "Correlation question",
   "steps": [
     {
       "id": "question",
-      "title": "Try an addition question",
-      "explanation": "Choose an answer. A wrong answer gives guidance in Chat without closing the question.",
+      "title": "Choose the coefficient",
+      "explanation": "The widget loads this question directly from the A-Guy CMS.",
       "rendererSlug": "question-select",
       "rendererData": {
         "question": {

@@ -2,9 +2,9 @@
 
 The A-Guy teaching consumer for Kody.
 
-The first demo lesson is
-[`guided-flows/demo-addition.json`](guided-flows/demo-addition.json). Its
-multiple-choice UI is owned by
+The first CMS-backed demo lesson is
+[`guided-flows/demo-correlation.json`](guided-flows/demo-correlation.json). Its
+question UI and educational behavior are owned by
 [`widgets/question-select/widget.js`](widgets/question-select/widget.js).
 
 The interactive Chat-feedback demo is

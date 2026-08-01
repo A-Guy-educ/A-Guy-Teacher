@@ -1,0 +1,37 @@
+{
+  "id": "demo-correlation-coefficient",
+  "version": 3,
+  "title": "Correlation coefficient",
+  "steps": [
+    {
+      "id": "intro",
+      "title": "Reading a correlation coefficient",
+      "explanation": "Use the sign and strength of a relationship to identify its correlation coefficient.",
+      "rendererSlug": "approval-card",
+      "rendererData": {
+        "title": "Correlation coefficient",
+        "body": "A strong positive relationship has a coefficient close to positive 1.",
+        "actions": [
+          {
+            "id": "start",
+            "label": "Start",
+            "response": "start",
+            "variant": "primary"
+          }
+        ]
+      },
+      "transitions": {
+        "start": "exercise"
+      },
+      "allowedActions": ["start"]
+    },
+    {
+      "id": "exercise",
+      "type": "flow",
+      "title": "Correlation question",
+      "explanation": "Answer the CMS-backed question.",
+      "flowId": "demo-correlation-coefficient-question",
+      "flowVersion": 3
+    }
+  ]
+}
