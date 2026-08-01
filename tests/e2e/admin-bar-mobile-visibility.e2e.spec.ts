@@ -8,7 +8,8 @@
  * @tags @bug
  */
 import { expect, test } from '@playwright/test'
-import { getWebPayload } from '@/infra/web-api/mongo-payload'
+
+import { getSeedPayload } from './helpers/seed'
 
 import {
   cleanupTestUsers,
@@ -18,7 +19,7 @@ import {
 } from './helpers/auth'
 
 async function authenticateAsAdmin(page: import('@playwright/test').Page, user: TestUser) {
-  const payload = await getWebPayload()
+  const payload = await getSeedPayload()
   const loginResult = await payload.login({
     collection: 'users',
     data: {
@@ -43,6 +44,15 @@ async function authenticateAsAdmin(page: import('@playwright/test').Page, user: 
 }
 
 test.describe('Admin Bar Mobile Visibility', () => {
+  // Learning pages are behind a session — middleware sends anonymous visitors
+  // to the login page, where none of the elements under test exist.
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedUser(page, {
+      email: generateTestUserEmail('admin-bar-mobile-vis'),
+      password: 'TestPassword123!',
+    })
+  })
+
   test.afterAll(async () => {
     await cleanupTestUsers()
   })

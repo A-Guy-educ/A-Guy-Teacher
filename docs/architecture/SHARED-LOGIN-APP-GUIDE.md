@@ -5,7 +5,9 @@ Hand this page to whoever builds a new app on `*.aguy.co.il` — link them strai
 
 It is the whole contract.
 
-> **Status:** the platform side is implemented. It stays dormant until `ROOT_DOMAIN` is set on the A-Guy-Web deployment — without it the cookie is host-only and nothing below works.
+> **Status: live.** The platform side shipped and `ROOT_DOMAIN` is set on production, so the shared cookie is already being issued on `aguy.co.il`. Everything below works today.
+>
+> Verified so far against a real database: the public reads, and that every protected endpoint refuses an anonymous caller. **Not yet verified end to end with a real second app** — you are the first, so treat the first login as the proof and say if it does not behave as written here.
 
 ---
 
@@ -118,7 +120,22 @@ Both apps must sit on one parent domain, and `localhost` cannot be one — `loca
 
 Use `lvh.me`, a public domain that resolves to `127.0.0.1`, so no host file editing is needed. A-Guy-Web runs at `http://app.lvh.me:3000`; run yours at `http://app2.lvh.me:3001`. Ask for your origin to be added to `AUTH_ALLOWED_RETURN_ORIGINS` and `API_ALLOWED_ORIGINS`, which exist because the automatic sibling rule requires HTTPS.
 
+Set the same two on A-Guy-Web's local `.env`, alongside `ROOT_DOMAIN=lvh.me`. Browse A-Guy-Web at `app.lvh.me:3000`, not `localhost:3000` — a login on `localhost` is not part of the shared domain and will not carry over.
+
 You cannot test against production from your machine: the real cookie only travels to `aguy.co.il` addresses.
+
+---
+
+## A working example
+
+`examples/second-app/` in this repository is the whole contract as ~150 lines of dependency-free Node: it never reads the cookie, forwards it to `/api/users/me`, and shows who the user is.
+
+```bash
+node examples/second-app/server.mjs
+# then open http://app2.lvh.me:3001
+```
+
+Copy it, or just read it — it is short enough to read in full.
 
 ---
 
