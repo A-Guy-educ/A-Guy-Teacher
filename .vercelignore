@@ -1,5 +1,9 @@
 .env
 .env.*
+!.env.docker.example
+!.env.example
+!.env.test
+!.env.test.example
 .agents/
 .ai-docs/
 .claude/
