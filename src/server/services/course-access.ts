@@ -52,8 +52,15 @@ export async function findCourseAccessGrants(
       {
         user: { $in: userIds },
         course: { $in: courseIds },
-        // A cancelled enrollment is a record of the past, not a grant.
-        status: { $ne: 'cancelled' },
+        // Cancelled or expired enrollments are records of the past, not grants.
+        // expiresAt in the past is treated as inactive even if the sweeper hasn't
+        // flipped the row to status: 'expired' yet — defense in depth.
+        status: { $nin: ['cancelled', 'expired'] },
+        $or: [
+          { expiresAt: { $exists: false } },
+          { expiresAt: null },
+          { expiresAt: { $gt: new Date() } },
+        ],
       },
       READ_FROM_PRIMARY,
     ),

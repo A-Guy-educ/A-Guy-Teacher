@@ -71,7 +71,9 @@ ${body}
 
 function render(result) {
   if (result.error) {
-    return page(`<div class="card err"><strong>Something went wrong</strong><p>${result.error}</p></div>`)
+    return page(
+      `<div class="card err"><strong>Something went wrong</strong><p>${result.error}</p></div>`,
+    )
   }
 
   if (!result.user) {

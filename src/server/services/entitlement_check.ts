@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Entitlement check service
  *
@@ -27,7 +26,12 @@ export async function hasEntitlement({
   userId,
   courseId,
 }: CheckEntitlementParams): Promise<boolean> {
-  // Step 1: Check Enrollments collection (new system)
+  const nowIso = new Date().toISOString()
+
+  // Step 1: Check Enrollments collection (active + not expired).
+  // Lifetime enrollments have no expiresAt (initial create with no
+  // durationDays) or expiresAt: null (lifetime re-purchase that cleared
+  // a prior expiry). Match both.
   const enrollment = await payload.find({
     collection: 'enrollments',
     where: {
@@ -35,6 +39,13 @@ export async function hasEntitlement({
         { user: { equals: userId } },
         { course: { equals: courseId } },
         { status: { equals: 'active' } },
+        {
+          or: [
+            { expiresAt: { exists: false } },
+            { expiresAt: { equals: null } },
+            { expiresAt: { greater_than: nowIso } },
+          ],
+        },
       ],
     },
     limit: 1,
@@ -58,7 +69,7 @@ export async function hasEntitlement({
   const entitlements = user?.courseEntitlements
   if (!entitlements || entitlements.length === 0) return false
 
-  return entitlements.some((e) => {
+  return entitlements.some((e: { course: string | { id: string } }) => {
     const entCourseId = typeof e.course === 'string' ? e.course : e.course?.id
     return entCourseId === courseId
   })

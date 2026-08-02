@@ -7,8 +7,8 @@
  * faithful about the operations the routes actually perform — it is not a
  * MongoDB implementation, and should not grow into one.
  *
- * It supports exactly the operators the migrated routes use — `$in`, `$ne`,
- * `$gt`, `$lt`, `$exists`, `$regex`, top-level `$or`, and `$set` /
+ * It supports exactly the operators the migrated routes use — `$in`, `$nin`,
+ * `$ne`, `$gt`, `$lt`, `$exists`, `$regex`, top-level `$or`, and `$set` /
  * `$setOnInsert` / `$inc` / `$push` updates. That list is deliberately closed.
  *
  * What it cannot show you, because it is a plain object rather than a
@@ -40,6 +40,9 @@ function matchesCondition(value: unknown, condition: unknown): boolean {
 
     if ('$in' in operators) {
       return (operators.$in as unknown[]).some((candidate) => sameId(value, candidate))
+    }
+    if ('$nin' in operators) {
+      return !(operators.$nin as unknown[]).some((candidate) => sameId(value, candidate))
     }
     if ('$ne' in operators) return !sameId(value, operators.$ne)
     if ('$exists' in operators) return (value !== undefined) === Boolean(operators.$exists)
