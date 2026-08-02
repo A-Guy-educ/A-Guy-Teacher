@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.30.13 — 2026-08-02
+
+### Bug Fixes
+- Filter expired enrollments in `findCourseAccessGrants` (used by `/api/entitlements/check` and the diag route) so `hasAccess` no longer returns `true` for a lapsed enrollment between hourly sweeper runs (f5f21ae1f)
+- Filter expired enrollments in web-side entitlement checks (`checkPaidAccess`, `hasEntitlement`); exclude `cancelled`/`expired` status and require `expiresAt` to be absent, null, or in the future (ecfe2c4c6)
+
 ## v0.30.12 — 2026-08-02
 
 ### Features
