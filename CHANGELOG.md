@@ -3224,6 +3224,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- promote: dev -> main (v0.30.13) ([#1019](https://github.com/A-Guy-educ/A-Guy-Web/pull/1019)) — @aguyshayb
 - chore: release v0.30.13 ([#1018](https://github.com/A-Guy-educ/A-Guy-Web/pull/1018)) — @aguyshayb
 - fix: Filter expired enrollments in web-side entitlement checks ([#1017](https://github.com/A-Guy-educ/A-Guy-Web/pull/1017)) — @aguyshayb
 - promote: dev -> main (v0.30.12) ([#1016](https://github.com/A-Guy-educ/A-Guy-Web/pull/1016)) — @aguyaharonyair
