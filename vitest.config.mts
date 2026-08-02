@@ -61,6 +61,7 @@ const activeIntegrationTests = [
   'tests/int/v2-vision-detection.int.spec.ts',
   'tests/int/paypal-concurrent-webhook-race.int.spec.ts',
   'tests/int/paypal-subscription-checkout.int.spec.ts',
+  'tests/int/enrollment-expiry-gate.int.spec.ts',
 ]
 
 export default defineConfig({

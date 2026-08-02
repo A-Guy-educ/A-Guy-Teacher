@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.30.13 — 2026-08-02
+
+### Bug Fixes
+- Filter expired enrollments in `findCourseAccessGrants` (used by `/api/entitlements/check` and the diag route) so `hasAccess` no longer returns `true` for a lapsed enrollment between hourly sweeper runs (f5f21ae1f)
+- Filter expired enrollments in web-side entitlement checks (`checkPaidAccess`, `hasEntitlement`); exclude `cancelled`/`expired` status and require `expiresAt` to be absent, null, or in the future (ecfe2c4c6)
+
 ## v0.30.12 — 2026-08-02
 
 ### Features
@@ -3218,6 +3224,9 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.30.13 ([#1018](https://github.com/A-Guy-educ/A-Guy-Web/pull/1018)) — @aguyshayb
+- fix: Filter expired enrollments in web-side entitlement checks ([#1017](https://github.com/A-Guy-educ/A-Guy-Web/pull/1017)) — @aguyshayb
+- promote: dev -> main (v0.30.12) ([#1016](https://github.com/A-Guy-educ/A-Guy-Web/pull/1016)) — @aguyaharonyair
 - chore: release v0.30.12 ([#1015](https://github.com/A-Guy-educ/A-Guy-Web/pull/1015)) — @aguyaharonyair
 - promote: dev -> main (v0.30.11) ([#1014](https://github.com/A-Guy-educ/A-Guy-Web/pull/1014)) — @aguyaharonyair
 - chore: release v0.30.11 ([#1013](https://github.com/A-Guy-educ/A-Guy-Web/pull/1013)) — @aguyaharonyair

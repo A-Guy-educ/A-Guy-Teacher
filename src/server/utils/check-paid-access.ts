@@ -51,7 +51,12 @@ export async function checkPaidAccess(courseId: string): Promise<PaidAccessResul
       {
         user: { $in: userIds },
         course: { $in: courseIds },
-        status: { $ne: 'cancelled' },
+        status: { $nin: ['cancelled', 'expired'] },
+        $or: [
+          { expiresAt: { $exists: false } },
+          { expiresAt: null },
+          { expiresAt: { $gt: new Date() } },
+        ],
       },
       READ_FROM_PRIMARY,
     ),
