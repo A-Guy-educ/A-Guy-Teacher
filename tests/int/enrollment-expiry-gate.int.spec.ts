@@ -2,13 +2,16 @@
 /**
  * Integration tests: Enrollments expiry gates web-side access
  *
- * Verifies that both web-side entitlement checks — `hasEntitlement` (Payload
- * find) and `checkPaidAccess` (raw MongoDB) — honor the enrollments
- * `expiresAt` field. Between hourly sweeper runs the row may still be
- * `status: 'active'` past its expiry window, so the read path must filter
- * on expiresAt directly (defense-in-depth).
+ * Verifies that all three web-side entitlement checks —
+ *   - `hasEntitlement`         (Payload find, /courses/[slug] SSR)
+ *   - `checkPaidAccess`        (raw MongoDB, page render)
+ *   - `findCourseAccessGrants` (raw MongoDB, /api/entitlements/check
+ *                               + /api/diag/access-check)
+ * honor the enrollments `expiresAt` field. Between hourly sweeper runs the row
+ * may still be `status: 'active'` past its expiry window, so every read path
+ * must filter on expiresAt directly (defense-in-depth).
  *
- * Coverage per gate (both `hasEntitlement` and `checkPaidAccess`):
+ * Coverage per gate:
  *   (a) active + expiresAt in the past      → denies
  *   (b) active + expiresAt in the future    → grants
  *   (c) active + no expiresAt (lifetime)    → grants
@@ -279,5 +282,38 @@ describe('hasEntitlement — expiresAt filter', () => {
       courseId: courseId.toString(),
     })
     expect(result).toBe(true)
+  })
+})
+
+// ─── findCourseAccessGrants (raw MongoDB, /api/entitlements/check) ────────
+describe('findCourseAccessGrants — expiresAt filter', () => {
+  async function grantsFor(userId: ObjectId) {
+    const { findCourseAccessGrants, grantsAccess } = await import('@/server/services/course-access')
+    const grants = await findCourseAccessGrants(userId.toString(), courseId.toString())
+    return { grants, hasAccess: grantsAccess(grants, courseId.toString()) }
+  }
+
+  it('denies access when expiresAt is in the past', async () => {
+    const { grants, hasAccess } = await grantsFor(userExpired)
+    expect(grants.enrollment).toBeNull()
+    expect(hasAccess).toBe(false)
+  })
+
+  it('grants access when expiresAt is in the future', async () => {
+    const { grants, hasAccess } = await grantsFor(userFuture)
+    expect(grants.enrollment).not.toBeNull()
+    expect(hasAccess).toBe(true)
+  })
+
+  it('grants access when expiresAt is absent (lifetime)', async () => {
+    const { grants, hasAccess } = await grantsFor(userNoExpires)
+    expect(grants.enrollment).not.toBeNull()
+    expect(hasAccess).toBe(true)
+  })
+
+  it('grants access when expiresAt is null (lifetime re-purchase)', async () => {
+    const { grants, hasAccess } = await grantsFor(userNullExpires)
+    expect(grants.enrollment).not.toBeNull()
+    expect(hasAccess).toBe(true)
   })
 })
