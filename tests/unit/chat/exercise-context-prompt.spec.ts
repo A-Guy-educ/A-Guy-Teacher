@@ -11,6 +11,11 @@ import {
   buildPromptWithExerciseContext,
   stripExerciseContext,
 } from '@/ui/web/chat/hooks/exercise-context-prompt'
+import {
+  buildPromptWithStepContext,
+  stripStepContext,
+  type ChatStepContext,
+} from '@/ui/web/chat/hooks/step-context'
 
 const sampleContext = `The student is now viewing the following exercise. Use this context to help them if they ask questions.
 
@@ -49,5 +54,42 @@ describe('stripExerciseContext', () => {
     const userBody = 'Q: what does the </exercise-context> tag mean?'
     const persisted = buildPromptWithExerciseContext(userBody, sampleContext)
     expect(stripExerciseContext(persisted)).toBe(userBody)
+  })
+})
+
+describe('composed strip with step-context', () => {
+  // Pins the write/read order: useNotebookChat wraps exercise-context INSIDE
+  // step-context on the write side, so the read side must peel step-context
+  // first for the anchored ^<exercise-context regex to match on the next
+  // pass. If someone flips the composition order in loadConversationHistory,
+  // this test catches the resulting XML leak into the chat bubble.
+  const step: ChatStepContext = {
+    currentStepId: 2,
+    totalSteps: 4,
+    stepTitle: 'Apply SAS',
+    stepNarration: 'The two triangles are congruent by SAS.',
+  }
+
+  it('round-trips a message wrapped with both step-context and exercise-context', () => {
+    const raw = 'Why did they add?'
+    const persisted = buildPromptWithStepContext(
+      buildPromptWithExerciseContext(raw, sampleContext),
+      step,
+    )
+    // step-context is outermost on the write side; peel it first, then exercise-context.
+    expect(stripExerciseContext(stripStepContext(persisted))).toBe(raw)
+  })
+
+  it('reversing the strip order leaves raw exercise-context XML in the message', () => {
+    // Locks in WHY the order matters — if a future refactor swaps the two
+    // strippers, this assertion documents the failure mode.
+    const raw = 'Why did they add?'
+    const persisted = buildPromptWithStepContext(
+      buildPromptWithExerciseContext(raw, sampleContext),
+      step,
+    )
+    const wrong = stripStepContext(stripExerciseContext(persisted))
+    expect(wrong).toContain('<exercise-context>')
+    expect(wrong).not.toBe(raw)
   })
 })

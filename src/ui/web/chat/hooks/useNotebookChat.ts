@@ -264,11 +264,14 @@ export function useNotebookChat({
                     msg.role === ChatRole.User || msg.role === 'user'
                       ? ChatRole.User
                       : ChatRole.Assistant,
-                  // Strip any persisted <exercise-context> / <step-context>
+                  // Strip any persisted <step-context> / <exercise-context>
                   // prefixes so the displayed bubble stays clean. The AI
                   // still sees them on the server side (full content is
-                  // retrieved for LLM context).
-                  content: stripStepContext(stripExerciseContext(String(msg.content))),
+                  // retrieved for LLM context). Order matters: the write
+                  // side wraps exercise-context *inside* step-context, so we
+                  // must peel the outer step-context first for the anchored
+                  // ^<exercise-context regex to match on the next pass.
+                  content: stripExerciseContext(stripStepContext(String(msg.content))),
                   media: raw.media,
                   chatAssets: raw.chatAssets,
                   createdAt: raw.createdAt,
