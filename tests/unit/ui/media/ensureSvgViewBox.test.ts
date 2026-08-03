@@ -43,4 +43,9 @@ describe('ensureSvgViewBox', () => {
     const input = '<svg width=250 height=150><rect/></svg>'
     expect(ensureSvgViewBox(input)).toContain('viewBox="0 0 250 150"')
   })
+
+  it('does not truncate the root tag on a `>` inside a quoted attribute value', () => {
+    const input = '<svg data-note="a>b" width="100" height="50"><rect/></svg>'
+    expect(ensureSvgViewBox(input)).toContain('viewBox="0 0 100 50"')
+  })
 })

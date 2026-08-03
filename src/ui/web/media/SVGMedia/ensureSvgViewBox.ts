@@ -28,7 +28,10 @@
  * than DOM-based so it runs on the server and does not depend on `window`.
  */
 export function ensureSvgViewBox(svg: string): string {
-  const openTagMatch = svg.match(/<svg\b[^>]*>/i)
+  // Match the <svg …> opening tag while stepping over quoted attribute values
+  // that may themselves contain `>`. A naive `[^>]*` would truncate on the
+  // first `>` inside e.g. `data-note="a>b"` and miss width / height.
+  const openTagMatch = svg.match(/<svg\b(?:[^>"']|"[^"]*"|'[^']*')*>/i)
   if (!openTagMatch) return svg
 
   const openTag = openTagMatch[0]
