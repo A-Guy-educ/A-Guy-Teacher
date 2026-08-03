@@ -1,7 +1,10 @@
 'use client'
 
 import { ChatRole } from '@/infra/llm/chat-message-role'
-import { formatExerciseContextMessage } from '@/infra/llm/exercise-context'
+import {
+  formatExerciseContextMessage,
+  formatExerciseWelcomeMessage,
+} from '@/infra/llm/exercise-context'
 import { IMAGE_REJECTED_TAG } from '@/server/chat-assets/constants'
 import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
 
@@ -12,6 +15,7 @@ import { toast } from 'sonner'
 import { ASK_STEP_CONTEXT_EVENT } from '@/app/(frontend)/ask/_components/ask-types'
 import { useDirectChatAssetUpload } from './useDirectChatAssetUpload'
 import { buildPromptWithStepContext, stripStepContext, type ChatStepContext } from './step-context'
+import { buildPromptWithExerciseContext, stripExerciseContext } from './exercise-context-prompt'
 
 export type { ChatStepContext } from './step-context'
 
@@ -142,6 +146,12 @@ export function useNotebookChat({
   // Guard to prevent concurrent context injections
   const isInjectingRef = useRef(false)
 
+  // Pending exercise context prompt — set when the student enters an exercise,
+  // consumed on their next outgoing message. Deferring the send until the
+  // student actually asks means the auto-navigation doesn't burn quota with
+  // an AI turn the student never asked for.
+  const pendingExerciseContextRef = useRef<string | null>(null)
+
   // Compute contextKey based on available context
   // For admin mode: use users:{userId} (user-scoped conversation)
   // Priority for regular mode: Lesson > Exercise (fallback) > Chapter > Course > Category
@@ -254,10 +264,11 @@ export function useNotebookChat({
                     msg.role === ChatRole.User || msg.role === 'user'
                       ? ChatRole.User
                       : ChatRole.Assistant,
-                  // Strip any persisted <step-context> prefix so the displayed
-                  // message bubble stays clean. The AI still sees it on the
-                  // server side (full content is retrieved for LLM context).
-                  content: stripStepContext(String(msg.content)),
+                  // Strip any persisted <exercise-context> / <step-context>
+                  // prefixes so the displayed bubble stays clean. The AI
+                  // still sees them on the server side (full content is
+                  // retrieved for LLM context).
+                  content: stripStepContext(stripExerciseContext(String(msg.content))),
                   media: raw.media,
                   chatAssets: raw.chatAssets,
                   createdAt: raw.createdAt,
@@ -384,7 +395,15 @@ export function useNotebookChat({
     // Capture active step context at send time so the badge reflects the
     // step the student was on when they asked, even if they advance later.
     const stepContext = askStepContextRef.current
-    const promptForAI = buildPromptWithStepContext(message, stepContext)
+    // Consume any pending exercise context on the first outgoing message
+    // since the student entered the exercise. It's prepended to the AI
+    // prompt only — the visible bubble carries the raw message.
+    const pendingExerciseContext = pendingExerciseContextRef.current
+    pendingExerciseContextRef.current = null
+    const promptForAI = buildPromptWithStepContext(
+      buildPromptWithExerciseContext(message, pendingExerciseContext),
+      stepContext,
+    )
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -686,9 +705,17 @@ export function useNotebookChat({
   )
 
   /**
-   * Inject exercise context as a hidden message when student navigates to an exercise.
-   * The context is persisted for LLM context but excluded from client responses.
-   * Deduplicates: skips injection if same exerciseId was already injected.
+   * Handle student navigation to an exercise.
+   *
+   * Previously this sent a hidden AI turn on every navigation, which counted
+   * toward the student's chat quota even though they never asked anything.
+   * Now it just:
+   *   1. Adds a local assistant welcome bubble stating the exercise (from
+   *      the first block) so the student sees where they landed.
+   *   2. Stores the full exercise-context prompt in a ref, to be prepended
+   *      invisibly to the student's next outgoing message.
+   *
+   * The AI only sees exercise context on turns the student actually initiates.
    */
   const injectExerciseContext = useCallback(
     async (
@@ -736,15 +763,32 @@ export function useNotebookChat({
           exercise.content.blocks,
           mediaMap,
         )
-        const prompt = `The student is now viewing the following exercise. Use this context to help them if they ask questions.\n\n${formatted}`
+        pendingExerciseContextRef.current = `The student is now viewing the following exercise. Use this context to help them if they ask questions.\n\n${formatted}`
 
-        const context = { exerciseId, lessonId, chapterId, courseId, categoryId }
-        await streamMessage(prompt, acknowledgment, context, { hidden: true, silent: true })
+        const welcome = formatExerciseWelcomeMessage(exercise.title, exercise.content.blocks)
+        if (welcome) {
+          setMessages((prev) => {
+            // If chat only shows the generic initial welcome, replace it with
+            // the exercise-specific one so the student sees a single, focused
+            // opening bubble. Otherwise append.
+            const onlyInitial =
+              prev.length === 1 &&
+              prev[0].role === ChatRole.Assistant &&
+              prev[0].content === initialMessage
+            const welcomeMessage: ChatMessage = {
+              id: crypto.randomUUID(),
+              role: ChatRole.Assistant,
+              content: welcome,
+              createdAt: new Date().toISOString(),
+            }
+            return onlyInitial ? [welcomeMessage] : [...prev, welcomeMessage]
+          })
+        }
       } finally {
         isInjectingRef.current = false
       }
     },
-    [streamMessage, acknowledgment, exerciseId, lessonId, chapterId, courseId, categoryId],
+    [initialMessage],
   )
 
   /**
