@@ -1,7 +1,10 @@
 'use client'
 
 import { ChatRole } from '@/infra/llm/chat-message-role'
-import { formatExerciseContextMessage } from '@/infra/llm/exercise-context'
+import {
+  formatExerciseContextMessage,
+  formatExerciseWelcomeMessage,
+} from '@/infra/llm/exercise-context'
 import { IMAGE_REJECTED_TAG } from '@/server/chat-assets/constants'
 import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
 
@@ -12,6 +15,7 @@ import { toast } from 'sonner'
 import { ASK_STEP_CONTEXT_EVENT } from '@/app/(frontend)/ask/_components/ask-types'
 import { useDirectChatAssetUpload } from './useDirectChatAssetUpload'
 import { buildPromptWithStepContext, stripStepContext, type ChatStepContext } from './step-context'
+import { buildPromptWithExerciseContext, stripExerciseContext } from './exercise-context-prompt'
 
 export type { ChatStepContext } from './step-context'
 
@@ -142,6 +146,29 @@ export function useNotebookChat({
   // Guard to prevent concurrent context injections
   const isInjectingRef = useRef(false)
 
+  // Pending exercise context prompt — set when the student enters an exercise,
+  // consumed on their next outgoing message. Deferring the send until the
+  // student actually asks means the auto-navigation doesn't burn quota with
+  // an AI turn the student never asked for.
+  const pendingExerciseContextRef = useRef<string | null>(null)
+
+  // Exercise IDs we've already shown a local welcome bubble for. Guards
+  // against duplicate welcomes on back-and-forth navigation (A → B → A)
+  // — the AI still gets a fresh pending-context refresh on the return trip,
+  // but the transcript doesn't sprout a second "**Exercise A**" bubble.
+  const welcomedExerciseIdsRef = useRef<Set<string>>(new Set())
+
+  // Wrap the given prompt with the pending exercise-context block if there
+  // is one. Does NOT clear the ref — that only happens on send success
+  // (streamMessage 'done' / sendMessageSync result.success) so a transient
+  // network/auth failure doesn't drop the context before the retry.
+  // Every model-facing path (typed message, quick action, hint/solution
+  // helper, incorrect-answer helper) MUST route through this so the AI gets
+  // exercise blocks/hints/options on the first turn after navigation.
+  const consumePendingExerciseContext = useCallback((message: string) => {
+    return buildPromptWithExerciseContext(message, pendingExerciseContextRef.current)
+  }, [])
+
   // Compute contextKey based on available context
   // For admin mode: use users:{userId} (user-scoped conversation)
   // Priority for regular mode: Lesson > Exercise (fallback) > Chapter > Course > Category
@@ -156,6 +183,29 @@ export function useNotebookChat({
     if (adminMode && userId) return `users:${userId}`
     return null
   }, [contextKeyOverride, exerciseId, lessonId, chapterId, courseId, categoryId, adminMode, userId])
+
+  // Drop any pending exercise context and welcome-tracking when the
+  // conversation switches. Otherwise the next typed message in the new
+  // conversation would silently carry a stale "[EXERCISE CONTEXT]" block
+  // from an exercise the student left without asking anything.
+  useEffect(() => {
+    pendingExerciseContextRef.current = null
+    welcomedExerciseIdsRef.current = new Set()
+    lastInjectedExerciseId.current = null
+  }, [contextKey])
+
+  // Reset pending exercise context and welcome-tracking. Called by consumers
+  // (e.g. ChatInterface) when the surrounding view stops being about a
+  // specific exercise so a later typed message doesn't pick up stale
+  // context. Handles the currentExercise=undefined transition that the
+  // contextKey-change effect above doesn't cover (contextKey stays the same
+  // when navigating between an exercise block and a content-page block of
+  // the same lesson).
+  const clearPendingExerciseContext = useCallback(() => {
+    pendingExerciseContextRef.current = null
+    welcomedExerciseIdsRef.current = new Set()
+    lastInjectedExerciseId.current = null
+  }, [])
 
   // Simple scroll to bottom using scrollTop instead of scrollIntoView
   // scrollIntoView can cause layout issues in nested flex containers
@@ -254,10 +304,14 @@ export function useNotebookChat({
                     msg.role === ChatRole.User || msg.role === 'user'
                       ? ChatRole.User
                       : ChatRole.Assistant,
-                  // Strip any persisted <step-context> prefix so the displayed
-                  // message bubble stays clean. The AI still sees it on the
-                  // server side (full content is retrieved for LLM context).
-                  content: stripStepContext(String(msg.content)),
+                  // Strip any persisted <step-context> / <exercise-context>
+                  // prefixes so the displayed bubble stays clean. The AI
+                  // still sees them on the server side (full content is
+                  // retrieved for LLM context). Order matters: the write
+                  // side wraps exercise-context *inside* step-context, so we
+                  // must peel the outer step-context first for the anchored
+                  // ^<exercise-context regex to match on the next pass.
+                  content: stripExerciseContext(stripStepContext(String(msg.content))),
                   media: raw.media,
                   chatAssets: raw.chatAssets,
                   createdAt: raw.createdAt,
@@ -384,7 +438,13 @@ export function useNotebookChat({
     // Capture active step context at send time so the badge reflects the
     // step the student was on when they asked, even if they advance later.
     const stepContext = askStepContextRef.current
-    const promptForAI = buildPromptWithStepContext(message, stepContext)
+    // Consume any pending exercise context on the first outgoing message
+    // since the student entered the exercise. It's prepended to the AI
+    // prompt only — the visible bubble carries the raw message.
+    const promptForAI = buildPromptWithStepContext(
+      consumePendingExerciseContext(message),
+      stepContext,
+    )
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -495,6 +555,9 @@ export function useNotebookChat({
             if (event.conversationId && event.contextKey) {
               onConversationCreated?.(event.conversationId, event.contextKey)
             }
+            // Only clear pending exercise context on a successful send so a
+            // transient error leaves the ref set for the retry.
+            pendingExerciseContextRef.current = null
           } else if (event.type === 'error') {
             const errMsg = event.error || errorMessage
             // Check if this is an auth error (contains "auth" or "authentication")
@@ -585,6 +648,10 @@ export function useNotebookChat({
         return
       }
 
+      // Only clear pending exercise context on a successful send so a
+      // transient error leaves the ref set for the retry.
+      pendingExerciseContextRef.current = null
+
       // Notify caller of conversation creation
       if (result.conversationId && result.contextKey) {
         onConversationCreated?.(result.conversationId, result.contextKey)
@@ -665,7 +732,7 @@ export function useNotebookChat({
       courseId,
       categoryId,
     }
-    sendMessageSync(prompt, acknowledgment, context)
+    sendMessageSync(consumePendingExerciseContext(prompt), acknowledgment, context)
   }
 
   const addAssistantMessage = useCallback(
@@ -686,9 +753,17 @@ export function useNotebookChat({
   )
 
   /**
-   * Inject exercise context as a hidden message when student navigates to an exercise.
-   * The context is persisted for LLM context but excluded from client responses.
-   * Deduplicates: skips injection if same exerciseId was already injected.
+   * Handle student navigation to an exercise.
+   *
+   * Previously this sent a hidden AI turn on every navigation, which counted
+   * toward the student's chat quota even though they never asked anything.
+   * Now it just:
+   *   1. Adds a local assistant welcome bubble stating the exercise (from
+   *      the first block) so the student sees where they landed.
+   *   2. Stores the full exercise-context prompt in a ref, to be prepended
+   *      invisibly to the student's next outgoing message.
+   *
+   * The AI only sees exercise context on turns the student actually initiates.
    */
   const injectExerciseContext = useCallback(
     async (
@@ -736,15 +811,39 @@ export function useNotebookChat({
           exercise.content.blocks,
           mediaMap,
         )
-        const prompt = `The student is now viewing the following exercise. Use this context to help them if they ask questions.\n\n${formatted}`
+        pendingExerciseContextRef.current = `The student is now viewing the following exercise. Use this context to help them if they ask questions.\n\n${formatted}`
 
-        const context = { exerciseId, lessonId, chapterId, courseId, categoryId }
-        await streamMessage(prompt, acknowledgment, context, { hidden: true, silent: true })
+        // Only add a visual welcome bubble the FIRST time we see this
+        // exercise in the session. On A → B → A back-navigation the pending
+        // ref above still gets refreshed so the AI stays in sync, but the
+        // transcript doesn't accumulate duplicate "**Exercise A**" bubbles.
+        if (!welcomedExerciseIdsRef.current.has(exercise.id)) {
+          welcomedExerciseIdsRef.current.add(exercise.id)
+          const welcome = formatExerciseWelcomeMessage(exercise.title, exercise.content.blocks)
+          if (welcome) {
+            setMessages((prev) => {
+              // If chat only shows the generic initial welcome, replace it
+              // with the exercise-specific one so the student sees a
+              // single, focused opening bubble. Otherwise append.
+              const onlyInitial =
+                prev.length === 1 &&
+                prev[0].role === ChatRole.Assistant &&
+                prev[0].content === initialMessage
+              const welcomeMessage: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: ChatRole.Assistant,
+                content: welcome,
+                createdAt: new Date().toISOString(),
+              }
+              return onlyInitial ? [welcomeMessage] : [...prev, welcomeMessage]
+            })
+          }
+        }
       } finally {
         isInjectingRef.current = false
       }
     },
-    [streamMessage, acknowledgment, exerciseId, lessonId, chapterId, courseId, categoryId],
+    [initialMessage],
   )
 
   /**
@@ -756,7 +855,9 @@ export function useNotebookChat({
     if (isLoading || isLoadingHistory) return
     setIsLoading(true)
     const context = { exerciseId, lessonId, chapterId, courseId, categoryId }
-    await streamMessage(prompt, acknowledgment, context, { hidden: true })
+    await streamMessage(consumePendingExerciseContext(prompt), acknowledgment, context, {
+      hidden: true,
+    })
   }
 
   /**
@@ -769,7 +870,10 @@ export function useNotebookChat({
     if (isLoading || isLoadingHistory) return
     setIsLoading(true)
     const context = { exerciseId, lessonId, chapterId, courseId, categoryId }
-    await streamMessage(prompt, acknowledgment, context, { hidden: true, hidePromptOnly: true })
+    await streamMessage(consumePendingExerciseContext(prompt), acknowledgment, context, {
+      hidden: true,
+      hidePromptOnly: true,
+    })
   }
 
   /**
@@ -816,7 +920,12 @@ export function useNotebookChat({
 
       // Send canvas drawing + any additional media (e.g. exercise image)
       const allMediaIds = [mediaId, ...(additionalMediaIds ?? [])]
-      await sendMessageSync(prompt, acknowledgment, context, allMediaIds)
+      await sendMessageSync(
+        consumePendingExerciseContext(prompt),
+        acknowledgment,
+        context,
+        allMediaIds,
+      )
     } catch (error) {
       logger.error({ err: error }, 'Failed to send canvas for check')
       toast.error(errorMessage)
@@ -852,7 +961,9 @@ export function useNotebookChat({
     setIsLoading(true)
     const context = { exerciseId, lessonId, chapterId, courseId, categoryId }
     try {
-      await sendMessageSync(prompt, acknowledgment, context, [mediaId])
+      await sendMessageSync(consumePendingExerciseContext(prompt), acknowledgment, context, [
+        mediaId,
+      ])
     } catch (error) {
       logger.error({ err: error }, 'Failed to send contextual help with media ID')
       toast.error(errorMessage)
@@ -894,6 +1005,7 @@ export function useNotebookChat({
     // Programmatic message injection
     addAssistantMessage,
     injectExerciseContext,
+    clearPendingExerciseContext,
     sendContextualHelp,
     sendVisibleHelp,
     sendContextualHelpWithMedia,
