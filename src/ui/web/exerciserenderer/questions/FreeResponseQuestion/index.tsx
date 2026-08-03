@@ -110,58 +110,57 @@ export function FreeResponseQuestion({
       </div>
 
       {/* Answer box with formula button */}
-      <div
-        className="relative rounded-xl border-2 border-[hsl(var(--tab-ask)/0.3)] bg-[hsl(var(--tab-ask)/0.04)] dark:border-[hsl(var(--tab-ask)/0.4)] dark:shadow-card overflow-hidden"
-        data-math-controls
-      >
-        {/* Textarea — always mounted, hidden behind overlay when in view mode */}
-        <Textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange({ type: 'free_response', value: e.target.value })}
-          onFocus={() => setIsEditing(true)}
-          onBlur={handleBlur}
-          disabled={disabled}
-          placeholder={t('enterAnswer')}
-          className="text-body-md min-h-0 resize-none overflow-hidden pe-10 bg-transparent border-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none placeholder:text-muted-foreground/50 placeholder:italic"
-          rows={3}
-        />
+      <div className="relative" data-math-controls>
+        <div className="relative rounded-xl border-2 border-[hsl(var(--tab-ask)/0.3)] bg-[hsl(var(--tab-ask)/0.04)] dark:border-[hsl(var(--tab-ask)/0.4)] dark:shadow-card overflow-hidden">
+          {/* Textarea — always mounted, hidden behind overlay when in view mode */}
+          <Textarea
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => onChange({ type: 'free_response', value: e.target.value })}
+            onFocus={() => setIsEditing(true)}
+            onBlur={handleBlur}
+            disabled={disabled}
+            placeholder={t('enterAnswer')}
+            className="text-body-md min-h-0 resize-none overflow-hidden pe-10 bg-transparent border-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none placeholder:text-muted-foreground/50 placeholder:italic"
+            rows={3}
+          />
 
-        {/* View overlay: rendered content on top of textarea */}
-        <AnimatePresence>
-          {showViewOverlay && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={switchToEditMode}
-              className="absolute inset-0 px-3 py-2 pe-10 bg-transparent text-body-md leading-relaxed cursor-text overflow-hidden"
+          {/* View overlay: rendered content on top of textarea */}
+          <AnimatePresence>
+            {showViewOverlay && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                onClick={switchToEditMode}
+                className="absolute inset-0 px-3 py-2 pe-10 bg-transparent text-body-md leading-relaxed cursor-text overflow-hidden"
+              >
+                <MathMarkdown content={value} />
+                {/* Edit indicator */}
+                {!disabled && (
+                  <span className="absolute top-2 end-2 text-muted-foreground/40">
+                    <Pencil className="w-3.5 h-3.5" />
+                  </span>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Formula button — pill style */}
+          {showMathTools && !disabled && (
+            <button
+              type="button"
+              onClick={() => setComposerOpen(!composerOpen)}
+              className="absolute end-1.5 top-2 flex items-center gap-1 px-3 py-1.5 rounded-full bg-[hsl(var(--tab-ask))] text-white shadow-card hover:shadow-card-hover transition-all duration-normal z-10 text-body-xs font-semibold"
+              title={t('insertFormula')}
             >
-              <MathMarkdown content={value} />
-              {/* Edit indicator */}
-              {!disabled && (
-                <span className="absolute top-2 end-2 text-muted-foreground/40">
-                  <Pencil className="w-3.5 h-3.5" />
-                </span>
-              )}
-            </motion.div>
+              <FunctionSquare className="w-3.5 h-3.5" />
+            </button>
           )}
-        </AnimatePresence>
+        </div>
 
-        {/* Formula button — pill style */}
-        {showMathTools && !disabled && (
-          <button
-            type="button"
-            onClick={() => setComposerOpen(!composerOpen)}
-            className="absolute end-1.5 top-2 flex items-center gap-1 px-3 py-1.5 rounded-full bg-[hsl(var(--tab-ask))] text-white shadow-card hover:shadow-card-hover transition-all duration-normal z-10 text-body-xs font-semibold"
-            title={t('insertFormula')}
-          >
-            <FunctionSquare className="w-3.5 h-3.5" />
-          </button>
-        )}
-
-        {/* Popup formula composer */}
+        {/* Popup formula composer — outside overflow-hidden so it can extend below the answer box */}
         <AnimatePresence>
           {composerOpen && (
             <motion.div
@@ -169,7 +168,7 @@ export function FreeResponseQuestion({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-full mt-2 start-0 end-0 z-10"
+              className="absolute top-full mt-2 start-0 end-0 z-20"
             >
               <FormulaComposer
                 onInsert={handleFormulaInsert}
