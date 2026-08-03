@@ -37,8 +37,12 @@ export function ensureSvgViewBox(svg: string): string {
   const openTag = openTagMatch[0]
   if (/\bviewBox\s*=/i.test(openTag)) return svg
 
-  const width = openTag.match(/\bwidth\s*=\s*["']?([\d.]+)/i)?.[1]
-  const height = openTag.match(/\bheight\s*=\s*["']?([\d.]+)/i)?.[1]
+  // Anchor the digit run to the end of the attribute value so `width="100%"`,
+  // `width="1e3"`, and other unit-suffixed / scientific-notation values fall
+  // through to the unchanged-return branch rather than silently producing a
+  // truncated viewBox (e.g. `100` from `100%`).
+  const width = openTag.match(/\bwidth\s*=\s*["']?([\d.]+)(?=["'\s/>])/i)?.[1]
+  const height = openTag.match(/\bheight\s*=\s*["']?([\d.]+)(?=["'\s/>])/i)?.[1]
   if (!width || !height) return svg
 
   const patchedTag = openTag.replace(/<svg\b/i, `<svg viewBox="0 0 ${width} ${height}"`)

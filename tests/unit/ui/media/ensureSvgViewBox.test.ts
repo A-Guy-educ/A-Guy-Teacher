@@ -48,4 +48,19 @@ describe('ensureSvgViewBox', () => {
     const input = '<svg data-note="a>b" width="100" height="50"><rect/></svg>'
     expect(ensureSvgViewBox(input)).toContain('viewBox="0 0 100 50"')
   })
+
+  it('leaves percentage-sized SVGs unchanged rather than injecting a truncated viewBox', () => {
+    const input = '<svg width="100%" height="50%"><rect/></svg>'
+    expect(ensureSvgViewBox(input)).toBe(input)
+  })
+
+  it('leaves scientific-notation dimensions unchanged rather than truncating the mantissa', () => {
+    const input = '<svg width="1e3" height="5e2"><rect/></svg>'
+    expect(ensureSvgViewBox(input)).toBe(input)
+  })
+
+  it('leaves unit-suffixed dimensions (px, em, etc.) unchanged rather than dropping the unit', () => {
+    const input = '<svg width="100px" height="50px"><rect/></svg>'
+    expect(ensureSvgViewBox(input)).toBe(input)
+  })
 })

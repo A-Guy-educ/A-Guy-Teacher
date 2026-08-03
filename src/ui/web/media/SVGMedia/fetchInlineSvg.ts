@@ -8,6 +8,11 @@
 import { sanitizeSvg } from '@/ui/web/exerciserenderer/utils/svgSanitize'
 import { ensureSvgViewBox } from './ensureSvgViewBox'
 
+// Session-lifetime retention is intentional. The set of SVGs a user can
+// reach is bounded by the courses/exercises they browse — not by activity —
+// so unbounded growth is not a realistic concern here. If this component is
+// ever placed behind infinite scroll or another unbounded surface, wrap
+// `cache` in a small LRU (drop oldest when size exceeds ~50).
 const cache = new Map<string, string>()
 const inflight = new Map<string, Promise<string>>()
 
