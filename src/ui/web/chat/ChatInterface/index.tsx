@@ -164,6 +164,7 @@ export function ChatInterface({
     clearAskMedia: _clearAskMedia,
     // Programmatic message injection
     injectExerciseContext,
+    clearPendingExerciseContext,
     addAssistantMessage,
     // Contextual help for incorrect answers
     sendContextualHelp,
@@ -328,12 +329,17 @@ export function ChatInterface({
     return () => window.removeEventListener('exercise-help-action', handler)
   }, [])
 
-  // Inject exercise context when student navigates to an exercise
+  // Inject exercise context when student navigates to an exercise. When
+  // navigating away from an exercise (e.g. into a content-page block of the
+  // same lesson), drop any pending context so a later typed message in the
+  // new view isn't silently prefixed with the previous exercise's blocks.
   useEffect(() => {
     if (currentExercise && injectExerciseContext) {
       injectExerciseContext(currentExercise, mediaMap)
+    } else if (!currentExercise && clearPendingExerciseContext) {
+      clearPendingExerciseContext()
     }
-  }, [currentExercise, injectExerciseContext, mediaMap])
+  }, [currentExercise, injectExerciseContext, clearPendingExerciseContext, mediaMap])
 
   const [formulaComposerOpen, setFormulaComposerOpen] = useState(false)
   const [formulaSheetOpen, setFormulaSheetOpen] = useState(false)

@@ -152,15 +152,21 @@ export function useNotebookChat({
   // an AI turn the student never asked for.
   const pendingExerciseContextRef = useRef<string | null>(null)
 
-  // Read-and-clear the pending exercise context and wrap the given prompt
-  // with it. Any code path that sends a prompt to the model (typed message,
-  // quick action, hint/solution helper, incorrect-answer helper) MUST route
-  // through this so the AI gets exercise blocks/hints/options on the first
-  // model-facing turn after navigation, whichever action initiates it.
+  // Exercise IDs we've already shown a local welcome bubble for. Guards
+  // against duplicate welcomes on back-and-forth navigation (A → B → A)
+  // — the AI still gets a fresh pending-context refresh on the return trip,
+  // but the transcript doesn't sprout a second "**Exercise A**" bubble.
+  const welcomedExerciseIdsRef = useRef<Set<string>>(new Set())
+
+  // Wrap the given prompt with the pending exercise-context block if there
+  // is one. Does NOT clear the ref — that only happens on send success
+  // (streamMessage 'done' / sendMessageSync result.success) so a transient
+  // network/auth failure doesn't drop the context before the retry.
+  // Every model-facing path (typed message, quick action, hint/solution
+  // helper, incorrect-answer helper) MUST route through this so the AI gets
+  // exercise blocks/hints/options on the first turn after navigation.
   const consumePendingExerciseContext = useCallback((message: string) => {
-    const pending = pendingExerciseContextRef.current
-    pendingExerciseContextRef.current = null
-    return buildPromptWithExerciseContext(message, pending)
+    return buildPromptWithExerciseContext(message, pendingExerciseContextRef.current)
   }, [])
 
   // Compute contextKey based on available context
@@ -177,6 +183,29 @@ export function useNotebookChat({
     if (adminMode && userId) return `users:${userId}`
     return null
   }, [contextKeyOverride, exerciseId, lessonId, chapterId, courseId, categoryId, adminMode, userId])
+
+  // Drop any pending exercise context and welcome-tracking when the
+  // conversation switches. Otherwise the next typed message in the new
+  // conversation would silently carry a stale "[EXERCISE CONTEXT]" block
+  // from an exercise the student left without asking anything.
+  useEffect(() => {
+    pendingExerciseContextRef.current = null
+    welcomedExerciseIdsRef.current = new Set()
+    lastInjectedExerciseId.current = null
+  }, [contextKey])
+
+  // Reset pending exercise context and welcome-tracking. Called by consumers
+  // (e.g. ChatInterface) when the surrounding view stops being about a
+  // specific exercise so a later typed message doesn't pick up stale
+  // context. Handles the currentExercise=undefined transition that the
+  // contextKey-change effect above doesn't cover (contextKey stays the same
+  // when navigating between an exercise block and a content-page block of
+  // the same lesson).
+  const clearPendingExerciseContext = useCallback(() => {
+    pendingExerciseContextRef.current = null
+    welcomedExerciseIdsRef.current = new Set()
+    lastInjectedExerciseId.current = null
+  }, [])
 
   // Simple scroll to bottom using scrollTop instead of scrollIntoView
   // scrollIntoView can cause layout issues in nested flex containers
@@ -526,6 +555,9 @@ export function useNotebookChat({
             if (event.conversationId && event.contextKey) {
               onConversationCreated?.(event.conversationId, event.contextKey)
             }
+            // Only clear pending exercise context on a successful send so a
+            // transient error leaves the ref set for the retry.
+            pendingExerciseContextRef.current = null
           } else if (event.type === 'error') {
             const errMsg = event.error || errorMessage
             // Check if this is an auth error (contains "auth" or "authentication")
@@ -615,6 +647,10 @@ export function useNotebookChat({
         }
         return
       }
+
+      // Only clear pending exercise context on a successful send so a
+      // transient error leaves the ref set for the retry.
+      pendingExerciseContextRef.current = null
 
       // Notify caller of conversation creation
       if (result.conversationId && result.contextKey) {
@@ -777,24 +813,31 @@ export function useNotebookChat({
         )
         pendingExerciseContextRef.current = `The student is now viewing the following exercise. Use this context to help them if they ask questions.\n\n${formatted}`
 
-        const welcome = formatExerciseWelcomeMessage(exercise.title, exercise.content.blocks)
-        if (welcome) {
-          setMessages((prev) => {
-            // If chat only shows the generic initial welcome, replace it with
-            // the exercise-specific one so the student sees a single, focused
-            // opening bubble. Otherwise append.
-            const onlyInitial =
-              prev.length === 1 &&
-              prev[0].role === ChatRole.Assistant &&
-              prev[0].content === initialMessage
-            const welcomeMessage: ChatMessage = {
-              id: crypto.randomUUID(),
-              role: ChatRole.Assistant,
-              content: welcome,
-              createdAt: new Date().toISOString(),
-            }
-            return onlyInitial ? [welcomeMessage] : [...prev, welcomeMessage]
-          })
+        // Only add a visual welcome bubble the FIRST time we see this
+        // exercise in the session. On A → B → A back-navigation the pending
+        // ref above still gets refreshed so the AI stays in sync, but the
+        // transcript doesn't accumulate duplicate "**Exercise A**" bubbles.
+        if (!welcomedExerciseIdsRef.current.has(exercise.id)) {
+          welcomedExerciseIdsRef.current.add(exercise.id)
+          const welcome = formatExerciseWelcomeMessage(exercise.title, exercise.content.blocks)
+          if (welcome) {
+            setMessages((prev) => {
+              // If chat only shows the generic initial welcome, replace it
+              // with the exercise-specific one so the student sees a
+              // single, focused opening bubble. Otherwise append.
+              const onlyInitial =
+                prev.length === 1 &&
+                prev[0].role === ChatRole.Assistant &&
+                prev[0].content === initialMessage
+              const welcomeMessage: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: ChatRole.Assistant,
+                content: welcome,
+                createdAt: new Date().toISOString(),
+              }
+              return onlyInitial ? [welcomeMessage] : [...prev, welcomeMessage]
+            })
+          }
         }
       } finally {
         isInjectingRef.current = false
@@ -962,6 +1005,7 @@ export function useNotebookChat({
     // Programmatic message injection
     addAssistantMessage,
     injectExerciseContext,
+    clearPendingExerciseContext,
     sendContextualHelp,
     sendVisibleHelp,
     sendContextualHelpWithMedia,
