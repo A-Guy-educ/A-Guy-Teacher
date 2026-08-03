@@ -152,6 +152,17 @@ export function useNotebookChat({
   // an AI turn the student never asked for.
   const pendingExerciseContextRef = useRef<string | null>(null)
 
+  // Read-and-clear the pending exercise context and wrap the given prompt
+  // with it. Any code path that sends a prompt to the model (typed message,
+  // quick action, hint/solution helper, incorrect-answer helper) MUST route
+  // through this so the AI gets exercise blocks/hints/options on the first
+  // model-facing turn after navigation, whichever action initiates it.
+  const consumePendingExerciseContext = useCallback((message: string) => {
+    const pending = pendingExerciseContextRef.current
+    pendingExerciseContextRef.current = null
+    return buildPromptWithExerciseContext(message, pending)
+  }, [])
+
   // Compute contextKey based on available context
   // For admin mode: use users:{userId} (user-scoped conversation)
   // Priority for regular mode: Lesson > Exercise (fallback) > Chapter > Course > Category
@@ -401,10 +412,8 @@ export function useNotebookChat({
     // Consume any pending exercise context on the first outgoing message
     // since the student entered the exercise. It's prepended to the AI
     // prompt only — the visible bubble carries the raw message.
-    const pendingExerciseContext = pendingExerciseContextRef.current
-    pendingExerciseContextRef.current = null
     const promptForAI = buildPromptWithStepContext(
-      buildPromptWithExerciseContext(message, pendingExerciseContext),
+      consumePendingExerciseContext(message),
       stepContext,
     )
 
@@ -687,7 +696,7 @@ export function useNotebookChat({
       courseId,
       categoryId,
     }
-    sendMessageSync(prompt, acknowledgment, context)
+    sendMessageSync(consumePendingExerciseContext(prompt), acknowledgment, context)
   }
 
   const addAssistantMessage = useCallback(
@@ -803,7 +812,9 @@ export function useNotebookChat({
     if (isLoading || isLoadingHistory) return
     setIsLoading(true)
     const context = { exerciseId, lessonId, chapterId, courseId, categoryId }
-    await streamMessage(prompt, acknowledgment, context, { hidden: true })
+    await streamMessage(consumePendingExerciseContext(prompt), acknowledgment, context, {
+      hidden: true,
+    })
   }
 
   /**
@@ -816,7 +827,10 @@ export function useNotebookChat({
     if (isLoading || isLoadingHistory) return
     setIsLoading(true)
     const context = { exerciseId, lessonId, chapterId, courseId, categoryId }
-    await streamMessage(prompt, acknowledgment, context, { hidden: true, hidePromptOnly: true })
+    await streamMessage(consumePendingExerciseContext(prompt), acknowledgment, context, {
+      hidden: true,
+      hidePromptOnly: true,
+    })
   }
 
   /**
@@ -863,7 +877,12 @@ export function useNotebookChat({
 
       // Send canvas drawing + any additional media (e.g. exercise image)
       const allMediaIds = [mediaId, ...(additionalMediaIds ?? [])]
-      await sendMessageSync(prompt, acknowledgment, context, allMediaIds)
+      await sendMessageSync(
+        consumePendingExerciseContext(prompt),
+        acknowledgment,
+        context,
+        allMediaIds,
+      )
     } catch (error) {
       logger.error({ err: error }, 'Failed to send canvas for check')
       toast.error(errorMessage)
@@ -899,7 +918,9 @@ export function useNotebookChat({
     setIsLoading(true)
     const context = { exerciseId, lessonId, chapterId, courseId, categoryId }
     try {
-      await sendMessageSync(prompt, acknowledgment, context, [mediaId])
+      await sendMessageSync(consumePendingExerciseContext(prompt), acknowledgment, context, [
+        mediaId,
+      ])
     } catch (error) {
       logger.error({ err: error }, 'Failed to send contextual help with media ID')
       toast.error(errorMessage)

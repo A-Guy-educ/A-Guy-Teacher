@@ -8,7 +8,15 @@
  * only the prompt sent to the model gets the prefix. On history reload, the
  * prefix is stripped from persisted user messages so the bubble stays clean.
  *
- * Mirrors the step-context module's write/strip pattern.
+ * Mirrors the step-context module's write/strip pattern with one deliberate
+ * asymmetry: step-context has an escape pass (`escapeStepContextField`)
+ * because its payload is Gemini-derived narration of a user-uploaded image
+ * — an adversarial input surface. This module's payload comes from
+ * `formatExerciseContextMessage` over admin-authored exercise blocks, which
+ * are trusted content. No escape pass is applied here; if that trust
+ * boundary ever changes (e.g. student-authored exercises), add an escape
+ * pass before wrapping so a literal `</exercise-context>` in the payload
+ * can't truncate the non-greedy strip on reload.
  */
 
 export const EXERCISE_CONTEXT_BLOCK_REGEX = /^<exercise-context[\s\S]*?<\/exercise-context>\s*/
