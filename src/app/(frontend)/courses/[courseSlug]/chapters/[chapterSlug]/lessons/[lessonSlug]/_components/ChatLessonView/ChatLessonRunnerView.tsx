@@ -9,7 +9,7 @@ import { RichContentBubble } from './bubbles/RichContentBubble'
 import { StudentBubble } from './bubbles/StudentBubble'
 import { TeacherBubble } from './bubbles/TeacherBubble'
 import { TextAnswerBubble } from './bubbles/TextAnswerBubble'
-import type { HistoryEntry, LessonScript } from './types'
+import type { HistoryEntry, LessonScript, ScriptOption } from './types'
 import { useBrowserTTS } from './useBrowserTTS'
 import { useScriptRunner } from './useScriptRunner'
 
@@ -19,39 +19,6 @@ interface ChatLessonRunnerViewProps {
 
 export function ChatLessonRunnerView({ script }: ChatLessonRunnerViewProps) {
   const [hasStarted, setHasStarted] = useState(false)
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-  const tts = useBrowserTTS()
-
-  const handleTeacherText = useCallback(
-    (text: string) => {
-      tts.speak(text)
-    },
-    [tts],
-  )
-
-  const {
-    history,
-    stepIndex,
-    totalSteps,
-    locked,
-    submitOption,
-    submitTextAnswer,
-    continueStep,
-    reset,
-  } = useScriptRunner({
-    script,
-    onTeacherText: hasStarted ? handleTeacherText : undefined,
-  })
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [history.length])
-
-  const handleReset = useCallback(() => {
-    tts.cancel()
-    reset()
-    setHasStarted(false)
-  }, [reset, tts])
 
   if (!hasStarted) {
     return (
@@ -60,6 +27,33 @@ export function ChatLessonRunnerView({ script }: ChatLessonRunnerViewProps) {
       </div>
     )
   }
+
+  // ActiveChat is only mounted after start, so useScriptRunner's initial
+  // step-transition effect can fire with TTS wired up — narrating the very
+  // first teacher line. Reset unmounts it, so a replay reinitializes cleanly.
+  return <ActiveChat script={script} onExit={() => setHasStarted(false)} />
+}
+
+interface ActiveChatProps {
+  script: LessonScript
+  onExit: () => void
+}
+
+function ActiveChat({ script, onExit }: ActiveChatProps) {
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const tts = useBrowserTTS()
+
+  const { history, stepIndex, totalSteps, locked, submitOption, submitTextAnswer, continueStep } =
+    useScriptRunner({ script, onTeacherText: tts.speak })
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [history.length])
+
+  const handleReset = useCallback(() => {
+    tts.cancel()
+    onExit()
+  }, [onExit, tts])
 
   const latestIdx = history.length - 1
 
@@ -99,7 +93,7 @@ interface RenderArgs {
   isLatest: boolean
   locked: boolean
   tts: ReturnType<typeof useBrowserTTS>
-  onSelectOption: (option: import('./types').ScriptOption) => void
+  onSelectOption: (option: ScriptOption) => void
   onSubmitText: (value: string) => void
   onContinue: () => void
 }

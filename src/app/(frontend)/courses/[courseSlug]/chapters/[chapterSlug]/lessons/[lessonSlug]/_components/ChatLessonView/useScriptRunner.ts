@@ -26,6 +26,20 @@ export function useScriptRunner({ script, onTeacherText }: UseScriptRunnerArgs) 
   const [locked, setLocked] = useState(false)
   const pendingTimers = useRef<ReturnType<typeof setTimeout>[]>([])
 
+  // Store onTeacherText in a ref so the step-transition effect below doesn't
+  // re-fire (and re-trigger TTS) every render when the caller passes a fresh
+  // callback identity. Without this, useBrowserTTS's re-rendering flips
+  // `speaking` state on every utterance, which recreates the callback, which
+  // fires the effect, which cancels + re-queues speech — infinite loop.
+  const onTeacherTextRef = useRef(onTeacherText)
+  useEffect(() => {
+    onTeacherTextRef.current = onTeacherText
+  })
+
+  // Track the last step id we spoke so React 18 strict-mode double-invocation
+  // (mount → cleanup → mount) doesn't narrate the same bubble twice.
+  const lastSpokenStepId = useRef<string | null>(null)
+
   const stepIndex = script.steps.findIndex((s) => s.id === currentStepId)
   const currentStep: ScriptStep | undefined = stepIndex === -1 ? undefined : script.steps[stepIndex]
 
@@ -55,8 +69,11 @@ export function useScriptRunner({ script, onTeacherText }: UseScriptRunnerArgs) 
         },
       ]
     })
-    onTeacherText?.(currentStep.text)
-  }, [currentStep, onTeacherText])
+    if (lastSpokenStepId.current !== currentStep.id) {
+      lastSpokenStepId.current = currentStep.id
+      onTeacherTextRef.current?.(currentStep.text)
+    }
+  }, [currentStep])
 
   const goTo = useCallback(
     (nextId: string | undefined) => {
@@ -69,22 +86,19 @@ export function useScriptRunner({ script, onTeacherText }: UseScriptRunnerArgs) 
     [script.steps],
   )
 
-  const pushFeedback = useCallback(
-    (text: string, variant: 'feedback' | 'correction') => {
-      setHistory((prev) => [
-        ...prev,
-        {
-          key: `fb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          role: 'teacher',
-          refId: `feedback-${prev.length}`,
-          text,
-          variant,
-        },
-      ])
-      onTeacherText?.(text)
-    },
-    [onTeacherText],
-  )
+  const pushFeedback = useCallback((text: string, variant: 'feedback' | 'correction') => {
+    setHistory((prev) => [
+      ...prev,
+      {
+        key: `fb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        role: 'teacher',
+        refId: `feedback-${prev.length}`,
+        text,
+        variant,
+      },
+    ])
+    onTeacherTextRef.current?.(text)
+  }, [])
 
   const pushStudent = useCallback((text: string, isCorrect?: boolean) => {
     setHistory((prev) => [
@@ -154,14 +168,6 @@ export function useScriptRunner({ script, onTeacherText }: UseScriptRunnerArgs) 
     goTo(currentStep.next)
   }, [currentStep, goTo, locked])
 
-  const reset = useCallback(() => {
-    pendingTimers.current.forEach(clearTimeout)
-    pendingTimers.current = []
-    setHistory([])
-    setCurrentStepId(script.steps[0]?.id ?? '')
-    setLocked(false)
-  }, [script.steps])
-
   return {
     history,
     currentStep,
@@ -171,6 +177,5 @@ export function useScriptRunner({ script, onTeacherText }: UseScriptRunnerArgs) 
     submitOption,
     submitTextAnswer,
     continueStep,
-    reset,
   }
 }

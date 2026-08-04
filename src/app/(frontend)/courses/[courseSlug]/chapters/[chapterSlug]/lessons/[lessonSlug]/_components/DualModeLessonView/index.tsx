@@ -74,8 +74,12 @@ function getVisibleTabs(
   visibleRenderers: LessonMode[] | undefined,
   hasMedia: boolean,
 ): { media: boolean; pdf: boolean; interactive: boolean; test: boolean; chat: boolean } {
-  const all: LessonMode[] = ['media', 'pdf', 'interactive', 'test', 'chat']
-  const allowed = visibleRenderers ?? all
+  // 'chat' is intentionally NOT in the default allowlist: v0 renders a
+  // hardcoded demo script that has nothing to do with any real lesson topic,
+  // so legacy lessons (no `visibleRenderers` set) must not surface it. Admins
+  // opt in per lesson by adding 'chat' to `visibleRenderers`.
+  const defaultAllowed: LessonMode[] = ['media', 'pdf', 'interactive', 'test']
+  const allowed = visibleRenderers ?? defaultAllowed
   return {
     media: hasMedia && allowed.includes('media'),
     pdf: allowed.includes('pdf'),
