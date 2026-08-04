@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-export type LessonMode = 'media' | 'pdf' | 'interactive' | 'test'
+export type LessonMode = 'media' | 'pdf' | 'interactive' | 'test' | 'chat'
 
 const STORAGE_PREFIX = 'lesson-view-mode:'
 
@@ -10,7 +10,13 @@ function readStoredMode(lessonId: string): LessonMode | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = window.localStorage.getItem(`${STORAGE_PREFIX}${lessonId}`)
-    return raw === 'media' || raw === 'pdf' || raw === 'interactive' || raw === 'test' ? raw : null
+    return raw === 'media' ||
+      raw === 'pdf' ||
+      raw === 'interactive' ||
+      raw === 'test' ||
+      raw === 'chat'
+      ? raw
+      : null
   } catch {
     return null
   }
@@ -35,7 +41,7 @@ function resolveEffectiveMode(
 ): LessonMode {
   if (!allowedModes) return stored ?? 'pdf'
   if (stored && allowedModes.includes(stored)) return stored
-  const priority: LessonMode[] = ['media', 'pdf', 'interactive', 'test']
+  const priority: LessonMode[] = ['media', 'pdf', 'interactive', 'test', 'chat']
   for (const mode of priority) {
     if (allowedModes.includes(mode)) return mode
   }

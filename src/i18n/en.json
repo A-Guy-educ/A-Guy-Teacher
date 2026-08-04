@@ -432,6 +432,7 @@
     "lessonViewModePdf": "Scroll view",
     "lessonViewModeInteractive": "Interactive",
     "lessonViewModeTest": "Test",
+    "lessonViewModeChat": "Chat",
     "checkAllAnswers": "Check all answers",
     "pdfBadge": "PDF",
     "scrollView": "Scroll View",
