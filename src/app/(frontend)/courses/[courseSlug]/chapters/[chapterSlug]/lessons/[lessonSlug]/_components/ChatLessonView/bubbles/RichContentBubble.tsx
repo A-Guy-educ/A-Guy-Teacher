@@ -1,20 +1,17 @@
 'use client'
 
+import { SafeHtml } from '@/ui/web/SafeHtml'
+
 interface RichContentBubbleProps {
   html: string
 }
 
 /**
- * Renders authored HTML (from the lesson JSON). Content is not user-supplied —
- * it comes from the scripted lesson file we control — so raw HTML injection is
- * safe here. If lessons ever move to a CMS with author-editable HTML, wrap this
- * in DOMPurify at the boundary.
+ * Renders authored HTML inside a teacher bubble. Content now flows in from
+ * the `chat-lessons` Payload collection where admins/content-editors author
+ * it, so raw `dangerouslySetInnerHTML` is unsafe (stored XSS). Sanitize at
+ * the sink via SafeHtml — same DOMPurify config the rest of the app uses.
  */
 export function RichContentBubble({ html }: RichContentBubbleProps) {
-  return (
-    <div
-      className="text-body-md text-foreground leading-relaxed"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  )
+  return <SafeHtml html={html} className="text-body-md text-foreground leading-relaxed" />
 }
