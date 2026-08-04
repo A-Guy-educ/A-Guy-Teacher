@@ -3358,6 +3358,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Honor admin-set visibleRenderers on lesson intro ([#1028](https://github.com/A-Guy-educ/A-Guy-Web/pull/1028)) — @aguyshayb
 - feat: Add Chat view as a fifth lesson tab ([#1026](https://github.com/A-Guy-educ/A-Guy-Web/pull/1026)) — @aguyshayb
 - chore(deps): Patch 4 high-severity transitive vulns via pnpm overrides ([#1027](https://github.com/A-Guy-educ/A-Guy-Web/pull/1027)) — @aguyshayb
 - feat: Defer exercise-context AI call to student's first message ([#1024](https://github.com/A-Guy-educ/A-Guy-Web/pull/1024)) — @aguyshayb
