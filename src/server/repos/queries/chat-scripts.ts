@@ -1,15 +1,23 @@
 /**
  * @fileType server-query
  * @domain chat-lessons
- * @ai-summary Fetches a single `chat-lessons` doc keyed by lesson + locale.
- *             Returns null when the collection or doc is missing — safe to
- *             call even before the admin repo ships the collection (Mongo
- *             just returns nothing).
+ * @ai-summary Fetches a single `chat-lessons` doc keyed by lesson + locale,
+ *             scoped to the current tenant and to published/active docs only —
+ *             matches the convention used by every other content query in
+ *             this folder. Returns null when the collection or matching doc
+ *             is missing, so this is safe to call before the admin repo ships
+ *             the collection (Mongo just returns nothing).
  */
 
 import { cache } from 'react'
 import type { ContentLocale } from '@/infra/types/content'
-import { findOneSerialized, objectIdFromString } from '../mongo'
+import {
+  andFilter,
+  defaultTenantFilter,
+  findOneSerialized,
+  objectIdFromString,
+  visibleContentFilter,
+} from '../mongo'
 import type { PayloadChatScriptDoc } from '@/lib/chat-lessons/payload-chat-script'
 
 export const getChatScriptByLessonId = cache(
@@ -20,9 +28,10 @@ export const getChatScriptByLessonId = cache(
     lessonId: string
     locale: ContentLocale
   }): Promise<PayloadChatScriptDoc | null> => {
-    return findOneSerialized<PayloadChatScriptDoc>('chat-lessons', {
-      lesson: objectIdFromString(lessonId),
-      locale,
-    })
+    const filter = andFilter(
+      visibleContentFilter({ lesson: objectIdFromString(lessonId), locale }),
+      await defaultTenantFilter(),
+    )
+    return findOneSerialized<PayloadChatScriptDoc>('chat-lessons', filter)
   },
 )

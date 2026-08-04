@@ -54,6 +54,17 @@ function toStep(block: PayloadStepBlock): ScriptStep {
       return fromTextAnswer(block)
     case 'finish':
       return fromFinish(block)
+    default: {
+      // Compile-time guard: if the admin repo adds a new blockType without a
+      // matching update to PayloadStepBlock, TypeScript flags this line and
+      // the runtime throws loudly instead of returning undefined and
+      // corrupting the step list downstream.
+      const _exhaustive: never = block
+      throw new Error(
+        `Unknown chat-lesson blockType: ${JSON.stringify(_exhaustive)}. ` +
+          `Update src/lib/chat-lessons/payload-chat-script.ts to match the admin schema.`,
+      )
+    }
   }
 }
 
