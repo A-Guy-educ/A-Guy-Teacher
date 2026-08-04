@@ -8,8 +8,12 @@
  *             runtime loop). TTS uses the browser voice by default — swap to a
  *             hosted TTS if higher fidelity is needed later.
  *
- *             v0 uses `demoLesson` as the script source. Wire real lesson
- *             scripts (from Payload) here once the collection exists.
+ *             Real scripts are authored per-lesson in the `chat-lessons`
+ *             Payload collection and fetched server-side (see
+ *             `getChatScriptByLessonId` + `payloadDocToLessonScript`). When the
+ *             admin has enabled the Chat tab but no script has been authored
+ *             yet, we fall back to `demoLesson` so the tab still renders
+ *             something meaningful during rollout.
  */
 
 'use client'
