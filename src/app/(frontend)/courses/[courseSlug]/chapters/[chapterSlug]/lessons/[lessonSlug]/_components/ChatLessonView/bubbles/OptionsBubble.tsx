@@ -13,7 +13,7 @@ interface OptionsBubbleProps {
 
 export function OptionsBubble({ options, disabled, onSelect }: OptionsBubbleProps) {
   return (
-    <div className="grid grid-cols-1 gap-content-gap-xs.5">
+    <div className="grid grid-cols-1 gap-content-gap-xs">
       {options.map((option, idx) => (
         <button
           key={`${option.text}-${idx}`}
