@@ -3358,6 +3358,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore(deps): Patch 4 high-severity transitive vulns via pnpm overrides ([#1027](https://github.com/A-Guy-educ/A-Guy-Web/pull/1027)) — @aguyshayb
 - feat: Defer exercise-context AI call to student's first message ([#1024](https://github.com/A-Guy-educ/A-Guy-Web/pull/1024)) — @aguyshayb
 - fix: Open formula composer in free-response answer box, reset scroll between exercises ([#1023](https://github.com/A-Guy-educ/A-Guy-Web/pull/1023)) — @aguyshayb
 - fix(svg): Inject viewBox on render so uploaded SVGs scale correctly ([#1022](https://github.com/A-Guy-educ/A-Guy-Web/pull/1022)) — @aguyshayb
