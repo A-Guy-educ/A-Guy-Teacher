@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.30.15 — 2026-08-05
+
+### Features
+- Fetch chat lesson script from Payload chat-lessons collection (bceec73e5)
+- Add Chat view as a fifth lesson tab (956070803)
+- Defer exercise-context AI call to student's first message (6ed7bd9e6)
+
+### Fixes
+- PR review — sanitize chat contentHtml, tighten query, guard switch (d7f1534c7)
+- Honor admin-set visibleRenderers on lesson intro (2f36bb108)
+- Address PR review — TTS loop and default chat visibility (22c138c9f)
+- Correct invalid Tailwind gap class in OptionsBubble (296e76d20)
+- Clear pending exercise context on nav-away, retain on send failure (63c17ebe6)
+- Route helper action prompts through pending exercise context (2216fe3ea)
+- Strip step-context before exercise-context on history load (abb2d9d3a)
+- Open formula composer in free-response answer box (20119f2c1)
+- Reject unit-suffixed dimensions instead of injecting a truncated viewBox (5da35fb04)
+- Address PR review feedback (d97ca88a8)
+- Inject viewBox on render so uploaded SVGs scale correctly (30e7f87a7)
+
+### Chores
+- add #1029 (10f8fd4b5)
+- add #1028 (ef5bd9b26)
+- add #1026 (7c467221b)
+- add #1027 (a2655634a)
+- Patch 4 high-severity transitive vulns via pnpm overrides (a07e27f71)
+- add #1024 (48d3876d9)
+- add #1023 (54af4f0ef)
+- add #1022 (ebf21f864)
+- add #1021 (7f08102cc)
+- add #1020 (fac50b2ec)
+- add #1019 (721c3c028)
 ## v0.30.14 — 2026-08-03
 
 ### Features
