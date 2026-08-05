@@ -13,6 +13,32 @@ import { ChatQuestionSelectBubble } from './ChatQuestionSelectBubble'
 
 const EMPTY_MEDIA_MAP: Record<string, Media> = {}
 
+/** Question letters for chat-native multi-question sections. */
+const HEBREW_LETTERS = [
+  'א',
+  'ב',
+  'ג',
+  'ד',
+  'ה',
+  'ו',
+  'ז',
+  'ח',
+  'ט',
+  'י',
+  'כ',
+  'ל',
+  'מ',
+  'נ',
+  'ס',
+  'ע',
+  'פ',
+  'צ',
+  'ק',
+  'ר',
+  'ש',
+  'ת',
+]
+
 interface ExerciseSectionBubbleProps {
   exercise: Exercise
   ordinal: number
@@ -98,6 +124,23 @@ export function ExerciseSectionBubble({
     [group.blocks, isChatNativePath],
   )
 
+  // Only label individual questions when the section has more than one — a
+  // solo question doesn't need a leading "א" badge. Mirrors ExerciseRenderer's
+  // per-question letter labels so students can reference "question ב" in a
+  // follow-up chat question.
+  const questionLabelById = useMemo(() => {
+    if (!isChatNativePath || chatNativeQuestionCount < 2) return null
+    const map = new Map<string, string>()
+    let i = 0
+    for (const block of group.blocks) {
+      if (isQuestionSelect(block)) {
+        map.set(block.id, HEBREW_LETTERS[i] ?? String(i + 1))
+        i++
+      }
+    }
+    return map
+  }, [chatNativeQuestionCount, group.blocks, isChatNativePath])
+
   const handleChatNativeSubmit = useCallback(
     (text: string, isCorrect: boolean) => {
       submittedCountRef.current += 1
@@ -131,6 +174,7 @@ export function ExerciseSectionBubble({
                   <ChatQuestionSelectBubble
                     key={block.id}
                     block={block as QuestionSelectBlock}
+                    questionLabel={questionLabelById?.get(block.id)}
                     onSubmit={handleChatNativeSubmit}
                   />
                 )
@@ -168,47 +212,30 @@ export function ExerciseSectionBubble({
 }
 
 /**
- * A section is chat-native only when every question block is a single-select
- * question_select and there are no other gradable blocks (multi-axis, or an
- * interactive svg with hotspots). Anything the chat-native render loop
- * would silently drop must force the fallback path, otherwise the student
- * loses a question AND the section outcome fires prematurely.
+ * Allowlist guard: a section is chat-native ONLY when every block is either
+ * a single-select `question_select` OR a `rich_text` decoration. The
+ * chat-native render loop below only knows how to render those two types;
+ * anything else (media, svg, html, latex, multi-axis, free-response,
+ * table/matching/geometry/axis, multi-select mcq) must fall back to the
+ * shared ExerciseRenderer so nothing is silently dropped AND the section
+ * outcome doesn't fire prematurely on a partial answer count.
+ *
+ * Kept as an explicit allowlist (rather than a growing rejectlist) so
+ * adding new block types can't accidentally slip through.
  */
 function isChatNativeSection(group: ExerciseBlockGroup): boolean {
   let hasAnyQuestion = false
   for (const block of group.blocks) {
-    const type = block.type
-    if (type === 'question_select') {
+    if (block.type === 'rich_text') continue
+    if (block.type === 'question_select') {
       hasAnyQuestion = true
       const b = block as unknown as QuestionSelectBlock
       if (b.variant === 'mcq' && b.answer.multiSelect) return false
       continue
     }
-    if (
-      type === 'question_free_response' ||
-      type === 'question_table' ||
-      type === 'question_matching' ||
-      type === 'question_geometry' ||
-      type === 'question_axis' ||
-      type === 'question_multi_axis'
-    ) {
-      return false
-    }
-    // SVG blocks are usually decorative, but ExerciseRenderer treats any svg
-    // with hotspots + correctHotspotIds as a gradable question — those must
-    // fall back to the standard renderer so the student can actually answer.
-    if (type === 'svg') {
-      const svg = block as unknown as {
-        interactive?: boolean
-        hotspots?: unknown[]
-        correctHotspotIds?: string[]
-      }
-      const hasHotspots = Array.isArray(svg.hotspots) && svg.hotspots.length > 0
-      const hasCorrectIds = Array.isArray(svg.correctHotspotIds) && svg.correctHotspotIds.length > 0
-      if (svg.interactive || hasHotspots || hasCorrectIds) return false
-    }
-    // Non-question blocks (rich_text, latex, purely decorative svg, media)
-    // are fine — they render either inline (rich_text) or are skipped.
+    // Any other block type → fallback path. ExerciseRenderer knows how to
+    // render media/svg/html/latex/etc. with all their affordances.
+    return false
   }
   return hasAnyQuestion
 }

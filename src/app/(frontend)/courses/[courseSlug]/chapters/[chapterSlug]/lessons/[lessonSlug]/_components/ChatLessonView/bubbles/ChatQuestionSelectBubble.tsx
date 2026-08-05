@@ -9,7 +9,7 @@ import type {
   QuestionSelectTrueFalseBlock,
 } from '@/ui/web/exerciserenderer/types'
 import { ArrowLeft } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 interface ChatQuestionSelectBubbleProps {
   block: QuestionSelectBlock
@@ -43,8 +43,8 @@ export function ChatQuestionSelectBubble({
 }: ChatQuestionSelectBubbleProps) {
   const [pickedId, setPickedId] = useState<string | null>(null)
 
-  const choices = getChoices(block)
-  const correctIds = getCorrectIds(block)
+  const choices = useMemo(() => getChoices(block), [block])
+  const correctIds = useMemo(() => getCorrectIds(block), [block])
 
   const handlePick = (choice: Choice) => {
     if (pickedId) return
@@ -110,15 +110,11 @@ export function ChatQuestionSelectBubble({
 
 function getChoices(block: QuestionSelectBlock): Choice[] {
   if (block.variant === 'true_false') {
-    const tf = block as QuestionSelectTrueFalseBlock
-    const options = tf.options ?? [
-      { id: 'true', value: true, label: { type: 'rich_text', format: 'md-math-v1', value: 'כן' } },
-      {
-        id: 'false',
-        value: false,
-        label: { type: 'rich_text', format: 'md-math-v1', value: 'לא' },
-      },
-    ]
+    // `options` is required per @/infra/types/exercise; the UI type marks it
+    // optional so we still guard with `?? []` — a missing array means bad
+    // data (renders no options; student sees a stuck section, which is
+    // preferable to hardcoding locale-specific fallback labels here).
+    const options = (block as QuestionSelectTrueFalseBlock).options ?? []
     return options.map((o) => ({
       id: o.id,
       labelValue: o.label.value,
