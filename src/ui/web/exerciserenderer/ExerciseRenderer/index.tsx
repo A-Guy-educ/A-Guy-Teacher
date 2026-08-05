@@ -139,6 +139,7 @@ export function ExerciseRenderer({
   batchCheckMode = false,
   hideBatchCheckButton = false,
   checkAllTrigger,
+  questionCardVariant = 'card',
 }: ExerciseRendererProps) {
   const t = useTranslations('courses')
   const locale = useLocale()
@@ -587,6 +588,7 @@ export function ExerciseRenderer({
               checkAnswerText={t('checkAnswer')}
               correctText={t('correct')}
               incorrectText={t('incorrect')}
+              variant={questionCardVariant}
             >
               <SvgRenderer
                 block={svgBlock}
@@ -748,6 +750,7 @@ export function ExerciseRenderer({
           dir={dir}
           helpSystem={helpSystemNode}
           animationDelay={nextIndex * 0.08}
+          variant={questionCardVariant}
         >
           {/* Render appropriate question component based on type */}
           {question.type === 'question_select' && question.variant === 'true_false' && (

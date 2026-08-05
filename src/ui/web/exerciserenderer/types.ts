@@ -264,4 +264,12 @@ export interface ExerciseRendererProps {
    * button by bumping the counter.
    */
   checkAllTrigger?: number
+  /**
+   * Visual variant applied to every QuestionCard the renderer emits.
+   * - 'card' (default) — bordered/padded Card wrapper (Interactive + Test).
+   * - 'flat' — no Card chrome; questions render inline with the parent's
+   *   own visual container. Used by the Chat view to avoid nesting a card
+   *   inside a teacher bubble.
+   */
+  questionCardVariant?: 'card' | 'flat'
 }
