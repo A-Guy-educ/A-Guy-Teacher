@@ -19,6 +19,8 @@ import type { ResolvedLessonBlock } from '@/server/repos/queries/lesson-blocks'
 import { ChatInterface } from '@/ui/web/chat'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { BlocksDocumentLessonView } from '../BlocksDocumentLessonView'
+import { ChatLessonView } from '../ChatLessonView'
+import type { LessonScript } from '../ChatLessonView/types'
 import { ExercisesPager } from '../ExercisesPager'
 import { MediaTabContent } from '../MediaTabContent'
 import { TestViewRenderer } from '../TestViewRenderer'
@@ -53,6 +55,9 @@ interface DualModeLessonViewProps {
   chatLessonId?: string
   showChat?: boolean
   formulaSheet?: FormulaSheet | null
+  /** Authored script for the Chat tab. When null on a chat-enabled lesson,
+   *  ChatLessonView falls back to its bundled demo script. */
+  chatScript?: LessonScript | null
   /** Renderer modes enabled by the admin for this lesson. Defaults to all four. */
   visibleRenderers?: LessonMode[]
   initialExerciseIndex?: number
@@ -72,14 +77,19 @@ interface DualModeLessonViewProps {
 function getVisibleTabs(
   visibleRenderers: LessonMode[] | undefined,
   hasMedia: boolean,
-): { media: boolean; pdf: boolean; interactive: boolean; test: boolean } {
-  const all: LessonMode[] = ['media', 'pdf', 'interactive', 'test']
-  const allowed = visibleRenderers ?? all
+): { media: boolean; pdf: boolean; interactive: boolean; test: boolean; chat: boolean } {
+  // 'chat' is intentionally NOT in the default allowlist: v0 renders a
+  // hardcoded demo script that has nothing to do with any real lesson topic,
+  // so legacy lessons (no `visibleRenderers` set) must not surface it. Admins
+  // opt in per lesson by adding 'chat' to `visibleRenderers`.
+  const defaultAllowed: LessonMode[] = ['media', 'pdf', 'interactive', 'test']
+  const allowed = visibleRenderers ?? defaultAllowed
   return {
     media: hasMedia && allowed.includes('media'),
     pdf: allowed.includes('pdf'),
     interactive: allowed.includes('interactive'),
     test: allowed.includes('test'),
+    chat: allowed.includes('chat'),
   }
 }
 
@@ -99,6 +109,7 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
     chatLessonId,
     showChat,
     formulaSheet,
+    chatScript,
     visibleRenderers,
     initialExerciseIndex,
     initialMode,
@@ -126,7 +137,8 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
       if (visibleTabs.media) return 'media'
       if (visibleTabs.pdf) return 'pdf'
       if (visibleTabs.interactive) return 'interactive'
-      return 'test'
+      if (visibleTabs.test) return 'test'
+      return 'chat'
     }
     return mode
   })()
@@ -136,10 +148,12 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
     pdfTab: `lesson-${lessonId}-tab-pdf`,
     interactiveTab: `lesson-${lessonId}-tab-interactive`,
     testTab: `lesson-${lessonId}-tab-test`,
+    chatTab: `lesson-${lessonId}-tab-chat`,
     mediaPanel: `lesson-${lessonId}-panel-media`,
     pdfPanel: `lesson-${lessonId}-panel-pdf`,
     interactivePanel: `lesson-${lessonId}-panel-interactive`,
     testPanel: `lesson-${lessonId}-panel-test`,
+    chatPanel: `lesson-${lessonId}-panel-chat`,
   }
 
   const tabBar = (
@@ -184,6 +198,15 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
           onClick={() => select('test')}
         />
       )}
+      {visibleTabs.chat && (
+        <TabButton
+          id={tabIds.chatTab}
+          controlsId={tabIds.chatPanel}
+          label={t('lessonViewModeChat')}
+          active={effectiveMode === 'chat'}
+          onClick={() => select('chat')}
+        />
+      )}
     </div>
   )
 
@@ -224,6 +247,20 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
               />
             ) : null
           }
+        />
+      </section>
+    )
+  }
+
+  if (effectiveMode === 'chat') {
+    return (
+      <section role="tabpanel" id={tabIds.chatPanel} aria-labelledby={tabIds.chatTab}>
+        <ChatLessonView
+          lessonTitle={lessonTitle}
+          backUrl={backUrl}
+          formulaSheet={formulaSheet}
+          headerSlot={tabBar}
+          script={chatScript ?? undefined}
         />
       </section>
     )

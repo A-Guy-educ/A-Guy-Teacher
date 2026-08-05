@@ -17,6 +17,7 @@ import { Card, CardContent } from '@/ui/web/components/card'
 import { Progress } from '@/ui/web/components/progress'
 import { useTranslations } from '@/ui/web/providers/I18n'
 
+import type { LessonScript } from '../ChatLessonView/types'
 import { ContentPagesPreamble } from '../ContentPagesPreamble'
 import { DualModeLessonView } from '../DualModeLessonView'
 import type { LessonMode } from '../DualModeLessonView/useLessonViewMode'
@@ -38,6 +39,8 @@ interface LessonIntroPageProps {
   backUrl: string
   showChat: boolean
   formulaSheet?: import('@/infra/types/content').FormulaSheet | null
+  /** Authored chat script for the Chat tab (from `chat-lessons` collection). */
+  chatScript?: LessonScript | null
   /** Exercises for this lesson (used to determine if lesson has exercises) */
   exercises?: import('@/infra/types/content').Exercise[]
   /** Media files (PDFs) for this lesson */
@@ -71,6 +74,7 @@ export function LessonIntroPage({
   backUrl,
   showChat,
   formulaSheet,
+  chatScript,
   exercises = [],
   mediaFiles = [],
   mediaMap = {},
@@ -124,11 +128,26 @@ export function LessonIntroPage({
   // the batch-graded test view instead of the read-only worksheet. Learning
   // and practice lessons keep the original scroll + interactive pair.
   const isExamLesson = getEffectiveLessonType(lesson.type) === 'exam'
-  const visibleRenderers: LessonMode[] = []
-  if (hasMedia) visibleRenderers.push('media')
+
+  // Compute the shape-derived default list first — used when the admin hasn't
+  // explicitly set `visibleRenderers` on the lesson doc.
+  const computedRenderers: LessonMode[] = []
+  if (hasMedia) computedRenderers.push('media')
   if (hasExerciseContent) {
-    visibleRenderers.push(isExamLesson ? 'test' : 'pdf', 'interactive')
-  } else if (hasContentPagesInBlocks) visibleRenderers.push('interactive')
+    computedRenderers.push(isExamLesson ? 'test' : 'pdf', 'interactive')
+  } else if (hasContentPagesInBlocks) computedRenderers.push('interactive')
+
+  // Admin-set `visibleRenderers` on the lesson doc is the source of truth
+  // when present — it's what lets opt-in tabs like 'chat' (no data-presence
+  // requirement) surface at all. DualModeLessonView still applies the media
+  // data-presence guard internally, so `hasMedia` doesn't need to be
+  // reasserted here.
+  const VALID_MODES: readonly LessonMode[] = ['media', 'pdf', 'interactive', 'test', 'chat']
+  const adminRenderers = (lesson.visibleRenderers ?? []).filter((v): v is LessonMode =>
+    (VALID_MODES as readonly string[]).includes(v),
+  )
+  const visibleRenderers: LessonMode[] =
+    adminRenderers.length > 0 ? adminRenderers : computedRenderers
 
   const completed = progress?.completed ?? 0
   const total = progress?.total ?? exerciseCount
@@ -202,6 +221,7 @@ export function LessonIntroPage({
         chatLessonId={lesson.id}
         showChat={showChat}
         formulaSheet={formulaSheet}
+        chatScript={chatScript}
         visibleRenderers={visibleRenderers}
         initialExerciseIndex={pageState.initialExerciseIndex}
         initialMode={

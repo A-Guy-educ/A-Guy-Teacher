@@ -33,6 +33,62 @@ export interface MediaItem {
 const MAX_OUTPUT_LENGTH = 2000
 const TRUNCATE_SUFFIX = '...'
 
+const WELCOME_BLOCK_MAX_LENGTH = 400
+
+/**
+ * Build a short student-facing welcome message when they open an exercise.
+ * Uses the exercise title and the first content block's textual preview, so
+ * the chat shows "here's what you're looking at" without calling the LLM.
+ * Returns an empty string when there's nothing meaningful to show.
+ */
+export function formatExerciseWelcomeMessage(
+  exerciseTitle: string,
+  blocks: Array<{
+    id: string
+    type: string
+    [key: string]: unknown
+  }>,
+): string {
+  const lines: string[] = []
+  const trimmedTitle = exerciseTitle?.trim()
+  if (trimmedTitle) {
+    lines.push(`**${trimmedTitle}**`)
+  }
+
+  const firstBlock = blocks?.[0]
+  const preview = firstBlock ? extractBlockPreview(firstBlock) : ''
+  if (preview) {
+    if (lines.length > 0) lines.push('')
+    lines.push(preview)
+  }
+
+  return lines.join('\n')
+}
+
+function extractBlockPreview(block: { type: string; [key: string]: unknown }): string {
+  const raw = readBlockText(block)
+  if (!raw) return ''
+  const collapsed = raw.replace(/\s+/g, ' ').trim()
+  return truncateText(collapsed, WELCOME_BLOCK_MAX_LENGTH)
+}
+
+function readBlockText(block: { type: string; [key: string]: unknown }): string {
+  const asRecord = block as Record<string, unknown>
+  const value = asRecord.value
+  if (typeof value === 'string' && value.trim()) return value
+
+  const prompt = asRecord.prompt as { value?: unknown } | undefined
+  if (prompt && typeof prompt.value === 'string' && prompt.value.trim()) return prompt.value
+
+  const latex = asRecord.latex
+  if (typeof latex === 'string' && latex.trim()) return latex
+
+  const altText = asRecord.altText
+  if (typeof altText === 'string' && altText.trim()) return altText
+
+  return ''
+}
+
 /**
  * Format exercise content blocks into a readable message for the LLM.
  */

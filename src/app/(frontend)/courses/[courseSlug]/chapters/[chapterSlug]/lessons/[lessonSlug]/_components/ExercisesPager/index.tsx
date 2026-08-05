@@ -140,12 +140,14 @@ export function ExercisesPager({
     if (isRightSwipe && canGoPrev) handlePrev()
   }
 
-  // Focus content area on page change
+  // Focus content area and reset scroll on page/block change
   useEffect(() => {
-    if (pageState.type === 'exercise' && contentRef.current) {
+    if (!contentRef.current) return
+    if (pageState.type === 'exercise') {
       contentRef.current.focus()
     }
-  }, [pageState.type])
+    contentRef.current.scrollTop = 0
+  }, [pageState.type, pageState.blockIndex])
 
   // Store per-exercise question results from ExerciseRenderer
   const exerciseResults = useRef<
