@@ -3390,6 +3390,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- feat: Rework Chat view as a reskin of the existing exercise flow ([#1031](https://github.com/A-Guy-educ/A-Guy-Web/pull/1031)) — @aguyshayb
 - promote: dev -> main (v0.30.15) ([#1030](https://github.com/A-Guy-educ/A-Guy-Web/pull/1030)) — @aguyaharonyair
 - chore: release v0.30.15 ([#1025](https://github.com/A-Guy-educ/A-Guy-Web/pull/1025)) — @aguyaharonyair
 - feat: Fetch chat lesson script from Payload chat-lessons collection ([#1029](https://github.com/A-Guy-educ/A-Guy-Web/pull/1029)) — @aguyshayb
