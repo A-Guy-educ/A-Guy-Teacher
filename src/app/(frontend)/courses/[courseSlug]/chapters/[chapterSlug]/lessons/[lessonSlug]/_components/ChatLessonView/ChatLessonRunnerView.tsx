@@ -1,8 +1,9 @@
 'use client'
 
 import type { Exercise, Media } from '@/infra/types/content'
+import { formatExerciseContextMessage } from '@/infra/llm/exercise-context'
 import { useTranslations } from '@/ui/web/providers/I18n'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChatInputPanel } from './ChatInputPanel'
 import { ChatLessonProgress } from './ChatLessonProgress'
 import { ChatLessonStartCard } from './ChatLessonStartCard'
@@ -18,6 +19,32 @@ import { useExerciseWalker } from './useExerciseWalker'
 import { pickWellDone } from './wellDoneMessages'
 
 const CELEBRATION_ADVANCE_MS = 1500
+
+/** א, ב, ג, ... — matches the ExerciseRenderer's question-card labeling. */
+const HEBREW_LETTERS = [
+  'א',
+  'ב',
+  'ג',
+  'ד',
+  'ה',
+  'ו',
+  'ז',
+  'ח',
+  'ט',
+  'י',
+  'כ',
+  'ל',
+  'מ',
+  'נ',
+  'ס',
+  'ע',
+  'פ',
+  'צ',
+  'ק',
+  'ר',
+  'ש',
+  'ת',
+]
 
 interface ChatLessonRunnerViewProps {
   lessonTitle: string
@@ -71,11 +98,35 @@ function ActiveChat({
   }, [])
 
   const walker = useExerciseWalker({ exercises, append })
-  const currentExercise = walker.currentStep?.exercise ?? null
+  const currentStep = walker.currentStep
+  const currentExercise = currentStep?.exercise ?? null
+
+  // Scope the AI's attention to the current section (not the whole exercise
+  // or, worse, whatever exercise the shared lesson-conversation was last
+  // talking about). Passing just the current group's blocks + a section-
+  // annotated title keeps every chat request grounded in the section the
+  // student is actually on.
+  const currentExerciseContext = useMemo(() => {
+    if (!currentStep) return null
+    const { exercise, group, groupIndex } = currentStep
+    const baseTitle = exercise.title?.trim() ?? ''
+    const sectionLetter =
+      group.sectionIndex !== null ? (HEBREW_LETTERS[groupIndex] ?? String(groupIndex + 1)) : null
+    const title = sectionLetter ? `${baseTitle} — סעיף ${sectionLetter}`.trim() : baseTitle
+    // Cast: our lesson-fetched Media has `filename: string | null | undefined`
+    // where the formatter's MediaItem expects `string | undefined`. The
+    // formatter only ever falsy-checks filename, so a runtime null is fine.
+    return formatExerciseContextMessage(
+      title,
+      group.blocks as Array<{ id: string; type: string; [key: string]: unknown }>,
+      mediaMap as unknown as Parameters<typeof formatExerciseContextMessage>[2],
+    )
+  }, [currentStep, mediaMap])
 
   const chat = useChatChannel({
     lessonId,
     currentExerciseId: currentExercise?.id ?? null,
+    currentExerciseContext,
     append,
     replace,
     acknowledgment: t('chatViewAcknowledgment'),
