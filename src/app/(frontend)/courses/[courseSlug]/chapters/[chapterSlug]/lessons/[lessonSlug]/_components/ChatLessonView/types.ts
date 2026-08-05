@@ -2,18 +2,20 @@
  * @fileType types
  * @domain lessons
  * @ai-summary Types for the Chat view — a visual reskin of the Interactive
- *             tab. The runner walks the lesson's existing exercises (no
- *             authored script), rendering each as a chat bubble. Freeform
- *             student questions go to the existing /api/agent/chat endpoint
- *             with the current exercise's context injected.
+ *             tab. The runner walks the lesson's existing exercises section
+ *             by section (via getExerciseBlockGroups), rendering each group
+ *             as its own chat bubble. Freeform student questions go to the
+ *             existing /api/agent/chat endpoint with the current exercise's
+ *             context injected.
  */
 
 import type { Exercise } from '@/infra/types/content'
+import type { ExerciseBlockGroup } from '@/infra/types/exercise'
 
 /** Everything rendered in the chat stream is a StreamEntry. */
 export type StreamEntry =
   | ExerciseIntroEntry
-  | ExerciseEntry
+  | ExerciseSectionEntry
   | ChatUserEntry
   | ChatAssistantEntry
   | ChatPendingEntry
@@ -21,25 +23,27 @@ export type StreamEntry =
   | LessonCompleteEntry
 
 interface EntryBase {
-  /** Stable React key + identity for updates (e.g. replacing pending → assistant). */
+  /** Stable React key + identity for dedupe / replacement. */
   key: string
 }
 
-/** Static "let's do the next one" bubble between exercises. */
+/** "Exercise N: title" intro bubble — shown once per exercise (before its first section). */
 export interface ExerciseIntroEntry extends EntryBase {
   kind: 'exercise-intro'
   exerciseIndex: number
-  /** Ordinal shown to the student, 1-based. */
   ordinal: number
   title?: string
 }
 
-/** The exercise itself, rendered via the shared ExerciseRenderer inside a bubble. */
-export interface ExerciseEntry extends EntryBase {
-  kind: 'exercise'
+/** One section (== one ExerciseBlockGroup) rendered inside a teacher bubble. */
+export interface ExerciseSectionEntry extends EntryBase {
+  kind: 'exercise-section'
   exerciseIndex: number
   ordinal: number
   exercise: Exercise
+  group: ExerciseBlockGroup
+  /** Number of question blocks in the group; 0 for intro-only groups. */
+  questionCount: number
 }
 
 /** Student's freeform question typed into the chat input. */
@@ -48,7 +52,7 @@ export interface ChatUserEntry extends EntryBase {
   text: string
 }
 
-/** Response from /api/agent/chat. */
+/** Response from /api/agent/chat OR a canned "well done" line. */
 export interface ChatAssistantEntry extends EntryBase {
   kind: 'chat-assistant'
   text: string
@@ -65,7 +69,10 @@ export interface ChatErrorEntry extends EntryBase {
   text: string
 }
 
-/** Terminal bubble shown once the last exercise is done. */
+/** Terminal bubble shown once the last section is done. */
 export interface LessonCompleteEntry extends EntryBase {
   kind: 'lesson-complete'
 }
+
+/** Reported by ExerciseSectionBubble when the student finishes the section. */
+export type SectionOutcome = 'correct' | 'wrong'

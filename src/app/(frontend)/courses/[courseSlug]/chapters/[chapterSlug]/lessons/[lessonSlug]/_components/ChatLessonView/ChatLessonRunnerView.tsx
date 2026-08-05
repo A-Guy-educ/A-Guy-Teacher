@@ -7,14 +7,17 @@ import { ChatInputPanel } from './ChatInputPanel'
 import { ChatLessonProgress } from './ChatLessonProgress'
 import { ChatLessonStartCard } from './ChatLessonStartCard'
 import { ContinueButton } from './bubbles/ContinueButton'
-import { ExerciseBubble } from './bubbles/ExerciseBubble'
+import { ExerciseSectionBubble } from './bubbles/ExerciseSectionBubble'
 import { PendingBubble } from './bubbles/PendingBubble'
 import { StudentBubble } from './bubbles/StudentBubble'
 import { TeacherBubble } from './bubbles/TeacherBubble'
-import type { StreamEntry } from './types'
+import type { SectionOutcome, StreamEntry } from './types'
 import { useBrowserTTS } from './useBrowserTTS'
 import { useChatChannel } from './useChatChannel'
 import { useExerciseWalker } from './useExerciseWalker'
+import { pickWellDone } from './wellDoneMessages'
+
+const CELEBRATION_ADVANCE_MS = 1500
 
 interface ChatLessonRunnerViewProps {
   lessonTitle: string
@@ -41,8 +44,6 @@ export function ChatLessonRunnerView(props: ChatLessonRunnerViewProps) {
     )
   }
 
-  // ActiveChat is only mounted after Start so the walker's initial seed effect
-  // (and its TTS narration) fire once, in a clean state, per lesson visit.
   return <ActiveChat {...props} onExit={() => setHasStarted(false)} />
 }
 
@@ -70,7 +71,7 @@ function ActiveChat({
   }, [])
 
   const walker = useExerciseWalker({ exercises, append })
-  const currentExercise = exercises[walker.currentIndex] ?? null
+  const currentExercise = walker.currentStep?.exercise ?? null
 
   const chat = useChatChannel({
     lessonId,
@@ -83,17 +84,46 @@ function ActiveChat({
     quotaExceededMessage: t('chatViewQuotaExceeded'),
   })
 
-  // Narrate teacher-side bubbles as they appear. Two failure modes we have
-  // to handle here:
-  //   1. Walker.emitExercise appends [intro, exercise] in one synchronous
-  //      batch — reading only entries[last] would see the exercise bubble
-  //      and skip the intro. So we walk every entry that hasn't been
-  //      narrated yet.
-  //   2. Chat channel appends a `chat-pending` entry, then swaps it in place
-  //      with a `chat-assistant` entry via replace(sameKey, ...). Deduping
-  //      on key alone would suppress the assistant. So we key the dedupe
-  //      cache by `key + kind` — a mutation of an existing key is treated
-  //      as a fresh candidate for narration.
+  // Cancel any pending auto-advance timer whenever the student navigates or
+  // resets — otherwise a leftover timer would fire after unmount.
+  const pendingAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelPendingAdvance = useCallback(() => {
+    if (pendingAdvanceRef.current !== null) {
+      clearTimeout(pendingAdvanceRef.current)
+      pendingAdvanceRef.current = null
+    }
+  }, [])
+  useEffect(() => () => cancelPendingAdvance(), [cancelPendingAdvance])
+
+  const advanceNow = useCallback(() => {
+    cancelPendingAdvance()
+    walker.advance()
+  }, [cancelPendingAdvance, walker])
+
+  const correctionPrompt = t('chatViewCorrectionPrompt')
+  const handleOutcome = useCallback(
+    (outcome: SectionOutcome) => {
+      if (outcome === 'correct') {
+        append({
+          key: `celebrate-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          kind: 'chat-assistant',
+          text: pickWellDone(),
+        })
+        cancelPendingAdvance()
+        pendingAdvanceRef.current = setTimeout(() => {
+          pendingAdvanceRef.current = null
+          walker.advance()
+        }, CELEBRATION_ADVANCE_MS)
+      } else {
+        chat.requestCorrection(correctionPrompt)
+      }
+    },
+    [append, cancelPendingAdvance, chat, correctionPrompt, walker],
+  )
+
+  // Narrate new teacher-side bubbles as they appear. Dedupe on `key + kind`
+  // so entries replaced in place (chat-pending → chat-assistant) still
+  // trigger narration when they mutate.
   const narratedRef = useRef<Set<string>>(new Set())
   useEffect(() => {
     for (const entry of entries) {
@@ -116,11 +146,12 @@ function ActiveChat({
   }, [entries.length])
 
   const handleReset = useCallback(() => {
+    cancelPendingAdvance()
     tts.cancel()
     onExit()
-  }, [onExit, tts])
+  }, [cancelPendingAdvance, onExit, tts])
 
-  const showContinueButton = !walker.isComplete && !chat.isSending && entries.length > 0
+  const showContinueButton = !walker.isComplete && entries.length > 0
 
   return (
     <>
@@ -133,12 +164,13 @@ function ActiveChat({
               lessonId={lessonId}
               mediaMap={mediaMap}
               tts={tts}
+              onOutcome={handleOutcome}
               introPrefix={t('chatViewIntroPrefix')}
               completeText={t('chatViewFinishTitle')}
             />
           ))}
           {showContinueButton && (
-            <ContinueButton disabled={chat.isSending} isEnd={false} onClick={walker.advance} />
+            <ContinueButton disabled={chat.isSending} isEnd={false} onClick={advanceNow} />
           )}
           <div ref={scrollRef} className="h-4" />
         </div>
@@ -152,8 +184,8 @@ function ActiveChat({
       />
 
       <ChatLessonProgress
-        stepIndex={walker.currentIndex}
-        totalSteps={walker.totalExercises}
+        stepIndex={walker.stepCursor}
+        totalSteps={walker.totalSteps}
         onReset={handleReset}
         onToggleMute={tts.toggleMuted}
         muted={tts.muted}
@@ -168,6 +200,7 @@ interface StreamEntryViewProps {
   lessonId: string
   mediaMap?: Record<string, Media>
   tts: ReturnType<typeof useBrowserTTS>
+  onOutcome: (outcome: SectionOutcome) => void
   introPrefix: string
   completeText: string
 }
@@ -177,6 +210,7 @@ function StreamEntryView({
   lessonId,
   mediaMap,
   tts,
+  onOutcome,
   introPrefix,
   completeText,
 }: StreamEntryViewProps) {
@@ -195,13 +229,16 @@ function StreamEntryView({
         />
       )
     }
-    case 'exercise':
+    case 'exercise-section':
       return (
-        <ExerciseBubble
+        <ExerciseSectionBubble
           exercise={entry.exercise}
           ordinal={entry.ordinal}
+          group={entry.group}
+          questionCount={entry.questionCount}
           lessonId={lessonId}
           mediaMap={mediaMap}
+          onOutcome={onOutcome}
         />
       )
     case 'chat-user':

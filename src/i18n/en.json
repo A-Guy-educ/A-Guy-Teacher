@@ -443,6 +443,7 @@
     "chatViewChatError": "Chat error — please try again",
     "chatViewAuthRequired": "Please log in to chat",
     "chatViewQuotaExceeded": "Daily chat limit reached",
+    "chatViewCorrectionPrompt": "The student answered the current section incorrectly. Explain the correct solution briefly in the lesson's language, in three sentences or fewer, in a neutral (non-gendered) voice. Do not address the student directly — just explain the solution.",
     "checkAllAnswers": "Check all answers",
     "pdfBadge": "PDF",
     "scrollView": "Scroll View",
