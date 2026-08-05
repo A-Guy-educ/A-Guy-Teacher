@@ -31,19 +31,19 @@ export function QuickActionChips({
   return (
     <div className="flex flex-wrap items-center gap-content-gap-xs mt-2">
       <Chip
-        icon={<Lightbulb className="w-3.5 h-3.5" />}
+        icon={<Lightbulb className="w-3.5 h-3.5" aria-hidden="true" />}
         label={hintLabel}
         disabled={disabled}
         onClick={() => onAction('hint')}
       />
       <Chip
-        icon={<HelpCircle className="w-3.5 h-3.5" />}
+        icon={<HelpCircle className="w-3.5 h-3.5" aria-hidden="true" />}
         label={explainLabel}
         disabled={disabled}
         onClick={() => onAction('explain')}
       />
       <Chip
-        icon={<SkipForward className="w-3.5 h-3.5" />}
+        icon={<SkipForward className="w-3.5 h-3.5" aria-hidden="true" />}
         label={skipLabel}
         disabled={disabled}
         onClick={() => onAction('skip')}

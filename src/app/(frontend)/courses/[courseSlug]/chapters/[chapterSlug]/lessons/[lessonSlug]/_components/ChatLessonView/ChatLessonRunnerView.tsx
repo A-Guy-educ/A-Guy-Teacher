@@ -226,6 +226,14 @@ function ActiveChat({
     [t],
   )
 
+  // Key of the current walker step — used by StreamEntryView to mark the
+  // matching bubble as "active". Historical bubbles (anything else) render
+  // as read-only so scroll-back clicks can't dispatch through the runner
+  // with the wrong context.
+  const activeStepKey = walker.currentStep
+    ? `sec-${walker.currentStep.exercise.id}-${walker.currentStep.groupIndex}`
+    : null
+
   // Narrate new teacher-side bubbles as they appear. Dedupe on `key + kind`
   // so entries replaced in place (chat-pending → chat-assistant) still
   // trigger narration when they mutate.
@@ -266,6 +274,7 @@ function ActiveChat({
             <StreamEntryView
               key={entry.key}
               entry={entry}
+              isActive={entry.key === activeStepKey}
               lessonId={lessonId}
               mediaMap={mediaMap}
               tts={tts}
@@ -312,6 +321,8 @@ function ActiveChat({
 
 interface StreamEntryViewProps {
   entry: StreamEntry
+  /** True only for the walker's current step. Locks stale scroll-back bubbles. */
+  isActive: boolean
   lessonId: string
   mediaMap?: Record<string, Media>
   tts: ReturnType<typeof useBrowserTTS>
@@ -326,6 +337,7 @@ interface StreamEntryViewProps {
 
 function StreamEntryView({
   entry,
+  isActive,
   lessonId,
   mediaMap,
   tts,
@@ -364,6 +376,7 @@ function StreamEntryView({
           speaking={tts.speaking}
           muted={tts.muted}
           ttsSupported={tts.supported}
+          isActive={isActive}
           onOutcome={onOutcome}
           onQuestionSubmit={onQuestionSubmit}
           onQuickAction={onQuickAction}

@@ -80,6 +80,13 @@ interface ExerciseSectionBubbleProps {
   quickActionLabels?: { hint: string; explain: string; skip: string }
   /** Disable chips while a chat request is already in flight. */
   quickActionsDisabled?: boolean
+  /**
+   * True only for the walker's current step. Historical (scroll-back)
+   * bubbles pass false, which locks their answer buttons + chips — otherwise
+   * a click on an old bubble would dispatch through the runner with the
+   * CURRENT step's context (wrong hint / wrong skip target).
+   */
+  isActive?: boolean
 }
 
 /**
@@ -114,20 +121,22 @@ export function ExerciseSectionBubble({
   onQuickAction,
   quickActionLabels,
   quickActionsDisabled,
+  isActive = true,
 }: ExerciseSectionBubbleProps) {
   const outcomeReportedRef = useRef(false)
   // Chips hide the moment the student starts answering — they're a discovery
   // affordance for "what can I do before answering", not a mid-answer HUD.
   const [hasAnyAnswer, setHasAnyAnswer] = useState(false)
+  // Block IDs the student answered incorrectly. Used to scope the "correct
+  // answer" bubble to ONLY the questions they missed, so a multi-question
+  // section doesn't leak answers to questions they got right.
+  const wrongBlockIdsRef = useRef<Set<string>>(new Set())
 
   const isChatNativePath = useMemo(() => isChatNativeSection(group), [group])
 
-  // Correct-answer text derived from question_select blocks. Passed with a
-  // 'wrong' outcome so the runner can echo the expected answer before the AI
-  // correction fires — cheaper feedback, no model roundtrip. Undefined when
-  // the section has no question_select blocks (fallback path grading table /
-  // matching / free-response etc., where we don't have a canonical text form).
-  const correctAnswerText = useMemo(() => deriveCorrectAnswerText(group), [group])
+  // Correct-answer text for the FALLBACK path (no per-question outcome
+  // signal there — we can only echo the whole section's correct answers).
+  const allCorrectAnswerText = useMemo(() => deriveCorrectAnswerText(group), [group])
 
   // ── FALLBACK path ────────────────────────────────────────────────────────
   // Existing aggregate onResultsChange from ExerciseRenderer; fires onOutcome
@@ -141,10 +150,10 @@ export function ExerciseSectionBubble({
       if (results.correctCount === results.totalQuestions) {
         onOutcome?.({ kind: 'correct' })
       } else {
-        onOutcome?.({ kind: 'wrong', correctAnswerText })
+        onOutcome?.({ kind: 'wrong', correctAnswerText: allCorrectAnswerText })
       }
     },
-    [correctAnswerText, onOutcome],
+    [allCorrectAnswerText, onOutcome],
   )
 
   // ── CHAT-NATIVE path ─────────────────────────────────────────────────────
@@ -175,9 +184,10 @@ export function ExerciseSectionBubble({
   }, [chatNativeQuestionCount, group.blocks, isChatNativePath])
 
   const handleChatNativeSubmit = useCallback(
-    (text: string, isCorrect: boolean) => {
+    (blockId: string, text: string, isCorrect: boolean) => {
       submittedCountRef.current += 1
       if (isCorrect) correctCountRef.current += 1
+      else wrongBlockIdsRef.current.add(blockId)
       setHasAnyAnswer(true)
       onQuestionSubmit?.(text, isCorrect)
 
@@ -190,11 +200,29 @@ export function ExerciseSectionBubble({
         if (correctCountRef.current === chatNativeQuestionCount) {
           onOutcome?.({ kind: 'correct' })
         } else {
-          onOutcome?.({ kind: 'wrong', correctAnswerText })
+          onOutcome?.({
+            kind: 'wrong',
+            // Scope the echoed "correct answer" to only the questions the
+            // student got wrong — don't leak answers to ones they nailed.
+            correctAnswerText: deriveCorrectAnswerText(group, wrongBlockIdsRef.current),
+          })
         }
       }
     },
-    [chatNativeQuestionCount, correctAnswerText, onOutcome, onQuestionSubmit],
+    [chatNativeQuestionCount, group, onOutcome, onQuestionSubmit],
+  )
+
+  // Wrap chip clicks so a scroll-back click can't dispatch through the runner
+  // — and skip in particular counts as "engaged with this section" and hides
+  // chips on the currently active bubble too (otherwise chips would linger
+  // after skip since no answer was submitted).
+  const handleChipAction = useCallback(
+    (action: QuickAction) => {
+      if (!isActive) return
+      if (action === 'skip') setHasAnyAnswer(true)
+      onQuickAction?.(action)
+    },
+    [isActive, onQuickAction],
   )
 
   return (
@@ -213,6 +241,10 @@ export function ExerciseSectionBubble({
                     key={block.id}
                     block={block as QuestionSelectBlock}
                     questionLabel={questionLabelById?.get(block.id)}
+                    // Lock stale scroll-back bubbles + freeze answering while
+                    // a chat request is in flight (otherwise the resulting
+                    // requestCorrection would be silently dropped).
+                    disabled={!isActive || quickActionsDisabled}
                     onSubmit={handleChatNativeSubmit}
                   />
                 )
@@ -231,15 +263,19 @@ export function ExerciseSectionBubble({
               return null
             })}
 
-            {!hasAnyAnswer && onQuickAction && quickActionLabels && chatNativeQuestionCount > 0 && (
-              <QuickActionChips
-                disabled={quickActionsDisabled}
-                hintLabel={quickActionLabels.hint}
-                explainLabel={quickActionLabels.explain}
-                skipLabel={quickActionLabels.skip}
-                onAction={onQuickAction}
-              />
-            )}
+            {isActive &&
+              !hasAnyAnswer &&
+              onQuickAction &&
+              quickActionLabels &&
+              chatNativeQuestionCount > 0 && (
+                <QuickActionChips
+                  disabled={quickActionsDisabled}
+                  hintLabel={quickActionLabels.hint}
+                  explainLabel={quickActionLabels.explain}
+                  skipLabel={quickActionLabels.skip}
+                  onAction={handleChipAction}
+                />
+              )}
           </div>
         </MediaMapProvider>
       ) : (
@@ -293,15 +329,21 @@ function isQuestionSelect(block: { type: string }): boolean {
 }
 
 /**
- * Extract a joined "correct answer" string from every question_select block
- * in the group. Returns undefined when the group has no question_select
- * blocks (fallback path grading table/matching/free-response can't
- * canonicalise their expected answer as a display string cheaply).
+ * Extract a joined "correct answer" string from question_select blocks in
+ * the group. When `onlyBlockIds` is provided, restricts to those block IDs —
+ * used by the chat-native path to echo answers ONLY for questions the
+ * student got wrong (so a multi-question section doesn't leak answers to
+ * ones they got right). Without the filter, echoes every question's answer
+ * (used by the fallback path where per-question outcomes aren't available).
  */
-function deriveCorrectAnswerText(group: ExerciseBlockGroup): string | undefined {
+function deriveCorrectAnswerText(
+  group: ExerciseBlockGroup,
+  onlyBlockIds?: Set<string>,
+): string | undefined {
   const parts: string[] = []
   for (const block of group.blocks) {
     if (block.type !== 'question_select') continue
+    if (onlyBlockIds && !onlyBlockIds.has(block.id)) continue
     const q = block as unknown as QuestionSelectBlock
     if (q.variant === 'true_false') {
       const tf = q as QuestionSelectTrueFalseBlock
