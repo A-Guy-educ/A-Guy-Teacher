@@ -14,7 +14,15 @@ import { useMemo, useState } from 'react'
 interface ChatQuestionSelectBubbleProps {
   block: QuestionSelectBlock
   questionLabel?: string
-  onSubmit: (optionText: string, isCorrect: boolean) => void
+  /**
+   * When true, the option buttons are locked regardless of local pick state.
+   * Used to freeze historical (scroll-back) bubbles + to prevent answering
+   * while a hint/explain/auto-correction request is in flight (otherwise the
+   * resulting requestCorrection would be silently dropped by
+   * useChatChannel's `sendingRef` early-return).
+   */
+  disabled?: boolean
+  onSubmit: (blockId: string, optionText: string, isCorrect: boolean) => void
 }
 
 interface Choice {
@@ -39,6 +47,7 @@ interface Choice {
 export function ChatQuestionSelectBubble({
   block,
   questionLabel,
+  disabled,
   onSubmit,
 }: ChatQuestionSelectBubbleProps) {
   const [pickedId, setPickedId] = useState<string | null>(null)
@@ -47,10 +56,10 @@ export function ChatQuestionSelectBubble({
   const correctIds = useMemo(() => getCorrectIds(block), [block])
 
   const handlePick = (choice: Choice) => {
-    if (pickedId) return
+    if (pickedId || disabled) return
     setPickedId(choice.id)
     const isCorrect = correctIds.has(choice.id)
-    onSubmit(choice.labelValue, isCorrect)
+    onSubmit(block.id, choice.labelValue, isCorrect)
   }
 
   return (
@@ -68,7 +77,7 @@ export function ChatQuestionSelectBubble({
       <div className="grid grid-cols-1 gap-content-gap-xs mt-2">
         {choices.map((choice) => {
           const isPicked = pickedId === choice.id
-          const isDisabled = pickedId !== null
+          const isDisabled = pickedId !== null || Boolean(disabled)
           const isThisCorrect = correctIds.has(choice.id)
           return (
             <button

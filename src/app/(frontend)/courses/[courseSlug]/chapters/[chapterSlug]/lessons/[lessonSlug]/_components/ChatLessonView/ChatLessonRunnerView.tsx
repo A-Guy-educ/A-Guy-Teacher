@@ -200,6 +200,40 @@ function ActiveChat({
     [append],
   )
 
+  // Quick-action chip dispatcher. Hint + explain go through the invisible
+  // requestCorrection channel so only the AI reply lands in the stream
+  // (no fake user bubble echoing our canned prompt). Skip just advances
+  // the walker without any chat roundtrip.
+  const hintPrompt = t('chatViewChipHintPrompt')
+  const explainPrompt = t('chatViewChipExplainPrompt')
+  const handleQuickAction = useCallback(
+    (action: 'hint' | 'explain' | 'skip') => {
+      if (action === 'skip') {
+        advanceNow()
+        return
+      }
+      chat.requestCorrection(action === 'hint' ? hintPrompt : explainPrompt)
+    },
+    [advanceNow, chat, explainPrompt, hintPrompt],
+  )
+
+  const quickActionLabels = useMemo(
+    () => ({
+      hint: t('chatViewChipHint'),
+      explain: t('chatViewChipExplain'),
+      skip: t('chatViewChipSkip'),
+    }),
+    [t],
+  )
+
+  // Key of the current walker step — used by StreamEntryView to mark the
+  // matching bubble as "active". Historical bubbles (anything else) render
+  // as read-only so scroll-back clicks can't dispatch through the runner
+  // with the wrong context.
+  const activeStepKey = walker.currentStep
+    ? `sec-${walker.currentStep.exercise.id}-${walker.currentStep.groupIndex}`
+    : null
+
   // Narrate new teacher-side bubbles as they appear. Dedupe on `key + kind`
   // so entries replaced in place (chat-pending → chat-assistant) still
   // trigger narration when they mutate.
@@ -240,11 +274,15 @@ function ActiveChat({
             <StreamEntryView
               key={entry.key}
               entry={entry}
+              isActive={entry.key === activeStepKey}
               lessonId={lessonId}
               mediaMap={mediaMap}
               tts={tts}
               onOutcome={handleOutcome}
               onQuestionSubmit={handleQuestionSubmit}
+              onQuickAction={handleQuickAction}
+              quickActionLabels={quickActionLabels}
+              quickActionsDisabled={chat.isSending}
               introPrefix={t('chatViewIntroPrefix')}
               completeText={t('chatViewFinishTitle')}
             />
@@ -283,22 +321,31 @@ function ActiveChat({
 
 interface StreamEntryViewProps {
   entry: StreamEntry
+  /** True only for the walker's current step. Locks stale scroll-back bubbles. */
+  isActive: boolean
   lessonId: string
   mediaMap?: Record<string, Media>
   tts: ReturnType<typeof useBrowserTTS>
   onOutcome: (outcome: SectionOutcome) => void
   onQuestionSubmit: (text: string, isCorrect: boolean) => void
+  onQuickAction: (action: 'hint' | 'explain' | 'skip') => void
+  quickActionLabels: { hint: string; explain: string; skip: string }
+  quickActionsDisabled: boolean
   introPrefix: string
   completeText: string
 }
 
 function StreamEntryView({
   entry,
+  isActive,
   lessonId,
   mediaMap,
   tts,
   onOutcome,
   onQuestionSubmit,
+  onQuickAction,
+  quickActionLabels,
+  quickActionsDisabled,
   introPrefix,
   completeText,
 }: StreamEntryViewProps) {
@@ -329,8 +376,12 @@ function StreamEntryView({
           speaking={tts.speaking}
           muted={tts.muted}
           ttsSupported={tts.supported}
+          isActive={isActive}
           onOutcome={onOutcome}
           onQuestionSubmit={onQuestionSubmit}
+          onQuickAction={onQuickAction}
+          quickActionLabels={quickActionLabels}
+          quickActionsDisabled={quickActionsDisabled}
         />
       )
     case 'chat-user':
