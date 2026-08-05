@@ -10,10 +10,11 @@ import type {
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
 import { RichTextRenderer } from '@/ui/web/exerciserenderer/blocks/RichTextRenderer'
 import { MediaMapProvider } from '@/ui/web/exerciserenderer/context/MediaMapContext'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import type { SectionOutcome } from '../types'
 import { TeacherBubble } from './TeacherBubble'
 import { ChatQuestionSelectBubble } from './ChatQuestionSelectBubble'
+import { QuickActionChips, type QuickAction } from './QuickActionChips'
 
 const EMPTY_MEDIA_MAP: Record<string, Media> = {}
 
@@ -68,6 +69,17 @@ interface ExerciseSectionBubbleProps {
    * students see the check button + inline correct/wrong strip instead.
    */
   onQuestionSubmit?: (text: string, isCorrect: boolean) => void
+  /**
+   * Fires when the student taps a quick-action chip (hint / explain / skip)
+   * on a chat-native section. Runner dispatches: hint/explain → invisible
+   * chat request; skip → walker.advance. Chips auto-hide once any question
+   * in the section has been answered.
+   */
+  onQuickAction?: (action: QuickAction) => void
+  /** Labels for the chips. Provided by the runner from i18n. */
+  quickActionLabels?: { hint: string; explain: string; skip: string }
+  /** Disable chips while a chat request is already in flight. */
+  quickActionsDisabled?: boolean
 }
 
 /**
@@ -99,8 +111,14 @@ export function ExerciseSectionBubble({
   ttsSupported,
   onOutcome,
   onQuestionSubmit,
+  onQuickAction,
+  quickActionLabels,
+  quickActionsDisabled,
 }: ExerciseSectionBubbleProps) {
   const outcomeReportedRef = useRef(false)
+  // Chips hide the moment the student starts answering — they're a discovery
+  // affordance for "what can I do before answering", not a mid-answer HUD.
+  const [hasAnyAnswer, setHasAnyAnswer] = useState(false)
 
   const isChatNativePath = useMemo(() => isChatNativeSection(group), [group])
 
@@ -160,6 +178,7 @@ export function ExerciseSectionBubble({
     (text: string, isCorrect: boolean) => {
       submittedCountRef.current += 1
       if (isCorrect) correctCountRef.current += 1
+      setHasAnyAnswer(true)
       onQuestionSubmit?.(text, isCorrect)
 
       if (
@@ -211,6 +230,16 @@ export function ExerciseSectionBubble({
               }
               return null
             })}
+
+            {!hasAnyAnswer && onQuickAction && quickActionLabels && chatNativeQuestionCount > 0 && (
+              <QuickActionChips
+                disabled={quickActionsDisabled}
+                hintLabel={quickActionLabels.hint}
+                explainLabel={quickActionLabels.explain}
+                skipLabel={quickActionLabels.skip}
+                onAction={onQuickAction}
+              />
+            )}
           </div>
         </MediaMapProvider>
       ) : (
