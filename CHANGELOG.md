@@ -3390,6 +3390,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- promote: dev -> main (v0.30.15) ([#1030](https://github.com/A-Guy-educ/A-Guy-Web/pull/1030)) — @aguyaharonyair
 - chore: release v0.30.15 ([#1025](https://github.com/A-Guy-educ/A-Guy-Web/pull/1025)) — @aguyaharonyair
 - feat: Fetch chat lesson script from Payload chat-lessons collection ([#1029](https://github.com/A-Guy-educ/A-Guy-Web/pull/1029)) — @aguyshayb
 - fix: Honor admin-set visibleRenderers on lesson intro ([#1028](https://github.com/A-Guy-educ/A-Guy-Web/pull/1028)) — @aguyshayb
