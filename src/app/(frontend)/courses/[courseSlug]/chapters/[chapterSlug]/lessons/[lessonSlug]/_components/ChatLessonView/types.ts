@@ -1,73 +1,71 @@
 /**
  * @fileType types
  * @domain lessons
- * @ai-summary Types for the scripted chat-lesson runner. The lesson is a graph
- *             of steps traversed via `next` IDs. All correctness checks are
- *             encoded in the JSON (no AI in the loop for v0).
+ * @ai-summary Types for the Chat view — a visual reskin of the Interactive
+ *             tab. The runner walks the lesson's existing exercises (no
+ *             authored script), rendering each as a chat bubble. Freeform
+ *             student questions go to the existing /api/agent/chat endpoint
+ *             with the current exercise's context injected.
  */
 
-export type ScriptStepType = 'multiple_choice' | 'rich_text' | 'text_answer'
+import type { Exercise } from '@/infra/types/content'
 
-export interface ScriptOption {
-  text: string
-  value?: string
-  feedback?: string
-  isCorrect?: boolean
-  next?: string
-}
+/** Everything rendered in the chat stream is a StreamEntry. */
+export type StreamEntry =
+  | ExerciseIntroEntry
+  | ExerciseEntry
+  | ChatUserEntry
+  | ChatAssistantEntry
+  | ChatPendingEntry
+  | ChatErrorEntry
+  | LessonCompleteEntry
 
-export interface ScriptCorrection {
-  text: string
-  content?: string
-}
-
-export interface ScriptStep {
-  id: string
-  type: ScriptStepType
-  /** Teacher message shown when the step appears. Supports $...$ math. */
-  text: string
-  /** Optional inline HTML rendered under the teacher text (rich_text steps). */
-  content?: string
-  /** Multiple-choice options (multiple_choice steps). */
-  options?: ScriptOption[]
-  /** Expected answer for text_answer steps — compared via case-insensitive trim. */
-  expected?: string
-  /** Feedback shown when the text_answer matches `expected`. */
-  correctFeedback?: string
-  /** Shown when the student picks a wrong option or gives a wrong text answer. */
-  correction?: ScriptCorrection
-  /** ID of the next step to advance to. Wrong MC picks may still fall through here. */
-  next?: string
-  isEnd?: boolean
-}
-
-export interface LessonScript {
-  id: string
-  lessonName: string
-  lessonNumber?: string
-  highlights?: string
-  steps: ScriptStep[]
-}
-
-export type HistoryRole = 'teacher' | 'student'
-
-export interface HistoryEntry {
+interface EntryBase {
+  /** Stable React key + identity for updates (e.g. replacing pending → assistant). */
   key: string
-  role: HistoryRole
-  /** For teacher bubbles: the step id; for student bubbles: a synthetic id. */
-  refId: string
+}
+
+/** Static "let's do the next one" bubble between exercises. */
+export interface ExerciseIntroEntry extends EntryBase {
+  kind: 'exercise-intro'
+  exerciseIndex: number
+  /** Ordinal shown to the student, 1-based. */
+  ordinal: number
+  title?: string
+}
+
+/** The exercise itself, rendered via the shared ExerciseRenderer inside a bubble. */
+export interface ExerciseEntry extends EntryBase {
+  kind: 'exercise'
+  exerciseIndex: number
+  ordinal: number
+  exercise: Exercise
+}
+
+/** Student's freeform question typed into the chat input. */
+export interface ChatUserEntry extends EntryBase {
+  kind: 'chat-user'
   text: string
-  content?: string
-  /** Present only for teacher rendering. Empty for student entries. */
-  options?: ScriptOption[]
-  /** Correction & feedback teacher bubbles carry these flags for styling. */
-  variant?: 'default' | 'correction' | 'feedback'
-  /** Present on student answer bubbles. */
-  isCorrect?: boolean
-  /** For text_answer / continue interactions on the latest teacher bubble. */
-  stepType?: ScriptStepType
-  /** Expected answer surfaced to the text-answer bubble so it can grade locally. */
-  expected?: string
-  /** Whether this is the terminal "end of lesson" bubble. */
-  isEnd?: boolean
+}
+
+/** Response from /api/agent/chat. */
+export interface ChatAssistantEntry extends EntryBase {
+  kind: 'chat-assistant'
+  text: string
+}
+
+/** In-flight indicator while waiting for the AI response. */
+export interface ChatPendingEntry extends EntryBase {
+  kind: 'chat-pending'
+}
+
+/** Displayed when /api/agent/chat fails (network, quota, auth). */
+export interface ChatErrorEntry extends EntryBase {
+  kind: 'chat-error'
+  text: string
+}
+
+/** Terminal bubble shown once the last exercise is done. */
+export interface LessonCompleteEntry extends EntryBase {
+  kind: 'lesson-complete'
 }

@@ -1,15 +1,23 @@
 'use client'
 
 import { cn } from '@/infra/utils/ui'
-import { ArrowLeft, BookOpen, Sparkles } from 'lucide-react'
-import type { LessonScript } from './types'
+import { ArrowLeft, BookOpen, MessageCircle } from 'lucide-react'
 
 interface ChatLessonStartCardProps {
-  script: LessonScript
+  lessonTitle: string
+  exerciseCount: number
+  startLabel: string
+  exercisesCountLabel: string
   onStart: () => void
 }
 
-export function ChatLessonStartCard({ script, onStart }: ChatLessonStartCardProps) {
+export function ChatLessonStartCard({
+  lessonTitle,
+  exerciseCount,
+  startLabel,
+  exercisesCountLabel,
+  onStart,
+}: ChatLessonStartCardProps) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-section-lg min-h-[60vh]">
       <div
@@ -19,24 +27,17 @@ export function ChatLessonStartCard({ script, onStart }: ChatLessonStartCardProp
         )}
       >
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10">
-          <Sparkles className="w-8 h-8 text-primary" />
+          <MessageCircle className="w-8 h-8 text-primary" />
         </div>
 
         <div className="space-y-2">
-          {script.lessonNumber && (
+          <h2 className="text-heading-md font-bold text-foreground">{lessonTitle}</h2>
+          {exerciseCount > 0 && (
             <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-body-xs font-bold rounded-md border border-primary/20">
-              {script.lessonNumber}
+              {exercisesCountLabel} · {exerciseCount}
             </span>
           )}
-          <h2 className="text-heading-md font-bold text-foreground">{script.lessonName}</h2>
         </div>
-
-        {script.highlights && (
-          <div className="p-card-padding-sm bg-muted rounded-xl text-body-sm text-muted-foreground text-right leading-relaxed border border-border">
-            <span className="text-primary font-bold">🎯 דגשי השיעור: </span>
-            {script.highlights}
-          </div>
-        )}
 
         <button
           type="button"
@@ -48,7 +49,7 @@ export function ChatLessonStartCard({ script, onStart }: ChatLessonStartCardProp
           )}
         >
           <BookOpen className="w-5 h-5" />
-          <span>התחל שיעור</span>
+          <span>{startLabel}</span>
           <ArrowLeft className="w-5 h-5" />
         </button>
       </div>

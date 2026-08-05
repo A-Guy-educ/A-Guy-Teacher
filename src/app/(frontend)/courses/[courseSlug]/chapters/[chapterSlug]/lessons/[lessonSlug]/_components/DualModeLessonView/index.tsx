@@ -20,7 +20,6 @@ import { ChatInterface } from '@/ui/web/chat'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import { BlocksDocumentLessonView } from '../BlocksDocumentLessonView'
 import { ChatLessonView } from '../ChatLessonView'
-import type { LessonScript } from '../ChatLessonView/types'
 import { ExercisesPager } from '../ExercisesPager'
 import { MediaTabContent } from '../MediaTabContent'
 import { TestViewRenderer } from '../TestViewRenderer'
@@ -55,9 +54,6 @@ interface DualModeLessonViewProps {
   chatLessonId?: string
   showChat?: boolean
   formulaSheet?: FormulaSheet | null
-  /** Authored script for the Chat tab. When null on a chat-enabled lesson,
-   *  ChatLessonView falls back to its bundled demo script. */
-  chatScript?: LessonScript | null
   /** Renderer modes enabled by the admin for this lesson. Defaults to all four. */
   visibleRenderers?: LessonMode[]
   initialExerciseIndex?: number
@@ -109,7 +105,6 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
     chatLessonId,
     showChat,
     formulaSheet,
-    chatScript,
     visibleRenderers,
     initialExerciseIndex,
     initialMode,
@@ -258,9 +253,11 @@ export function DualModeLessonView(props: DualModeLessonViewProps) {
         <ChatLessonView
           lessonTitle={lessonTitle}
           backUrl={backUrl}
+          lessonId={lessonId}
+          exercises={exercises}
+          mediaMap={mediaMap}
           formulaSheet={formulaSheet}
           headerSlot={tabBar}
-          script={chatScript ?? undefined}
         />
       </section>
     )

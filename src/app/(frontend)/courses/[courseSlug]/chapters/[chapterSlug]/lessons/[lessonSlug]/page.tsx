@@ -5,11 +5,9 @@ import { notFound } from 'next/navigation'
 import { getSystemLocale } from '@/i18n/server-locale'
 import { resolveAccessType } from '@/infra/auth/access-types'
 import { SystemParams } from '@/infra/config/system-params'
-import { getChatScriptByLessonId } from '@/server/repos/queries/chat-scripts'
 import { queryCourseBySlugWithFallback } from '@/server/repos/queries/courses'
 import { queryExercisesByLesson } from '@/server/repos/queries/exercises'
 import { resolveFormulaSheet } from '@/server/repos/queries/formula-sheets'
-import { payloadDocToLessonScript } from '@/lib/chat-lessons/toLessonScript'
 import { queryLessonBySlug, queryLessonsByCourse } from '@/server/repos/queries/lessons'
 import { queryMediaByIds } from '@/server/repos/queries/media'
 import { relationId } from '@/server/repos/mongo'
@@ -216,11 +214,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     }
   }
 
-  // Only fetch the chat script when the lesson has actually opted into the
-  // Chat tab — saves a Mongo roundtrip on lessons that don't use it.
-  const chatEnabled = (lesson.visibleRenderers ?? []).includes('chat')
-
-  const [exercises, mediaFiles, formulaSheetResult, chatScriptDoc] = await Promise.all([
+  const [exercises, mediaFiles, formulaSheetResult] = await Promise.all([
     queryExercisesByLesson({ lessonId: lesson.id }).then((exercises) =>
       (exercises ?? []).filter(
         (ex): ex is Exercise =>
@@ -233,14 +227,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
       courseId: course.id,
       locale: contentLocale ?? 'he',
     }),
-    chatEnabled
-      ? getChatScriptByLessonId({ lessonId: lesson.id, locale: contentLocale ?? 'he' })
-      : Promise.resolve(null),
   ])
-
-  const chatScript = chatScriptDoc
-    ? payloadDocToLessonScript({ doc: chatScriptDoc, lessonTitle: lesson.title })
-    : null
 
   const contentPagesInBlocks = blocks
     .filter((block) => block.type === 'contentPage')
@@ -295,7 +282,6 @@ export default async function LessonPage({ params }: LessonPageProps) {
         backUrl={backUrl}
         showChat={showChat}
         formulaSheet={formulaSheet}
-        chatScript={chatScript}
         exercises={exercises}
         mediaFiles={mediaFiles}
         mediaMap={mediaMap}

@@ -17,7 +17,6 @@ import { Card, CardContent } from '@/ui/web/components/card'
 import { Progress } from '@/ui/web/components/progress'
 import { useTranslations } from '@/ui/web/providers/I18n'
 
-import type { LessonScript } from '../ChatLessonView/types'
 import { ContentPagesPreamble } from '../ContentPagesPreamble'
 import { DualModeLessonView } from '../DualModeLessonView'
 import type { LessonMode } from '../DualModeLessonView/useLessonViewMode'
@@ -39,8 +38,6 @@ interface LessonIntroPageProps {
   backUrl: string
   showChat: boolean
   formulaSheet?: import('@/infra/types/content').FormulaSheet | null
-  /** Authored chat script for the Chat tab (from `chat-lessons` collection). */
-  chatScript?: LessonScript | null
   /** Exercises for this lesson (used to determine if lesson has exercises) */
   exercises?: import('@/infra/types/content').Exercise[]
   /** Media files (PDFs) for this lesson */
@@ -74,7 +71,6 @@ export function LessonIntroPage({
   backUrl,
   showChat,
   formulaSheet,
-  chatScript,
   exercises = [],
   mediaFiles = [],
   mediaMap = {},
@@ -221,7 +217,6 @@ export function LessonIntroPage({
         chatLessonId={lesson.id}
         showChat={showChat}
         formulaSheet={formulaSheet}
-        chatScript={chatScript}
         visibleRenderers={visibleRenderers}
         initialExerciseIndex={pageState.initialExerciseIndex}
         initialMode={
