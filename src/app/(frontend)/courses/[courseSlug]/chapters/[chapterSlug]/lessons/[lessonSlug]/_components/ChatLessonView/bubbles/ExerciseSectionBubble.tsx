@@ -2,7 +2,11 @@
 
 import type { Exercise, Media } from '@/infra/types/content'
 import type { ExerciseBlockGroup, RichTextBlock } from '@/infra/types/exercise'
-import type { QuestionSelectBlock } from '@/ui/web/exerciserenderer/types'
+import type {
+  QuestionSelectBlock,
+  QuestionSelectMcqBlock,
+  QuestionSelectTrueFalseBlock,
+} from '@/ui/web/exerciserenderer/types'
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
 import { RichTextRenderer } from '@/ui/web/exerciserenderer/blocks/RichTextRenderer'
 import { MediaMapProvider } from '@/ui/web/exerciserenderer/context/MediaMapContext'
@@ -100,6 +104,13 @@ export function ExerciseSectionBubble({
 
   const isChatNativePath = useMemo(() => isChatNativeSection(group), [group])
 
+  // Correct-answer text derived from question_select blocks. Passed with a
+  // 'wrong' outcome so the runner can echo the expected answer before the AI
+  // correction fires — cheaper feedback, no model roundtrip. Undefined when
+  // the section has no question_select blocks (fallback path grading table /
+  // matching / free-response etc., where we don't have a canonical text form).
+  const correctAnswerText = useMemo(() => deriveCorrectAnswerText(group), [group])
+
   // ── FALLBACK path ────────────────────────────────────────────────────────
   // Existing aggregate onResultsChange from ExerciseRenderer; fires onOutcome
   // once the section has been fully checked via the Check button flow.
@@ -109,9 +120,13 @@ export function ExerciseSectionBubble({
       if (results.totalQuestions === 0) return
       if (results.checkedCount < results.totalQuestions) return
       outcomeReportedRef.current = true
-      onOutcome?.(results.correctCount === results.totalQuestions ? 'correct' : 'wrong')
+      if (results.correctCount === results.totalQuestions) {
+        onOutcome?.({ kind: 'correct' })
+      } else {
+        onOutcome?.({ kind: 'wrong', correctAnswerText })
+      }
     },
-    [onOutcome],
+    [correctAnswerText, onOutcome],
   )
 
   // ── CHAT-NATIVE path ─────────────────────────────────────────────────────
@@ -153,10 +168,14 @@ export function ExerciseSectionBubble({
         chatNativeQuestionCount > 0
       ) {
         outcomeReportedRef.current = true
-        onOutcome?.(correctCountRef.current === chatNativeQuestionCount ? 'correct' : 'wrong')
+        if (correctCountRef.current === chatNativeQuestionCount) {
+          onOutcome?.({ kind: 'correct' })
+        } else {
+          onOutcome?.({ kind: 'wrong', correctAnswerText })
+        }
       }
     },
-    [chatNativeQuestionCount, onOutcome, onQuestionSubmit],
+    [chatNativeQuestionCount, correctAnswerText, onOutcome, onQuestionSubmit],
   )
 
   return (
@@ -242,4 +261,32 @@ function isChatNativeSection(group: ExerciseBlockGroup): boolean {
 
 function isQuestionSelect(block: { type: string }): boolean {
   return block.type === 'question_select'
+}
+
+/**
+ * Extract a joined "correct answer" string from every question_select block
+ * in the group. Returns undefined when the group has no question_select
+ * blocks (fallback path grading table/matching/free-response can't
+ * canonicalise their expected answer as a display string cheaply).
+ */
+function deriveCorrectAnswerText(group: ExerciseBlockGroup): string | undefined {
+  const parts: string[] = []
+  for (const block of group.blocks) {
+    if (block.type !== 'question_select') continue
+    const q = block as unknown as QuestionSelectBlock
+    if (q.variant === 'true_false') {
+      const tf = q as QuestionSelectTrueFalseBlock
+      const correctId = tf.answer.correctOptionId
+      const opt = tf.options?.find((o) => o.id === correctId)
+      if (opt) parts.push(opt.label.value)
+      continue
+    }
+    const mcq = q as QuestionSelectMcqBlock
+    const correctIds = new Set(mcq.answer.correctOptionIds)
+    const correctOpts = mcq.answer.options.filter((o) => correctIds.has(o.id))
+    if (correctOpts.length > 0) {
+      parts.push(correctOpts.map((o) => o.content.value).join(', '))
+    }
+  }
+  return parts.length > 0 ? parts.join(' · ') : undefined
 }
