@@ -1,8 +1,9 @@
 'use client'
 
 import { cn } from '@/infra/utils/ui'
-import { MathMarkdown } from '@/ui/web/shared/MathMarkdown'
+import { RichTextRenderer } from '@/ui/web/exerciserenderer/blocks/RichTextRenderer'
 import type {
+  InlineRichText,
   QuestionSelectBlock,
   QuestionSelectMcqBlock,
   QuestionSelectTrueFalseBlock,
@@ -18,7 +19,10 @@ interface ChatQuestionSelectBubbleProps {
 
 interface Choice {
   id: string
+  /** Plain text form for echoing into the student bubble. */
   labelValue: string
+  /** Rich-text form for on-screen rendering (supports mediaIds + SVG-aware imgs). */
+  labelBlock: InlineRichText
 }
 
 /**
@@ -41,7 +45,6 @@ export function ChatQuestionSelectBubble({
 
   const choices = getChoices(block)
   const correctIds = getCorrectIds(block)
-  const promptValue = block.prompt.value
 
   const handlePick = (choice: Choice) => {
     if (pickedId) return
@@ -59,7 +62,7 @@ export function ChatQuestionSelectBubble({
       )}
 
       <div className="text-body-md font-medium text-foreground leading-relaxed">
-        <MathMarkdown content={promptValue} />
+        <RichTextRenderer block={block.prompt} />
       </div>
 
       <div className="grid grid-cols-1 gap-content-gap-xs mt-2">
@@ -87,7 +90,7 @@ export function ChatQuestionSelectBubble({
               )}
             >
               <span className="flex-1 text-right">
-                <MathMarkdown content={choice.labelValue} />
+                <RichTextRenderer block={choice.labelBlock} />
               </span>
               <ArrowLeft
                 className={cn(
@@ -116,10 +119,18 @@ function getChoices(block: QuestionSelectBlock): Choice[] {
         label: { type: 'rich_text', format: 'md-math-v1', value: 'לא' },
       },
     ]
-    return options.map((o) => ({ id: o.id, labelValue: o.label.value }))
+    return options.map((o) => ({
+      id: o.id,
+      labelValue: o.label.value,
+      labelBlock: o.label,
+    }))
   }
   const mcq = block as QuestionSelectMcqBlock
-  return mcq.answer.options.map((o) => ({ id: o.id, labelValue: o.content.value }))
+  return mcq.answer.options.map((o) => ({
+    id: o.id,
+    labelValue: o.content.value,
+    labelBlock: o.content,
+  }))
 }
 
 function getCorrectIds(block: QuestionSelectBlock): Set<string> {

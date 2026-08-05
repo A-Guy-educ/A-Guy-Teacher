@@ -1,14 +1,17 @@
 'use client'
 
 import type { Exercise, Media } from '@/infra/types/content'
-import type { ExerciseBlockGroup } from '@/infra/types/exercise'
+import type { ExerciseBlockGroup, RichTextBlock } from '@/infra/types/exercise'
 import type { QuestionSelectBlock } from '@/ui/web/exerciserenderer/types'
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
-import { MathMarkdown } from '@/ui/web/shared/MathMarkdown'
+import { RichTextRenderer } from '@/ui/web/exerciserenderer/blocks/RichTextRenderer'
+import { MediaMapProvider } from '@/ui/web/exerciserenderer/context/MediaMapContext'
 import { useCallback, useMemo, useRef } from 'react'
 import type { SectionOutcome } from '../types'
 import { TeacherBubble } from './TeacherBubble'
 import { ChatQuestionSelectBubble } from './ChatQuestionSelectBubble'
+
+const EMPTY_MEDIA_MAP: Record<string, Media> = {}
 
 interface ExerciseSectionBubbleProps {
   exercise: Exercise
@@ -116,31 +119,37 @@ export function ExerciseSectionBubble({
   return (
     <TeacherBubble onSpeak={onSpeak} speaking={speaking} muted={muted} ttsSupported={ttsSupported}>
       {isChatNativePath ? (
-        <div className="flex flex-col gap-content-gap">
-          {group.blocks.map((block) => {
-            if (isQuestionSelect(block)) {
-              return (
-                <ChatQuestionSelectBubble
-                  key={block.id}
-                  block={block as QuestionSelectBlock}
-                  onSubmit={handleChatNativeSubmit}
-                />
-              )
-            }
-            if (block.type === 'rich_text') {
-              const rt = block as { id: string; type: 'rich_text'; value: string }
-              return (
-                <div
-                  key={block.id}
-                  className="text-body-md font-medium text-foreground leading-relaxed"
-                >
-                  <MathMarkdown content={rt.value} />
-                </div>
-              )
-            }
-            return null
-          })}
-        </div>
+        // MediaMapProvider is required so RichTextRenderer's MediaAttachments
+        // (used inside prompts, option labels, and inline rich_text) can look
+        // up media by id. The standard ExerciseRenderer path installs this
+        // provider itself; the chat-native path has to do it here.
+        <MediaMapProvider value={mediaMap ?? EMPTY_MEDIA_MAP}>
+          <div className="flex flex-col gap-content-gap">
+            {group.blocks.map((block) => {
+              if (isQuestionSelect(block)) {
+                return (
+                  <ChatQuestionSelectBubble
+                    key={block.id}
+                    block={block as QuestionSelectBlock}
+                    onSubmit={handleChatNativeSubmit}
+                  />
+                )
+              }
+              if (block.type === 'rich_text') {
+                const rt = block as RichTextBlock
+                return (
+                  <div
+                    key={block.id}
+                    className="text-body-md font-medium text-foreground leading-relaxed"
+                  >
+                    <RichTextRenderer block={rt} />
+                  </div>
+                )
+              }
+              return null
+            })}
+          </div>
+        </MediaMapProvider>
       ) : (
         <ExerciseRenderer
           groups={[group]}
@@ -160,7 +169,10 @@ export function ExerciseSectionBubble({
 
 /**
  * A section is chat-native only when every question block is a single-select
- * question_select. Multi-select and other question types force the fallback.
+ * question_select and there are no other gradable blocks (multi-axis, or an
+ * interactive svg with hotspots). Anything the chat-native render loop
+ * would silently drop must force the fallback path, otherwise the student
+ * loses a question AND the section outcome fires prematurely.
  */
 function isChatNativeSection(group: ExerciseBlockGroup): boolean {
   let hasAnyQuestion = false
@@ -177,12 +189,26 @@ function isChatNativeSection(group: ExerciseBlockGroup): boolean {
       type === 'question_table' ||
       type === 'question_matching' ||
       type === 'question_geometry' ||
-      type === 'question_axis'
+      type === 'question_axis' ||
+      type === 'question_multi_axis'
     ) {
       return false
     }
-    // Non-question blocks (rich_text, latex, svg, media) are fine — they
-    // render either inline (rich_text) or are skipped in the chat path.
+    // SVG blocks are usually decorative, but ExerciseRenderer treats any svg
+    // with hotspots + correctHotspotIds as a gradable question — those must
+    // fall back to the standard renderer so the student can actually answer.
+    if (type === 'svg') {
+      const svg = block as unknown as {
+        interactive?: boolean
+        hotspots?: unknown[]
+        correctHotspotIds?: string[]
+      }
+      const hasHotspots = Array.isArray(svg.hotspots) && svg.hotspots.length > 0
+      const hasCorrectIds = Array.isArray(svg.correctHotspotIds) && svg.correctHotspotIds.length > 0
+      if (svg.interactive || hasHotspots || hasCorrectIds) return false
+    }
+    // Non-question blocks (rich_text, latex, purely decorative svg, media)
+    // are fine — they render either inline (rich_text) or are skipped.
   }
   return hasAnyQuestion
 }
