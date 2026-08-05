@@ -133,11 +133,24 @@ export function useExerciseWalker({ exercises, append }: UseExerciseWalkerArgs) 
 
   const currentStep = steps[stepCursor] ?? null
 
+  // Total distinct exercises drives the "Exercise X/Y" label in the progress
+  // footer. Derived here so the progress component doesn't have to hold onto
+  // the full exercises array.
+  const totalExercises = useMemo(() => exercises.length, [exercises.length])
+
   return {
     currentStep,
     /** 0-based cursor into the flattened step list — drives the progress bar. */
     stepCursor,
     totalSteps: steps.length,
+    /** 1-based exercise ordinal at the current step (0 when no current step). */
+    currentExerciseOrdinal: currentStep?.ordinal ?? 0,
+    /** Total number of exercises in the lesson. */
+    totalExercises,
+    /** 1-based section index WITHIN the current exercise. */
+    currentSectionOrdinal: currentStep ? currentStep.groupIndex + 1 : 0,
+    /** Total sections in the current exercise. */
+    currentExerciseSections: currentStep?.groupsInExercise ?? 0,
     isComplete,
     advance,
   }

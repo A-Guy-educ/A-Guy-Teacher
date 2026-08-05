@@ -81,5 +81,12 @@ export interface LessonCompleteEntry extends EntryBase {
   kind: 'lesson-complete'
 }
 
-/** Reported by ExerciseSectionBubble when the student finishes the section. */
-export type SectionOutcome = 'correct' | 'wrong'
+/**
+ * Reported by ExerciseSectionBubble when the student finishes the section.
+ * `correctAnswerText` is populated on wrong outcomes when the section's
+ * blocks let us extract the expected answer (currently: question_select
+ * options with `isCorrect` / `correctOptionId`). The runner uses it to
+ * post a "correct answer: X" bubble before the AI correction, so the
+ * student sees the actual answer immediately without waiting on the model.
+ */
+export type SectionOutcome = { kind: 'correct' } | { kind: 'wrong'; correctAnswerText?: string }

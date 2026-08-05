@@ -152,9 +152,10 @@ function ActiveChat({
   }, [cancelPendingAdvance, walker])
 
   const correctionPrompt = t('chatViewCorrectionPrompt')
+  const correctAnswerLabel = t('chatViewCorrectAnswerLabel')
   const handleOutcome = useCallback(
     (outcome: SectionOutcome) => {
-      if (outcome === 'correct') {
+      if (outcome.kind === 'correct') {
         append({
           key: `celebrate-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           kind: 'chat-assistant',
@@ -166,10 +167,21 @@ function ActiveChat({
           walker.advance()
         }, CELEBRATION_ADVANCE_MS)
       } else {
+        // Post the correct-answer bubble immediately (from block data — no
+        // model roundtrip), THEN kick off the AI explanation. Anchors the
+        // student on the answer while the fuller correction is being
+        // generated.
+        if (outcome.correctAnswerText) {
+          append({
+            key: `ans-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            kind: 'chat-assistant',
+            text: `${correctAnswerLabel}: ${outcome.correctAnswerText}`,
+          })
+        }
         chat.requestCorrection(correctionPrompt)
       }
     },
-    [append, cancelPendingAdvance, chat, correctionPrompt, walker],
+    [append, cancelPendingAdvance, chat, correctAnswerLabel, correctionPrompt, walker],
   )
 
   const handleQuestionSubmit = useCallback(
@@ -254,6 +266,12 @@ function ActiveChat({
       <ChatLessonProgress
         stepIndex={walker.stepCursor}
         totalSteps={walker.totalSteps}
+        currentExerciseOrdinal={walker.currentExerciseOrdinal}
+        totalExercises={walker.totalExercises}
+        currentSectionOrdinal={walker.currentSectionOrdinal}
+        currentExerciseSections={walker.currentExerciseSections}
+        exerciseLabel={t('chatViewProgressExercise')}
+        sectionLabel={t('chatViewProgressSection')}
         onReset={handleReset}
         onToggleMute={tts.toggleMuted}
         muted={tts.muted}
