@@ -3390,6 +3390,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Inject current section context into every Chat-view chat request ([#1033](https://github.com/A-Guy-educ/A-Guy-Web/pull/1033)) — @aguyshayb
 - feat: Chat view — section-by-section walk with feedback + auto-correction ([#1032](https://github.com/A-Guy-educ/A-Guy-Web/pull/1032)) — @aguyshayb
 - feat: Rework Chat view as a reskin of the existing exercise flow ([#1031](https://github.com/A-Guy-educ/A-Guy-Web/pull/1031)) — @aguyshayb
 - promote: dev -> main (v0.30.15) ([#1030](https://github.com/A-Guy-educ/A-Guy-Web/pull/1030)) — @aguyaharonyair
