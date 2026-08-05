@@ -172,6 +172,22 @@ function ActiveChat({
     [append, cancelPendingAdvance, chat, correctionPrompt, walker],
   )
 
+  const handleQuestionSubmit = useCallback(
+    (text: string, isCorrect: boolean) => {
+      // Echo the student's answer as a right-side bubble; color is derived
+      // from isCorrect so the "chose the correct option" and "chose wrong"
+      // states are immediately visible even before the section outcome
+      // fires the celebration or correction below.
+      append({
+        key: `q-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        kind: 'chat-user',
+        text,
+        isCorrect,
+      })
+    },
+    [append],
+  )
+
   // Narrate new teacher-side bubbles as they appear. Dedupe on `key + kind`
   // so entries replaced in place (chat-pending → chat-assistant) still
   // trigger narration when they mutate.
@@ -216,6 +232,7 @@ function ActiveChat({
               mediaMap={mediaMap}
               tts={tts}
               onOutcome={handleOutcome}
+              onQuestionSubmit={handleQuestionSubmit}
               introPrefix={t('chatViewIntroPrefix')}
               completeText={t('chatViewFinishTitle')}
             />
@@ -252,6 +269,7 @@ interface StreamEntryViewProps {
   mediaMap?: Record<string, Media>
   tts: ReturnType<typeof useBrowserTTS>
   onOutcome: (outcome: SectionOutcome) => void
+  onQuestionSubmit: (text: string, isCorrect: boolean) => void
   introPrefix: string
   completeText: string
 }
@@ -262,6 +280,7 @@ function StreamEntryView({
   mediaMap,
   tts,
   onOutcome,
+  onQuestionSubmit,
   introPrefix,
   completeText,
 }: StreamEntryViewProps) {
@@ -289,11 +308,15 @@ function StreamEntryView({
           questionCount={entry.questionCount}
           lessonId={lessonId}
           mediaMap={mediaMap}
+          speaking={tts.speaking}
+          muted={tts.muted}
+          ttsSupported={tts.supported}
           onOutcome={onOutcome}
+          onQuestionSubmit={onQuestionSubmit}
         />
       )
     case 'chat-user':
-      return <StudentBubble text={entry.text} />
+      return <StudentBubble text={entry.text} isCorrect={entry.isCorrect} />
     case 'chat-assistant':
       return (
         <TeacherBubble

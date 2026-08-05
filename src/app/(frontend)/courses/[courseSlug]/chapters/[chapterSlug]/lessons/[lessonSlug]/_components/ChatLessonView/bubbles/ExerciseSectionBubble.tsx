@@ -1,11 +1,43 @@
 'use client'
 
-import { cn } from '@/infra/utils/ui'
 import type { Exercise, Media } from '@/infra/types/content'
-import type { ExerciseBlockGroup } from '@/infra/types/exercise'
+import type { ExerciseBlockGroup, RichTextBlock } from '@/infra/types/exercise'
+import type { QuestionSelectBlock } from '@/ui/web/exerciserenderer/types'
 import { ExerciseRenderer } from '@/ui/web/exerciserenderer'
-import { useCallback, useRef } from 'react'
+import { RichTextRenderer } from '@/ui/web/exerciserenderer/blocks/RichTextRenderer'
+import { MediaMapProvider } from '@/ui/web/exerciserenderer/context/MediaMapContext'
+import { useCallback, useMemo, useRef } from 'react'
 import type { SectionOutcome } from '../types'
+import { TeacherBubble } from './TeacherBubble'
+import { ChatQuestionSelectBubble } from './ChatQuestionSelectBubble'
+
+const EMPTY_MEDIA_MAP: Record<string, Media> = {}
+
+/** Question letters for chat-native multi-question sections. */
+const HEBREW_LETTERS = [
+  'א',
+  'ב',
+  'ג',
+  'ד',
+  'ה',
+  'ו',
+  'ז',
+  'ח',
+  'ט',
+  'י',
+  'כ',
+  'ל',
+  'מ',
+  'נ',
+  'ס',
+  'ע',
+  'פ',
+  'צ',
+  'ק',
+  'ר',
+  'ש',
+  'ת',
+]
 
 interface ExerciseSectionBubbleProps {
   exercise: Exercise
@@ -14,20 +46,41 @@ interface ExerciseSectionBubbleProps {
   questionCount: number
   lessonId: string
   mediaMap?: Record<string, Media>
+  /** Speak the section's teacher header line if the chrome renders one. */
+  onSpeak?: () => void
+  speaking?: boolean
+  muted?: boolean
+  ttsSupported?: boolean
   /**
-   * Fires exactly once — when the student has checked every question in the
-   * section. `correct` when all answers matched; `wrong` when at least one
-   * was off. Not fired at all for intro-only groups (questionCount === 0).
+   * Fires when the student has finished the section — either all questions
+   * checked correctly or at least one wrong. Fires once. Not called for
+   * intro-only groups (questionCount === 0).
    */
   onOutcome?: (outcome: SectionOutcome) => void
+  /**
+   * Fires per-question when the student picks an answer in the chat-native
+   * path. Used by the runner to emit right-aligned student bubbles into the
+   * shared stream. Not called in the fallback (ExerciseRenderer) path — those
+   * students see the check button + inline correct/wrong strip instead.
+   */
+  onQuestionSubmit?: (text: string, isCorrect: boolean) => void
 }
 
 /**
- * One section of an exercise, rendered as a teacher-style chat bubble.
- * Answer UI, per-question letter labels, and local correctness checking
- * come from the shared ExerciseRenderer — this component only slices the
- * exercise down to a single group and translates the aggregate results
- * into a one-shot outcome signal for the runner.
+ * A section rendered as a chat bubble. Two rendering paths:
+ *
+ * - CHAT-NATIVE: when every question in the section is a single-select
+ *   `question_select` (mcq single-select OR true/false). Renders the prompt
+ *   as a chat message, options as chat buttons that auto-submit on click,
+ *   and echoes each pick as a right-side student bubble in the stream via
+ *   `onQuestionSubmit`. Non-question blocks (rich_text) render inline.
+ *
+ * - FALLBACK: any other shape (multi-select mcq, free-response, table,
+ *   matching, geometry, axis, svg, etc.) drops through to the shared
+ *   `ExerciseRenderer` with `questionCardVariant='flat'` so the internal
+ *   card chrome is stripped to blend inside the bubble.
+ *
+ * Both paths report the section-level outcome via `onOutcome` exactly once.
  */
 export function ExerciseSectionBubble({
   exercise,
@@ -36,29 +89,112 @@ export function ExerciseSectionBubble({
   questionCount,
   lessonId,
   mediaMap,
+  onSpeak,
+  speaking,
+  muted,
+  ttsSupported,
   onOutcome,
+  onQuestionSubmit,
 }: ExerciseSectionBubbleProps) {
-  const reportedRef = useRef(false)
+  const outcomeReportedRef = useRef(false)
 
-  const handleResults = useCallback(
+  const isChatNativePath = useMemo(() => isChatNativeSection(group), [group])
+
+  // ── FALLBACK path ────────────────────────────────────────────────────────
+  // Existing aggregate onResultsChange from ExerciseRenderer; fires onOutcome
+  // once the section has been fully checked via the Check button flow.
+  const handleAggregateResults = useCallback(
     (results: { totalQuestions: number; checkedCount: number; correctCount: number }) => {
-      if (reportedRef.current) return
+      if (outcomeReportedRef.current) return
       if (results.totalQuestions === 0) return
       if (results.checkedCount < results.totalQuestions) return
-      reportedRef.current = true
+      outcomeReportedRef.current = true
       onOutcome?.(results.correctCount === results.totalQuestions ? 'correct' : 'wrong')
     },
     [onOutcome],
   )
 
+  // ── CHAT-NATIVE path ─────────────────────────────────────────────────────
+  // Per-question submits accumulate here; when every question in the section
+  // has been picked we emit the section outcome exactly once.
+  const submittedCountRef = useRef(0)
+  const correctCountRef = useRef(0)
+  const chatNativeQuestionCount = useMemo(
+    () => (isChatNativePath ? group.blocks.filter(isQuestionSelect).length : 0),
+    [group.blocks, isChatNativePath],
+  )
+
+  // Only label individual questions when the section has more than one — a
+  // solo question doesn't need a leading "א" badge. Mirrors ExerciseRenderer's
+  // per-question letter labels so students can reference "question ב" in a
+  // follow-up chat question.
+  const questionLabelById = useMemo(() => {
+    if (!isChatNativePath || chatNativeQuestionCount < 2) return null
+    const map = new Map<string, string>()
+    let i = 0
+    for (const block of group.blocks) {
+      if (isQuestionSelect(block)) {
+        map.set(block.id, HEBREW_LETTERS[i] ?? String(i + 1))
+        i++
+      }
+    }
+    return map
+  }, [chatNativeQuestionCount, group.blocks, isChatNativePath])
+
+  const handleChatNativeSubmit = useCallback(
+    (text: string, isCorrect: boolean) => {
+      submittedCountRef.current += 1
+      if (isCorrect) correctCountRef.current += 1
+      onQuestionSubmit?.(text, isCorrect)
+
+      if (
+        !outcomeReportedRef.current &&
+        submittedCountRef.current >= chatNativeQuestionCount &&
+        chatNativeQuestionCount > 0
+      ) {
+        outcomeReportedRef.current = true
+        onOutcome?.(correctCountRef.current === chatNativeQuestionCount ? 'correct' : 'wrong')
+      }
+    },
+    [chatNativeQuestionCount, onOutcome, onQuestionSubmit],
+  )
+
   return (
-    <div className="flex justify-start">
-      <div
-        className={cn(
-          'max-w-[95%] w-full rounded-2xl rounded-tr-none border border-border bg-card',
-          'p-card-padding-sm md:p-card-padding shadow-elevation-1',
-        )}
-      >
+    <TeacherBubble onSpeak={onSpeak} speaking={speaking} muted={muted} ttsSupported={ttsSupported}>
+      {isChatNativePath ? (
+        // MediaMapProvider is required so RichTextRenderer's MediaAttachments
+        // (used inside prompts, option labels, and inline rich_text) can look
+        // up media by id. The standard ExerciseRenderer path installs this
+        // provider itself; the chat-native path has to do it here.
+        <MediaMapProvider value={mediaMap ?? EMPTY_MEDIA_MAP}>
+          <div className="flex flex-col gap-content-gap">
+            {group.blocks.map((block) => {
+              if (isQuestionSelect(block)) {
+                return (
+                  <ChatQuestionSelectBubble
+                    key={block.id}
+                    block={block as QuestionSelectBlock}
+                    questionLabel={questionLabelById?.get(block.id)}
+                    onSubmit={handleChatNativeSubmit}
+                  />
+                )
+              }
+              if (block.type === 'rich_text') {
+                const rt = block as RichTextBlock
+                return (
+                  <div
+                    key={block.id}
+                    className="text-body-md font-medium text-foreground leading-relaxed"
+                  >
+                    <RichTextRenderer block={rt} />
+                  </div>
+                )
+              }
+              return null
+            })}
+          </div>
+        </MediaMapProvider>
+      ) : (
         <ExerciseRenderer
           groups={[group]}
           mediaMap={mediaMap}
@@ -67,9 +203,43 @@ export function ExerciseSectionBubble({
           lessonId={lessonId}
           exerciseId={exercise.id}
           hideLatexBlocks
-          onResultsChange={questionCount > 0 ? handleResults : undefined}
+          questionCardVariant="flat"
+          onResultsChange={questionCount > 0 ? handleAggregateResults : undefined}
         />
-      </div>
-    </div>
+      )}
+    </TeacherBubble>
   )
+}
+
+/**
+ * Allowlist guard: a section is chat-native ONLY when every block is either
+ * a single-select `question_select` OR a `rich_text` decoration. The
+ * chat-native render loop below only knows how to render those two types;
+ * anything else (media, svg, html, latex, multi-axis, free-response,
+ * table/matching/geometry/axis, multi-select mcq) must fall back to the
+ * shared ExerciseRenderer so nothing is silently dropped AND the section
+ * outcome doesn't fire prematurely on a partial answer count.
+ *
+ * Kept as an explicit allowlist (rather than a growing rejectlist) so
+ * adding new block types can't accidentally slip through.
+ */
+function isChatNativeSection(group: ExerciseBlockGroup): boolean {
+  let hasAnyQuestion = false
+  for (const block of group.blocks) {
+    if (block.type === 'rich_text') continue
+    if (block.type === 'question_select') {
+      hasAnyQuestion = true
+      const b = block as unknown as QuestionSelectBlock
+      if (b.variant === 'mcq' && b.answer.multiSelect) return false
+      continue
+    }
+    // Any other block type → fallback path. ExerciseRenderer knows how to
+    // render media/svg/html/latex/etc. with all their affordances.
+    return false
+  }
+  return hasAnyQuestion
+}
+
+function isQuestionSelect(block: { type: string }): boolean {
+  return block.type === 'question_select'
 }

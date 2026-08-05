@@ -46,10 +46,17 @@ export interface ExerciseSectionEntry extends EntryBase {
   questionCount: number
 }
 
-/** Student's freeform question typed into the chat input. */
+/**
+ * Right-aligned student bubble. Two sources feed this entry:
+ *   1. Freeform questions typed into the ChatInputPanel (no `isCorrect`).
+ *   2. Multiple-choice picks in the chat-native section renderer, which
+ *      echoes the student's chosen option here with `isCorrect` set so
+ *      StudentBubble can color the bubble green/red immediately.
+ */
 export interface ChatUserEntry extends EntryBase {
   kind: 'chat-user'
   text: string
+  isCorrect?: boolean
 }
 
 /** Response from /api/agent/chat OR a canned "well done" line. */
