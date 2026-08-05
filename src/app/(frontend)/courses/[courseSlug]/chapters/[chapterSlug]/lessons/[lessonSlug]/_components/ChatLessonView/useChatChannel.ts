@@ -4,24 +4,38 @@
  * @ai-summary Freeform chat channel for the Chat view. When the student types
  *             a question, we append their bubble + a pending indicator, then
  *             hit the existing /api/agent/chat endpoint with the current
- *             exercise's context (same channel the Interactive-tab chat uses).
- *             The assistant reply replaces the pending indicator in place.
+ *             section's context wrapped around the message. The assistant
+ *             reply replaces the pending indicator in place.
  *
- *             Only the current exerciseId is passed as context — no extra
- *             injection here, because the /api/agent/chat handler already
- *             resolves lessonId/courseId/exerciseId server-side and formats
- *             the exercise context for the model.
+ *             Why we wrap the message in `<exercise-context>` ourselves: the
+ *             /api/agent/chat endpoint resolves its context key as
+ *             `lessons:${lessonId}` when both lessonId + exerciseId are
+ *             present (see `resolveContextKey`), so the conversation is
+ *             lesson-wide and cumulative. Without an explicit block telling
+ *             the AI which section is "current", it grabs whatever exercise
+ *             was most recently in history and answers about that. Injecting
+ *             the current section's blocks on every send scopes the AI's
+ *             attention to the section the student is actually on.
  */
 
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
+import { buildPromptWithExerciseContext } from '@/ui/web/chat/hooks/exercise-context-prompt'
 import { apiService } from '@/server/services/api/api-service'
 import type { StreamEntry } from './types'
 
 interface UseChatChannelArgs {
   lessonId: string
   currentExerciseId: string | null
+  /**
+   * Pre-formatted `<exercise-context>` payload for the current section. When
+   * provided, we wrap every outgoing message with it via
+   * buildPromptWithExerciseContext so the AI knows exactly which section is
+   * in play, regardless of what the lesson-wide conversation history looks
+   * like. Null when no section is active (start card / lesson-complete).
+   */
+  currentExerciseContext: string | null
   /** Called to add a new entry to the shared stream. */
   append: (entry: StreamEntry) => void
   /** Called to swap the pending entry for a real assistant/error entry. */
@@ -35,6 +49,7 @@ interface UseChatChannelArgs {
 export function useChatChannel({
   lessonId,
   currentExerciseId,
+  currentExerciseContext,
   append,
   replace,
   acknowledgment,
@@ -73,8 +88,10 @@ export function useChatChannel({
         replace(pendingKey, entry)
       }
 
+      const wrappedMessage = buildPromptWithExerciseContext(message, currentExerciseContext)
+
       try {
-        const response = await apiService.chat(message, acknowledgment, {
+        const response = await apiService.chat(wrappedMessage, acknowledgment, {
           lessonId,
           exerciseId: currentExerciseId ?? undefined,
         })
@@ -101,6 +118,7 @@ export function useChatChannel({
       acknowledgment,
       append,
       authRequiredMessage,
+      currentExerciseContext,
       currentExerciseId,
       errorMessage,
       lessonId,
