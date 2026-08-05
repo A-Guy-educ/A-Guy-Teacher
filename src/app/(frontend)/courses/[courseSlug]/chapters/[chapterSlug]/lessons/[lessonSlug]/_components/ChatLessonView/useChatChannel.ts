@@ -46,15 +46,31 @@ export function useChatChannel({
   const idCounter = useRef(0)
   const nextKey = (prefix: string) => `${prefix}-${Date.now()}-${++idCounter.current}`
 
+  // The visible `isSending` state drives the input button's disabled prop,
+  // but a second synchronous invocation of `send` (e.g. two Enter presses
+  // dispatched before React reconciles) would still pass an `isSending`
+  // guard because the closure captures the stale render-time value. Guard
+  // synchronously via a ref, then mirror to state for the UI.
+  const sendingRef = useRef(false)
+
   const send = useCallback(
     async (rawText: string) => {
       const text = rawText.trim()
-      if (!text || isSending) return
+      if (!text || sendingRef.current) return
+      sendingRef.current = true
+      setIsSending(true)
 
       append({ key: nextKey('u'), kind: 'chat-user', text })
       const pendingKey = nextKey('p')
       append({ key: pendingKey, kind: 'chat-pending' })
-      setIsSending(true)
+
+      // Give the assistant reply a distinct key from the pending indicator
+      // so downstream effects (e.g. TTS narration) treat it as a fresh
+      // entry rather than the same key being mutated. The pending entry is
+      // removed in the same replace call.
+      const finalize = (entry: Extract<StreamEntry, { kind: 'chat-assistant' | 'chat-error' }>) => {
+        replace(pendingKey, entry)
+      }
 
       try {
         const response = await apiService.chat(text, acknowledgment, {
@@ -63,11 +79,7 @@ export function useChatChannel({
         })
 
         if (response.success && response.message) {
-          replace(pendingKey, {
-            key: pendingKey,
-            kind: 'chat-assistant',
-            text: response.message,
-          })
+          finalize({ key: nextKey('a'), kind: 'chat-assistant', text: response.message })
           return
         }
 
@@ -76,10 +88,11 @@ export function useChatChannel({
           : response.quotaExceeded
             ? quotaExceededMessage
             : (response.error ?? errorMessage)
-        replace(pendingKey, { key: pendingKey, kind: 'chat-error', text: message })
+        finalize({ key: nextKey('e'), kind: 'chat-error', text: message })
       } catch {
-        replace(pendingKey, { key: pendingKey, kind: 'chat-error', text: errorMessage })
+        finalize({ key: nextKey('e'), kind: 'chat-error', text: errorMessage })
       } finally {
+        sendingRef.current = false
         setIsSending(false)
       }
     },
@@ -89,7 +102,6 @@ export function useChatChannel({
       authRequiredMessage,
       currentExerciseId,
       errorMessage,
-      isSending,
       lessonId,
       quotaExceededMessage,
       replace,

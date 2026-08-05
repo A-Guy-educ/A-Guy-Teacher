@@ -8,6 +8,7 @@ import { ChatLessonProgress } from './ChatLessonProgress'
 import { ChatLessonStartCard } from './ChatLessonStartCard'
 import { ContinueButton } from './bubbles/ContinueButton'
 import { ExerciseBubble } from './bubbles/ExerciseBubble'
+import { PendingBubble } from './bubbles/PendingBubble'
 import { StudentBubble } from './bubbles/StudentBubble'
 import { TeacherBubble } from './bubbles/TeacherBubble'
 import type { StreamEntry } from './types'
@@ -82,21 +83,31 @@ function ActiveChat({
     quotaExceededMessage: t('chatViewQuotaExceeded'),
   })
 
-  // Narrate teacher-side bubbles as they appear. Intros carry the exercise
-  // title; assistant replies carry AI text. We narrate on entry-count change
-  // so mid-stream additions get spoken exactly once.
-  const lastNarratedKey = useRef<string | null>(null)
+  // Narrate teacher-side bubbles as they appear. Two failure modes we have
+  // to handle here:
+  //   1. Walker.emitExercise appends [intro, exercise] in one synchronous
+  //      batch — reading only entries[last] would see the exercise bubble
+  //      and skip the intro. So we walk every entry that hasn't been
+  //      narrated yet.
+  //   2. Chat channel appends a `chat-pending` entry, then swaps it in place
+  //      with a `chat-assistant` entry via replace(sameKey, ...). Deduping
+  //      on key alone would suppress the assistant. So we key the dedupe
+  //      cache by `key + kind` — a mutation of an existing key is treated
+  //      as a fresh candidate for narration.
+  const narratedRef = useRef<Set<string>>(new Set())
   useEffect(() => {
-    const latest = entries[entries.length - 1]
-    if (!latest || latest.key === lastNarratedKey.current) return
-    lastNarratedKey.current = latest.key
-    if (latest.kind === 'exercise-intro') {
-      const line = latest.title
-        ? `${t('chatViewIntroPrefix')} ${latest.ordinal}: ${latest.title}`
-        : `${t('chatViewIntroPrefix')} ${latest.ordinal}`
-      tts.speak(line)
-    } else if (latest.kind === 'chat-assistant') {
-      tts.speak(latest.text)
+    for (const entry of entries) {
+      const token = `${entry.key}:${entry.kind}`
+      if (narratedRef.current.has(token)) continue
+      narratedRef.current.add(token)
+      if (entry.kind === 'exercise-intro') {
+        const line = entry.title
+          ? `${t('chatViewIntroPrefix')} ${entry.ordinal}: ${entry.title}`
+          : `${t('chatViewIntroPrefix')} ${entry.ordinal}`
+        tts.speak(line)
+      } else if (entry.kind === 'chat-assistant') {
+        tts.speak(entry.text)
+      }
     }
   }, [entries, t, tts])
 
@@ -206,7 +217,7 @@ function StreamEntryView({
         />
       )
     case 'chat-pending':
-      return <TeacherBubble text="…" variant="feedback" />
+      return <PendingBubble />
     case 'chat-error':
       return <TeacherBubble text={entry.text} variant="correction" />
     case 'lesson-complete':
