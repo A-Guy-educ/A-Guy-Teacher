@@ -53,14 +53,15 @@ export function useChatChannel({
   // synchronously via a ref, then mirror to state for the UI.
   const sendingRef = useRef(false)
 
-  const send = useCallback(
-    async (rawText: string) => {
-      const text = rawText.trim()
-      if (!text || sendingRef.current) return
+  const runRequest = useCallback(
+    async (message: string, showUserBubble: boolean) => {
+      if (sendingRef.current) return
       sendingRef.current = true
       setIsSending(true)
 
-      append({ key: nextKey('u'), kind: 'chat-user', text })
+      if (showUserBubble) {
+        append({ key: nextKey('u'), kind: 'chat-user', text: message })
+      }
       const pendingKey = nextKey('p')
       append({ key: pendingKey, kind: 'chat-pending' })
 
@@ -73,7 +74,7 @@ export function useChatChannel({
       }
 
       try {
-        const response = await apiService.chat(text, acknowledgment, {
+        const response = await apiService.chat(message, acknowledgment, {
           lessonId,
           exerciseId: currentExerciseId ?? undefined,
         })
@@ -83,12 +84,12 @@ export function useChatChannel({
           return
         }
 
-        const message = response.authRequired
+        const errorText = response.authRequired
           ? authRequiredMessage
           : response.quotaExceeded
             ? quotaExceededMessage
             : (response.error ?? errorMessage)
-        finalize({ key: nextKey('e'), kind: 'chat-error', text: message })
+        finalize({ key: nextKey('e'), kind: 'chat-error', text: errorText })
       } catch {
         finalize({ key: nextKey('e'), kind: 'chat-error', text: errorMessage })
       } finally {
@@ -108,5 +109,30 @@ export function useChatChannel({
     ],
   )
 
-  return { send, isSending }
+  /** Freeform student question — shows their bubble + AI reply. */
+  const send = useCallback(
+    (rawText: string) => {
+      const text = rawText.trim()
+      if (!text) return
+      void runRequest(text, true)
+    },
+    [runRequest],
+  )
+
+  /**
+   * Auto-correction triggered when the student answers a section incorrectly.
+   * The canned prompt is invisible to the student — only the pending
+   * indicator + assistant reply land in the stream so it reads like the
+   * teacher volunteered an explanation.
+   */
+  const requestCorrection = useCallback(
+    (prompt: string) => {
+      const text = prompt.trim()
+      if (!text) return
+      void runRequest(text, false)
+    },
+    [runRequest],
+  )
+
+  return { send, requestCorrection, isSending }
 }
