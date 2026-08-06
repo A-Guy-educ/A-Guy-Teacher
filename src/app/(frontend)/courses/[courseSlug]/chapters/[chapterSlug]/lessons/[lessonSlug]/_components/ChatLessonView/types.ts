@@ -63,6 +63,17 @@ export interface ChatUserEntry extends EntryBase {
 export interface ChatAssistantEntry extends EntryBase {
   kind: 'chat-assistant'
   text: string
+  /**
+   * True while a streamed reply is still growing (chunks arriving). Turns
+   * false on the terminal replace once the stream ends. Downstream effects
+   * (TTS narration in particular) MUST skip streaming entries — otherwise
+   * they'd narrate on the first ~80-char chunk and dedupe every subsequent
+   * chunk, leaving blind users with only the opening fragment.
+   *
+   * Undefined for non-streamed entries (the canned "well done" bubble, or
+   * anything appended synchronously) — treated as false.
+   */
+  streaming?: boolean
 }
 
 /** In-flight indicator while waiting for the AI response. */

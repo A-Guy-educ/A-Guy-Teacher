@@ -143,12 +143,14 @@ export function useChatChannel({
                   key: assistantKey,
                   kind: 'chat-assistant',
                   text: accumulatedText,
+                  streaming: true,
                 })
               } else {
                 replace(assistantKey, {
                   key: assistantKey,
                   kind: 'chat-assistant',
                   text: accumulatedText,
+                  streaming: true,
                 })
               }
             } else if (parsed.event === 'error') {
@@ -156,7 +158,8 @@ export function useChatChannel({
               finalizeError(text)
               return
             }
-            // 'done' → nothing to do; final text is already rendered
+            // 'done' → nothing to do; the terminal replace below flips the
+            // streaming flag once the reader loop exits.
           }
         }
 
@@ -165,7 +168,18 @@ export function useChatChannel({
         // the UI doesn't leave the pending indicator hanging.
         if (assistantKey === null) {
           finalizeError(errorMessage)
+          return
         }
+
+        // Terminal replace: same key + text, streaming: false. TTS narration
+        // gates on !streaming so this is the point at which the reply gets
+        // spoken (once, on the whole text — not per chunk).
+        replace(assistantKey, {
+          key: assistantKey,
+          kind: 'chat-assistant',
+          text: accumulatedText,
+          streaming: false,
+        })
       } catch {
         finalizeError(errorMessage)
       } finally {
