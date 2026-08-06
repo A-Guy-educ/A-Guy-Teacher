@@ -3440,6 +3440,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- feat: Chat view — stream AI responses over SSE ([#1039](https://github.com/A-Guy-educ/A-Guy-Web/pull/1039)) — @aguyshayb
 - promote: dev -> main (v0.30.16) ([#1038](https://github.com/A-Guy-educ/A-Guy-Web/pull/1038)) — @aguyaharonyair
 - chore: release v0.30.16 ([#1037](https://github.com/A-Guy-educ/A-Guy-Web/pull/1037)) — @aguyaharonyair
 - feat: Chat view — quick-action chips (hint / explain / skip) ([#1036](https://github.com/A-Guy-educ/A-Guy-Web/pull/1036)) — @aguyshayb
