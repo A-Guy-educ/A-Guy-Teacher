@@ -3440,6 +3440,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.30.16 ([#1037](https://github.com/A-Guy-educ/A-Guy-Web/pull/1037)) — @aguyaharonyair
 - feat: Chat view — quick-action chips (hint / explain / skip) ([#1036](https://github.com/A-Guy-educ/A-Guy-Web/pull/1036)) — @aguyshayb
 - feat: Chat view — correct-answer bubble + per-exercise progress ([#1035](https://github.com/A-Guy-educ/A-Guy-Web/pull/1035)) — @aguyshayb
 - feat: Chat view visual polish — flat questions + chat-native MC ([#1034](https://github.com/A-Guy-educ/A-Guy-Web/pull/1034)) — @aguyshayb
