@@ -3,6 +3,7 @@
 import type { Exercise, Media } from '@/infra/types/content'
 import type { ExerciseBlockGroup, RichTextBlock } from '@/infra/types/exercise'
 import type {
+  QuestionFreeResponseBlock,
   QuestionSelectBlock,
   QuestionSelectMcqBlock,
   QuestionSelectTrueFalseBlock,
@@ -13,6 +14,7 @@ import { MediaMapProvider } from '@/ui/web/exerciserenderer/context/MediaMapCont
 import { useCallback, useMemo, useRef, useState } from 'react'
 import type { SectionOutcome } from '../types'
 import { TeacherBubble } from './TeacherBubble'
+import { ChatFreeResponseBubble } from './ChatFreeResponseBubble'
 import { ChatQuestionSelectBubble } from './ChatQuestionSelectBubble'
 import { QuickActionChips, type QuickAction } from './QuickActionChips'
 
@@ -80,6 +82,9 @@ interface ExerciseSectionBubbleProps {
   quickActionLabels?: { hint: string; explain: string; skip: string }
   /** Disable chips while a chat request is already in flight. */
   quickActionsDisabled?: boolean
+  /** i18n placeholders used by the chat-native free-response input. */
+  freeResponsePlaceholder?: string
+  freeResponseSendLabel?: string
   /**
    * True only for the walker's current step. Historical (scroll-back)
    * bubbles pass false, which locks their answer buttons + chips — otherwise
@@ -121,6 +126,8 @@ export function ExerciseSectionBubble({
   onQuickAction,
   quickActionLabels,
   quickActionsDisabled,
+  freeResponsePlaceholder,
+  freeResponseSendLabel,
   isActive = true,
 }: ExerciseSectionBubbleProps) {
   const outcomeReportedRef = useRef(false)
@@ -162,7 +169,7 @@ export function ExerciseSectionBubble({
   const submittedCountRef = useRef(0)
   const correctCountRef = useRef(0)
   const chatNativeQuestionCount = useMemo(
-    () => (isChatNativePath ? group.blocks.filter(isQuestionSelect).length : 0),
+    () => (isChatNativePath ? group.blocks.filter(isChatNativeQuestion).length : 0),
     [group.blocks, isChatNativePath],
   )
 
@@ -175,7 +182,7 @@ export function ExerciseSectionBubble({
     const map = new Map<string, string>()
     let i = 0
     for (const block of group.blocks) {
-      if (isQuestionSelect(block)) {
+      if (isChatNativeQuestion(block)) {
         map.set(block.id, HEBREW_LETTERS[i] ?? String(i + 1))
         i++
       }
@@ -235,7 +242,7 @@ export function ExerciseSectionBubble({
         <MediaMapProvider value={mediaMap ?? EMPTY_MEDIA_MAP}>
           <div className="flex flex-col gap-content-gap">
             {group.blocks.map((block) => {
-              if (isQuestionSelect(block)) {
+              if (block.type === 'question_select') {
                 return (
                   <ChatQuestionSelectBubble
                     key={block.id}
@@ -244,6 +251,19 @@ export function ExerciseSectionBubble({
                     // Lock stale scroll-back bubbles + freeze answering while
                     // a chat request is in flight (otherwise the resulting
                     // requestCorrection would be silently dropped).
+                    disabled={!isActive || quickActionsDisabled}
+                    onSubmit={handleChatNativeSubmit}
+                  />
+                )
+              }
+              if (block.type === 'question_free_response') {
+                return (
+                  <ChatFreeResponseBubble
+                    key={block.id}
+                    block={block as QuestionFreeResponseBlock}
+                    questionLabel={questionLabelById?.get(block.id)}
+                    placeholder={freeResponsePlaceholder ?? ''}
+                    sendLabel={freeResponseSendLabel ?? ''}
                     disabled={!isActive || quickActionsDisabled}
                     onSubmit={handleChatNativeSubmit}
                   />
@@ -296,13 +316,13 @@ export function ExerciseSectionBubble({
 }
 
 /**
- * Allowlist guard: a section is chat-native ONLY when every block is either
- * a single-select `question_select` OR a `rich_text` decoration. The
- * chat-native render loop below only knows how to render those two types;
- * anything else (media, svg, html, latex, multi-axis, free-response,
- * table/matching/geometry/axis, multi-select mcq) must fall back to the
- * shared ExerciseRenderer so nothing is silently dropped AND the section
- * outcome doesn't fire prematurely on a partial answer count.
+ * Allowlist guard: a section is chat-native ONLY when every block is one of
+ * — single-select `question_select`, `question_free_response`, or a
+ * `rich_text` decoration. The chat-native render loop below only knows how
+ * to render those three; anything else (media, svg, html, latex, multi-
+ * axis, table/matching/geometry/axis, multi-select mcq) must fall back to
+ * the shared ExerciseRenderer so nothing is silently dropped AND the
+ * section outcome doesn't fire prematurely on a partial answer count.
  *
  * Kept as an explicit allowlist (rather than a growing rejectlist) so
  * adding new block types can't accidentally slip through.
@@ -317,6 +337,10 @@ function isChatNativeSection(group: ExerciseBlockGroup): boolean {
       if (b.variant === 'mcq' && b.answer.multiSelect) return false
       continue
     }
+    if (block.type === 'question_free_response') {
+      hasAnyQuestion = true
+      continue
+    }
     // Any other block type → fallback path. ExerciseRenderer knows how to
     // render media/svg/html/latex/etc. with all their affordances.
     return false
@@ -324,17 +348,22 @@ function isChatNativeSection(group: ExerciseBlockGroup): boolean {
   return hasAnyQuestion
 }
 
-function isQuestionSelect(block: { type: string }): boolean {
-  return block.type === 'question_select'
+/** Blocks the chat-native path treats as "gradable questions". */
+function isChatNativeQuestion(block: { type: string }): boolean {
+  return block.type === 'question_select' || block.type === 'question_free_response'
 }
 
 /**
- * Extract a joined "correct answer" string from question_select blocks in
- * the group. When `onlyBlockIds` is provided, restricts to those block IDs —
+ * Extract a joined "correct answer" string from gradable blocks in the
+ * group. When `onlyBlockIds` is provided, restricts to those block IDs —
  * used by the chat-native path to echo answers ONLY for questions the
  * student got wrong (so a multi-question section doesn't leak answers to
  * ones they got right). Without the filter, echoes every question's answer
  * (used by the fallback path where per-question outcomes aren't available).
+ *
+ * question_select: joins `correctOptionIds` labels. question_free_response:
+ * uses `acceptedAnswers[0]` as the canonical display form (the other
+ * accepted variants are alternative phrasings, not the "right answer").
  */
 function deriveCorrectAnswerText(
   group: ExerciseBlockGroup,
@@ -342,21 +371,31 @@ function deriveCorrectAnswerText(
 ): string | undefined {
   const parts: string[] = []
   for (const block of group.blocks) {
-    if (block.type !== 'question_select') continue
     if (onlyBlockIds && !onlyBlockIds.has(block.id)) continue
-    const q = block as unknown as QuestionSelectBlock
-    if (q.variant === 'true_false') {
-      const tf = q as QuestionSelectTrueFalseBlock
-      const correctId = tf.answer.correctOptionId
-      const opt = tf.options?.find((o) => o.id === correctId)
-      if (opt) parts.push(opt.label.value)
+
+    if (block.type === 'question_select') {
+      const q = block as unknown as QuestionSelectBlock
+      if (q.variant === 'true_false') {
+        const tf = q as QuestionSelectTrueFalseBlock
+        const correctId = tf.answer.correctOptionId
+        const opt = tf.options?.find((o) => o.id === correctId)
+        if (opt) parts.push(opt.label.value)
+        continue
+      }
+      const mcq = q as QuestionSelectMcqBlock
+      const correctIds = new Set(mcq.answer.correctOptionIds)
+      const correctOpts = mcq.answer.options.filter((o) => correctIds.has(o.id))
+      if (correctOpts.length > 0) {
+        parts.push(correctOpts.map((o) => o.content.value).join(', '))
+      }
       continue
     }
-    const mcq = q as QuestionSelectMcqBlock
-    const correctIds = new Set(mcq.answer.correctOptionIds)
-    const correctOpts = mcq.answer.options.filter((o) => correctIds.has(o.id))
-    if (correctOpts.length > 0) {
-      parts.push(correctOpts.map((o) => o.content.value).join(', '))
+
+    if (block.type === 'question_free_response') {
+      const fr = block as unknown as QuestionFreeResponseBlock
+      const answer = fr.answer.acceptedAnswers?.[0]
+      if (answer) parts.push(answer)
+      continue
     }
   }
   return parts.length > 0 ? parts.join(' · ') : undefined
