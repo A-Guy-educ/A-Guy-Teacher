@@ -291,6 +291,8 @@ function ActiveChat({
               onQuickAction={handleQuickAction}
               quickActionLabels={quickActionLabels}
               quickActionsDisabled={chat.isSending}
+              freeResponsePlaceholder={t('chatViewAnswerPlaceholder')}
+              freeResponseSendLabel={t('chatViewSendLabel')}
               introPrefix={t('chatViewIntroPrefix')}
               completeText={t('chatViewFinishTitle')}
             />
@@ -339,6 +341,8 @@ interface StreamEntryViewProps {
   onQuickAction: (action: 'hint' | 'explain' | 'skip') => void
   quickActionLabels: { hint: string; explain: string; skip: string }
   quickActionsDisabled: boolean
+  freeResponsePlaceholder: string
+  freeResponseSendLabel: string
   introPrefix: string
   completeText: string
 }
@@ -354,6 +358,8 @@ function StreamEntryView({
   onQuickAction,
   quickActionLabels,
   quickActionsDisabled,
+  freeResponsePlaceholder,
+  freeResponseSendLabel,
   introPrefix,
   completeText,
 }: StreamEntryViewProps) {
@@ -390,6 +396,8 @@ function StreamEntryView({
           onQuickAction={onQuickAction}
           quickActionLabels={quickActionLabels}
           quickActionsDisabled={quickActionsDisabled}
+          freeResponsePlaceholder={freeResponsePlaceholder}
+          freeResponseSendLabel={freeResponseSendLabel}
         />
       )
     case 'chat-user':
