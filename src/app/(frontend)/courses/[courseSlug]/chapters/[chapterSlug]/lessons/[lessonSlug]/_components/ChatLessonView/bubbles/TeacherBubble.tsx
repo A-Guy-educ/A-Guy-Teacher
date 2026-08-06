@@ -6,7 +6,10 @@ import { Sparkles, Volume2, VolumeX } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 interface TeacherBubbleProps {
-  text: string
+  /** Teacher line rendered as MathMarkdown. Omit for bubbles whose whole
+   *  content lives in `children` (e.g. an exercise-section bubble that
+   *  wants the header + speak affordance but no top prose). */
+  text?: string
   variant?: 'default' | 'correction' | 'feedback'
   onSpeak?: () => void
   speaking?: boolean
@@ -25,6 +28,7 @@ export function TeacherBubble({
   children,
 }: TeacherBubbleProps) {
   const isCorrection = variant === 'correction'
+  const hasText = typeof text === 'string' && text.trim().length > 0
   return (
     <div className="flex justify-start">
       <div
@@ -33,7 +37,7 @@ export function TeacherBubble({
           isCorrection ? 'bg-warning/10 border-warning/30' : 'bg-card border-border',
         )}
       >
-        <div className="flex items-center justify-between mb-3">
+        <div className={cn('flex items-center justify-between', (hasText || children) && 'mb-3')}>
           <span className="inline-flex items-center gap-1.5 text-body-xs font-semibold text-primary">
             <Sparkles className="w-3.5 h-3.5" />
             {isCorrection ? 'הסבר ותיקון' : 'A-Guy — המורה הפרטי'}
@@ -53,11 +57,13 @@ export function TeacherBubble({
           )}
         </div>
 
-        <div className="text-body-md font-medium text-foreground leading-relaxed">
-          <MathMarkdown content={text} />
-        </div>
+        {hasText && (
+          <div className="text-body-md font-medium text-foreground leading-relaxed">
+            <MathMarkdown content={text!} />
+          </div>
+        )}
 
-        {children ? <div className="mt-4">{children}</div> : null}
+        {children ? <div className={hasText ? 'mt-4' : undefined}>{children}</div> : null}
       </div>
     </div>
   )

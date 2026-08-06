@@ -33,6 +33,16 @@ interface QuestionCardProps {
   helpSystem?: React.ReactNode
   /** Delay for staggered entrance animation (seconds) */
   animationDelay?: number
+  /**
+   * Visual variant.
+   * - 'card' (default) — the standard bordered/padded Card wrapper used by
+   *   the Interactive + Test tabs.
+   * - 'flat' — drops the Card wrapper (no border, no bg, no card padding)
+   *   so the question renders inline with its parent's chrome. Used by the
+   *   Chat view, where each question already sits inside a teacher bubble
+   *   and a nested card looks blocky/duplicated.
+   */
+  variant?: 'card' | 'flat'
 }
 
 export function QuestionCard({
@@ -50,8 +60,10 @@ export function QuestionCard({
   dir = 'ltr',
   helpSystem,
   animationDelay = 0,
+  variant = 'card',
 }: QuestionCardProps) {
   const isCorrect = checked && checkResult?.isCorrect
+  const isFlat = variant === 'flat'
 
   return (
     <motion.div
@@ -61,12 +73,15 @@ export function QuestionCard({
     >
       <Card
         className={cn(
-          'p-card-padding border border-border/40 transition-all duration-normal',
-          // Light mode: translucent bg so it blends with warm cream page — no floating effect
-          'bg-background/70 [data-theme="light"]:bg-background/70 dark:bg-card',
-          // Dark mode: slightly stronger border opacity for visibility
-          'dark:border-border/60 dark:shadow-card',
-          isCorrect && 'border-success/30 bg-success/5',
+          'transition-all duration-normal',
+          isFlat
+            ? 'border-0 bg-transparent p-0 shadow-none dark:bg-transparent dark:shadow-none'
+            : [
+                'p-card-padding border border-border/40',
+                'bg-background/70 [data-theme="light"]:bg-background/70 dark:bg-card',
+                'dark:border-border/60 dark:shadow-card',
+                isCorrect && 'border-success/30 bg-success/5',
+              ],
         )}
       >
         {/* Question Label */}

@@ -1,84 +1,315 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Exercise, Media } from '@/infra/types/content'
+import { formatExerciseContextMessage } from '@/infra/llm/exercise-context'
+import { useTranslations } from '@/ui/web/providers/I18n'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ChatInputPanel } from './ChatInputPanel'
 import { ChatLessonProgress } from './ChatLessonProgress'
 import { ChatLessonStartCard } from './ChatLessonStartCard'
 import { ContinueButton } from './bubbles/ContinueButton'
-import { OptionsBubble } from './bubbles/OptionsBubble'
-import { RichContentBubble } from './bubbles/RichContentBubble'
+import { ExerciseSectionBubble } from './bubbles/ExerciseSectionBubble'
+import { PendingBubble } from './bubbles/PendingBubble'
 import { StudentBubble } from './bubbles/StudentBubble'
 import { TeacherBubble } from './bubbles/TeacherBubble'
-import { TextAnswerBubble } from './bubbles/TextAnswerBubble'
-import type { HistoryEntry, LessonScript, ScriptOption } from './types'
+import type { SectionOutcome, StreamEntry } from './types'
 import { useBrowserTTS } from './useBrowserTTS'
-import { useScriptRunner } from './useScriptRunner'
+import { useChatChannel } from './useChatChannel'
+import { useExerciseWalker } from './useExerciseWalker'
+import { pickWellDone } from './wellDoneMessages'
+
+const CELEBRATION_ADVANCE_MS = 1500
+
+/** א, ב, ג, ... — matches the ExerciseRenderer's question-card labeling. */
+const HEBREW_LETTERS = [
+  'א',
+  'ב',
+  'ג',
+  'ד',
+  'ה',
+  'ו',
+  'ז',
+  'ח',
+  'ט',
+  'י',
+  'כ',
+  'ל',
+  'מ',
+  'נ',
+  'ס',
+  'ע',
+  'פ',
+  'צ',
+  'ק',
+  'ר',
+  'ש',
+  'ת',
+]
 
 interface ChatLessonRunnerViewProps {
-  script: LessonScript
+  lessonTitle: string
+  lessonId: string
+  exercises: Exercise[]
+  mediaMap?: Record<string, Media>
 }
 
-export function ChatLessonRunnerView({ script }: ChatLessonRunnerViewProps) {
+export function ChatLessonRunnerView(props: ChatLessonRunnerViewProps) {
   const [hasStarted, setHasStarted] = useState(false)
+  const t = useTranslations('courses')
 
   if (!hasStarted) {
     return (
       <div className="flex-1 overflow-y-auto bg-muted">
-        <ChatLessonStartCard script={script} onStart={() => setHasStarted(true)} />
+        <ChatLessonStartCard
+          lessonTitle={props.lessonTitle}
+          exerciseCount={props.exercises.length}
+          startLabel={t('chatViewStart')}
+          exercisesCountLabel={t('chatViewExercisesCount')}
+          onStart={() => setHasStarted(true)}
+        />
       </div>
     )
   }
 
-  // ActiveChat is only mounted after start, so useScriptRunner's initial
-  // step-transition effect can fire with TTS wired up — narrating the very
-  // first teacher line. Reset unmounts it, so a replay reinitializes cleanly.
-  return <ActiveChat script={script} onExit={() => setHasStarted(false)} />
+  return <ActiveChat {...props} onExit={() => setHasStarted(false)} />
 }
 
-interface ActiveChatProps {
-  script: LessonScript
+interface ActiveChatProps extends ChatLessonRunnerViewProps {
   onExit: () => void
 }
 
-function ActiveChat({ script, onExit }: ActiveChatProps) {
+function ActiveChat({
+  lessonTitle: _lessonTitle,
+  lessonId,
+  exercises,
+  mediaMap,
+  onExit,
+}: ActiveChatProps) {
+  const t = useTranslations('courses')
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const tts = useBrowserTTS()
 
-  const { history, stepIndex, totalSteps, locked, submitOption, submitTextAnswer, continueStep } =
-    useScriptRunner({ script, onTeacherText: tts.speak })
+  const [entries, setEntries] = useState<StreamEntry[]>([])
+  const append = useCallback((entry: StreamEntry) => {
+    setEntries((prev) => [...prev, entry])
+  }, [])
+  const replace = useCallback((key: string, entry: StreamEntry) => {
+    setEntries((prev) => prev.map((e) => (e.key === key ? entry : e)))
+  }, [])
+
+  const walker = useExerciseWalker({ exercises, append })
+  const currentStep = walker.currentStep
+  const currentExercise = currentStep?.exercise ?? null
+
+  // Scope the AI's attention to the current section (not the whole exercise
+  // or, worse, whatever exercise the shared lesson-conversation was last
+  // talking about). Passing just the current group's blocks + a section-
+  // annotated title keeps every chat request grounded in the section the
+  // student is actually on.
+  const currentExerciseContext = useMemo(() => {
+    if (!currentStep) return null
+    const { exercise, group, groupIndex } = currentStep
+    const baseTitle = exercise.title?.trim() ?? ''
+    const sectionLetter =
+      group.sectionIndex !== null ? (HEBREW_LETTERS[groupIndex] ?? String(groupIndex + 1)) : null
+    const title = sectionLetter ? `${baseTitle} — סעיף ${sectionLetter}`.trim() : baseTitle
+    // Cast: our lesson-fetched Media has `filename: string | null | undefined`
+    // where the formatter's MediaItem expects `string | undefined`. The
+    // formatter only ever falsy-checks filename, so a runtime null is fine.
+    return formatExerciseContextMessage(
+      title,
+      group.blocks as Array<{ id: string; type: string; [key: string]: unknown }>,
+      mediaMap as unknown as Parameters<typeof formatExerciseContextMessage>[2],
+    )
+  }, [currentStep, mediaMap])
+
+  const chat = useChatChannel({
+    lessonId,
+    currentExerciseId: currentExercise?.id ?? null,
+    currentExerciseContext,
+    append,
+    replace,
+    acknowledgment: t('chatViewAcknowledgment'),
+    errorMessage: t('chatViewChatError'),
+    authRequiredMessage: t('chatViewAuthRequired'),
+    quotaExceededMessage: t('chatViewQuotaExceeded'),
+  })
+
+  // Cancel any pending auto-advance timer whenever the student navigates or
+  // resets — otherwise a leftover timer would fire after unmount.
+  const pendingAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelPendingAdvance = useCallback(() => {
+    if (pendingAdvanceRef.current !== null) {
+      clearTimeout(pendingAdvanceRef.current)
+      pendingAdvanceRef.current = null
+    }
+  }, [])
+  useEffect(() => () => cancelPendingAdvance(), [cancelPendingAdvance])
+
+  const advanceNow = useCallback(() => {
+    cancelPendingAdvance()
+    walker.advance()
+  }, [cancelPendingAdvance, walker])
+
+  const correctionPrompt = t('chatViewCorrectionPrompt')
+  const correctAnswerLabel = t('chatViewCorrectAnswerLabel')
+  const handleOutcome = useCallback(
+    (outcome: SectionOutcome) => {
+      if (outcome.kind === 'correct') {
+        append({
+          key: `celebrate-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          kind: 'chat-assistant',
+          text: pickWellDone(),
+        })
+        cancelPendingAdvance()
+        pendingAdvanceRef.current = setTimeout(() => {
+          pendingAdvanceRef.current = null
+          walker.advance()
+        }, CELEBRATION_ADVANCE_MS)
+      } else {
+        // Post the correct-answer bubble immediately (from block data — no
+        // model roundtrip), THEN kick off the AI explanation. Anchors the
+        // student on the answer while the fuller correction is being
+        // generated.
+        if (outcome.correctAnswerText) {
+          append({
+            key: `ans-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            kind: 'chat-assistant',
+            text: `${correctAnswerLabel}: ${outcome.correctAnswerText}`,
+          })
+        }
+        chat.requestCorrection(correctionPrompt)
+      }
+    },
+    [append, cancelPendingAdvance, chat, correctAnswerLabel, correctionPrompt, walker],
+  )
+
+  const handleQuestionSubmit = useCallback(
+    (text: string, isCorrect: boolean) => {
+      // Echo the student's answer as a right-side bubble; color is derived
+      // from isCorrect so the "chose the correct option" and "chose wrong"
+      // states are immediately visible even before the section outcome
+      // fires the celebration or correction below.
+      append({
+        key: `q-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        kind: 'chat-user',
+        text,
+        isCorrect,
+      })
+    },
+    [append],
+  )
+
+  // Quick-action chip dispatcher. Hint + explain go through the invisible
+  // requestCorrection channel so only the AI reply lands in the stream
+  // (no fake user bubble echoing our canned prompt). Skip just advances
+  // the walker without any chat roundtrip.
+  const hintPrompt = t('chatViewChipHintPrompt')
+  const explainPrompt = t('chatViewChipExplainPrompt')
+  const handleQuickAction = useCallback(
+    (action: 'hint' | 'explain' | 'skip') => {
+      if (action === 'skip') {
+        advanceNow()
+        return
+      }
+      chat.requestCorrection(action === 'hint' ? hintPrompt : explainPrompt)
+    },
+    [advanceNow, chat, explainPrompt, hintPrompt],
+  )
+
+  const quickActionLabels = useMemo(
+    () => ({
+      hint: t('chatViewChipHint'),
+      explain: t('chatViewChipExplain'),
+      skip: t('chatViewChipSkip'),
+    }),
+    [t],
+  )
+
+  // Key of the current walker step — used by StreamEntryView to mark the
+  // matching bubble as "active". Historical bubbles (anything else) render
+  // as read-only so scroll-back clicks can't dispatch through the runner
+  // with the wrong context.
+  const activeStepKey = walker.currentStep
+    ? `sec-${walker.currentStep.exercise.id}-${walker.currentStep.groupIndex}`
+    : null
+
+  // Narrate new teacher-side bubbles as they appear. Dedupe on `key + kind`
+  // so entries replaced in place (chat-pending → chat-assistant) still
+  // trigger narration when they mutate.
+  const narratedRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    for (const entry of entries) {
+      const token = `${entry.key}:${entry.kind}`
+      if (narratedRef.current.has(token)) continue
+      narratedRef.current.add(token)
+      if (entry.kind === 'exercise-intro') {
+        const line = entry.title
+          ? `${t('chatViewIntroPrefix')} ${entry.ordinal}: ${entry.title}`
+          : `${t('chatViewIntroPrefix')} ${entry.ordinal}`
+        tts.speak(line)
+      } else if (entry.kind === 'chat-assistant') {
+        tts.speak(entry.text)
+      }
+    }
+  }, [entries, t, tts])
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [history.length])
+  }, [entries.length])
 
   const handleReset = useCallback(() => {
+    cancelPendingAdvance()
     tts.cancel()
     onExit()
-  }, [onExit, tts])
+  }, [cancelPendingAdvance, onExit, tts])
 
-  const latestIdx = history.length - 1
+  const showContinueButton = !walker.isComplete && entries.length > 0
 
   return (
     <>
       <main className="flex-1 overflow-y-auto bg-muted px-4 py-section-sm md:px-6 md:py-section-md">
         <div className="max-w-2xl mx-auto flex flex-col gap-content-gap" dir="rtl">
-          {history.map((entry, idx) =>
-            renderEntry({
-              entry,
-              isLatest: idx === latestIdx,
-              locked,
-              tts,
-              onSelectOption: submitOption,
-              onSubmitText: submitTextAnswer,
-              onContinue: continueStep,
-            }),
+          {entries.map((entry) => (
+            <StreamEntryView
+              key={entry.key}
+              entry={entry}
+              isActive={entry.key === activeStepKey}
+              lessonId={lessonId}
+              mediaMap={mediaMap}
+              tts={tts}
+              onOutcome={handleOutcome}
+              onQuestionSubmit={handleQuestionSubmit}
+              onQuickAction={handleQuickAction}
+              quickActionLabels={quickActionLabels}
+              quickActionsDisabled={chat.isSending}
+              introPrefix={t('chatViewIntroPrefix')}
+              completeText={t('chatViewFinishTitle')}
+            />
+          ))}
+          {showContinueButton && (
+            <ContinueButton disabled={chat.isSending} isEnd={false} onClick={advanceNow} />
           )}
           <div ref={scrollRef} className="h-4" />
         </div>
       </main>
 
+      <ChatInputPanel
+        isSending={chat.isSending}
+        placeholder={t('chatViewInputPlaceholder')}
+        sendLabel={t('chatViewSendLabel')}
+        onSubmit={chat.send}
+      />
+
       <ChatLessonProgress
-        stepIndex={stepIndex}
-        totalSteps={totalSteps}
+        stepIndex={walker.stepCursor}
+        totalSteps={walker.totalSteps}
+        currentExerciseOrdinal={walker.currentExerciseOrdinal}
+        totalExercises={walker.totalExercises}
+        currentSectionOrdinal={walker.currentSectionOrdinal}
+        currentExerciseSections={walker.currentExerciseSections}
+        exerciseLabel={t('chatViewProgressExercise')}
+        sectionLabel={t('chatViewProgressSection')}
         onReset={handleReset}
         onToggleMute={tts.toggleMuted}
         muted={tts.muted}
@@ -88,55 +319,88 @@ function ActiveChat({ script, onExit }: ActiveChatProps) {
   )
 }
 
-interface RenderArgs {
-  entry: HistoryEntry
-  isLatest: boolean
-  locked: boolean
+interface StreamEntryViewProps {
+  entry: StreamEntry
+  /** True only for the walker's current step. Locks stale scroll-back bubbles. */
+  isActive: boolean
+  lessonId: string
+  mediaMap?: Record<string, Media>
   tts: ReturnType<typeof useBrowserTTS>
-  onSelectOption: (option: ScriptOption) => void
-  onSubmitText: (value: string) => void
-  onContinue: () => void
+  onOutcome: (outcome: SectionOutcome) => void
+  onQuestionSubmit: (text: string, isCorrect: boolean) => void
+  onQuickAction: (action: 'hint' | 'explain' | 'skip') => void
+  quickActionLabels: { hint: string; explain: string; skip: string }
+  quickActionsDisabled: boolean
+  introPrefix: string
+  completeText: string
 }
 
-function renderEntry(args: RenderArgs) {
-  const { entry, isLatest, locked, tts, onSelectOption, onSubmitText, onContinue } = args
-
-  if (entry.role === 'student') {
-    return <StudentBubble key={entry.key} text={entry.text} isCorrect={entry.isCorrect} />
+function StreamEntryView({
+  entry,
+  isActive,
+  lessonId,
+  mediaMap,
+  tts,
+  onOutcome,
+  onQuestionSubmit,
+  onQuickAction,
+  quickActionLabels,
+  quickActionsDisabled,
+  introPrefix,
+  completeText,
+}: StreamEntryViewProps) {
+  switch (entry.kind) {
+    case 'exercise-intro': {
+      const label = entry.title
+        ? `${introPrefix} ${entry.ordinal}: ${entry.title}`
+        : `${introPrefix} ${entry.ordinal}`
+      return (
+        <TeacherBubble
+          text={label}
+          onSpeak={() => tts.speak(label)}
+          speaking={tts.speaking}
+          muted={tts.muted}
+          ttsSupported={tts.supported}
+        />
+      )
+    }
+    case 'exercise-section':
+      return (
+        <ExerciseSectionBubble
+          exercise={entry.exercise}
+          ordinal={entry.ordinal}
+          group={entry.group}
+          questionCount={entry.questionCount}
+          lessonId={lessonId}
+          mediaMap={mediaMap}
+          speaking={tts.speaking}
+          muted={tts.muted}
+          ttsSupported={tts.supported}
+          isActive={isActive}
+          onOutcome={onOutcome}
+          onQuestionSubmit={onQuestionSubmit}
+          onQuickAction={onQuickAction}
+          quickActionLabels={quickActionLabels}
+          quickActionsDisabled={quickActionsDisabled}
+        />
+      )
+    case 'chat-user':
+      return <StudentBubble text={entry.text} isCorrect={entry.isCorrect} />
+    case 'chat-assistant':
+      return (
+        <TeacherBubble
+          text={entry.text}
+          onSpeak={() => tts.speak(entry.text)}
+          speaking={tts.speaking}
+          muted={tts.muted}
+          ttsSupported={tts.supported}
+        />
+      )
+    case 'chat-pending':
+      return <PendingBubble />
+    case 'chat-error':
+      return <TeacherBubble text={entry.text} variant="correction" />
+    case 'lesson-complete':
+      return <TeacherBubble text={completeText} />
   }
-
-  const canInteract = isLatest && !locked
-  const showContinue = canInteract && entry.stepType === 'rich_text' && !entry.variant
-
-  return (
-    <TeacherBubble
-      key={entry.key}
-      text={entry.text}
-      variant={entry.variant}
-      onSpeak={() => tts.speak(entry.text)}
-      speaking={tts.speaking}
-      muted={tts.muted}
-      ttsSupported={tts.supported}
-    >
-      {entry.content ? <RichContentBubble html={entry.content} /> : null}
-
-      {entry.options && canInteract && (
-        <div className="mt-4">
-          <OptionsBubble options={entry.options} disabled={locked} onSelect={onSelectOption} />
-        </div>
-      )}
-
-      {entry.stepType === 'text_answer' && canInteract && (
-        <div className="mt-4">
-          <TextAnswerBubble disabled={locked} onSubmit={onSubmitText} />
-        </div>
-      )}
-
-      {showContinue && (
-        <div className="mt-4">
-          <ContinueButton disabled={locked} isEnd={entry.isEnd} onClick={onContinue} />
-        </div>
-      )}
-    </TeacherBubble>
-  )
 }
