@@ -3440,6 +3440,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Bump nanoid to patch CVE-2026-67213 and CVE-2026-67214 ([#1043](https://github.com/A-Guy-educ/A-Guy-Web/pull/1043)) — @aguyshayb
 - feat: Chat view — chat-native free-response bubble ([#1040](https://github.com/A-Guy-educ/A-Guy-Web/pull/1040)) — @aguyshayb
 - feat: Chat view — stream AI responses over SSE ([#1039](https://github.com/A-Guy-educ/A-Guy-Web/pull/1039)) — @aguyshayb
 - promote: dev -> main (v0.30.16) ([#1038](https://github.com/A-Guy-educ/A-Guy-Web/pull/1038)) — @aguyaharonyair
