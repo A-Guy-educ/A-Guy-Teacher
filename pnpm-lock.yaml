@@ -133,7 +133,7 @@ overrides:
   fast-uri@>=4.0.0: 4.1.2
   ip-address@<=10.3.0: 10.3.1
   brace-expansion@^5.0.0: 5.0.9
-  nanoid@<3.3.17: '>=3.3.17'
+  nanoid@<3.3.17: ^3.3.17
   nanoid@>=4.0.0 <5.1.16: '>=5.1.16'
 
 importers:
@@ -6283,6 +6283,11 @@ packages:
   nano-spawn@2.0.0:
     resolution: {integrity: sha512-tacvGzUY5o2D8CBh2rrwxyNojUsZNU2zjNTzKQrkgGJQTbGAfArVWXSKMBokBeeg6C7OLRGUEyoFlYbfeWQIqw==}
     engines: {node: '>=20.17'}
+
+  nanoid@3.3.18:
+    resolution: {integrity: sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
 
   nanoid@5.1.16:
     resolution: {integrity: sha512-kVrnsrJqMR8+oLJnGEmSWw9BivK5mt7H3FZatVRjrc5wGqFYuBxX1yG7+A7Gi5AefkX6t/oCkizcQgpu0cY1dQ==}
@@ -14988,6 +14993,8 @@ snapshots:
 
   nano-spawn@2.0.0: {}
 
+  nanoid@3.3.18: {}
+
   nanoid@5.1.16: {}
 
   napi-postinstall@0.3.4: {}
@@ -15302,7 +15309,7 @@ snapshots:
 
   postcss@8.5.22:
     dependencies:
-      nanoid: 5.1.16
+      nanoid: 3.3.18
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
