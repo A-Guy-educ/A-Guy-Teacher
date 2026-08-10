@@ -3440,6 +3440,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- feat: Prefer Piper TTS endpoint over browser voice for Hebrew narration ([#1046](https://github.com/A-Guy-educ/A-Guy-Web/pull/1046)) — @aguyshayb
 - fix: Render geometricLoci in axis blocks ([#1045](https://github.com/A-Guy-educ/A-Guy-Web/pull/1045)) — @aguyshayb
 - feat: Rank Hebrew TTS voices to pick the least-robotic option ([#1042](https://github.com/A-Guy-educ/A-Guy-Web/pull/1042)) — @aguyshayb
 - fix: Bump nanoid to patch CVE-2026-67213 and CVE-2026-67214 ([#1043](https://github.com/A-Guy-educ/A-Guy-Web/pull/1043)) — @aguyshayb
