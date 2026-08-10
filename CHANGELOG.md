@@ -3456,6 +3456,8 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+## [v0.31.0] - 2026-08-10
+
 - promote: dev -> main (v0.31.0) ([#1049](https://github.com/A-Guy-educ/A-Guy-Web/pull/1049)) — @aguyshayb
 - chore: Release v0.31.0 ([#1048](https://github.com/A-Guy-educ/A-Guy-Web/pull/1048)) — @aguyshayb
 - fix(csp): Allow blob: media sources for Piper TTS audio playback ([#1047](https://github.com/A-Guy-educ/A-Guy-Web/pull/1047)) — @aguyshayb
