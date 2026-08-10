@@ -237,9 +237,17 @@ function ActiveChat({
   // Narrate new teacher-side bubbles as they appear. Dedupe on `key + kind`
   // so entries replaced in place (chat-pending → chat-assistant) still
   // trigger narration when they mutate.
+  //
+  // Streaming assistant entries are skipped WITHOUT being added to the
+  // dedupe set — otherwise narration would fire on the first chunk (~80
+  // chars) and dedupe every subsequent chunk, leaving TTS listeners with
+  // only the opening fragment. The channel does a terminal replace with
+  // `streaming: false` once the stream ends, and narration fires then on
+  // the full accumulated text.
   const narratedRef = useRef<Set<string>>(new Set())
   useEffect(() => {
     for (const entry of entries) {
+      if (entry.kind === 'chat-assistant' && entry.streaming) continue
       const token = `${entry.key}:${entry.kind}`
       if (narratedRef.current.has(token)) continue
       narratedRef.current.add(token)
@@ -283,6 +291,8 @@ function ActiveChat({
               onQuickAction={handleQuickAction}
               quickActionLabels={quickActionLabels}
               quickActionsDisabled={chat.isSending}
+              freeResponsePlaceholder={t('chatViewAnswerPlaceholder')}
+              freeResponseSendLabel={t('chatViewSendLabel')}
               introPrefix={t('chatViewIntroPrefix')}
               completeText={t('chatViewFinishTitle')}
             />
@@ -331,6 +341,8 @@ interface StreamEntryViewProps {
   onQuickAction: (action: 'hint' | 'explain' | 'skip') => void
   quickActionLabels: { hint: string; explain: string; skip: string }
   quickActionsDisabled: boolean
+  freeResponsePlaceholder: string
+  freeResponseSendLabel: string
   introPrefix: string
   completeText: string
 }
@@ -346,6 +358,8 @@ function StreamEntryView({
   onQuickAction,
   quickActionLabels,
   quickActionsDisabled,
+  freeResponsePlaceholder,
+  freeResponseSendLabel,
   introPrefix,
   completeText,
 }: StreamEntryViewProps) {
@@ -382,6 +396,8 @@ function StreamEntryView({
           onQuickAction={onQuickAction}
           quickActionLabels={quickActionLabels}
           quickActionsDisabled={quickActionsDisabled}
+          freeResponsePlaceholder={freeResponsePlaceholder}
+          freeResponseSendLabel={freeResponseSendLabel}
         />
       )
     case 'chat-user':

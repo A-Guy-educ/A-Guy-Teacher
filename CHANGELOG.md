@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.31.0 — 2026-08-10
+
+### Features
+- Chat view — chat-native free-response bubble (ada79c620)
+- Stream AI responses in the Chat view (bcc7ff805)
+- Prefer Piper TTS endpoint over browser voice for Hebrew narration (2c32dee2a)
+- Rank Hebrew TTS voices to pick the least-robotic option (e5603d6a8)
+
+### Fixes
+- Allow blob: media sources for Piper TTS audio playback (5b75582f5)
+- Fall back on Piper timeout, clean up on unmount, env-configurable endpoint (e11454bc1)
+- Render geometricLoci in axis blocks (4f0e0c3a8)
+- Pin nanoid 3.x override so postcss stays CJS-compatible (5eaad176f)
+- Bump nanoid to patch CVE-2026-67213 and CVE-2026-67214 (245afd1e8)
+- Address PR review on chat view streaming (c1b3c0ef3)
+
 ## v0.30.16 — 2026-08-06
 
 ### Features
@@ -3440,6 +3456,15 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: Release v0.31.0 ([#1048](https://github.com/A-Guy-educ/A-Guy-Web/pull/1048)) — @aguyshayb
+- fix(csp): Allow blob: media sources for Piper TTS audio playback ([#1047](https://github.com/A-Guy-educ/A-Guy-Web/pull/1047)) — @aguyshayb
+- feat: Prefer Piper TTS endpoint over browser voice for Hebrew narration ([#1046](https://github.com/A-Guy-educ/A-Guy-Web/pull/1046)) — @aguyshayb
+- fix: Render geometricLoci in axis blocks ([#1045](https://github.com/A-Guy-educ/A-Guy-Web/pull/1045)) — @aguyshayb
+- feat: Rank Hebrew TTS voices to pick the least-robotic option ([#1042](https://github.com/A-Guy-educ/A-Guy-Web/pull/1042)) — @aguyshayb
+- fix: Bump nanoid to patch CVE-2026-67213 and CVE-2026-67214 ([#1043](https://github.com/A-Guy-educ/A-Guy-Web/pull/1043)) — @aguyshayb
+- feat: Chat view — chat-native free-response bubble ([#1040](https://github.com/A-Guy-educ/A-Guy-Web/pull/1040)) — @aguyshayb
+- feat: Chat view — stream AI responses over SSE ([#1039](https://github.com/A-Guy-educ/A-Guy-Web/pull/1039)) — @aguyshayb
+- promote: dev -> main (v0.30.16) ([#1038](https://github.com/A-Guy-educ/A-Guy-Web/pull/1038)) — @aguyaharonyair
 - chore: release v0.30.16 ([#1037](https://github.com/A-Guy-educ/A-Guy-Web/pull/1037)) — @aguyaharonyair
 - feat: Chat view — quick-action chips (hint / explain / skip) ([#1036](https://github.com/A-Guy-educ/A-Guy-Web/pull/1036)) — @aguyshayb
 - feat: Chat view — correct-answer bubble + per-exercise progress ([#1035](https://github.com/A-Guy-educ/A-Guy-Web/pull/1035)) — @aguyshayb
