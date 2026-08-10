@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.31.0 — 2026-08-10
+
+### Features
+- Chat view — chat-native free-response bubble (ada79c620)
+- Stream AI responses in the Chat view (bcc7ff805)
+- Prefer Piper TTS endpoint over browser voice for Hebrew narration (2c32dee2a)
+- Rank Hebrew TTS voices to pick the least-robotic option (e5603d6a8)
+
+### Fixes
+- Allow blob: media sources for Piper TTS audio playback (5b75582f5)
+- Fall back on Piper timeout, clean up on unmount, env-configurable endpoint (e11454bc1)
+- Render geometricLoci in axis blocks (4f0e0c3a8)
+- Pin nanoid 3.x override so postcss stays CJS-compatible (5eaad176f)
+- Bump nanoid to patch CVE-2026-67213 and CVE-2026-67214 (245afd1e8)
+- Address PR review on chat view streaming (c1b3c0ef3)
+
 ## v0.30.16 — 2026-08-06
 
 ### Features
