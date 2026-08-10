@@ -25,8 +25,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 const HEBREW_LANG_PREFIX = 'he'
 
 // Our Piper TTS microservice (see `aguyshayb/tts` repo). Public, no auth,
-// CORS-open — cross-origin fetch from the main app is expected.
-const PIPER_ENDPOINT = 'https://aguy-text-to-speech-piper-aguy.vercel.app/api/tts'
+// CORS-open — cross-origin fetch from the main app is expected. Env
+// override lets local/preview builds point at a staging endpoint (or
+// unset to force the browser-fallback path).
+const PIPER_ENDPOINT =
+  process.env.NEXT_PUBLIC_PIPER_ENDPOINT ??
+  'https://aguy-text-to-speech-piper-aguy.vercel.app/api/tts'
 const PIPER_VOICE = 'he_IL-saspeech-medium'
 // If Piper doesn't return in this budget, fall back to browser TTS so the
 // user isn't stuck waiting. Warm is ~500 ms; cold-start after idle can be
@@ -105,7 +109,25 @@ export function useBrowserTTS() {
   // line while the previous is loading should silently supersede it.
   const abortRef = useRef<AbortController | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioUrlRef = useRef<string | null>(null)
   const hasBrowserTTSRef = useRef(false)
+
+  const stopAudio = useCallback(() => {
+    const audio = audioRef.current
+    if (audio) {
+      // Detach handlers before mutating src so their `audio === audioRef.current`
+      // guards don't fire on our own teardown.
+      audio.onended = null
+      audio.onerror = null
+      audio.pause()
+      audio.src = ''
+      audioRef.current = null
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -115,27 +137,28 @@ export function useBrowserTTS() {
     setSupported(true)
     hasBrowserTTSRef.current = 'speechSynthesis' in window
 
-    if (!hasBrowserTTSRef.current) return
-
-    const loadVoices = () => {
-      voiceRef.current = pickHebrewVoice(window.speechSynthesis.getVoices())
+    if (hasBrowserTTSRef.current) {
+      const loadVoices = () => {
+        voiceRef.current = pickHebrewVoice(window.speechSynthesis.getVoices())
+      }
+      loadVoices()
+      window.speechSynthesis.onvoiceschanged = loadVoices
     }
-    loadVoices()
-    window.speechSynthesis.onvoiceschanged = loadVoices
 
     return () => {
-      window.speechSynthesis.onvoiceschanged = null
-      window.speechSynthesis.cancel()
+      // Full teardown on unmount: abort any in-flight Piper fetch, stop
+      // the detached <audio>, revoke its object URL, and drop the
+      // speechSynthesis queue. Prevents audio from continuing after the
+      // student navigates away mid-playback.
+      abortRef.current?.abort()
+      abortRef.current = null
+      stopAudio()
+      if (hasBrowserTTSRef.current) {
+        window.speechSynthesis.onvoiceschanged = null
+        window.speechSynthesis.cancel()
+      }
     }
-  }, [])
-
-  const stopAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.src = ''
-      audioRef.current = null
-    }
-  }, [])
+  }, [stopAudio])
 
   const cancel = useCallback(() => {
     if (abortRef.current) {
@@ -183,7 +206,14 @@ export function useBrowserTTS() {
 
       const controller = new AbortController()
       abortRef.current = controller
-      const timeoutId = window.setTimeout(() => controller.abort(), PIPER_TIMEOUT_MS)
+      // Track whether the abort we're about to see is from our own
+      // timeout watchdog vs. an explicit cancel()/supersede — matters
+      // in .catch to decide "silently drop" vs "fall back to browser".
+      let timedOut = false
+      const timeoutId = window.setTimeout(() => {
+        timedOut = true
+        controller.abort()
+      }, PIPER_TIMEOUT_MS)
 
       const url = `${PIPER_ENDPOINT}?voice=${PIPER_VOICE}&text=${encodeURIComponent(clean)}`
       setSpeaking(true)
@@ -195,22 +225,21 @@ export function useBrowserTTS() {
         })
         .then((blob) => {
           window.clearTimeout(timeoutId)
-          // If a newer speak() has already replaced our controller, abort.
+          // If a newer speak() has already replaced our controller, drop.
           if (abortRef.current !== controller) return
           const objectUrl = URL.createObjectURL(blob)
+          audioUrlRef.current = objectUrl
           const audio = new Audio(objectUrl)
           audioRef.current = audio
           audio.onended = () => {
-            URL.revokeObjectURL(objectUrl)
             if (audioRef.current === audio) {
-              audioRef.current = null
+              stopAudio()
               setSpeaking(false)
             }
           }
           audio.onerror = () => {
-            URL.revokeObjectURL(objectUrl)
             if (audioRef.current === audio) {
-              audioRef.current = null
+              stopAudio()
               // Audio decode failed — fall back to browser voice so the
               // student still hears something.
               speakViaBrowser(clean)
@@ -218,22 +247,27 @@ export function useBrowserTTS() {
           }
           void audio.play().catch(() => {
             // Autoplay policy or other play() rejection — fall back.
-            URL.revokeObjectURL(objectUrl)
-            if (audioRef.current === audio) audioRef.current = null
-            speakViaBrowser(clean)
+            if (audioRef.current === audio) {
+              stopAudio()
+              speakViaBrowser(clean)
+            }
           })
         })
         .catch((err) => {
           window.clearTimeout(timeoutId)
-          // Superseded by a newer speak() — silently drop.
+          // Superseded by a newer speak() or explicit cancel() — silently
+          // drop. Both replace or clear abortRef.current before we get here.
           if (abortRef.current !== controller) return
           abortRef.current = null
-          if ((err as Error).name === 'AbortError') return
-          // Piper unreachable / timed out — degrade to browser voice.
+          // User-initiated abort (cancel()/mute) → nothing to do, speaking
+          // was already cleared. Only the timeout branch should fall back.
+          const isUserAbort = (err as Error).name === 'AbortError' && !timedOut
+          if (isUserAbort) return
+          // Piper unreachable / timed out / non-OK — degrade to browser.
           speakViaBrowser(clean)
         })
     },
-    [cancel, muted, speakViaBrowser, supported],
+    [cancel, muted, speakViaBrowser, stopAudio, supported],
   )
 
   const toggleMuted = useCallback(() => {
