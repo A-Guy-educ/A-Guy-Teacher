@@ -1,19 +1,21 @@
 /**
  * @fileType hook
  * @domain lessons
- * @ai-summary Thin wrapper around `window.speechSynthesis`. Zero token cost —
- *             deliberately uses the browser voice so the chat lesson can narrate
- *             every teacher line without a Gemini/OpenAI TTS call.
+ * @ai-summary Hebrew TTS narration for chat lessons. Prefers our
+ *             self-hosted Piper endpoint (open-source neural voice with
+ *             Dicta Nakdan niqqud preprocessing — dramatically better
+ *             than the stock OS voice), falls back to `window.speechSynthesis`
+ *             when the endpoint is unreachable so lessons still narrate
+ *             offline. Public API unchanged: `speak(text)`, `cancel()`,
+ *             `toggleMuted()`, plus `supported`/`speaking`/`muted` state.
  *
- *             Voice selection ranks Hebrew voices so we prefer the
- *             higher-quality cloud voices Chrome/Edge desktop expose
- *             (Google/Microsoft neural voices sound near-human) over the
- *             stock OS voice, which is what browsers pick by default and
- *             what students were describing as "robotic". Falls back through
- *             known-good named voices, then any cloud Hebrew voice, then
- *             any Hebrew voice at all. Level 1 (cloud-hosted TTS via
- *             Google Cloud / Azure free tier) is a follow-up if this
- *             ranking alone isn't enough.
+ *             Piper endpoint: `a-guy-tts` repo, Vercel Python function,
+ *             ~500 ms warm / ~3 s cold. Response is aggressively cached
+ *             at Vercel's edge (24 h) on (text, voice), so repeat plays
+ *             of the same bubble are instant.
+ *
+ *             Zero token cost — Piper + Dicta are both free and open.
+ *             Deliberately NOT calling Gemini/OpenAI TTS.
  */
 
 'use client'
@@ -22,9 +24,22 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 const HEBREW_LANG_PREFIX = 'he'
 
+// Our Piper TTS microservice (see `aguyshayb/tts` repo). Public, no auth,
+// CORS-open — cross-origin fetch from the main app is expected. Env
+// override lets local/preview builds point at a staging endpoint (or
+// unset to force the browser-fallback path).
+const PIPER_ENDPOINT =
+  process.env.NEXT_PUBLIC_PIPER_ENDPOINT ??
+  'https://aguy-text-to-speech-piper-aguy.vercel.app/api/tts'
+const PIPER_VOICE = 'he_IL-saspeech-medium'
+// If Piper doesn't return in this budget, fall back to browser TTS so the
+// user isn't stuck waiting. Warm is ~500 ms; cold-start after idle can be
+// 3-4 s; give some headroom past cold start.
+const PIPER_TIMEOUT_MS = 6000
+
 /**
- * Named-voice preference list, roughly ranked by empirical quality on
- * the platforms that expose them.
+ * Named-voice preference list for the browser fallback path, roughly
+ * ranked by empirical quality on the platforms that expose them.
  *
  * - Google Chrome desktop ships "Google עברית" via Google's cloud voice
  *   backend — significantly more natural than any OS-installed Hebrew voice.
@@ -35,13 +50,9 @@ const HEBREW_LANG_PREFIX = 'he'
  *   than the default. The user has to actually download it from Settings,
  *   which we can't force, but we prefer it when present.
  *
- * Matching is case-insensitive substring on `voice.name` — voice names
- * vary slightly across platforms and language settings (e.g. "Google עברית"
- * vs "Google Hebrew" vs "Google Hebrew (Israel)"), so partial match is more
- * robust than equality.
+ * Matching is case-insensitive substring on `voice.name`.
  */
 const PREFERRED_VOICE_NAMES: readonly string[] = [
-  // Highest quality first
   'Google עברית',
   'Google Hebrew',
   'Microsoft Asaf',
@@ -70,22 +81,12 @@ function isHebrewVoice(v: SpeechSynthesisVoice): boolean {
   return v.lang?.toLowerCase().startsWith(HEBREW_LANG_PREFIX) || /hebrew/i.test(v.name)
 }
 
-/**
- * Score a Hebrew voice by empirical quality. Higher = better.
- * Combined signal from the preferred-name list + `localService` (network
- * voices are usually the cloud-neural ones).
- */
 function scoreVoice(v: SpeechSynthesisVoice): number {
   let score = 0
   const nameIdx = PREFERRED_VOICE_NAMES.findIndex((preferred) =>
     v.name.toLowerCase().includes(preferred.toLowerCase()),
   )
-  if (nameIdx !== -1) {
-    // Earlier in the preferred list = better score. Base +100, minus rank.
-    score += 100 - nameIdx
-  }
-  // Network voices are usually the cloud-neural ones (Google/Microsoft).
-  // localService=true is the local OS voice which tends to sound robotic.
+  if (nameIdx !== -1) score += 100 - nameIdx
   if (v.localService === false) score += 50
   return score
 }
@@ -93,8 +94,6 @@ function scoreVoice(v: SpeechSynthesisVoice): number {
 function pickHebrewVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
   const hebrewVoices = voices.filter(isHebrewVoice)
   if (hebrewVoices.length === 0) return undefined
-  // Stable sort: keep original order among equal scores so the first
-  // matching Hebrew voice still wins the tiebreak.
   return hebrewVoices
     .map((v, i) => ({ v, i, s: scoreVoice(v) }))
     .sort((a, b) => b.s - a.s || a.i - b.i)[0]?.v
@@ -105,27 +104,95 @@ export function useBrowserTTS() {
   const [speaking, setSpeaking] = useState(false)
   const [supported, setSupported] = useState(false)
   const voiceRef = useRef<SpeechSynthesisVoice | undefined>(undefined)
+  // Track the in-flight Piper request + audio element so `cancel()` and
+  // subsequent `speak()` calls can tear them down cleanly. Playing a new
+  // line while the previous is loading should silently supersede it.
+  const abortRef = useRef<AbortController | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioUrlRef = useRef<string | null>(null)
+  const hasBrowserTTSRef = useRef(false)
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
-    setSupported(true)
-
-    const loadVoices = () => {
-      voiceRef.current = pickHebrewVoice(window.speechSynthesis.getVoices())
+  const stopAudio = useCallback(() => {
+    const audio = audioRef.current
+    if (audio) {
+      // Detach handlers before mutating src so their `audio === audioRef.current`
+      // guards don't fire on our own teardown.
+      audio.onended = null
+      audio.onerror = null
+      audio.pause()
+      audio.src = ''
+      audioRef.current = null
     }
-    loadVoices()
-    window.speechSynthesis.onvoiceschanged = loadVoices
-
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null
-      window.speechSynthesis.cancel()
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
     }
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    // We're "supported" as long as either engine works. The Piper engine
+    // needs `fetch` (universal) + `Audio` (universal) — safe to assume
+    // it's available in any browser we care about.
+    setSupported(true)
+    hasBrowserTTSRef.current = 'speechSynthesis' in window
+
+    if (hasBrowserTTSRef.current) {
+      const loadVoices = () => {
+        voiceRef.current = pickHebrewVoice(window.speechSynthesis.getVoices())
+      }
+      loadVoices()
+      window.speechSynthesis.onvoiceschanged = loadVoices
+    }
+
+    return () => {
+      // Full teardown on unmount: abort any in-flight Piper fetch, stop
+      // the detached <audio>, revoke its object URL, and drop the
+      // speechSynthesis queue. Prevents audio from continuing after the
+      // student navigates away mid-playback.
+      abortRef.current?.abort()
+      abortRef.current = null
+      stopAudio()
+      if (hasBrowserTTSRef.current) {
+        window.speechSynthesis.onvoiceschanged = null
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [stopAudio])
+
   const cancel = useCallback(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
-    window.speechSynthesis.cancel()
+    if (abortRef.current) {
+      abortRef.current.abort()
+      abortRef.current = null
+    }
+    stopAudio()
+    if (hasBrowserTTSRef.current) {
+      window.speechSynthesis.cancel()
+    }
     setSpeaking(false)
+  }, [stopAudio])
+
+  const speakViaBrowser = useCallback((clean: string) => {
+    if (!hasBrowserTTSRef.current) {
+      setSpeaking(false)
+      return
+    }
+    // Defensive re-pick: on Chrome desktop the first paint of the page
+    // sees an empty voices list, so voiceRef may be undefined on the very
+    // first speak call even though voices are now available.
+    if (!voiceRef.current) {
+      voiceRef.current = pickHebrewVoice(window.speechSynthesis.getVoices())
+    }
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(clean)
+    utterance.lang = 'he-IL'
+    utterance.rate = 0.95
+    utterance.pitch = 1.0
+    if (voiceRef.current) utterance.voice = voiceRef.current
+    utterance.onstart = () => setSpeaking(true)
+    utterance.onend = () => setSpeaking(false)
+    utterance.onerror = () => setSpeaking(false)
+    window.speechSynthesis.speak(utterance)
   }, [])
 
   const speak = useCallback(
@@ -134,40 +201,82 @@ export function useBrowserTTS() {
       const clean = stripForSpeech(text)
       if (!clean) return
 
-      // Defensive re-pick: on Chrome desktop the first paint of the page
-      // sees an empty voices list, so voiceRef may be undefined on the very
-      // first speak call even though voices are now available. Cheap to
-      // retry here rather than relying only on the onvoiceschanged handler.
-      if (!voiceRef.current) {
-        voiceRef.current = pickHebrewVoice(window.speechSynthesis.getVoices())
-      }
+      // Tear down anything from the previous line.
+      cancel()
 
-      window.speechSynthesis.cancel()
+      const controller = new AbortController()
+      abortRef.current = controller
+      // Track whether the abort we're about to see is from our own
+      // timeout watchdog vs. an explicit cancel()/supersede — matters
+      // in .catch to decide "silently drop" vs "fall back to browser".
+      let timedOut = false
+      const timeoutId = window.setTimeout(() => {
+        timedOut = true
+        controller.abort()
+      }, PIPER_TIMEOUT_MS)
 
-      const utterance = new SpeechSynthesisUtterance(clean)
-      utterance.lang = 'he-IL'
-      utterance.rate = 0.95
-      utterance.pitch = 1.0
-      if (voiceRef.current) utterance.voice = voiceRef.current
-      utterance.onstart = () => setSpeaking(true)
-      utterance.onend = () => setSpeaking(false)
-      utterance.onerror = () => setSpeaking(false)
+      const url = `${PIPER_ENDPOINT}?voice=${PIPER_VOICE}&text=${encodeURIComponent(clean)}`
+      setSpeaking(true)
 
-      window.speechSynthesis.speak(utterance)
+      fetch(url, { signal: controller.signal })
+        .then((r) => {
+          if (!r.ok) throw new Error(`Piper HTTP ${r.status}`)
+          return r.blob()
+        })
+        .then((blob) => {
+          window.clearTimeout(timeoutId)
+          // If a newer speak() has already replaced our controller, drop.
+          if (abortRef.current !== controller) return
+          const objectUrl = URL.createObjectURL(blob)
+          audioUrlRef.current = objectUrl
+          const audio = new Audio(objectUrl)
+          audioRef.current = audio
+          audio.onended = () => {
+            if (audioRef.current === audio) {
+              stopAudio()
+              setSpeaking(false)
+            }
+          }
+          audio.onerror = () => {
+            if (audioRef.current === audio) {
+              stopAudio()
+              // Audio decode failed — fall back to browser voice so the
+              // student still hears something.
+              speakViaBrowser(clean)
+            }
+          }
+          void audio.play().catch(() => {
+            // Autoplay policy or other play() rejection — fall back.
+            if (audioRef.current === audio) {
+              stopAudio()
+              speakViaBrowser(clean)
+            }
+          })
+        })
+        .catch((err) => {
+          window.clearTimeout(timeoutId)
+          // Superseded by a newer speak() or explicit cancel() — silently
+          // drop. Both replace or clear abortRef.current before we get here.
+          if (abortRef.current !== controller) return
+          abortRef.current = null
+          // User-initiated abort (cancel()/mute) → nothing to do, speaking
+          // was already cleared. Only the timeout branch should fall back.
+          const isUserAbort = (err as Error).name === 'AbortError' && !timedOut
+          if (isUserAbort) return
+          // Piper unreachable / timed out / non-OK — degrade to browser.
+          speakViaBrowser(clean)
+        })
     },
-    [muted, supported],
+    [cancel, muted, speakViaBrowser, stopAudio, supported],
   )
 
   const toggleMuted = useCallback(() => {
     setMuted((prev) => {
       const next = !prev
-      if (next && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel()
-        setSpeaking(false)
-      }
+      if (next) cancel()
       return next
     })
-  }, [])
+  }, [cancel])
 
   return { supported, muted, speaking, speak, cancel, toggleMuted }
 }
