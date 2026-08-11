@@ -2,7 +2,7 @@
  * @fileType utility
  * @domain ui
  * @pattern remark-plugin
- * @ai-summary Simplified remark plugin to transform ::text-highlight-N{text} syntax (single-node only)
+ * @ai-summary Remark plugin transforming ::token{text} syntax for highlights, named colors, and sizes (single-node only)
  */
 
 import { visit } from 'unist-util-visit'
@@ -31,10 +31,16 @@ interface Root extends Parent {
 }
 
 /**
- * Whitelisted highlight tokens that are allowed for rendering.
+ * Whitelisted tokens that are allowed for rendering.
  * Any token not in this list will be rendered as literal text.
+ *
+ * Categories:
+ * - Numbered highlights: text-highlight-1..8 (design-system palette slots)
+ * - Named colors: text-red/orange/yellow/green/blue/purple/pink/gray/black
+ *   (semantic aliases mapping to the same palette slots)
+ * - Sizes: text-size-xs/small/medium/large/xlarge/xxlarge
  */
-const ALLOWED_HIGHLIGHTS = [
+const ALLOWED_TOKENS = [
   'text-highlight-1',
   'text-highlight-2',
   'text-highlight-3',
@@ -43,14 +49,26 @@ const ALLOWED_HIGHLIGHTS = [
   'text-highlight-6',
   'text-highlight-7',
   'text-highlight-8',
+  'text-red',
+  'text-orange',
+  'text-yellow',
+  'text-green',
+  'text-blue',
+  'text-purple',
+  'text-pink',
+  'text-gray',
+  'text-black',
+  'text-size-xs',
+  'text-size-small',
+  'text-size-medium',
+  'text-size-large',
+  'text-size-xlarge',
+  'text-size-xxlarge',
 ] as const
-type AllowedHighlight = (typeof ALLOWED_HIGHLIGHTS)[number]
+type AllowedToken = (typeof ALLOWED_TOKENS)[number]
 
-/**
- * Check if a string is a whitelisted highlight token.
- */
-function isAllowedHighlight(token: string): token is AllowedHighlight {
-  return ALLOWED_HIGHLIGHTS.includes(token as AllowedHighlight)
+function isAllowedToken(token: string): token is AllowedToken {
+  return ALLOWED_TOKENS.includes(token as AllowedToken)
 }
 
 /**
@@ -69,25 +87,27 @@ interface HighlightTextNode extends Parent {
 }
 
 /**
- * Simplified remark plugin to transform ::text-highlight-N{text} syntax.
+ * Simplified remark plugin to transform ::token{text} syntax.
  *
  * IMPORTANT: This plugin ONLY transforms syntax when BOTH the opening marker
- * ::text-highlight-N{ and the matching closing } exist within the SAME text node.
+ * ::token{ and the matching closing } exist within the SAME text node.
  *
  * If the opening and closing are not in the same text node (e.g., because
  * markdown parsing created separate nodes for bold, italic, etc.), the text
  * is left unchanged as literal text.
  *
  * WHAT IT DOES:
- * - Parses ::text-highlight-1{...} through ::text-highlight-8{...} syntax
+ * - Parses ::<token>{...} for any token in ALLOWED_TOKENS
+ *   - Numbered highlights: text-highlight-1..8
+ *   - Named colors: text-red/orange/yellow/green/blue/purple/pink/gray/black
+ *   - Sizes: text-size-xs/small/medium/large/xlarge/xxlarge
  * - ONLY when opening and closing exist in same text node
- * - Splits text node into: [before, content, after]
- * - Emits: [beforeText?, highlightTextNode(content), afterText?]
- * - Recursively processes afterText for multiple highlights
+ * - Emits: <span class="aguy-<token>">content</span>
+ * - Recursively processes text after the closing brace for multiple tokens
  *
  * WHAT IT DOESN'T DO:
  * - Does NOT scan across multiple nodes
- * - Does NOT support nested markdown (bold, italic, etc.) inside highlights
+ * - Does NOT support nested markdown (bold, italic, etc.) inside tokens
  * - If closing brace not in same node, leaves node untouched
  *
  * SCOPE:
@@ -95,17 +115,17 @@ interface HighlightTextNode extends Parent {
  * - Does NOT transform in code blocks, tables, etc.
  *
  * SECURITY:
- * - Only whitelisted tokens (text-highlight-1 through 8) are transformed
+ * - Only tokens in ALLOWED_TOKENS are transformed
  * - Uses data.hName and data.hProperties (safe remark-rehype directives)
  * - No raw HTML, only CSS classes
  *
  * @example Works (same node)
- * Input:  "This is ::text-highlight-1{important} text"
- * Output: <p>This is <span class="aguy-text-highlight-1">important</span> text</p>
+ * Input:  "This is ::text-green{important} text"
+ * Output: <p>This is <span class="aguy-text-green">important</span> text</p>
  *
  * @example Doesn't work (cross-node)
- * Input:  "::text-highlight-1{**bold**}" (bold creates separate nodes)
- * Output: <p>::text-highlight-1{<strong>bold</strong>}</p> (literal text)
+ * Input:  "::text-green{**bold**}" (bold creates separate nodes)
+ * Output: <p>::text-green{<strong>bold</strong>}</p> (literal text)
  */
 export function remarkColorSyntax() {
   return (tree: Root) => {
@@ -138,8 +158,9 @@ function transformChildren(children: Node[]): Node[] {
     const textNode = node as Text
     const text = textNode.value
 
-    // Look for opening marker ::text-highlight-N{
-    const markerMatch = text.match(/::(text-highlight-[1-8])\{/)
+    // Look for opening marker ::<token>{
+    // Generic pattern — the whitelist below decides what actually transforms.
+    const markerMatch = text.match(/::([a-z0-9-]+)\{/)
 
     if (!markerMatch) {
       // No marker found, keep node as-is
@@ -152,7 +173,7 @@ function transformChildren(children: Node[]): Node[] {
     const markerEnd = markerIndex + markerMatch[0].length
 
     // Only process whitelisted tokens
-    if (!isAllowedHighlight(token)) {
+    if (!isAllowedToken(token)) {
       result.push(node)
       continue
     }

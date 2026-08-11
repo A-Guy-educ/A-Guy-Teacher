@@ -593,6 +593,57 @@ math-field:focus-within {
   color: hsl(var(--text-highlight-8));
 }
 
+/* Named color aliases for ::text-<name>{} markdown syntax.
+   Reuse the same design-system palette slots so themes/dark-mode stay consistent. */
+.aguy-text-red {
+  color: hsl(var(--text-highlight-1));
+}
+.aguy-text-orange {
+  color: hsl(var(--text-highlight-2));
+}
+.aguy-text-yellow {
+  color: hsl(var(--text-highlight-3));
+}
+.aguy-text-green {
+  color: hsl(var(--text-highlight-4));
+}
+.aguy-text-blue {
+  color: hsl(var(--text-highlight-5));
+}
+.aguy-text-purple {
+  color: hsl(var(--text-highlight-6));
+}
+.aguy-text-pink {
+  color: hsl(var(--text-highlight-7));
+}
+.aguy-text-gray {
+  color: hsl(var(--text-highlight-8));
+}
+.aguy-text-black {
+  color: hsl(var(--foreground));
+}
+
+/* Text size scale for ::text-size-<name>{} markdown syntax.
+   Sizes are relative (em) so they inherit surrounding context. */
+.aguy-text-size-xs {
+  font-size: 0.75em;
+}
+.aguy-text-size-small {
+  font-size: 0.875em;
+}
+.aguy-text-size-medium {
+  font-size: 1em;
+}
+.aguy-text-size-large {
+  font-size: 1.25em;
+}
+.aguy-text-size-xlarge {
+  font-size: 1.5em;
+}
+.aguy-text-size-xxlarge {
+  font-size: 2em;
+}
+
 /* Landing page: hide chrome for immersive experience */
 body.landing-page header,
 body.landing-page footer {
