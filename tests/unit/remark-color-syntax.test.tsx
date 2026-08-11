@@ -74,6 +74,69 @@ describe('remarkColorSyntax - Basic Parsing', () => {
   })
 })
 
+describe('remarkColorSyntax - Named Color Tokens', () => {
+  const namedColors = [
+    'red',
+    'orange',
+    'yellow',
+    'green',
+    'blue',
+    'purple',
+    'pink',
+    'gray',
+    'black',
+  ] as const
+
+  it.each(namedColors)('should parse ::text-%s{text} and render matching aguy class', (color) => {
+    const { container } = renderHighlightMarkdown(`::text-${color}{sample text}`)
+    const span = container.querySelector(`.aguy-text-${color}`)
+    expect(span).not.toBeNull()
+    expect(span?.textContent).toBe('sample text')
+  })
+
+  it('should handle a mixed paragraph with a named color and a numbered highlight', () => {
+    const { container } = renderHighlightMarkdown(
+      'Start ::text-green{ok} middle ::text-highlight-1{oops} end',
+    )
+    expect(container.querySelector('.aguy-text-green')?.textContent).toBe('ok')
+    expect(container.querySelector('.aguy-text-highlight-1')?.textContent).toBe('oops')
+  })
+})
+
+describe('remarkColorSyntax - Size Tokens', () => {
+  const sizes = ['xs', 'small', 'medium', 'large', 'xlarge', 'xxlarge'] as const
+
+  it.each(sizes)('should parse ::text-size-%s{text} and render matching aguy class', (size) => {
+    const { container } = renderHighlightMarkdown(`::text-size-${size}{sized text}`)
+    const span = container.querySelector(`.aguy-text-size-${size}`)
+    expect(span).not.toBeNull()
+    expect(span?.textContent).toBe('sized text')
+  })
+
+  it('should handle size and color tokens together in one paragraph', () => {
+    const { container } = renderHighlightMarkdown(
+      'Hello ::text-size-small{tiny} and ::text-size-xlarge{huge} and ::text-green{ok}',
+    )
+    expect(container.querySelector('.aguy-text-size-small')?.textContent).toBe('tiny')
+    expect(container.querySelector('.aguy-text-size-xlarge')?.textContent).toBe('huge')
+    expect(container.querySelector('.aguy-text-green')?.textContent).toBe('ok')
+  })
+
+  it('should render the reported Hebrew paragraph correctly', () => {
+    // Regression: the tokens below used to leak through as literal text
+    // because the plugin only whitelisted text-highlight-1..8.
+    const content =
+      'ילדי::text-size-small{ם יקרי}ם, דמיינו שאתם רוצים לחלוק עוגה עם חברים. איך ::text-size-xlarge{תדעו איזה חלק מהעוגה כל אחד מקבל}? בדיוק בשביל זה יש לנו שברים. בואו נתרגל לזהות ולכתוב שברים לפי::text-green{ ציורים.}'
+    const { container } = renderHighlightMarkdown(content)
+    expect(container.querySelector('.aguy-text-size-small')?.textContent).toBe('ם יקרי')
+    expect(container.querySelector('.aguy-text-size-xlarge')?.textContent).toBe(
+      'תדעו איזה חלק מהעוגה כל אחד מקבל',
+    )
+    expect(container.querySelector('.aguy-text-green')?.textContent).toBe(' ציורים.')
+    expect(container.textContent).not.toContain('::text-')
+  })
+})
+
 describe('remarkColorSyntax - Cross-Node Behavior (Does NOT Transform)', () => {
   it('should NOT transform when bold markdown creates separate nodes', () => {
     // Bold syntax ** ** causes markdown to create separate nodes before our plugin runs
