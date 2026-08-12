@@ -72,6 +72,36 @@ describe('renderAdminHtmlWithMath', () => {
   })
 })
 
+describe('renderAdminHtmlWithMath - color-syntax tokens', () => {
+  it('wraps color tokens found in text between admin HTML tags', () => {
+    const result = renderAdminHtmlWithMath(
+      '<p>אתר זה נבנה בהתאם לתקנות ש::text-blue{וויון זכויות לאנשי}ם עם מוגבלות</p>',
+    )
+    expect(result).toContain('<span class="aguy-text-blue">וויון זכויות לאנשי</span>')
+    expect(result).not.toContain('::text-blue{')
+  })
+
+  it('wraps dark/wine tokens in admin HTML', () => {
+    const result = renderAdminHtmlWithMath(
+      '<p>נגי::text-dark-orange{שות לשירות} וגם ::text-wine-red{דגש}</p>',
+    )
+    expect(result).toContain('<span class="aguy-text-dark-orange">שות לשירות</span>')
+    expect(result).toContain('<span class="aguy-text-wine-red">דגש</span>')
+  })
+
+  it('leaves color tokens inside <code> blocks untouched', () => {
+    const result = renderAdminHtmlWithMath('<code>::text-blue{keep raw}</code>')
+    expect(result).toContain('::text-blue{keep raw}')
+    expect(result).not.toContain('aguy-text-blue')
+  })
+
+  it('renders both color and math within the same admin HTML paragraph', () => {
+    const result = renderAdminHtmlWithMath('<p>::text-green{$x^2$} תשובה</p>')
+    expect(result).toContain('<span class="aguy-text-green">')
+    expect(result).toContain('class="katex"')
+  })
+})
+
 describe('renderTextWithMath - color-syntax tokens', () => {
   it('wraps a whitelisted color token in a matching aguy-* span', () => {
     const result = renderTextWithMath('אתר ::text-blue{שוויון זכויות} עם מוגבלות')
