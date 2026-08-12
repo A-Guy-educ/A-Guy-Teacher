@@ -1,4 +1,5 @@
 import katex from 'katex'
+import { isAllowedColorToken } from '@/infra/utils/allowedColorTokens'
 
 const MATH_RE =
   /(?<!\\)\$\$([\s\S]+?)\$\$(?!\d)|(?<!\\)\$\$([^$\n]+?)\$(?!\$|\d)|(?<!\\)\$([^$\n]+?)\$(?!\d)/g
@@ -110,9 +111,23 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;')
 }
 
+// Matches ::<token>{content} where token is [a-z0-9-]+ and content excludes '}'.
+// Applied AFTER html-escape so injected span markup is safe; the whitelist below
+// keeps unknown tokens as literal text (matching the remark plugin's behaviour).
+const COLOR_TOKEN_RE = /::([a-z0-9-]+)\{([^}]*)\}/g
+
+function renderColorTokensInEscapedText(text: string): string {
+  return text.replace(COLOR_TOKEN_RE, (match, token: string, content: string) => {
+    if (!isAllowedColorToken(token)) return match
+    return `<span class="aguy-${token}">${content}</span>`
+  })
+}
+
 export function renderTextWithMath(text: string): string {
   if (!text) return ''
-  return renderMathInText(escapeHtml(text))
+  const escaped = escapeHtml(text)
+  const colored = renderColorTokensInEscapedText(escaped)
+  return renderMathInText(colored)
 }
 
 function extractBodyHtml(html: string): string {

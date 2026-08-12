@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it, vi } from 'vitest'
-import { renderAdminHtmlWithMath } from '@/infra/utils/renderAdminHtmlWithMath'
+import { renderAdminHtmlWithMath, renderTextWithMath } from '@/infra/utils/renderAdminHtmlWithMath'
 
 describe('renderAdminHtmlWithMath', () => {
   it('renders inline math inside admin HTML as KaTeX', () => {
@@ -69,5 +69,48 @@ describe('renderAdminHtmlWithMath', () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+})
+
+describe('renderTextWithMath - color-syntax tokens', () => {
+  it('wraps a whitelisted color token in a matching aguy-* span', () => {
+    const result = renderTextWithMath('אתר ::text-blue{שוויון זכויות} עם מוגבלות')
+    expect(result).toContain('<span class="aguy-text-blue">שוויון זכויות</span>')
+    expect(result).not.toContain('::text-blue{')
+  })
+
+  it('wraps darker/named tone tokens', () => {
+    const result = renderTextWithMath(
+      'לפני ::text-dark-orange{התאמות נגישות} אחרי ::text-wine-red{דגש} סוף',
+    )
+    expect(result).toContain('<span class="aguy-text-dark-orange">התאמות נגישות</span>')
+    expect(result).toContain('<span class="aguy-text-wine-red">דגש</span>')
+  })
+
+  it('wraps size tokens', () => {
+    const result = renderTextWithMath('a ::text-size-xlarge{big} b ::text-size-small{tiny} c')
+    expect(result).toContain('<span class="aguy-text-size-xlarge">big</span>')
+    expect(result).toContain('<span class="aguy-text-size-small">tiny</span>')
+  })
+
+  it('leaves unknown tokens untouched as literal text', () => {
+    const result = renderTextWithMath('start ::text-violet{ignored} end')
+    expect(result).toContain('::text-violet{ignored}')
+    expect(result).not.toContain('aguy-text-violet')
+  })
+
+  it('does not let user-supplied token content inject markup', () => {
+    // Content is HTML-escaped BEFORE the color transform, so any raw '<' inside
+    // the token braces stays escaped inside the emitted span.
+    const result = renderTextWithMath('::text-blue{<script>x</script>}')
+    expect(result).toContain('<span class="aguy-text-blue">')
+    expect(result).toContain('&lt;script&gt;')
+    expect(result).not.toContain('<script>')
+  })
+
+  it('renders math inside color-wrapped content', () => {
+    const result = renderTextWithMath('::text-green{$x^2$}')
+    expect(result).toContain('<span class="aguy-text-green">')
+    expect(result).toContain('class="katex"')
   })
 })
