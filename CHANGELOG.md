@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.31.3 — 2026-08-12
+
+### Fixes
+- Scan across inline nodes when rendering ::text-<token> markdown (383e647b6)
+- Apply ::text-<token>{} inside admin HTML blocks (1204fc89a)
+- Apply ::text-<token>{} to Lexical/HTML rendered CMS pages (3cc239fd3)
+- Render ::text-dark-<color> and ::text-wine-red markdown tokens (9329b8589)
+
+### Chores
+- add #1058 (5976a16e1)
+- add #1057 (1e8bc3dd1)
+- add #1056 (13e15dbb3)
+- add #1055 (c85c69c28)
+- add #1054 (512b6c4a5)
+- sync main promotion back to dev (e91a0dbcf)
+- add #1053 (a263baafd)
+
 ## v0.31.2 — 2026-08-12
 
 ### Fixes
@@ -3539,6 +3556,12 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: Release v0.31.3 ([#1059](https://github.com/A-Guy-educ/A-Guy-Web/pull/1059)) — @aguyshayb
+- fix: Render ::text-<token> across bold/italic markdown boundaries ([#1058](https://github.com/A-Guy-educ/A-Guy-Web/pull/1058)) — @aguyshayb
+- fix: Apply ::text-<token>{} inside admin HTML blocks ([#1057](https://github.com/A-Guy-educ/A-Guy-Web/pull/1057)) — @aguyshayb
+- fix: Apply ::text-<token>{} to Lexical/HTML rendered CMS pages ([#1056](https://github.com/A-Guy-educ/A-Guy-Web/pull/1056)) — @aguyshayb
+- fix: Render ::text-dark-<color> and ::text-wine-red markdown tokens ([#1055](https://github.com/A-Guy-educ/A-Guy-Web/pull/1055)) — @aguyshayb
+- promote: dev -> main (v0.31.2) ([#1054](https://github.com/A-Guy-educ/A-Guy-Web/pull/1054)) — @aguyaharonyair
 - chore: release v0.31.2 ([#1053](https://github.com/A-Guy-educ/A-Guy-Web/pull/1053)) — @aguyaharonyair
 - fix: Render ::text-<color> and ::text-size-<name> markdown tokens ([#1052](https://github.com/A-Guy-educ/A-Guy-Web/pull/1052)) — @aguyshayb
 - promote: dev -> main (v0.31.1) ([#1051](https://github.com/A-Guy-educ/A-Guy-Web/pull/1051)) — @aguyaharonyair

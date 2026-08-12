@@ -1,4 +1,5 @@
 import katex from 'katex'
+import { isAllowedColorToken } from '@/infra/utils/allowedColorTokens'
 
 const MATH_RE =
   /(?<!\\)\$\$([\s\S]+?)\$\$(?!\d)|(?<!\\)\$\$([^$\n]+?)\$(?!\$|\d)|(?<!\\)\$([^$\n]+?)\$(?!\d)/g
@@ -110,9 +111,25 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;')
 }
 
+// Matches ::<token>{content} where token is [a-z0-9-]+ and content excludes '}'.
+// Unknown tokens fall through as literal text (matches the remark plugin behaviour).
+// Callers are responsible for HTML-escaping the input first when the source is
+// untrusted (e.g. Lexical text nodes); admin-authored HTML is trusted at
+// authoring time and can be passed through as-is.
+const COLOR_TOKEN_RE = /::([a-z0-9-]+)\{([^}]*)\}/g
+
+function renderColorTokensInText(text: string): string {
+  return text.replace(COLOR_TOKEN_RE, (match, token: string, content: string) => {
+    if (!isAllowedColorToken(token)) return match
+    return `<span class="aguy-${token}">${content}</span>`
+  })
+}
+
 export function renderTextWithMath(text: string): string {
   if (!text) return ''
-  return renderMathInText(escapeHtml(text))
+  const escaped = escapeHtml(text)
+  const colored = renderColorTokensInText(escaped)
+  return renderMathInText(colored)
 }
 
 function extractBodyHtml(html: string): string {
@@ -174,7 +191,7 @@ export function renderAdminHtmlWithMath(html: string): string {
   while ((match = TAG_RE.exec(source))) {
     const tag = match[0]
     const text = source.slice(lastIndex, match.index)
-    result += isSkippingText(stack) ? text : renderMathInText(text)
+    result += isSkippingText(stack) ? text : renderMathInText(renderColorTokensInText(text))
     result += tag
 
     const name = getTagName(tag)
@@ -190,6 +207,6 @@ export function renderAdminHtmlWithMath(html: string): string {
   }
 
   const tail = source.slice(lastIndex)
-  result += isSkippingText(stack) ? tail : renderMathInText(tail)
+  result += isSkippingText(stack) ? tail : renderMathInText(renderColorTokensInText(tail))
   return result
 }

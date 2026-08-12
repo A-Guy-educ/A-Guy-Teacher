@@ -103,6 +103,36 @@ describe('remarkColorSyntax - Named Color Tokens', () => {
   })
 })
 
+describe('remarkColorSyntax - Darker Color Tokens', () => {
+  const darkColors = [
+    'dark-red',
+    'dark-orange',
+    'dark-yellow',
+    'dark-green',
+    'dark-blue',
+    'dark-purple',
+    'dark-pink',
+    'dark-gray',
+    'wine-red',
+  ] as const
+
+  it.each(darkColors)('should parse ::text-%s{text} and render matching aguy class', (color) => {
+    const { container } = renderHighlightMarkdown(`::text-${color}{sample text}`)
+    const span = container.querySelector(`.aguy-text-${color}`)
+    expect(span).not.toBeNull()
+    expect(span?.textContent).toBe('sample text')
+  })
+
+  it('should render mixed dark + named + numbered tokens in one paragraph', () => {
+    const { container } = renderHighlightMarkdown(
+      'start ::text-wine-red{a} mid ::text-dark-orange{b} end ::text-blue{c}',
+    )
+    expect(container.querySelector('.aguy-text-wine-red')?.textContent).toBe('a')
+    expect(container.querySelector('.aguy-text-dark-orange')?.textContent).toBe('b')
+    expect(container.querySelector('.aguy-text-blue')?.textContent).toBe('c')
+  })
+})
+
 describe('remarkColorSyntax - Size Tokens', () => {
   const sizes = ['xs', 'small', 'medium', 'large', 'xlarge', 'xxlarge'] as const
 
@@ -137,45 +167,61 @@ describe('remarkColorSyntax - Size Tokens', () => {
   })
 })
 
-describe('remarkColorSyntax - Cross-Node Behavior (Does NOT Transform)', () => {
-  it('should NOT transform when bold markdown creates separate nodes', () => {
-    // Bold syntax ** ** causes markdown to create separate nodes before our plugin runs
-    // Since opening and closing are not in same text node, it stays literal
-    const { container } = renderHighlightMarkdown('::text-highlight-1{**bold text**}')
-    const redSpan = container.querySelector('.aguy-text-highlight-1')
-    // Should NOT find the highlight span because bold creates separate nodes
-    expect(redSpan).toBeNull()
-    // Should see the literal text with markdown-rendered bold
-    expect(container.textContent).toContain('::text-highlight-1{')
-    expect(container.querySelector('strong')?.textContent).toBe('bold text')
+describe('remarkColorSyntax - Cross-Node Behavior (Now Transforms)', () => {
+  // Historical note: these cases used to fall through as literal text because
+  // markdown parsing (bold/italic/etc.) split the token across sibling nodes.
+  // The plugin now scans across siblings and recurses into inline formatting.
+
+  it('transforms a token whose content is entirely bolded (child of <strong>)', () => {
+    const { container } = renderHighlightMarkdown('**::text-highlight-1{bold text}**')
+    const strong = container.querySelector('strong')
+    expect(strong).not.toBeNull()
+    const span = strong?.querySelector('.aguy-text-highlight-1')
+    expect(span?.textContent).toBe('bold text')
   })
 
-  it('should NOT transform when italic markdown creates separate nodes', () => {
-    const { container } = renderHighlightMarkdown('::text-highlight-5{*italic text*}')
-    const highlight5Span = container.querySelector('.aguy-text-highlight-5')
-    expect(highlight5Span).toBeNull()
-    expect(container.textContent).toContain('::text-highlight-5{')
-    expect(container.querySelector('em')?.textContent).toBe('italic text')
+  it('transforms a token whose content spans an italic sibling', () => {
+    const { container } = renderHighlightMarkdown('::text-highlight-5{outer *inner* tail}')
+    const span = container.querySelector('.aguy-text-highlight-5')
+    expect(span).not.toBeNull()
+    expect(span?.textContent).toBe('outer inner tail')
+    expect(span?.querySelector('em')?.textContent).toBe('inner')
+    expect(container.textContent).not.toContain('::text-highlight-5{')
   })
 
-  it('should NOT transform when code markdown creates separate nodes', () => {
-    const { container } = renderHighlightMarkdown('::text-highlight-1{`code snippet`}')
-    const redSpan = container.querySelector('.aguy-text-highlight-1')
-    expect(redSpan).toBeNull()
-    expect(container.textContent).toContain('::text-highlight-1{')
-    expect(container.querySelector('code')?.textContent).toBe('code snippet')
-  })
-
-  it('should NOT transform when link markdown creates separate nodes', () => {
+  it('transforms a token whose content wraps a link', () => {
     const { container } = renderHighlightMarkdown(
-      '::text-highlight-5{[click here](https://example.com)}',
+      '::text-highlight-5{go to [click here](https://example.com) now}',
     )
-    const highlight5Span = container.querySelector('.aguy-text-highlight-5')
-    expect(highlight5Span).toBeNull()
-    expect(container.textContent).toContain('::text-highlight-5{')
-    const link = container.querySelector('a')
-    expect(link).not.toBeNull()
+    const span = container.querySelector('.aguy-text-highlight-5')
+    expect(span).not.toBeNull()
+    const link = span?.querySelector('a')
     expect(link?.getAttribute('href')).toBe('https://example.com')
+    expect(container.textContent).not.toContain('::text-highlight-5{')
+  })
+
+  it('leaves inline code inside a token as <code> but still wraps the span', () => {
+    const { container } = renderHighlightMarkdown('::text-highlight-1{run `npm i` first}')
+    const span = container.querySelector('.aguy-text-highlight-1')
+    expect(span).not.toBeNull()
+    expect(span?.querySelector('code')?.textContent).toBe('npm i')
+    expect(container.textContent).not.toContain('::text-highlight-1{')
+  })
+
+  it('handles the reported paragraph where bold/italic straddle the token braces', () => {
+    // Real-world admin content: italic and bold happened to run through the
+    // middle of two color tokens (::text-blue and ::text-dark-orange).
+    const content =
+      'אתר זה נבנה בהתא*ם ל1תקנות ש*::text-blue{*וויון זכ*ויות לאנשי}ם עם מוגבלות (ה**תאמות נגי::text-dark-orange{שות1 לשירות), תשע}"ג-2013**'
+    const { container } = renderHighlightMarkdown(content)
+    const blue = container.querySelector('.aguy-text-blue')
+    const darkOrange = container.querySelector('.aguy-text-dark-orange')
+    expect(blue).not.toBeNull()
+    expect(darkOrange).not.toBeNull()
+    expect(blue?.textContent).toContain('ויות לאנשי')
+    expect(darkOrange?.textContent).toContain('שות1 לשירות')
+    expect(container.textContent).not.toContain('::text-blue{')
+    expect(container.textContent).not.toContain('::text-dark-orange{')
   })
 })
 
