@@ -3539,6 +3539,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Render ::text-dark-<color> and ::text-wine-red markdown tokens ([#1055](https://github.com/A-Guy-educ/A-Guy-Web/pull/1055)) — @aguyshayb
 - promote: dev -> main (v0.31.2) ([#1054](https://github.com/A-Guy-educ/A-Guy-Web/pull/1054)) — @aguyaharonyair
 - chore: release v0.31.2 ([#1053](https://github.com/A-Guy-educ/A-Guy-Web/pull/1053)) — @aguyaharonyair
 - fix: Render ::text-<color> and ::text-size-<name> markdown tokens ([#1052](https://github.com/A-Guy-educ/A-Guy-Web/pull/1052)) — @aguyshayb
