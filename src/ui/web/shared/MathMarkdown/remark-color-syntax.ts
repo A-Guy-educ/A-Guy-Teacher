@@ -6,6 +6,7 @@
  */
 
 import { visit } from 'unist-util-visit'
+import { isAllowedColorToken } from '@/infra/utils/allowedColorTokens'
 
 // Local type definitions for mdast nodes (to avoid adding new dependencies)
 
@@ -28,56 +29,6 @@ type PhrasingContent = Text | HighlightTextNode
 interface Root extends Parent {
   type: 'root'
   children: Node[]
-}
-
-/**
- * Whitelisted tokens that are allowed for rendering.
- * Any token not in this list will be rendered as literal text.
- *
- * Categories:
- * - Numbered highlights: text-highlight-1..8 (design-system palette slots)
- * - Named colors: text-red/orange/yellow/green/blue/purple/pink/gray/black
- *   (semantic aliases mapping to the same palette slots)
- * - Sizes: text-size-xs/small/medium/large/xlarge/xxlarge
- */
-const ALLOWED_TOKENS = [
-  'text-highlight-1',
-  'text-highlight-2',
-  'text-highlight-3',
-  'text-highlight-4',
-  'text-highlight-5',
-  'text-highlight-6',
-  'text-highlight-7',
-  'text-highlight-8',
-  'text-red',
-  'text-orange',
-  'text-yellow',
-  'text-green',
-  'text-blue',
-  'text-purple',
-  'text-pink',
-  'text-gray',
-  'text-black',
-  'text-dark-red',
-  'text-dark-orange',
-  'text-dark-yellow',
-  'text-dark-green',
-  'text-dark-blue',
-  'text-dark-purple',
-  'text-dark-pink',
-  'text-dark-gray',
-  'text-wine-red',
-  'text-size-xs',
-  'text-size-small',
-  'text-size-medium',
-  'text-size-large',
-  'text-size-xlarge',
-  'text-size-xxlarge',
-] as const
-type AllowedToken = (typeof ALLOWED_TOKENS)[number]
-
-function isAllowedToken(token: string): token is AllowedToken {
-  return ALLOWED_TOKENS.includes(token as AllowedToken)
 }
 
 /**
@@ -106,7 +57,7 @@ interface HighlightTextNode extends Parent {
  * is left unchanged as literal text.
  *
  * WHAT IT DOES:
- * - Parses ::<token>{...} for any token in ALLOWED_TOKENS
+ * - Parses ::<token>{...} for any token in ALLOWED_COLOR_TOKENS
  *   - Numbered highlights: text-highlight-1..8
  *   - Named colors: text-red/orange/yellow/green/blue/purple/pink/gray/black
  *   - Sizes: text-size-xs/small/medium/large/xlarge/xxlarge
@@ -124,7 +75,7 @@ interface HighlightTextNode extends Parent {
  * - Does NOT transform in code blocks, tables, etc.
  *
  * SECURITY:
- * - Only tokens in ALLOWED_TOKENS are transformed
+ * - Only tokens in ALLOWED_COLOR_TOKENS are transformed
  * - Uses data.hName and data.hProperties (safe remark-rehype directives)
  * - No raw HTML, only CSS classes
  *
@@ -182,7 +133,7 @@ function transformChildren(children: Node[]): Node[] {
     const markerEnd = markerIndex + markerMatch[0].length
 
     // Only process whitelisted tokens
-    if (!isAllowedToken(token)) {
+    if (!isAllowedColorToken(token)) {
       result.push(node)
       continue
     }
