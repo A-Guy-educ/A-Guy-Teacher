@@ -3556,6 +3556,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: Release v0.31.3 ([#1059](https://github.com/A-Guy-educ/A-Guy-Web/pull/1059)) — @aguyshayb
 - fix: Render ::text-<token> across bold/italic markdown boundaries ([#1058](https://github.com/A-Guy-educ/A-Guy-Web/pull/1058)) — @aguyshayb
 - fix: Apply ::text-<token>{} inside admin HTML blocks ([#1057](https://github.com/A-Guy-educ/A-Guy-Web/pull/1057)) — @aguyshayb
 - fix: Apply ::text-<token>{} to Lexical/HTML rendered CMS pages ([#1056](https://github.com/A-Guy-educ/A-Guy-Web/pull/1056)) — @aguyshayb
