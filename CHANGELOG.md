@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.31.2 — 2026-08-12
+
+### Fixes
+- Render ::text-<color> and ::text-size-<name> markdown tokens (55584f101)
+
+### Chores
+- add #1052 (0852db473)
+- add #1051 (f61bd0b4e)
+- add #1050 (b5bff5bec)
+- release v0.31.0 (a2370376a)
+- add #1049 (8449fe06e)
 ## v0.31.1 — 2026-08-11
 
 ### Features
@@ -3528,6 +3539,9 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.31.2 ([#1053](https://github.com/A-Guy-educ/A-Guy-Web/pull/1053)) — @aguyaharonyair
+- fix: Render ::text-<color> and ::text-size-<name> markdown tokens ([#1052](https://github.com/A-Guy-educ/A-Guy-Web/pull/1052)) — @aguyshayb
+- promote: dev -> main (v0.31.1) ([#1051](https://github.com/A-Guy-educ/A-Guy-Web/pull/1051)) — @aguyaharonyair
 - chore: release v0.31.1 ([#1050](https://github.com/A-Guy-educ/A-Guy-Web/pull/1050)) — @aguyaharonyair
 ## [v0.31.0] - 2026-08-10
 
