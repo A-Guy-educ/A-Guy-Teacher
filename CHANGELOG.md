@@ -3539,6 +3539,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix: Apply ::text-<token>{} inside admin HTML blocks ([#1057](https://github.com/A-Guy-educ/A-Guy-Web/pull/1057)) — @aguyshayb
 - fix: Apply ::text-<token>{} to Lexical/HTML rendered CMS pages ([#1056](https://github.com/A-Guy-educ/A-Guy-Web/pull/1056)) — @aguyshayb
 - fix: Render ::text-dark-<color> and ::text-wine-red markdown tokens ([#1055](https://github.com/A-Guy-educ/A-Guy-Web/pull/1055)) — @aguyshayb
 - promote: dev -> main (v0.31.2) ([#1054](https://github.com/A-Guy-educ/A-Guy-Web/pull/1054)) — @aguyaharonyair
