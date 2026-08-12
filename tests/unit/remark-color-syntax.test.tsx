@@ -103,6 +103,36 @@ describe('remarkColorSyntax - Named Color Tokens', () => {
   })
 })
 
+describe('remarkColorSyntax - Darker Color Tokens', () => {
+  const darkColors = [
+    'dark-red',
+    'dark-orange',
+    'dark-yellow',
+    'dark-green',
+    'dark-blue',
+    'dark-purple',
+    'dark-pink',
+    'dark-gray',
+    'wine-red',
+  ] as const
+
+  it.each(darkColors)('should parse ::text-%s{text} and render matching aguy class', (color) => {
+    const { container } = renderHighlightMarkdown(`::text-${color}{sample text}`)
+    const span = container.querySelector(`.aguy-text-${color}`)
+    expect(span).not.toBeNull()
+    expect(span?.textContent).toBe('sample text')
+  })
+
+  it('should render mixed dark + named + numbered tokens in one paragraph', () => {
+    const { container } = renderHighlightMarkdown(
+      'start ::text-wine-red{a} mid ::text-dark-orange{b} end ::text-blue{c}',
+    )
+    expect(container.querySelector('.aguy-text-wine-red')?.textContent).toBe('a')
+    expect(container.querySelector('.aguy-text-dark-orange')?.textContent).toBe('b')
+    expect(container.querySelector('.aguy-text-blue')?.textContent).toBe('c')
+  })
+})
+
 describe('remarkColorSyntax - Size Tokens', () => {
   const sizes = ['xs', 'small', 'medium', 'large', 'xlarge', 'xxlarge'] as const
 
