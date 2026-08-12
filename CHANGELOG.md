@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.31.3 — 2026-08-12
+
+### Fixes
+- Scan across inline nodes when rendering ::text-<token> markdown (383e647b6)
+- Apply ::text-<token>{} inside admin HTML blocks (1204fc89a)
+- Apply ::text-<token>{} to Lexical/HTML rendered CMS pages (3cc239fd3)
+- Render ::text-dark-<color> and ::text-wine-red markdown tokens (9329b8589)
+
+### Chores
+- add #1058 (5976a16e1)
+- add #1057 (1e8bc3dd1)
+- add #1056 (13e15dbb3)
+- add #1055 (c85c69c28)
+- add #1054 (512b6c4a5)
+- sync main promotion back to dev (e91a0dbcf)
+- add #1053 (a263baafd)
+
 ## v0.31.2 — 2026-08-12
 
 ### Fixes
