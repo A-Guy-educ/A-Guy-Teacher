@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.31.4 — 2026-08-13
+
+### Fixes
+- Scan across inline nodes when rendering ::text-<token> markdown (383e647b6)
+- Apply ::text-<token>{} inside admin HTML blocks (1204fc89a)
+- Apply ::text-<token>{} to Lexical/HTML rendered CMS pages (3cc239fd3)
+- Render ::text-dark-<color> and ::text-wine-red markdown tokens (9329b8589)
+- Render ::text-<color> and ::text-size-<name> markdown tokens (55584f101)
+
+### Chores
+- release v0.31.3 (99e5920a8)
+- add #1060 (a6584fe94)
+- add #1059 (e2b99eb57)
+- add #1058 (5976a16e1)
+- add #1057 (1e8bc3dd1)
+- add #1056 (13e15dbb3)
+- add #1055 (c85c69c28)
+- add #1054 (512b6c4a5)
+- add #1053 (a263baafd)
+- add #1052 (0852db473)
+- add #1051 (f61bd0b4e)
+- add #1050 (b5bff5bec)
+- release v0.31.0 (a2370376a)
+- add #1049 (8449fe06e)
 ## v0.31.3 — 2026-08-12
 
 ### Fixes
@@ -3556,6 +3580,10 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.31.4 ([#1061](https://github.com/A-Guy-educ/A-Guy-Web/pull/1061)) — @aguyaharonyair
+## [v0.31.3] - 2026-08-12
+
+- promote: dev -> main (v0.31.3) ([#1060](https://github.com/A-Guy-educ/A-Guy-Web/pull/1060)) — @aguyshayb
 - chore: Release v0.31.3 ([#1059](https://github.com/A-Guy-educ/A-Guy-Web/pull/1059)) — @aguyshayb
 - fix: Render ::text-<token> across bold/italic markdown boundaries ([#1058](https://github.com/A-Guy-educ/A-Guy-Web/pull/1058)) — @aguyshayb
 - fix: Apply ::text-<token>{} inside admin HTML blocks ([#1057](https://github.com/A-Guy-educ/A-Guy-Web/pull/1057)) — @aguyshayb
