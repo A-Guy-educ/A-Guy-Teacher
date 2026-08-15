@@ -167,6 +167,62 @@ type AttachmentDoc = Record<string, unknown> & {
   url?: unknown
 }
 
+type LessonContext = {
+  text: string
+  attachmentText: string
+  parts: GeminiPart[]
+}
+
+async function loadLessonContext(lessonId?: string): Promise<LessonContext> {
+  if (!lessonId || !ObjectId.isValid(lessonId)) {
+    return { text: '', attachmentText: '', parts: [] }
+  }
+
+  const db = await getContentDb()
+  const lesson = await db
+    .collection('lessons')
+    .findOne(
+      { _id: new ObjectId(lessonId) },
+      { projection: { lessonContextText: 1, contentFiles: 1 } },
+    )
+
+  const text = typeof lesson?.lessonContextText === 'string' ? lesson.lessonContextText.trim() : ''
+  if (text || !Array.isArray(lesson?.contentFiles)) {
+    return { text, attachmentText: '', parts: [] }
+  }
+
+  const mediaIds = lesson.contentFiles
+    .map((file: unknown) => {
+      if (typeof file === 'string') return file
+      if (!file || typeof file !== 'object') return null
+      const record = file as { _id?: unknown; id?: unknown }
+      return String(record._id ?? record.id ?? '')
+    })
+    .filter((id: string | null): id is string => Boolean(id && ObjectId.isValid(id)))
+
+  if (mediaIds.length === 0) return { text, attachmentText: '', parts: [] }
+
+  const media = await db
+    .collection('media')
+    .find({ _id: { $in: mediaIds.map((id) => new ObjectId(id)) } })
+    .limit(CHAT_ASSET_MAX_ATTACHMENTS)
+    .toArray()
+  const attachmentText: string[] = []
+  const parts: GeminiPart[] = []
+
+  for (const item of media as AttachmentDoc[]) {
+    attachmentText.push(`Lesson attachment: ${attachmentName(item)}`)
+    try {
+      const part = await attachmentToInlinePart(item)
+      if (part) parts.push(part)
+    } catch {
+      attachmentText.push(`Lesson attachment data unavailable: ${attachmentName(item)}`)
+    }
+  }
+
+  return { text, attachmentText: attachmentText.join('\n'), parts }
+}
+
 const SUPPORTED_INLINE_MIME_TYPES = new Set<string>(CHAT_ASSET_ALLOWED_MIME_TYPES)
 
 function cleanMimeType(mimeType: unknown) {
@@ -278,9 +334,11 @@ export async function generateAssistantReply(args: {
   message: string
   acknowledgment?: string
   history?: WebChatMessage[]
+  lessonId?: string
   chatAssetIds?: string[]
   mediaIds?: string[]
 }) {
+  const lessonContext = await loadLessonContext(args.lessonId)
   const attachments = await loadAttachments(args.ownerId, args.chatAssetIds, args.mediaIds)
   const system =
     'You are A-Guy, a concise math tutor. Help the student with clear steps, in the same language they use when possible.'
@@ -288,7 +346,13 @@ export async function generateAssistantReply(args: {
     .slice(-10)
     .map((m) => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content}`)
     .join('\n')
-  const prompt = [history, attachments.text, `Student: ${args.message}`, 'Tutor:']
+  const prompt = [
+    history,
+    lessonContext.text ? `Lesson context:\n${lessonContext.text}` : '',
+    [lessonContext.attachmentText, attachments.text].filter(Boolean).join('\n'),
+    `Student: ${args.message}`,
+    'Tutor:',
+  ]
     .filter(Boolean)
     .join('\n\n')
 
@@ -307,7 +371,12 @@ export async function generateAssistantReply(args: {
       },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
-        contents: [{ role: 'user', parts: buildGeminiUserParts(prompt, attachments.parts) }],
+        contents: [
+          {
+            role: 'user',
+            parts: buildGeminiUserParts(prompt, [...lessonContext.parts, ...attachments.parts]),
+          },
+        ],
         generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
       }),
     },

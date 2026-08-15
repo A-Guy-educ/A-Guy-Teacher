@@ -1,5 +1,69 @@
 # Changelog
 
+## [0.31.7] - 2026-08-15
+
+### Bug Fixes
+
+- Include lesson context in chat
+
+### Maintenance
+
+- **changelog:** add #1067
+- **changelog:** add #1066
+- **release:** sync main promotion back to dev
+- **changelog:** add #1065
+- release v0.31.6 (#1065) (#1065)
+- **changelog:** add #1064
+- **release:** sync main promotion back to dev
+- **changelog:** add #1063
+- release v0.31.5 (#1063) (#1063)
+- **changelog:** add #1062
+- **release:** sync main promotion back to dev
+- **changelog:** add #1061
+- release v0.31.4 (#1061) (#1061)
+- **changelog:** release v0.31.3
+- **changelog:** add #1060
+
+### Other Changes
+
+- Merge pull request #1067 from A-Guy-educ/fix/lesson-chat-pdf-context
+- Merge pull request #1066 from A-Guy-educ/dev
+- Merge pull request #1064 from A-Guy-educ/dev
+- Merge pull request #1062 from A-Guy-educ/dev
+
+
+## [0.31.7] - 2026-08-15
+
+### Bug Fixes
+
+- Include lesson context in chat
+
+### Maintenance
+
+- **changelog:** add #1067
+- **changelog:** add #1066
+- **release:** sync main promotion back to dev
+- **changelog:** add #1065
+- release v0.31.6 (#1065) (#1065)
+- **changelog:** add #1064
+- **release:** sync main promotion back to dev
+- **changelog:** add #1063
+- release v0.31.5 (#1063) (#1063)
+- **changelog:** add #1062
+- **release:** sync main promotion back to dev
+- **changelog:** add #1061
+- release v0.31.4 (#1061) (#1061)
+- **changelog:** release v0.31.3
+- **changelog:** add #1060
+
+### Other Changes
+
+- Merge pull request #1067 from A-Guy-educ/fix/lesson-chat-pdf-context
+- Merge pull request #1066 from A-Guy-educ/dev
+- Merge pull request #1064 from A-Guy-educ/dev
+- Merge pull request #1062 from A-Guy-educ/dev
+
+
 ## v0.31.6 — 2026-08-15
 
 ### Chores
@@ -3596,6 +3660,9 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.31.7 ([#1068](https://github.com/A-Guy-educ/A-Guy-Web/pull/1068)) — @aguyaharonyair
+- fix: Include lesson context in chat ([#1067](https://github.com/A-Guy-educ/A-Guy-Web/pull/1067)) — @aguyaharonyair
+- promote: dev -> main (v0.31.6) ([#1066](https://github.com/A-Guy-educ/A-Guy-Web/pull/1066)) — @aguyaharonyair
 - chore: release v0.31.6 ([#1065](https://github.com/A-Guy-educ/A-Guy-Web/pull/1065)) — @aguyaharonyair
 - promote: dev -> main (v0.31.5) ([#1064](https://github.com/A-Guy-educ/A-Guy-Web/pull/1064)) — @aguyaharonyair
 - chore: release v0.31.5 ([#1063](https://github.com/A-Guy-educ/A-Guy-Web/pull/1063)) — @aguyaharonyair

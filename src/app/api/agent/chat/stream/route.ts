@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
           message: body.message,
           acknowledgment: body.acknowledgment,
           history: Array.isArray(conversation.messages) ? conversation.messages : [],
+          lessonId: body.lessonId,
         })
         await appendMessage(String(conversation.id), {
           role: 'assistant',
