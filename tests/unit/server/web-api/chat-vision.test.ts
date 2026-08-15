@@ -17,6 +17,12 @@ const getContentDbMock = getContentDb as Mock
 
 function collection(name: string) {
   return {
+    findOne: vi.fn(async () => {
+      if (name === 'lessons') {
+        return { lessonContextText: 'A right triangle has one 90-degree angle.' }
+      }
+      return null
+    }),
     find: vi.fn(() => ({
       toArray: vi.fn(async () => {
         if (name === 'chat-assets') {
@@ -84,5 +90,29 @@ describe('web chat vision attachments', () => {
 
   it('keeps text-only prompts text-only', () => {
     expect(buildGeminiUserParts('hello', [])).toEqual([{ text: 'hello' }])
+  })
+
+  it('includes extracted lesson context in the Gemini prompt', async () => {
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as {
+        contents: Array<{ parts: Array<{ text?: string }> }>
+      }
+      expect(body.contents[0]?.parts.at(-1)?.text).toContain(
+        'A right triangle has one 90-degree angle.',
+      )
+
+      return Response.json({
+        candidates: [{ content: { parts: [{ text: 'The lesson says it is a right triangle.' }] } }],
+      })
+    })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(
+      generateAssistantReply({
+        message: 'What does this lesson explain?',
+        lessonId: '65f000000000000000000002',
+      }),
+    ).resolves.toBe('The lesson says it is a right triangle.')
   })
 })
