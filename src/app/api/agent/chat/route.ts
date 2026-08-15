@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
     message: body.message,
     acknowledgment: body.acknowledgment,
     history: Array.isArray(conversation.messages) ? conversation.messages : [],
+    lessonId: body.lessonId,
     mediaIds: body.mediaIds,
     chatAssetIds: body.chatAssetIds,
   })
