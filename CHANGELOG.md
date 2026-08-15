@@ -3660,6 +3660,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- promote: dev -> main (v0.31.7) ([#1069](https://github.com/A-Guy-educ/A-Guy-Web/pull/1069)) — @aguyaharonyair
 - chore: release v0.31.7 ([#1068](https://github.com/A-Guy-educ/A-Guy-Web/pull/1068)) — @aguyaharonyair
 - fix: Include lesson context in chat ([#1067](https://github.com/A-Guy-educ/A-Guy-Web/pull/1067)) — @aguyaharonyair
 - promote: dev -> main (v0.31.6) ([#1066](https://github.com/A-Guy-educ/A-Guy-Web/pull/1066)) — @aguyaharonyair
