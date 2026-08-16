@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.31.8 — 2026-08-16
+
+### Fixes
+- Include lesson context in chat (0e77f8964)
+
+### Chores
+- release v0.31.7 (2ccb25002)
+- add #1069 (7aa909b14)
+- add #1068 (dd07a1774)
+- add #1067 (a397f3eed)
+- add #1066 (1a0904c4f)
+- add #1065 (0435e5e38)
+- add #1064 (6ed3384ed)
+- add #1063 (e012ae867)
+- add #1062 (cf23c457f)
+- add #1061 (09c85c317)
+- release v0.31.3 (99e5920a8)
+- add #1060 (a6584fe94)
 ## [0.31.7] - 2026-08-15
 
 ### Bug Fixes
@@ -3660,6 +3678,10 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.31.8 ([#1070](https://github.com/A-Guy-educ/A-Guy-Web/pull/1070)) — @aguyaharonyair
+## [v0.31.7] - 2026-08-15
+
+- promote: dev -> main (v0.31.7) ([#1069](https://github.com/A-Guy-educ/A-Guy-Web/pull/1069)) — @aguyaharonyair
 - chore: release v0.31.7 ([#1068](https://github.com/A-Guy-educ/A-Guy-Web/pull/1068)) — @aguyaharonyair
 - fix: Include lesson context in chat ([#1067](https://github.com/A-Guy-educ/A-Guy-Web/pull/1067)) — @aguyaharonyair
 - promote: dev -> main (v0.31.6) ([#1066](https://github.com/A-Guy-educ/A-Guy-Web/pull/1066)) — @aguyaharonyair
