@@ -3688,6 +3688,8 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+## [v0.32.0] - 2026-08-16
+
 - promote: dev -> main (v0.32.0) ([#1076](https://github.com/A-Guy-educ/A-Guy-Web/pull/1076)) — @aguyshayb
 - chore: Release v0.32.0 ([#1075](https://github.com/A-Guy-educ/A-Guy-Web/pull/1075)) — @aguyshayb
 - fix(analytics): Transform proxy payload to dashboard's expected shape ([#1074](https://github.com/A-Guy-educ/A-Guy-Web/pull/1074)) — @aguyshayb
