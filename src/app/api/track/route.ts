@@ -25,6 +25,7 @@ import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
+import { transformToDashboardEvent } from '@/server/services/analytics/dashboard-transform'
 import { logger } from '@/infra/utils/logger/logger'
 
 export const runtime = 'nodejs'
@@ -163,6 +164,12 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
   const payload = parsed.data
 
+  const outbound = {
+    events: payload.events.map((event) =>
+      transformToDashboardEvent(event, payload.session_id, payload.source),
+    ),
+  }
+
   const target = `${analyticsUrl.replace(/\/+$/, '')}/api/track`
 
   // Vercel's Node.js serverless containers can freeze right after the
@@ -177,7 +184,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           'Content-Type': 'application/json',
           'X-Track-Key': ingestKey,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(outbound),
         signal: AbortSignal.timeout(FORWARD_TIMEOUT_MS),
         cache: 'no-store',
       })

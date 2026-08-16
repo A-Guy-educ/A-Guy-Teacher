@@ -12,10 +12,11 @@
  * outside a request context (crons, scripts, tests) we fall back to a plain
  * fire-and-forget promise so `after()` doesn't throw.
  *
- * Envelope: sends the same `{ events, sent_at }` batch shape as the client
- * tracker, minus `session_id` / `source` because server-fired events do not
- * belong to any tab session and have no acquisition attribution — the
- * dashboard should treat those two fields as optional for that reason.
+ * Envelope: outbound payload matches the dashboard's expected shape (flat,
+ * camelCase per-event, unix-ms `ts`) via the shared `dashboard-transform`
+ * helper. Server-fired events have no browser session, so the transform
+ * synthesizes a `server:<userId>` sessionId to satisfy the dashboard's
+ * required-field constraint while keeping same-user events on one session.
  *
  * Kill-switch: when NEXT_PUBLIC_ANALYTICS_ENABLED is anything other than
  * "true", the helper returns immediately without forwarding. This keeps
@@ -29,6 +30,8 @@ import { after } from 'next/server'
 
 import { logger } from '@/infra/utils/logger/logger'
 
+import { transformToDashboardEvent, type DashboardEvent } from './dashboard-transform'
+
 export type AnalyticsEvent = {
   event: string
   session_id?: string
@@ -38,8 +41,7 @@ export type AnalyticsEvent = {
 }
 
 export type AnalyticsBatch = {
-  sent_at: string
-  events: AnalyticsEvent[]
+  events: DashboardEvent[]
 }
 
 const FORWARD_TIMEOUT_MS = 5_000
@@ -93,8 +95,7 @@ export async function trackServerEvent(event: AnalyticsEvent): Promise<void> {
 
   const target = `${analyticsUrl.replace(/\/+$/, '')}/api/track`
   const payload: AnalyticsBatch = {
-    sent_at: new Date().toISOString(),
-    events: [{ ...event, occurred_at: event.occurred_at ?? new Date().toISOString() }],
+    events: [transformToDashboardEvent(event, undefined, undefined)],
   }
 
   try {
