@@ -1,13 +1,30 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
+import { ObjectId } from 'mongodb'
 
-vi.mock('@/infra/db/content-db', () => ({
-  getContentDb: vi.fn(),
-  objectIdFromString: (id: string) => id,
-  serializeDoc: (doc: unknown) => doc,
-}))
+vi.mock('@/infra/db/content-db', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return {
+    ...actual,
+    getContentDb: vi.fn(),
+    objectIdFromString: (id: string) => id,
+    serializeDoc: (doc: unknown) => doc,
+  }
+})
 
 vi.mock('@/infra/config/storage', () => ({
   resolveMediaFilePath: (filename: string) => `/tmp/${filename}`,
+}))
+
+// Bypass the course-access lookup path — the vision tests only care about
+// the Gemini request shape. Tests that need to exercise the entitlement
+// gate live in a separate spec.
+vi.mock('@/server/services/course-access', () => ({
+  findCourseAccessGrants: vi.fn(async () => ({
+    entitlement: null,
+    enrollment: null,
+    legacyEntitlements: [],
+  })),
+  grantsAccess: () => true,
 }))
 
 import { getContentDb } from '@/infra/db/content-db'
@@ -15,11 +32,28 @@ import { buildGeminiUserParts, generateAssistantReply } from '@/server/web-api/c
 
 const getContentDbMock = getContentDb as Mock
 
+const LESSON_ID = '65f000000000000000000002'
+const CHAPTER_ID = '65f000000000000000000010'
+const COURSE_ID = '65f000000000000000000020'
+
 function collection(name: string) {
   return {
     findOne: vi.fn(async () => {
       if (name === 'lessons') {
-        return { lessonContextText: 'A right triangle has one 90-degree angle.' }
+        // Chapter is stored as a bare ObjectId, matching what Payload
+        // actually writes to Mongo for single relationships — the earlier
+        // string-only mock hid a real production no-op.
+        return {
+          _id: new ObjectId(LESSON_ID),
+          lessonContextText: 'A right triangle has one 90-degree angle.',
+          chapter: new ObjectId(CHAPTER_ID),
+        }
+      }
+      if (name === 'chapters') {
+        return { _id: new ObjectId(CHAPTER_ID), course: new ObjectId(COURSE_ID) }
+      }
+      if (name === 'courses') {
+        return { _id: new ObjectId(COURSE_ID), accessType: 'free' }
       }
       return null
     }),
@@ -80,6 +114,7 @@ describe('web chat vision attachments', () => {
 
     await expect(
       generateAssistantReply({
+        ownerId: '65f000000000000000000099',
         message: 'What is in the image?',
         chatAssetIds: ['65f000000000000000000001'],
       }),
@@ -110,8 +145,9 @@ describe('web chat vision attachments', () => {
 
     await expect(
       generateAssistantReply({
+        ownerId: '65f000000000000000000099',
         message: 'What does this lesson explain?',
-        lessonId: '65f000000000000000000002',
+        lessonId: LESSON_ID,
       }),
     ).resolves.toBe('The lesson says it is a right triangle.')
   })

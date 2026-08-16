@@ -3,6 +3,7 @@ import React from 'react'
 import { HeaderThemeProvider } from './HeaderTheme'
 import { ThemeProvider } from './Theme'
 import { AnalyticsProvider } from '@/infra/analytics/providers/AnalyticsProvider'
+import { AnalyticsProvider as ExternalAnalyticsProvider } from '@/components/AnalyticsProvider'
 
 export const Providers: React.FC<{
   children: React.ReactNode
@@ -10,7 +11,9 @@ export const Providers: React.FC<{
   return (
     <ThemeProvider>
       <AnalyticsProvider>
-        <HeaderThemeProvider>{children}</HeaderThemeProvider>
+        <ExternalAnalyticsProvider>
+          <HeaderThemeProvider>{children}</HeaderThemeProvider>
+        </ExternalAnalyticsProvider>
       </AnalyticsProvider>
     </ThemeProvider>
   )
