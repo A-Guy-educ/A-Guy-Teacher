@@ -8,6 +8,22 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+// trackServerEvent wraps its outbound fetch in `after()` from `next/server`
+// so the dashboard forward happens post-response on Vercel. In vitest there
+// is no request lifecycle to run the callback, so we replace `after` with a
+// synchronous invoker. (The helper also catches the "outside request
+// context" throw and falls back to a naked fire-and-forget promise, so this
+// mock is belt-and-braces.)
+vi.mock('next/server', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return {
+    ...actual,
+    after: (callback: () => unknown) => {
+      void callback()
+    },
+  }
+})
+
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 

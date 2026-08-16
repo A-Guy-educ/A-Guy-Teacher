@@ -20,30 +20,57 @@
 const SESSION_STORAGE_KEY = 'aguy_sid'
 const SOURCE_STORAGE_KEY = 'aguy_src'
 
+// Hebrew market: most Google search traffic arrives via google.co.il, and
+// most social-share traffic via mobile subdomains (m.facebook.com,
+// l.instagram.com, etc). Missing those means the primary user base buckets
+// as "direct" and defeats source attribution.
 const KNOWN_REFERRER_HOSTNAMES = new Set([
+  // Google
   'google.com',
   'www.google.com',
+  'google.co.il',
+  'www.google.co.il',
+  // Facebook
   'facebook.com',
   'www.facebook.com',
+  'm.facebook.com',
+  'l.facebook.com',
+  'lm.facebook.com',
+  // Instagram
   'instagram.com',
   'www.instagram.com',
+  'l.instagram.com',
+  // Twitter / X
   'twitter.com',
   'www.twitter.com',
+  'x.com',
+  'www.x.com',
   't.co',
+  // YouTube
   'youtube.com',
   'www.youtube.com',
+  'm.youtube.com',
+  // Bing
   'bing.com',
   'www.bing.com',
+  // Reddit
   'reddit.com',
   'www.reddit.com',
+  // WhatsApp
   'whatsapp.com',
   'www.whatsapp.com',
+  'l.wl.co',
+  // Telegram
   't.me',
   'telegram.org',
+  // LinkedIn
   'linkedin.com',
   'www.linkedin.com',
+  // TikTok
   'tiktok.com',
   'www.tiktok.com',
+  'm.tiktok.com',
+  'l.tiktok.com',
 ])
 
 function generateUuid(): string {

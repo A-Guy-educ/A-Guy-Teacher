@@ -20,25 +20,61 @@
  * @ai-summary Tests the kill-switch and forwarding logic of /api/track.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
+
+import { _resetDurableRateLimit } from '@/infra/security/rate-limit'
+import { startMongoContainer } from '@/infra/utils/test/mongodb-container'
+
+// The route wraps its outbound fetch in `after()` from `next/server` so the
+// dashboard forward happens post-response on Vercel. In vitest there is no
+// request lifecycle to run the callback, so we replace `after` with a
+// synchronous invoker — the fetch runs immediately and is observable by the
+// mock assertions below.
+vi.mock('next/server', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return {
+    ...actual,
+    after: (callback: () => unknown) => {
+      void callback()
+    },
+  }
+})
 
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
 const ORIGINAL_ENV = { ...process.env }
 
-beforeEach(() => {
+let mongoStarted = false
+
+beforeAll(async () => {
+  // Route uses rateLimit → getContentDb, so we need a live Mongo. Follow
+  // the pattern from durable-rate-limit.int.spec.ts: start the container
+  // if a URL isn't already provided by the environment.
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = await startMongoContainer()
+    mongoStarted = true
+  }
+})
+
+afterAll(async () => {
+  if (mongoStarted) delete process.env.DATABASE_URL
+})
+
+beforeEach(async () => {
   fetchMock.mockReset()
   // Default: kill-switch off; tests opt in explicitly.
   delete process.env.NEXT_PUBLIC_ANALYTICS_ENABLED
   delete process.env.ANALYTICS_URL
   delete process.env.ANALYTICS_INGEST_KEY
+  // Reset the rate-limit counter so each test starts with a fresh window.
+  await _resetDurableRateLimit()
 })
 
 afterEach(() => {
   for (const key of Object.keys(process.env)) {
-    if (!(key in ORIGINAL_ENV)) delete process.env[key]
+    if (!(key in ORIGINAL_ENV) && key !== 'DATABASE_URL') delete process.env[key]
   }
   for (const [key, value] of Object.entries(ORIGINAL_ENV)) {
     process.env[key] = value
@@ -60,7 +96,6 @@ async function importRoute() {
 
 describe('POST /api/track', () => {
   it('returns { ok: true } and does not forward when kill-switch is unset', async () => {
-    process.env.NEXT_PUBLIC_ANALYTICS_ENABLED = undefined
     delete process.env.NEXT_PUBLIC_ANALYTICS_ENABLED
 
     const POST = await importRoute()

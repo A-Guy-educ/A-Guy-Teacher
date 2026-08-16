@@ -11,6 +11,10 @@
  *    every 30 seconds. The interval is paused while the tab is hidden so a
  *    backgrounded tab does not generate fake-active data.
  *  - On unmount, clears its interval so the heartbeat stops immediately.
+ *
+ * The `NEXT_PUBLIC_ANALYTICS_ENABLED` check is inlined at build time.
+ * Flipping the env var in Vercel does not take effect on already-shipped
+ * client bundles until the next deploy — see tracker.ts for the same note.
  */
 
 'use client'

@@ -10,16 +10,42 @@ vi.mock('@/infra/config/storage', () => ({
   resolveMediaFilePath: (filename: string) => `/tmp/${filename}`,
 }))
 
+// Bypass the course-access lookup path — the vision tests only care about
+// the Gemini request shape. Tests that need to exercise the entitlement
+// gate live in a separate spec.
+vi.mock('@/server/services/course-access', () => ({
+  findCourseAccessGrants: vi.fn(async () => ({
+    entitlement: null,
+    enrollment: null,
+    legacyEntitlements: [],
+  })),
+  grantsAccess: () => true,
+}))
+
 import { getContentDb } from '@/infra/db/content-db'
 import { buildGeminiUserParts, generateAssistantReply } from '@/server/web-api/chat'
 
 const getContentDbMock = getContentDb as Mock
 
+const LESSON_ID = '65f000000000000000000002'
+const CHAPTER_ID = '65f000000000000000000010'
+const COURSE_ID = '65f000000000000000000020'
+
 function collection(name: string) {
   return {
     findOne: vi.fn(async () => {
       if (name === 'lessons') {
-        return { lessonContextText: 'A right triangle has one 90-degree angle.' }
+        return {
+          _id: LESSON_ID,
+          lessonContextText: 'A right triangle has one 90-degree angle.',
+          chapter: CHAPTER_ID,
+        }
+      }
+      if (name === 'chapters') {
+        return { _id: CHAPTER_ID, course: COURSE_ID }
+      }
+      if (name === 'courses') {
+        return { _id: COURSE_ID, accessType: 'free' }
       }
       return null
     }),
@@ -80,6 +106,7 @@ describe('web chat vision attachments', () => {
 
     await expect(
       generateAssistantReply({
+        ownerId: '65f000000000000000000099',
         message: 'What is in the image?',
         chatAssetIds: ['65f000000000000000000001'],
       }),
@@ -110,8 +137,9 @@ describe('web chat vision attachments', () => {
 
     await expect(
       generateAssistantReply({
+        ownerId: '65f000000000000000000099',
         message: 'What does this lesson explain?',
-        lessonId: '65f000000000000000000002',
+        lessonId: LESSON_ID,
       }),
     ).resolves.toBe('The lesson says it is a right triangle.')
   })

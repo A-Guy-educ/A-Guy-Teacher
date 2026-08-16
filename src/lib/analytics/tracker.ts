@@ -9,6 +9,13 @@
  * - When the kill-switch is off, every entry point (`track`, `flush`,
  *   sendBeacon fallback) is a no-op — no queue, no fetch, no sendBeacon.
  * - Every error from the network is swallowed.
+ *
+ * IMPORTANT: `NEXT_PUBLIC_ANALYTICS_ENABLED` is inlined into the client
+ * bundle at build time. Flipping the flag in Vercel env config does NOT
+ * disable already-shipped client JS — clients keep buffering and posting to
+ * /api/track until the next deploy. The server proxy still drops the
+ * payload when its runtime flag is off, so no data leaks; only the client
+ * flag is a "next-deploy" toggle. To make a live flip effective, redeploy.
  */
 
 import { getOrCreateSessionId, resolveSource } from './session'

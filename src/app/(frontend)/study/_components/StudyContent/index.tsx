@@ -7,7 +7,6 @@ import {
 import { useExamCountdown } from '@/client/hooks/useExamCountdown'
 import { getUserProfile } from '@/client/state/localStorage/userProfile'
 import { SystemLink } from '@/infra/loading/components/SystemLink'
-import { track } from '@/lib/analytics/tracker'
 import { logger } from '@/infra/utils/logger'
 // cn import removed - not currently used
 import type { Chapter, Lesson } from '@/infra/types/content'
@@ -116,14 +115,11 @@ export function StudyContent({
     lessonType === 'practice' ? 'practice' : lessonType === 'exam' ? 'exams' : 'learn'
   const tabColor = TAB_COLORS[tabForLessonType]
 
-  useEffect(() => {
-    track('lesson_open', {
-      properties: {
-        lesson_type: lessonType,
-        course_id: prefetchedData?.courseId ?? null,
-      },
-    })
-  }, [lessonType, prefetchedData?.courseId])
+  // `lesson_open` is fired by LessonAnalytics on the actual lesson detail
+  // page (keyed off lessonId). Firing it here too — from the study listing —
+  // double-counts against downstream funnel math since this component is a
+  // list view, not a lesson open. If a distinct "study list view" metric is
+  // needed later, add it under a different event name.
 
   useEffect(() => {
     // Skip fetch if server already prefetched the data
