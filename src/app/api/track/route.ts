@@ -22,6 +22,7 @@
 
 import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { z } from 'zod'
 
 import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { logger } from '@/infra/utils/logger/logger'
@@ -39,6 +40,41 @@ const MAX_BODY_BYTES = 32 * 1024
 // bound) yet still contains a burst attempt to poison / amplify.
 const RATE_LIMIT_MAX = 60
 const RATE_LIMIT_WINDOW_MS = 60_000
+// Per-batch caps for the shape validator. `MAX_EVENTS_PER_BATCH` matches
+// the tracker's flush ceiling (100 per the WEB_INTEGRATION_PROMPT.md
+// contract). Per-event `properties` is capped at 4 KB serialized to keep
+// a single event from consuming the whole 32 KB body budget on its own.
+const MAX_EVENTS_PER_BATCH = 100
+const MAX_PROPERTIES_JSON_BYTES = 4 * 1024
+
+// Bounded event envelope — rejects unknown top-level fields via `.strict()`
+// so a caller can't smuggle in extra data the dashboard might mis-index. All
+// string fields have max lengths chosen against the concrete payloads the
+// client tracker and server helper actually emit; `properties` is an
+// arbitrary record, but capped in bytes below.
+const AnalyticsEventSchema = z
+  .object({
+    event: z.string().min(1).max(64),
+    session_id: z.string().max(64).optional(),
+    user_id: z.string().max(64).optional(),
+    properties: z
+      .record(z.string(), z.unknown())
+      .refine((props) => JSON.stringify(props).length <= MAX_PROPERTIES_JSON_BYTES, {
+        message: 'properties too large',
+      })
+      .optional(),
+    occurred_at: z.string().max(32).optional(),
+  })
+  .strict()
+
+const AnalyticsBatchSchema = z
+  .object({
+    session_id: z.string().max(64).optional(),
+    source: z.string().max(128).optional(),
+    sent_at: z.string().max(32).optional(),
+    events: z.array(AnalyticsEventSchema).max(MAX_EVENTS_PER_BATCH),
+  })
+  .strict()
 
 function isAnalyticsEnabled(): boolean {
   return process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === 'true'
@@ -99,13 +135,33 @@ export async function POST(request: NextRequest): Promise<Response> {
     return Response.json({ ok: true })
   }
 
-  let payload: unknown
+  let rawPayload: unknown
   try {
-    payload = JSON.parse(rawBody)
+    rawPayload = JSON.parse(rawBody)
   } catch {
     // Empty / malformed body is treated as a no-op so a bad client never throws.
     return Response.json({ ok: true })
   }
+
+  // Shape validation — the endpoint is public and uses the private
+  // ingest key on the caller's behalf, so accepting arbitrary JSON would
+  // let anyone POST events attributed to another user_id, inflate
+  // conversion counts, or push unknown-shaped rows into the dashboard.
+  // We keep the response silent (200 { ok: true }) rather than 400 so
+  // bad clients never see analytics as a broken API surface.
+  const parsed = AnalyticsBatchSchema.safeParse(rawPayload)
+  if (!parsed.success) {
+    logger.warn(
+      {
+        ip: clientIp(request),
+        issue: parsed.error.issues[0]?.message,
+        path: parsed.error.issues[0]?.path.join('.'),
+      },
+      'Analytics proxy rejected malformed batch — dropped',
+    )
+    return Response.json({ ok: true })
+  }
+  const payload = parsed.data
 
   const target = `${analyticsUrl.replace(/\/+$/, '')}/api/track`
 

@@ -3,7 +3,7 @@ import fs from 'fs/promises'
 import { ObjectId, type Document } from 'mongodb'
 
 import { resolveMediaFilePath } from '@/infra/config/storage'
-import { getContentDb, objectIdFromString, serializeDoc } from '@/infra/db/content-db'
+import { getContentDb, objectIdFromString, relationId, serializeDoc } from '@/infra/db/content-db'
 import {
   CHAT_ASSET_ALLOWED_MIME_TYPES,
   CHAT_ASSET_MAX_ATTACHMENTS,
@@ -202,19 +202,18 @@ async function loadLessonContext(ownerId: string, lessonId?: string): Promise<Le
   if (!lesson) return EMPTY_LESSON_CONTEXT
 
   // lessons → chapter → course (there is no direct lesson.course field).
-  const chapterId =
-    typeof lesson.chapter === 'string'
-      ? lesson.chapter
-      : String((lesson.chapter as { _id?: unknown } | null)?._id ?? '')
+  // Use relationId so all three on-disk shapes are handled: bare ObjectId
+  // (what Payload actually writes for single relationships in Mongo — see
+  // src/server/repos/queries/lessons.ts), plain string, or populated
+  // { _id | id } object. Missing the ObjectId shape silently no-ops the
+  // whole feature in production.
+  const chapterId = relationId(lesson.chapter)
   if (!chapterId || !ObjectId.isValid(chapterId)) return EMPTY_LESSON_CONTEXT
 
   const chapter = await db
     .collection('chapters')
     .findOne({ _id: new ObjectId(chapterId) }, { projection: { course: 1 } })
-  const courseId =
-    typeof chapter?.course === 'string'
-      ? chapter.course
-      : String((chapter?.course as { _id?: unknown } | null)?._id ?? '')
+  const courseId = relationId(chapter?.course)
   if (!courseId || !ObjectId.isValid(courseId)) return EMPTY_LESSON_CONTEXT
 
   const course = await db

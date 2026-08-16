@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
+import { ObjectId } from 'mongodb'
 
-vi.mock('@/infra/db/content-db', () => ({
-  getContentDb: vi.fn(),
-  objectIdFromString: (id: string) => id,
-  serializeDoc: (doc: unknown) => doc,
-}))
+vi.mock('@/infra/db/content-db', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>
+  return {
+    ...actual,
+    getContentDb: vi.fn(),
+    objectIdFromString: (id: string) => id,
+    serializeDoc: (doc: unknown) => doc,
+  }
+})
 
 vi.mock('@/infra/config/storage', () => ({
   resolveMediaFilePath: (filename: string) => `/tmp/${filename}`,
@@ -35,17 +40,20 @@ function collection(name: string) {
   return {
     findOne: vi.fn(async () => {
       if (name === 'lessons') {
+        // Chapter is stored as a bare ObjectId, matching what Payload
+        // actually writes to Mongo for single relationships — the earlier
+        // string-only mock hid a real production no-op.
         return {
-          _id: LESSON_ID,
+          _id: new ObjectId(LESSON_ID),
           lessonContextText: 'A right triangle has one 90-degree angle.',
-          chapter: CHAPTER_ID,
+          chapter: new ObjectId(CHAPTER_ID),
         }
       }
       if (name === 'chapters') {
-        return { _id: CHAPTER_ID, course: COURSE_ID }
+        return { _id: new ObjectId(CHAPTER_ID), course: new ObjectId(COURSE_ID) }
       }
       if (name === 'courses') {
-        return { _id: COURSE_ID, accessType: 'free' }
+        return { _id: new ObjectId(COURSE_ID), accessType: 'free' }
       }
       return null
     }),

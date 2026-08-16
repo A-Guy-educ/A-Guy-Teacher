@@ -200,4 +200,53 @@ describe('POST /api/track', () => {
     // No upstream call should ever fire on a parse failure.
     expect(fetchMock).not.toHaveBeenCalled()
   })
+
+  it('drops batches with unknown top-level fields (strict schema)', async () => {
+    process.env.NEXT_PUBLIC_ANALYTICS_ENABLED = 'true'
+    process.env.ANALYTICS_URL = 'https://analytics.example.com'
+    process.env.ANALYTICS_INGEST_KEY = 'shhh-secret'
+
+    const POST = await importRoute()
+    const res = await POST(makeRequest({ events: [], evil: 'attacker-injected-field' }))
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('drops batches exceeding the 100-event cap', async () => {
+    process.env.NEXT_PUBLIC_ANALYTICS_ENABLED = 'true'
+    process.env.ANALYTICS_URL = 'https://analytics.example.com'
+    process.env.ANALYTICS_INGEST_KEY = 'shhh-secret'
+
+    const oversized = Array.from({ length: 101 }, (_, i) => ({
+      event: `evt_${i}`,
+      occurred_at: '2025-01-01T00:00:00Z',
+    }))
+
+    const POST = await importRoute()
+    const res = await POST(makeRequest({ events: oversized }))
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('drops events whose properties JSON exceeds 4 KB', async () => {
+    process.env.NEXT_PUBLIC_ANALYTICS_ENABLED = 'true'
+    process.env.ANALYTICS_URL = 'https://analytics.example.com'
+    process.env.ANALYTICS_INGEST_KEY = 'shhh-secret'
+
+    const bloat = 'x'.repeat(5000)
+    const POST = await importRoute()
+    const res = await POST(
+      makeRequest({
+        events: [{ event: 'session_start', properties: { junk: bloat } }],
+      }),
+    )
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 })
