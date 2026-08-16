@@ -3678,6 +3678,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- fix(analytics): Transform proxy payload to dashboard's expected shape ([#1074](https://github.com/A-Guy-educ/A-Guy-Web/pull/1074)) — @aguyshayb
 - #1072: feat(analytics): wire event tracking to external dashboard + env… ([#1073](https://github.com/A-Guy-educ/A-Guy-Web/pull/1073)) — @aguyaharonyair
 - promote: dev -> main (v0.31.8) ([#1071](https://github.com/A-Guy-educ/A-Guy-Web/pull/1071)) — @aguyaharonyair
 - chore: release v0.31.8 ([#1070](https://github.com/A-Guy-educ/A-Guy-Web/pull/1070)) — @aguyaharonyair
