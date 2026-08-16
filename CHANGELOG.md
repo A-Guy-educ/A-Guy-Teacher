@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.32.0 — 2026-08-16
+
+### Features
+- Wire event tracking to external analytics dashboard with server-only proxy and `NEXT_PUBLIC_ANALYTICS_ENABLED` kill-switch (fa81d59d1)
+
+### Bug Fixes
+- Transform outbound analytics payload to dashboard's expected shape (5aaa64ce4)
+- Validate `/api/track` batch shape and fix `loadLessonContext` relation resolution (3840300dc)
+- Address analytics review findings and unblock CI (1547f67e7)
+
 ## v0.31.8 — 2026-08-16
 
 ### Fixes
