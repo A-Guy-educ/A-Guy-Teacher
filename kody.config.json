@@ -27,6 +27,14 @@
         "baseURL": "https://openrouter.ai/api/v1",
         "modelName": "openrouter/free",
         "apiKeyEnvVar": "OPENROUTER_API_KEY"
+      },
+      {
+        "spec": "minimax/MiniMax-M3",
+        "provider": "custom",
+        "protocol": "openai",
+        "baseURL": "https://api.minimax.io/v1",
+        "modelName": "MiniMax-M3",
+        "apiKeyEnvVar": "MINIMAX_API_KEY"
       }
     ]
   },
