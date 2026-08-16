@@ -3,12 +3,13 @@ import fs from 'fs/promises'
 import { ObjectId, type Document } from 'mongodb'
 
 import { resolveMediaFilePath } from '@/infra/config/storage'
-import { getContentDb, objectIdFromString, serializeDoc } from '@/infra/db/content-db'
+import { getContentDb, objectIdFromString, relationId, serializeDoc } from '@/infra/db/content-db'
 import {
   CHAT_ASSET_ALLOWED_MIME_TYPES,
   CHAT_ASSET_MAX_ATTACHMENTS,
   CHAT_ASSET_MAX_BYTES,
 } from '@/server/chat-assets/constants'
+import { findCourseAccessGrants, grantsAccess } from '@/server/services/course-access'
 
 export type ChatContext = {
   exerciseId?: string
@@ -173,9 +174,22 @@ type LessonContext = {
   parts: GeminiPart[]
 }
 
-async function loadLessonContext(lessonId?: string): Promise<LessonContext> {
+const EMPTY_LESSON_CONTEXT: LessonContext = { text: '', attachmentText: '', parts: [] }
+
+/**
+ * Load lesson-scoped context (summary text + inline attachments) into the
+ * tutor prompt.
+ *
+ * Access rule: the caller (`ownerId`) must be entitled to the lesson's
+ * course when that course is paid. Without this gate, any authenticated
+ * user with chat quota could POST { lessonId: <paywalled> } to
+ * /api/agent/chat and receive the lesson's content back through the tutor
+ * reply — bypassing AccessGateProvider. Free courses skip the check and
+ * always load context.
+ */
+async function loadLessonContext(ownerId: string, lessonId?: string): Promise<LessonContext> {
   if (!lessonId || !ObjectId.isValid(lessonId)) {
-    return { text: '', attachmentText: '', parts: [] }
+    return EMPTY_LESSON_CONTEXT
   }
 
   const db = await getContentDb()
@@ -183,15 +197,41 @@ async function loadLessonContext(lessonId?: string): Promise<LessonContext> {
     .collection('lessons')
     .findOne(
       { _id: new ObjectId(lessonId) },
-      { projection: { lessonContextText: 1, contentFiles: 1 } },
+      { projection: { lessonContextText: 1, contentFiles: 1, chapter: 1 } },
     )
+  if (!lesson) return EMPTY_LESSON_CONTEXT
 
-  const text = typeof lesson?.lessonContextText === 'string' ? lesson.lessonContextText.trim() : ''
-  if (text || !Array.isArray(lesson?.contentFiles)) {
+  // lessons → chapter → course (there is no direct lesson.course field).
+  // Use relationId so all three on-disk shapes are handled: bare ObjectId
+  // (what Payload actually writes for single relationships in Mongo — see
+  // src/server/repos/queries/lessons.ts), plain string, or populated
+  // { _id | id } object. Missing the ObjectId shape silently no-ops the
+  // whole feature in production.
+  const chapterId = relationId(lesson.chapter)
+  if (!chapterId || !ObjectId.isValid(chapterId)) return EMPTY_LESSON_CONTEXT
+
+  const chapter = await db
+    .collection('chapters')
+    .findOne({ _id: new ObjectId(chapterId) }, { projection: { course: 1 } })
+  const courseId = relationId(chapter?.course)
+  if (!courseId || !ObjectId.isValid(courseId)) return EMPTY_LESSON_CONTEXT
+
+  const course = await db
+    .collection('courses')
+    .findOne({ _id: new ObjectId(courseId) }, { projection: { accessType: 1 } })
+  const isPaid = course?.accessType === 'paid'
+  if (isPaid) {
+    const grants = await findCourseAccessGrants(ownerId, courseId)
+    if (!grantsAccess(grants, courseId)) return EMPTY_LESSON_CONTEXT
+  }
+
+  const text = typeof lesson.lessonContextText === 'string' ? lesson.lessonContextText.trim() : ''
+  const files = Array.isArray(lesson.contentFiles) ? lesson.contentFiles : []
+  if (files.length === 0) {
     return { text, attachmentText: '', parts: [] }
   }
 
-  const mediaIds = lesson.contentFiles
+  const mediaIds = files
     .map((file: unknown) => {
       if (typeof file === 'string') return file
       if (!file || typeof file !== 'object') return null
@@ -338,7 +378,7 @@ export async function generateAssistantReply(args: {
   chatAssetIds?: string[]
   mediaIds?: string[]
 }) {
-  const lessonContext = await loadLessonContext(args.lessonId)
+  const lessonContext = await loadLessonContext(args.ownerId, args.lessonId)
   const attachments = await loadAttachments(args.ownerId, args.chatAssetIds, args.mediaIds)
   const system =
     'You are A-Guy, a concise math tutor. Help the student with clear steps, in the same language they use when possible.'

@@ -18,7 +18,25 @@
   },
   "agent": {
     "model": "minimax/MiniMax-M3",
-    "reasoningEffort": "high"
+    "reasoningEffort": "high",
+    "automaticModels": [
+      {
+        "spec": "minimax/MiniMax-M3",
+        "provider": "custom",
+        "protocol": "openai",
+        "baseURL": "https://api.minimax.io/v1",
+        "modelName": "MiniMax-M3",
+        "apiKeyEnvVar": "MINIMAX_API_KEY"
+      },
+      {
+        "spec": "openrouter/free",
+        "provider": "openrouter",
+        "protocol": "openai",
+        "baseURL": "https://openrouter.ai/api/v1",
+        "modelName": "openrouter/free",
+        "apiKeyEnvVar": "OPENROUTER_API_KEY"
+      }
+    ]
   },
   "qa": {
     "fallbackUrl": "https://dev.aguy.co.il"

@@ -11,6 +11,7 @@ import { ObjectId, type Document } from 'mongodb'
 
 import { getContentDb } from '@/infra/db/content-db'
 import { idCandidates } from '@/server/web-api/progress'
+import { trackServerEvent } from './analytics/track'
 
 /** An access code by its printed form, matched without regard to case. */
 export async function findAccessCode(code: string): Promise<Document | null> {
@@ -107,4 +108,10 @@ export async function grantCourseByCode(
       updatedAt: now,
     }),
   ])
+
+  await trackServerEvent({
+    event: 'course_enroll',
+    user_id: userId,
+    properties: { course_id: courseId, method: 'code' },
+  })
 }
