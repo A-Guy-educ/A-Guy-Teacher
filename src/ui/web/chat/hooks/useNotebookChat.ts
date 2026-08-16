@@ -10,6 +10,8 @@ import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
 
 import { logger } from '@/infra/utils/logger'
 import { apiService } from '@/server/services/api/api-service'
+import { track } from '@/lib/analytics/tracker'
+import { looksLikeQuestion } from '@/lib/analytics/question-detector'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { ASK_STEP_CONTEXT_EVENT } from '@/app/(frontend)/ask/_components/ask-types'
@@ -465,6 +467,24 @@ export function useNotebookChat({
       message_type: 'user',
       message_length: message.length,
     })
+
+    // External analytics pipeline (see #1072). chat_message fires on every
+    // submit; chat_question fires additionally when the message looks like a
+    // question (trailing ? or Hebrew question prefix).
+    track('chat_message', {
+      properties: {
+        conversation_id: contextKey || 'unknown',
+        message_length: message.length,
+      },
+    })
+    if (looksLikeQuestion(message)) {
+      track('chat_question', {
+        properties: {
+          conversation_id: contextKey || 'unknown',
+          message_length: message.length,
+        },
+      })
+    }
 
     // Track photo uploads to chat
     if (completedChatAssetIds.length > 0) {
