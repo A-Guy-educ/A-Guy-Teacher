@@ -52,7 +52,7 @@ describe('trackServerEvent', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('forwards to ${ANALYTICS_URL}/api/track when enabled', async () => {
+  it('forwards to ${ANALYTICS_URL}/api/track in dashboard shape when enabled', async () => {
     process.env.NEXT_PUBLIC_ANALYTICS_ENABLED = 'true'
     process.env.ANALYTICS_URL = 'https://analytics.example.com'
     process.env.ANALYTICS_INGEST_KEY = 'shhh-secret'
@@ -67,13 +67,19 @@ describe('trackServerEvent', () => {
     expect(target).toBe('https://analytics.example.com/api/track')
     expect(init.method).toBe('POST')
     expect((init.headers as Record<string, string>)['X-Track-Key']).toBe('shhh-secret')
+
     const body = JSON.parse(init.body as string)
     expect(body.events).toHaveLength(1)
+    // Dashboard shape: flat, camelCase, synthesized server sessionId keyed
+    // off user_id, meta carries the arbitrary `properties` payload, ts is
+    // a unix-ms number.
     expect(body.events[0]).toMatchObject({
       event: 'signup',
-      user_id: 'u1',
-      properties: { method: 'email' },
+      sessionId: 'server:u1',
+      userId: 'u1',
+      meta: { method: 'email' },
     })
+    expect(typeof body.events[0].ts).toBe('number')
   })
 
   it('is a no-op when upstream env vars are missing', async () => {

@@ -115,7 +115,7 @@ describe('POST /api/track', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('forwards to ${ANALYTICS_URL}/api/track with X-Track-Key when enabled', async () => {
+  it('forwards to ${ANALYTICS_URL}/api/track with X-Track-Key and dashboard shape when enabled', async () => {
     process.env.NEXT_PUBLIC_ANALYTICS_ENABLED = 'true'
     process.env.ANALYTICS_URL = 'https://analytics.example.com/'
     process.env.ANALYTICS_INGEST_KEY = 'shhh-secret'
@@ -125,7 +125,16 @@ describe('POST /api/track', () => {
     const POST = await importRoute()
     const res = await POST(
       makeRequest({
-        events: [{ event: 'session_start', occurred_at: '2025-01-01T00:00:00Z' }],
+        session_id: 'sess-abc',
+        source: 'guy-koren',
+        events: [
+          {
+            event: 'lesson_open',
+            user_id: 'u1',
+            occurred_at: '2025-01-01T00:00:00Z',
+            properties: { course_id: 'c1', lesson_type: 'practice', extra: 'meta-value' },
+          },
+        ],
       }),
     )
 
@@ -138,7 +147,21 @@ describe('POST /api/track', () => {
     expect(init.method).toBe('POST')
     expect((init.headers as Record<string, string>)['X-Track-Key']).toBe('shhh-secret')
     expect((init.headers as Record<string, string>)['Content-Type']).toBe('application/json')
-    expect(typeof init.body).toBe('string')
+
+    // Body must be in the dashboard's expected shape: flat, camelCase,
+    // known fields promoted, ISO timestamp converted to unix ms.
+    const body = JSON.parse(init.body as string)
+    expect(body.events).toHaveLength(1)
+    expect(body.events[0]).toEqual({
+      event: 'lesson_open',
+      sessionId: 'sess-abc',
+      userId: 'u1',
+      source: 'guy-koren',
+      courseId: 'c1',
+      lessonType: 'practice',
+      ts: Date.parse('2025-01-01T00:00:00Z'),
+      meta: { extra: 'meta-value' },
+    })
   })
 
   it('strips trailing slashes from ANALYTICS_URL before composing the target', async () => {
