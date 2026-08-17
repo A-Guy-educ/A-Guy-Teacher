@@ -56,6 +56,12 @@
       "month": "חודש",
       "year": "שנה"
     },
+    "tabs": {
+      "users": "משתמשים",
+      "content": "תוכן",
+      "engagement": "מעורבות",
+      "revenue": "הכנסות"
+    },
     "users": {
       "section": "משתמשים",
       "totalUsers": "סה״כ משתמשים",

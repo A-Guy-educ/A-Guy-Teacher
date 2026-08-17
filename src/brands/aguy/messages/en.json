@@ -56,6 +56,12 @@
       "month": "Month",
       "year": "Year"
     },
+    "tabs": {
+      "users": "Users",
+      "content": "Content",
+      "engagement": "Engagement",
+      "revenue": "Revenue"
+    },
     "users": {
       "section": "Users",
       "totalUsers": "Total users",
