@@ -13,6 +13,7 @@ import {
   aggregateCourseEnrollments,
   aggregateGuestSessions,
   aggregateLessonTypes,
+  aggregateMonthlySignups,
   aggregateTransactions,
   aggregateUserStats,
   aggregateUsers,
@@ -29,20 +30,30 @@ export async function computeDashboardMetrics(period: Period): Promise<Dashboard
 
   const buckets = computeDateBuckets(period)
 
-  const [userStats, users, guests, revenueMetrics, courseEnrollments, lessons, simpleCounts] =
-    await Promise.all([
-      aggregateUserStats(db, buckets),
-      aggregateUsers(db, buckets),
-      aggregateGuestSessions(db, buckets),
-      aggregateTransactions(db, buckets),
-      aggregateCourseEnrollments(db),
-      aggregateLessonTypes(db),
-      countSimpleContent(db),
-    ])
+  const [
+    userStats,
+    users,
+    guests,
+    revenueMetrics,
+    courseEnrollments,
+    lessons,
+    simpleCounts,
+    monthlySignups,
+  ] = await Promise.all([
+    aggregateUserStats(db, buckets),
+    aggregateUsers(db, buckets),
+    aggregateGuestSessions(db, buckets),
+    aggregateTransactions(db, buckets),
+    aggregateCourseEnrollments(db),
+    aggregateLessonTypes(db),
+    countSimpleContent(db),
+    aggregateMonthlySignups(db),
+  ])
 
   return {
     period,
     userMetrics: buildUserMetrics({ userStats, users, guests }),
+    monthlySignups,
     contentCounts: {
       courses: simpleCounts.courses,
       lessons: lessons.total,
@@ -52,6 +63,8 @@ export async function computeDashboardMetrics(period: Period): Promise<Dashboard
     },
     engagement: {
       avgTimeSpentMinutes: userStats.avgTimeSpentMinutes,
+      medianTimeSpentMinutes: userStats.medianTimeSpentMinutes,
+      stdDevTimeSpentMinutes: userStats.stdDevTimeSpentMinutes,
       courseEnrollments,
       featureUsage: userStats.featureUsage,
       lessonTypeUsage: {

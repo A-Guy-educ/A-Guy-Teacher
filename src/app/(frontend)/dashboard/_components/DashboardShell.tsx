@@ -29,6 +29,7 @@ import type { DashboardMetricsResponse, Period } from '@/server/services/dashboa
 
 import { ContentCountsSection } from './ContentCountsSection'
 import { EngagementSection } from './EngagementSection'
+import { MonthlySignupsSection } from './MonthlySignupsSection'
 import { PeriodSelector } from './PeriodSelector'
 import { RevenueSection } from './RevenueSection'
 import { UserMetricsSection } from './UserMetricsSection'
@@ -103,6 +104,7 @@ export function DashboardShell({ initialData }: Props) {
       )}
 
       <UserMetricsSection metrics={data.userMetrics} />
+      <MonthlySignupsSection months={data.monthlySignups} />
       <ContentCountsSection counts={data.contentCounts} />
       <EngagementSection engagement={data.engagement} />
       <RevenueSection revenue={data.revenueMetrics} />

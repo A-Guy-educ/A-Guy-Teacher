@@ -23,6 +23,7 @@ import type {
   CourseEnrollment,
   CurrencyRevenue,
   EngagementMetrics,
+  MonthlySignup,
   RevenueMetrics,
   TopProduct,
   UserMetrics,
@@ -50,7 +51,11 @@ interface UserStatsFacetResult {
   activeLastWeek: Array<{ n: number }>
   activeLastMonth: Array<{ n: number }>
   returningInPeriod: Array<{ n: number }>
-  avgTime: Array<{ avgSeconds: number }>
+  timeSpread: Array<{
+    avgSeconds: number
+    stdDevSeconds: number | null
+    medianSeconds: number
+  }>
   returnedOnce: Array<{ n: number }>
   returnedMultiple: Array<{ n: number }>
   featureUsage: Array<{ _id: string | null; count: number }>
@@ -68,6 +73,8 @@ export async function aggregateUserStats(
   }
   returningInPeriod: number
   avgTimeSpentMinutes: number
+  medianTimeSpentMinutes: number
+  stdDevTimeSpentMinutes: number
   returnedOnceCount: number
   returnedMultipleCount: number
   featureUsage: EngagementMetrics['featureUsage']
@@ -105,12 +112,45 @@ export async function aggregateUserStats(
             { $match: { lastActiveDate: { $gte: buckets.periodStartStr } } },
             { $count: 'n' },
           ],
-          avgTime: [
+          timeSpread: [
             { $match: { totalTimeSpentSeconds: { $gt: 0 } } },
+            // Safety cap — 100k user-stats docs is far above current scale
+            // but bounded so a runaway growth can't blow the 16 MB per-doc
+            // limit when `values` gets pushed for the median calc.
+            { $limit: 100000 },
             {
               $group: {
                 _id: null,
+                values: { $push: '$totalTimeSpentSeconds' },
                 avgSeconds: { $avg: '$totalTimeSpentSeconds' },
+                stdDevSeconds: { $stdDevSamp: '$totalTimeSpentSeconds' },
+              },
+            },
+            {
+              $project: {
+                avgSeconds: 1,
+                stdDevSeconds: 1,
+                // Median via $sortArray + arrayElemAt at n/2 (requires
+                // Mongo 5.2+). For even n this returns the upper middle
+                // value rather than the average of two middles — accurate
+                // enough for a "typical session" summary metric.
+                medianSeconds: {
+                  $let: {
+                    vars: {
+                      sorted: { $sortArray: { input: '$values', sortBy: 1 } },
+                      n: { $size: '$values' },
+                    },
+                    in: {
+                      $cond: [
+                        { $eq: ['$$n', 0] },
+                        0,
+                        {
+                          $arrayElemAt: ['$$sorted', { $floor: { $divide: ['$$n', 2] } }],
+                        },
+                      ],
+                    },
+                  },
+                },
               },
             },
           ],
@@ -172,7 +212,10 @@ export async function aggregateUserStats(
     if (key) featureUsage[key] = row.count
   }
 
-  const avgSeconds = result.avgTime[0]?.avgSeconds ?? 0
+  const spread = result.timeSpread[0]
+  const avgSeconds = spread?.avgSeconds ?? 0
+  const medianSeconds = spread?.medianSeconds ?? 0
+  const stdDevSeconds = spread?.stdDevSeconds ?? 0
 
   return {
     active: {
@@ -183,6 +226,8 @@ export async function aggregateUserStats(
     },
     returningInPeriod: firstCount(result.returningInPeriod),
     avgTimeSpentMinutes: Math.round(avgSeconds / 60),
+    medianTimeSpentMinutes: Math.round(medianSeconds / 60),
+    stdDevTimeSpentMinutes: Math.round((stdDevSeconds ?? 0) / 60),
     returnedOnceCount: firstCount(result.returnedOnce),
     returnedMultipleCount: firstCount(result.returnedMultiple),
     featureUsage,
@@ -195,6 +240,7 @@ export async function aggregateUserStats(
 
 interface UsersFacetResult {
   total: Array<{ n: number }>
+  registeredToday: Array<{ n: number }>
   registeredYesterday: Array<{ n: number }>
   registeredThisWeek: Array<{ n: number }>
   registeredLastWeek: Array<{ n: number }>
@@ -208,6 +254,7 @@ export async function aggregateUsers(
   buckets: DateBuckets,
 ): Promise<{
   total: number
+  registeredToday: number
   registeredYesterday: number
   registeredThisWeek: number
   registeredLastWeek: number
@@ -221,6 +268,10 @@ export async function aggregateUsers(
       {
         $facet: {
           total: [{ $count: 'n' }],
+          registeredToday: [
+            { $match: { createdAt: { $gte: buckets.todayStart } } },
+            { $count: 'n' },
+          ],
           registeredYesterday: [
             {
               $match: {
@@ -264,6 +315,7 @@ export async function aggregateUsers(
 
   return {
     total: firstCount(result.total),
+    registeredToday: firstCount(result.registeredToday),
     registeredYesterday: firstCount(result.registeredYesterday),
     registeredThisWeek: firstCount(result.registeredThisWeek),
     registeredLastWeek: firstCount(result.registeredLastWeek),
@@ -271,6 +323,46 @@ export async function aggregateUsers(
     registeredLastMonth: firstCount(result.registeredLastMonth),
     totalUsersBeforePeriod: firstCount(result.totalUsersBeforePeriod),
   }
+}
+
+// ---------------------------------------------------------------------------
+// users — signups grouped by month (last 12 months). Feeds the year-view
+// bar chart. Empty months are backfilled at the callsite so gaps appear as
+// zero bars rather than missing entries.
+// ---------------------------------------------------------------------------
+
+interface MonthlySignupRow {
+  _id: string
+  count: number
+}
+
+export async function aggregateMonthlySignups(db: Db): Promise<MonthlySignup[]> {
+  const now = new Date()
+  const start = new Date(now.getFullYear(), now.getMonth() - 11, 1)
+
+  const rows = await db
+    .collection('users')
+    .aggregate<MonthlySignupRow>([
+      { $match: { createdAt: { $gte: start } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+          count: { $sum: 1 },
+        },
+      },
+    ])
+    .toArray()
+
+  const counts = new Map(rows.map((row) => [row._id, row.count]))
+  const months: MonthlySignup[] = []
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const key = `${y}-${m}`
+    months.push({ month: key, count: counts.get(key) ?? 0 })
+  }
+  return months
 }
 
 // ---------------------------------------------------------------------------
@@ -580,6 +672,7 @@ export function buildUserMetrics(input: {
     activeUsersYesterday: userStats.active.yesterday,
     activeUsersLastWeek: userStats.active.lastWeek,
     activeUsersLastMonth: userStats.active.lastMonth,
+    registeredToday: users.registeredToday,
     registeredYesterday: users.registeredYesterday,
     registeredThisWeek: users.registeredThisWeek,
     registeredLastWeek: users.registeredLastWeek,
