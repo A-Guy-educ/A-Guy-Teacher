@@ -173,6 +173,12 @@ export async function aggregateUserStats(
           returnedMultiple: [{ $match: { returnCount: { $gt: 2 } } }, { $count: 'n' }],
           featureUsage: [
             { $match: { totalTimeSpentSeconds: { $gt: 0 }, activityLog: { $type: 'array' } } },
+            // Cap per-user unwinds so a handful of heavy long-lived accounts
+            // can't inflate the intermediate document count enough to blow
+            // the perf target. -50000 keeps the most-recent slice, which is
+            // what usage counters care about anyway. Precompute counters
+            // on the user-stats document if this ever needs to drop lower.
+            { $addFields: { activityLog: { $slice: ['$activityLog', -50000] } } },
             { $unwind: '$activityLog' },
             {
               $group: {
@@ -576,6 +582,10 @@ export async function aggregateCourseEnrollments(db: Db): Promise<CourseEnrollme
         },
       },
       { $sort: { activeEnrollmentCount: -1 } },
+      // Safety cap — leaves plenty of headroom for the "top N + expand"
+      // widget (Batch A) while preventing the long tail from bloating the
+      // response as the catalog grows.
+      { $limit: 100 },
     ])
     .toArray()
 
@@ -628,13 +638,18 @@ export async function aggregateLessonTypes(
 
 export async function countSimpleContent(
   db: Db,
-): Promise<Pick<ContentCounts, 'exercises' | 'formulaSheets' | 'prompts'>> {
-  const [exercises, formulaSheets, prompts] = await Promise.all([
+): Promise<Pick<ContentCounts, 'courses' | 'exercises' | 'formulaSheets' | 'prompts'>> {
+  // `courses` is counted independently rather than derived from
+  // aggregateCourseEnrollments().length because that pipeline caps at
+  // $limit: 100 for the top-N widget — deriving from it would silently
+  // truncate the "Courses" metric card once the catalog grows past 100.
+  const [courses, exercises, formulaSheets, prompts] = await Promise.all([
+    db.collection('courses').countDocuments({}),
     db.collection('exercises').countDocuments({}),
     db.collection('formula-sheets').countDocuments({}),
     db.collection('prompts').countDocuments({}),
   ])
-  return { exercises, formulaSheets, prompts }
+  return { courses, exercises, formulaSheets, prompts }
 }
 
 // ---------------------------------------------------------------------------

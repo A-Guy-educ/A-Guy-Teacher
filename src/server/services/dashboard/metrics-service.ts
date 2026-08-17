@@ -55,7 +55,7 @@ export async function computeDashboardMetrics(period: Period): Promise<Dashboard
     userMetrics: buildUserMetrics({ userStats, users, guests }),
     monthlySignups,
     contentCounts: {
-      courses: courseEnrollments.length,
+      courses: simpleCounts.courses,
       lessons: lessons.total,
       exercises: simpleCounts.exercises,
       formulaSheets: simpleCounts.formulaSheets,

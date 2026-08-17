@@ -35,10 +35,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const periodParam = request.nextUrl.searchParams.get('period')
-  const period: Period = isValidPeriod(periodParam) ? periodParam : 'month'
   if (periodParam !== null && !isValidPeriod(periodParam)) {
     return NextResponse.json({ error: 'Invalid period' }, { status: 400 })
   }
+  const period: Period = periodParam ?? 'month'
 
   const startedAt = Date.now()
   try {
@@ -47,10 +47,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     logger.info({ durationMs, period, userId: user.id }, 'dashboard-metrics: computed successfully')
     return NextResponse.json(data, {
       headers: {
-        // Per-admin cache — the endpoint requires auth so `private` keeps
-        // it out of shared CDN tiers. 5-minute freshness matches the
-        // metrics' aggregate nature (nothing needs to be second-fresh).
-        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600',
+        // no-store matches the repo's convention for auth-required endpoints
+        // (see /api/health, /api/agent/chat/stream). Browser HTTP cache is
+        // keyed by URL, not session, so a `private, max-age` header would
+        // let a second browser user see the cached admin response after the
+        // admin logged out. Server-Timing stays for perf verification.
+        'Cache-Control': 'no-store',
         'Server-Timing': `total;dur=${durationMs}`,
       },
     })
