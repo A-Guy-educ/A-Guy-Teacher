@@ -2,7 +2,6 @@
 
 import { consumeLessonOpenTimestamp } from '@/infra/analytics/utils/lesson-load-timing'
 import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
-import { track } from '@/lib/analytics/tracker'
 import { useSetCurrentLesson } from '@/client/providers/ActiveTimeProvider'
 import { useEffect, useRef } from 'react'
 
@@ -36,16 +35,6 @@ export function LessonAnalytics({
       lesson_id: lessonId,
       course_id: courseId,
       lesson_title: lessonTitle,
-    })
-
-    track('lesson_open', {
-      properties: {
-        lesson_id: lessonId,
-        course_id: courseId,
-        lesson_title: lessonTitle,
-        lesson_type: 'lesson',
-        content_type: contentType,
-      },
     })
 
     // Track lesson load success — calculate time since user clicked the link

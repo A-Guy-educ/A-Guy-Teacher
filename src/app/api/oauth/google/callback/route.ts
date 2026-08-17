@@ -15,7 +15,6 @@ import {
 import { sanitizeReturnTo } from '@/infra/auth/oauth_sanitize'
 import { getSharedLoginPolicy } from '@/infra/auth/shared-login/policy.env'
 import { getOnboardingRedirect, START_WIZARD_COMPLETED_COOKIE } from '@/infra/onboarding/redirect'
-import { trackServerEvent } from '@/server/services/analytics/track'
 
 const googleUserSchema = z.object({
   sub: z.string().min(1),
@@ -78,14 +77,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       userId: String(user._id),
       googleSub: google.sub,
     })
-
-    if (isNewUser) {
-      await trackServerEvent({
-        event: 'signup',
-        user_id: String(user._id),
-        properties: { method: 'google' },
-      })
-    }
 
     // Re-sanitized rather than trusted: `returnTo` comes back from a cookie,
     // and the policy may have changed since the handshake began.

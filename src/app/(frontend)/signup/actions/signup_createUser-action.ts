@@ -4,7 +4,6 @@ import { cookies } from 'next/headers'
 
 import { getRequestHeadersSafe } from '@/infra/auth/request-headers'
 import { createPasswordUser, setAuthCookie } from '@/infra/auth/web-auth'
-import { trackServerEvent } from '@/server/services/analytics/track'
 import { checkRateLimit } from './signup_rateLimit-action'
 import { SignupSchema, type SignupResult } from '../signup_schemas'
 
@@ -73,12 +72,6 @@ export async function signupAction(
 
   const store = _cookieStore ?? (await cookies())
   setAuthCookie({ cookies: store }, session.token, await getRequestHeadersSafe())
-
-  await trackServerEvent({
-    event: 'signup',
-    user_id: session.user.id,
-    properties: { method: 'email' },
-  })
 
   return { success: true, userId: session.user.id, data: { userId: session.user.id } }
 }
