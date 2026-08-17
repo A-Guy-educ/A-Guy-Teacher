@@ -59,11 +59,13 @@
     "users": {
       "section": "Users",
       "totalUsers": "Total users",
-      "registeredYesterday": "Registered yesterday",
+      "registeredToday": "Today",
+      "registeredYesterday": "Yesterday",
       "thisWeek": "This week",
       "lastWeek": "Last week",
       "thisMonth": "This month",
       "lastMonth": "Last month",
+      "vsPrior": "vs prior",
       "activeSection": "Active users",
       "activeToday": "Today",
       "activeYesterday": "Yesterday",
@@ -91,9 +93,16 @@
       "formulaSheets": "Formula sheets",
       "prompts": "Prompts"
     },
+    "monthly": {
+      "section": "Signups by month (last 12)"
+    },
     "engagement": {
       "section": "Engagement",
       "avgSession": "Avg session",
+      "medianSession": "Median session",
+      "stdDevSession": "Session std dev",
+      "showMore": "Show more",
+      "showLess": "Show less",
       "minSuffix": "min",
       "questionsAsked": "Questions asked",
       "conversationsStarted": "Conversations started",

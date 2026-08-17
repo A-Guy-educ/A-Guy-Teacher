@@ -15,6 +15,7 @@ export interface UserMetrics {
   activeUsersYesterday: number
   activeUsersLastWeek: number
   activeUsersLastMonth: number
+  registeredToday: number
   registeredYesterday: number
   registeredThisWeek: number
   registeredLastWeek: number
@@ -35,6 +36,12 @@ export interface UserMetrics {
   returningUsersTotal: number
 }
 
+/** One month bucket for the year-view signups chart. `month` is "YYYY-MM". */
+export interface MonthlySignup {
+  month: string
+  count: number
+}
+
 export interface CourseEnrollment {
   courseTitle: string
   count: number
@@ -42,6 +49,8 @@ export interface CourseEnrollment {
 
 export interface EngagementMetrics {
   avgTimeSpentMinutes: number
+  medianTimeSpentMinutes: number
+  stdDevTimeSpentMinutes: number
   courseEnrollments: CourseEnrollment[]
   featureUsage: {
     questionsAsked: number
@@ -86,6 +95,7 @@ export interface RevenueMetrics {
 export interface DashboardMetricsResponse {
   period: Period
   userMetrics: UserMetrics
+  monthlySignups: MonthlySignup[]
   contentCounts: ContentCounts
   engagement: EngagementMetrics
   revenueMetrics: RevenueMetrics

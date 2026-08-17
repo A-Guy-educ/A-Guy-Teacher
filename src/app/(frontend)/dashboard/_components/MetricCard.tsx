@@ -14,6 +14,8 @@
 
 'use client'
 
+import type React from 'react'
+
 import { cn } from '@/infra/utils/ui'
 import { Card, CardContent } from '@/ui/web/components/card'
 import { useLocale } from '@/ui/web/providers/I18n'
@@ -24,9 +26,10 @@ interface MetricCardProps {
   suffix?: string
   hint?: string
   className?: string
+  trend?: React.ReactNode
 }
 
-export function MetricCard({ label, value, suffix, hint, className }: MetricCardProps) {
+export function MetricCard({ label, value, suffix, hint, className, trend }: MetricCardProps) {
   const locale = useLocale()
   const displayValue = typeof value === 'number' ? value.toLocaleString(locale) : value
 
@@ -40,6 +43,7 @@ export function MetricCard({ label, value, suffix, hint, className }: MetricCard
             <span className="text-body-sm font-normal text-muted-foreground ml-1">{suffix}</span>
           )}
         </p>
+        {trend && <div className="mt-2">{trend}</div>}
         {hint && <p className="text-body-xs text-muted-foreground mt-2">{hint}</p>}
       </CardContent>
     </Card>

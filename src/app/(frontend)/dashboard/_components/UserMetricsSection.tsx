@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/web/components/ca
 import { useLocale, useTranslations } from '@/ui/web/providers/I18n'
 import type { UserMetrics } from '@/server/services/dashboard/metrics-types'
 import { MetricCard } from './MetricCard'
+import { TrendBadge } from './TrendBadge'
 
 interface Props {
   metrics: UserMetrics
@@ -29,13 +30,44 @@ export function UserMetricsSection({ metrics }: Props) {
     <section className="space-y-6">
       <h2 className="text-heading-lg font-semibold">{t('section')}</h2>
 
-      {/* Registered totals */}
+      {/* Registered totals — each period-over-prior card gets a growth badge */}
       <div className="grid gap-content-gap grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <MetricCard label={t('totalUsers')} value={metrics.totalUsers} />
+        <MetricCard
+          label={t('registeredToday')}
+          value={metrics.registeredToday}
+          trend={
+            <TrendBadge
+              current={metrics.registeredToday}
+              prior={metrics.registeredYesterday}
+              suffix={t('vsPrior')}
+            />
+          }
+        />
         <MetricCard label={t('registeredYesterday')} value={metrics.registeredYesterday} />
-        <MetricCard label={t('thisWeek')} value={metrics.registeredThisWeek} />
+        <MetricCard
+          label={t('thisWeek')}
+          value={metrics.registeredThisWeek}
+          trend={
+            <TrendBadge
+              current={metrics.registeredThisWeek}
+              prior={metrics.registeredLastWeek}
+              suffix={t('vsPrior')}
+            />
+          }
+        />
         <MetricCard label={t('lastWeek')} value={metrics.registeredLastWeek} />
-        <MetricCard label={t('thisMonth')} value={metrics.registeredThisMonth} />
+        <MetricCard
+          label={t('thisMonth')}
+          value={metrics.registeredThisMonth}
+          trend={
+            <TrendBadge
+              current={metrics.registeredThisMonth}
+              prior={metrics.registeredLastMonth}
+              suffix={t('vsPrior')}
+            />
+          }
+        />
         <MetricCard label={t('lastMonth')} value={metrics.registeredLastMonth} />
       </div>
 

@@ -59,11 +59,13 @@
     "users": {
       "section": "משתמשים",
       "totalUsers": "סה״כ משתמשים",
-      "registeredYesterday": "נרשמו אתמול",
+      "registeredToday": "היום",
+      "registeredYesterday": "אתמול",
       "thisWeek": "השבוע",
       "lastWeek": "שבוע שעבר",
       "thisMonth": "החודש",
       "lastMonth": "חודש שעבר",
+      "vsPrior": "לעומת התקופה הקודמת",
       "activeSection": "משתמשים פעילים",
       "activeToday": "היום",
       "activeYesterday": "אתמול",
@@ -91,9 +93,16 @@
       "formulaSheets": "דפי נוסחאות",
       "prompts": "פרומפטים"
     },
+    "monthly": {
+      "section": "הרשמות לפי חודש (12 אחרונים)"
+    },
     "engagement": {
       "section": "מעורבות",
       "avgSession": "זמן ממוצע לסשן",
+      "medianSession": "חציון זמן לסשן",
+      "stdDevSession": "סטיית תקן לסשן",
+      "showMore": "הצג עוד",
+      "showLess": "הצג פחות",
       "minSuffix": "דק׳",
       "questionsAsked": "שאלות שנשאלו",
       "conversationsStarted": "שיחות שהתחילו",
