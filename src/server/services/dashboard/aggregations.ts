@@ -546,13 +546,18 @@ export async function aggregateLessonTypes(
 
 export async function countSimpleContent(
   db: Db,
-): Promise<Pick<ContentCounts, 'exercises' | 'formulaSheets' | 'prompts'>> {
-  const [exercises, formulaSheets, prompts] = await Promise.all([
+): Promise<Pick<ContentCounts, 'courses' | 'exercises' | 'formulaSheets' | 'prompts'>> {
+  // `courses` is counted independently rather than derived from
+  // aggregateCourseEnrollments().length because that pipeline caps at
+  // $limit: 100 for the top-N widget — deriving from it would silently
+  // truncate the "Courses" metric card once the catalog grows past 100.
+  const [courses, exercises, formulaSheets, prompts] = await Promise.all([
+    db.collection('courses').countDocuments({}),
     db.collection('exercises').countDocuments({}),
     db.collection('formula-sheets').countDocuments({}),
     db.collection('prompts').countDocuments({}),
   ])
-  return { exercises, formulaSheets, prompts }
+  return { courses, exercises, formulaSheets, prompts }
 }
 
 // ---------------------------------------------------------------------------
