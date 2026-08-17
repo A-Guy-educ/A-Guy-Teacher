@@ -12,10 +12,15 @@
  * action so a transient upstream failure doesn't leave the manager stuck
  * on stale data with no recovery path.
  *
+ * Layout: sections are grouped into topic tabs (users, content, engagement,
+ * revenue) rather than a single scrolling stack. Users tab pairs the
+ * period buckets with the monthly signups chart since both are user-time
+ * views of the same underlying data.
+ *
  * @fileType component
  * @domain dashboard
  * @pattern container
- * @ai-summary Period state + refetch + error/retry surface for /dashboard
+ * @ai-summary Period state + refetch + tab layout for /dashboard sections
  */
 
 'use client'
@@ -24,6 +29,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { logger } from '@/infra/utils/logger'
 import { Button } from '@/ui/web/components/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/ui/web/components/tabs'
 import { useTranslations } from '@/ui/web/providers/I18n'
 import type { DashboardMetricsResponse, Period } from '@/server/services/dashboard/metrics-types'
 
@@ -103,11 +109,31 @@ export function DashboardShell({ initialData }: Props) {
         </div>
       )}
 
-      <UserMetricsSection metrics={data.userMetrics} />
-      <MonthlySignupsSection months={data.monthlySignups} />
-      <ContentCountsSection counts={data.contentCounts} />
-      <EngagementSection engagement={data.engagement} />
-      <RevenueSection revenue={data.revenueMetrics} />
+      <Tabs defaultValue="users" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="users">{t('tabs.users')}</TabsTrigger>
+          <TabsTrigger value="content">{t('tabs.content')}</TabsTrigger>
+          <TabsTrigger value="engagement">{t('tabs.engagement')}</TabsTrigger>
+          <TabsTrigger value="revenue">{t('tabs.revenue')}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users" className="space-y-8">
+          <UserMetricsSection metrics={data.userMetrics} />
+          <MonthlySignupsSection months={data.monthlySignups} />
+        </TabsContent>
+
+        <TabsContent value="content">
+          <ContentCountsSection counts={data.contentCounts} />
+        </TabsContent>
+
+        <TabsContent value="engagement">
+          <EngagementSection engagement={data.engagement} />
+        </TabsContent>
+
+        <TabsContent value="revenue">
+          <RevenueSection revenue={data.revenueMetrics} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
