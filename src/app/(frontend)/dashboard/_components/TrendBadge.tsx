@@ -23,7 +23,10 @@ export function TrendBadge({ current, prior, suffix }: TrendBadgeProps) {
   if (prior === 0) return null
   const pct = ((current - prior) / prior) * 100
   const rounded = Math.round(pct)
-  const isPositive = rounded >= 0
+  // Zero-delta reads as "no change" rather than a green up-arrow — showing
+  // a positive badge for a flat trend is semantically misleading.
+  if (rounded === 0) return null
+  const isPositive = rounded > 0
   const arrow = isPositive ? '▲' : '▼'
   const sign = isPositive ? '+' : ''
 

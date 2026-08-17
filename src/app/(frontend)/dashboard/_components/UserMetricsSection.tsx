@@ -31,7 +31,7 @@ export function UserMetricsSection({ metrics }: Props) {
       <h2 className="text-heading-lg font-semibold">{t('section')}</h2>
 
       {/* Registered totals — each period-over-prior card gets a growth badge */}
-      <div className="grid gap-content-gap grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-content-gap grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
         <MetricCard label={t('totalUsers')} value={metrics.totalUsers} />
         <MetricCard
           label={t('registeredToday')}
