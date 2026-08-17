@@ -1,12 +1,22 @@
 /**
- * Small numeric metric card — the atomic unit of every dashboard section.
+ * Atomic label + value primitive used by every dashboard section.
  *
- * Deliberately simpler than the admin's MetricCard (no trend badges, no
- * tooltips). If the manager wants those back later, extend here.
+ * Numeric values are locale-formatted via `useLocale()` from the shared I18n
+ * provider so a Hebrew manager sees Hebrew grouping while an English one
+ * sees English — no more hardcoded `he-IL`. Strings are passed through as-is
+ * (revenue cards already do their own currency-aware formatting).
+ *
+ * @fileType component
+ * @domain dashboard
+ * @pattern presentational
+ * @ai-summary Small label + big number card, locale-aware
  */
 
-import { Card, CardContent } from '@/ui/web/components/card'
+'use client'
+
 import { cn } from '@/infra/utils/ui'
+import { Card, CardContent } from '@/ui/web/components/card'
+import { useLocale } from '@/ui/web/providers/I18n'
 
 interface MetricCardProps {
   label: string
@@ -17,7 +27,8 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ label, value, suffix, hint, className }: MetricCardProps) {
-  const displayValue = typeof value === 'number' ? value.toLocaleString('he-IL') : value
+  const locale = useLocale()
+  const displayValue = typeof value === 'number' ? value.toLocaleString(locale) : value
 
   return (
     <Card className={cn('h-full', className)}>

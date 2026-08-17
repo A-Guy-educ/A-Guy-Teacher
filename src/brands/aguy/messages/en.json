@@ -42,5 +42,80 @@
       "notFound": "Transaction not found",
       "viewProduct": "View Product"
     }
+  },
+  "dashboard": {
+    "title": "Analytics dashboard",
+    "periodLabel": "Period",
+    "refreshing": "refreshing…",
+    "loadError": "Failed to load metrics.",
+    "retry": "Retry",
+    "adminOnlyTitle": "Admin access required",
+    "adminOnlyBody": "Your account is not authorized to view this page.",
+    "period": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "users": {
+      "section": "Users",
+      "totalUsers": "Total users",
+      "registeredYesterday": "Registered yesterday",
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "activeSection": "Active users",
+      "activeToday": "Today",
+      "activeYesterday": "Yesterday",
+      "activeLastWeek": "Last week",
+      "activeLastMonth": "Last month",
+      "guestSection": "Guest sessions",
+      "guestTotal": "Total",
+      "guestToday": "Today",
+      "guestLastWeek": "Last week",
+      "guestLastMonth": "Last month",
+      "converted": "Converted",
+      "conversion": "Conversion",
+      "returningSection": "Returning",
+      "returningInPeriod": "Returning in period",
+      "returningHintPrefix": "out of",
+      "returningHintSuffix": "pre-period users",
+      "returnedOnce": "Returned once",
+      "returnedMultiple": "Returned >2x"
+    },
+    "content": {
+      "section": "Content library",
+      "courses": "Courses",
+      "lessons": "Lessons",
+      "exercises": "Exercises",
+      "formulaSheets": "Formula sheets",
+      "prompts": "Prompts"
+    },
+    "engagement": {
+      "section": "Engagement",
+      "avgSession": "Avg session",
+      "minSuffix": "min",
+      "questionsAsked": "Questions asked",
+      "conversationsStarted": "Conversations started",
+      "lessonsCompleted": "Lessons completed",
+      "exercisesAttempted": "Exercises attempted",
+      "exercisesCompleted": "Exercises completed",
+      "learningLessons": "Learning lessons",
+      "practiceLessons": "Practice lessons",
+      "examLessons": "Exam lessons",
+      "courseEnrollments": "Course enrollments",
+      "noCourses": "No courses."
+    },
+    "revenue": {
+      "section": "Revenue",
+      "revenueCurrencyPrefix": "Revenue",
+      "transactions": "Transactions",
+      "successRate": "Success rate",
+      "refundedIls": "Refunded (ILS)",
+      "failedIls": "Failed (ILS)",
+      "topProducts": "Top products in period",
+      "noTransactions": "No paid transactions in this period.",
+      "deletedProductPrefix": "Deleted product"
+    }
   }
 }

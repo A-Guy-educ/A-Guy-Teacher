@@ -14,6 +14,7 @@ import { getWebUser } from '@/infra/web-api/mongo-payload'
 import { computeDashboardMetrics } from '@/server/services/dashboard/metrics-service'
 
 import { DashboardShell } from './_components/DashboardShell'
+import { NotAuthorizedPanel } from './_components/NotAuthorizedPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,12 +26,7 @@ export default async function DashboardPage() {
     redirect('/login?returnTo=/dashboard')
   }
   if (user.role !== AccountRole.Admin) {
-    return (
-      <main className="p-card-padding-lg">
-        <h1 className="text-heading-xl font-semibold mb-2">Admin access required</h1>
-        <p className="text-muted-foreground">Your account is not authorized to view this page.</p>
-      </main>
-    )
+    return <NotAuthorizedPanel />
   }
 
   const metrics = await computeDashboardMetrics('month')

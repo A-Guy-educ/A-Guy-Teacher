@@ -1,11 +1,17 @@
 /**
- * User metrics — 22 fields grouped into three sub-blocks:
- *   1. Registered users (totals + recent windows)
- *   2. Active users (today/yesterday/lastWeek/lastMonth)
- *   3. Guest sessions + conversion + returning behavior
+ * User metrics — 22 fields grouped into four sub-blocks: registered totals,
+ * active users, guest sessions + conversion, and returning behavior.
+ *
+ * @fileType component
+ * @domain dashboard
+ * @pattern presentational
+ * @ai-summary Sectioned user statistics: registered / active / guests / returning
  */
 
+'use client'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/web/components/card'
+import { useLocale, useTranslations } from '@/ui/web/providers/I18n'
 import type { UserMetrics } from '@/server/services/dashboard/metrics-types'
 import { MetricCard } from './MetricCard'
 
@@ -14,31 +20,36 @@ interface Props {
 }
 
 export function UserMetricsSection({ metrics }: Props) {
+  const t = useTranslations('dashboard.users')
+  const locale = useLocale()
+
+  const returningHint = `${t('returningHintPrefix')} ${metrics.returningUsersTotal.toLocaleString(locale)} ${t('returningHintSuffix')}`
+
   return (
     <section className="space-y-6">
-      <h2 className="text-heading-lg font-semibold">Users</h2>
+      <h2 className="text-heading-lg font-semibold">{t('section')}</h2>
 
       {/* Registered totals */}
       <div className="grid gap-content-gap grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-        <MetricCard label="Total users" value={metrics.totalUsers} />
-        <MetricCard label="Registered yesterday" value={metrics.registeredYesterday} />
-        <MetricCard label="This week" value={metrics.registeredThisWeek} />
-        <MetricCard label="Last week" value={metrics.registeredLastWeek} />
-        <MetricCard label="This month" value={metrics.registeredThisMonth} />
-        <MetricCard label="Last month" value={metrics.registeredLastMonth} />
+        <MetricCard label={t('totalUsers')} value={metrics.totalUsers} />
+        <MetricCard label={t('registeredYesterday')} value={metrics.registeredYesterday} />
+        <MetricCard label={t('thisWeek')} value={metrics.registeredThisWeek} />
+        <MetricCard label={t('lastWeek')} value={metrics.registeredLastWeek} />
+        <MetricCard label={t('thisMonth')} value={metrics.registeredThisMonth} />
+        <MetricCard label={t('lastMonth')} value={metrics.registeredLastMonth} />
       </div>
 
       {/* Active users */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-heading-md">Active users</CardTitle>
+          <CardTitle className="text-heading-md">{t('activeSection')}</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="grid gap-content-gap grid-cols-2 md:grid-cols-4">
-            <MetricCard label="Today" value={metrics.activeUsersToday} />
-            <MetricCard label="Yesterday" value={metrics.activeUsersYesterday} />
-            <MetricCard label="Last week" value={metrics.activeUsersLastWeek} />
-            <MetricCard label="Last month" value={metrics.activeUsersLastMonth} />
+            <MetricCard label={t('activeToday')} value={metrics.activeUsersToday} />
+            <MetricCard label={t('activeYesterday')} value={metrics.activeUsersYesterday} />
+            <MetricCard label={t('activeLastWeek')} value={metrics.activeUsersLastWeek} />
+            <MetricCard label={t('activeLastMonth')} value={metrics.activeUsersLastMonth} />
           </div>
         </CardContent>
       </Card>
@@ -47,17 +58,17 @@ export function UserMetricsSection({ metrics }: Props) {
       <div className="grid gap-content-gap grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-heading-md">Guest sessions</CardTitle>
+            <CardTitle className="text-heading-md">{t('guestSection')}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="grid gap-content-gap grid-cols-2 md:grid-cols-3">
-              <MetricCard label="Total" value={metrics.totalGuestSessions} />
-              <MetricCard label="Today" value={metrics.guestSessionsToday} />
-              <MetricCard label="Last week" value={metrics.guestSessionsLastWeek} />
-              <MetricCard label="Last month" value={metrics.guestSessionsLastMonth} />
-              <MetricCard label="Converted" value={metrics.guestToRegisteredCount} />
+              <MetricCard label={t('guestTotal')} value={metrics.totalGuestSessions} />
+              <MetricCard label={t('guestToday')} value={metrics.guestSessionsToday} />
+              <MetricCard label={t('guestLastWeek')} value={metrics.guestSessionsLastWeek} />
+              <MetricCard label={t('guestLastMonth')} value={metrics.guestSessionsLastMonth} />
+              <MetricCard label={t('converted')} value={metrics.guestToRegisteredCount} />
               <MetricCard
-                label="Conversion"
+                label={t('conversion')}
                 value={metrics.guestToRegisteredPercentage}
                 suffix="%"
               />
@@ -67,22 +78,22 @@ export function UserMetricsSection({ metrics }: Props) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-heading-md">Returning</CardTitle>
+            <CardTitle className="text-heading-md">{t('returningSection')}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="grid gap-content-gap grid-cols-2 md:grid-cols-3">
               <MetricCard
-                label="Returning in period"
+                label={t('returningInPeriod')}
                 value={metrics.returningUsers}
-                hint={`out of ${metrics.returningUsersTotal.toLocaleString('he-IL')} pre-period users`}
+                hint={returningHint}
               />
               <MetricCard
-                label="Returned once"
+                label={t('returnedOnce')}
                 value={metrics.returnedOnceCount}
                 hint={`${metrics.returnedOncePercentage}%`}
               />
               <MetricCard
-                label="Returned >2x"
+                label={t('returnedMultiple')}
                 value={metrics.returnedMultipleCount}
                 hint={`${metrics.returnedMultiplePercentage}%`}
               />
