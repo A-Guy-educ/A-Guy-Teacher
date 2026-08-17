@@ -37,6 +37,16 @@ export function LessonAnalytics({
       lesson_title: lessonTitle,
     })
 
+    // Persist the open for the admin dashboard's "top lessons opened"
+    // widget. Fire-and-forget — never block the lesson render on this.
+    void fetch('/api/stats/track-activity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventType: 'lesson_opened', lessonId }),
+      credentials: 'include',
+      keepalive: true,
+    }).catch(() => {})
+
     // Track lesson load success — calculate time since user clicked the link
     const clickTimestamp = consumeLessonOpenTimestamp(lessonId)
     const loadTimeMs = clickTimestamp ? Date.now() - clickTimestamp : 0

@@ -119,7 +119,10 @@
       "practiceLessons": "Practice lessons",
       "examLessons": "Exam lessons",
       "courseEnrollments": "Course enrollments",
-      "noCourses": "No courses."
+      "noCourses": "No courses.",
+      "topLessons": "Top lessons opened",
+      "noLessons": "No lesson opens tracked yet.",
+      "opensSuffix": "opens"
     },
     "revenue": {
       "section": "Revenue",

@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { getWebUser } from '@/infra/web-api/mongo-payload'
 import { pushActivity } from '@/server/services/dashboard-stats'
+import { incrementLessonOpen } from '@/server/services/lesson-stats'
 import {
   findUserProgress,
   getOrCreateUserStats,
@@ -15,6 +16,10 @@ const BodySchema = z.discriminatedUnion('eventType', [
     eventType: z.literal('lesson_completed'),
     lessonId: z.string().min(1),
     lessonTitle: z.string().optional(),
+  }),
+  z.object({
+    eventType: z.literal('lesson_opened'),
+    lessonId: z.string().min(1),
   }),
   z.object({
     eventType: z.literal('exercise_completed'),
@@ -33,7 +38,12 @@ const BodySchema = z.discriminatedUnion('eventType', [
   }),
 ])
 
-function activityFor(data: z.infer<typeof BodySchema>) {
+// The `lesson_opened` variant is handled up-front in the POST handler and
+// never reaches these helpers, so exclude it from their input types to
+// keep the exhaustiveness checks honest without unreachable branches.
+type ActivityBody = Exclude<z.infer<typeof BodySchema>, { eventType: 'lesson_opened' }>
+
+function activityFor(data: ActivityBody) {
   const timestamp = new Date().toISOString()
   if (data.eventType === 'lesson_completed') {
     return {
@@ -53,7 +63,7 @@ function activityFor(data: z.infer<typeof BodySchema>) {
   }
 }
 
-function progressRecord(data: z.infer<typeof BodySchema>): ProgressRecord {
+function progressRecord(data: ActivityBody): ProgressRecord {
   if (data.eventType === 'lesson_completed') {
     return {
       recordType: 'lesson',
@@ -87,6 +97,14 @@ export async function POST(request: NextRequest) {
       { error: 'Invalid request', details: parsed.error.flatten() },
       { status: 400 },
     )
+  }
+
+  // `lesson_opened` is a per-lesson counter (feeds the dashboard's "top
+  // lessons opened" widget) with no user-level progress semantics — skip
+  // both the capped activityLog push and the progressRecords upsert.
+  if (parsed.data.eventType === 'lesson_opened') {
+    await incrementLessonOpen(parsed.data.lessonId)
+    return Response.json({ success: true })
   }
 
   const stats = await getOrCreateUserStats(user.id)
