@@ -1,12 +1,9 @@
 /**
  * /dashboard — admin-only analytics page.
  *
- * PR-B1: raw JSON dump of the metrics response so the perf target and
- * response shape can be verified live before the widget port (PR-B2)
- * replaces this with the real UI.
- *
- * Auth is server-side: non-admin cookie holders get a 403 rendering
- * instead of the dashboard. Anonymous requests get redirected to /login.
+ * Server-side auth gate + SSR-fetched initial metrics for the default
+ * period; the client shell owns period changes and re-fetches. Anonymous
+ * requests redirect to /login; non-admin cookie holders get a 403 panel.
  */
 
 import { headers } from 'next/headers'
@@ -15,6 +12,9 @@ import { redirect } from 'next/navigation'
 import { AccountRole } from '@/infra/auth/roles'
 import { getWebUser } from '@/infra/web-api/mongo-payload'
 import { computeDashboardMetrics } from '@/server/services/dashboard/metrics-service'
+
+import { DashboardShell } from './_components/DashboardShell'
+import { NotAuthorizedPanel } from './_components/NotAuthorizedPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,26 +26,14 @@ export default async function DashboardPage() {
     redirect('/login?returnTo=/dashboard')
   }
   if (user.role !== AccountRole.Admin) {
-    return (
-      <main className="p-card-padding-lg">
-        <h1 className="text-heading-xl font-semibold mb-2">Admin access required</h1>
-        <p className="text-muted-foreground">Your account is not authorized to view this page.</p>
-      </main>
-    )
+    return <NotAuthorizedPanel />
   }
 
   const metrics = await computeDashboardMetrics('month')
 
   return (
-    <main className="p-card-padding-lg">
-      <h1 className="text-heading-xl font-semibold mb-4">Dashboard metrics (raw)</h1>
-      <p className="text-muted-foreground mb-4">
-        PR-B1 preview — real widgets ship in PR-B2. This raw JSON is here to verify the aggregation
-        shape + perf target (&lt;500ms warm) live.
-      </p>
-      <pre className="bg-muted rounded-lg p-card-padding-sm overflow-auto text-body-xs leading-relaxed">
-        {JSON.stringify(metrics, null, 2)}
-      </pre>
+    <main>
+      <DashboardShell initialData={metrics} />
     </main>
   )
 }
