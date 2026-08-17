@@ -3709,6 +3709,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore(analytics): Remove external dashboard tracking pipeline (PR-A) ([#1080](https://github.com/A-Guy-educ/A-Guy-Web/pull/1080)) — @aguyshayb
 - promote: dev -> main (v0.32.1) ([#1078](https://github.com/A-Guy-educ/A-Guy-Web/pull/1078)) — @aguyaharonyair
 - chore: release v0.32.1 ([#1077](https://github.com/A-Guy-educ/A-Guy-Web/pull/1077)) — @aguyaharonyair
 ## [v0.32.0] - 2026-08-16
