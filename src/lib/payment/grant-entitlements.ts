@@ -2,7 +2,6 @@ import { ObjectId } from 'mongodb'
 
 import { getContentDb, relationId } from '@/infra/db/content-db'
 import { logger } from '@/infra/utils/logger/logger'
-import { trackServerEvent } from '@/server/services/analytics/track'
 
 interface CourseBlock {
   blockType: 'courseBlock'
@@ -187,12 +186,6 @@ export async function grantProductEntitlements(
       )
       continue
     }
-
-    await trackServerEvent({
-      event: 'course_enroll',
-      user_id: userId,
-      properties: { course_id: courseId, method: 'purchase', transaction_id: transactionId },
-    })
 
     logger.info(
       { userId, productId, courseId, transactionId },
