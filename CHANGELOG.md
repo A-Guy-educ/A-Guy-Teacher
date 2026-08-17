@@ -3709,6 +3709,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- feat(dashboard): Group sections into topic tabs (Users / Content / Engagement / Revenue) ([#1085](https://github.com/A-Guy-educ/A-Guy-Web/pull/1085)) — @aguyshayb
 - chore(dashboard): Cleanup nits — no-store cache, dead ternary, perf caps ([#1083](https://github.com/A-Guy-educ/A-Guy-Web/pull/1083)) — @aguyshayb
 - feat(dashboard): Port widgets with A-Guy-Web design system (PR-B2) ([#1082](https://github.com/A-Guy-educ/A-Guy-Web/pull/1082)) — @aguyshayb
 - feat(dashboard): Add admin-gated /dashboard route with rewritten metrics API (PR-B1) ([#1081](https://github.com/A-Guy-educ/A-Guy-Web/pull/1081)) — @aguyshayb
