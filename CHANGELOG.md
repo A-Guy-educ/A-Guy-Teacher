@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.32.1 — 2026-08-17
+
+### Fixes
+- Transform outbound payload to dashboard's expected shape (5aaa64ce4)
+- Validate /api/track batch shape and fix loadLessonContext relation resolution (3840300dc)
+- Address review findings and unblock ci (1547f67e7)
+
+### Chores
+- release v0.32.0 (62f815599)
+- add #1076 (ae69e08ea)
+- add #1075 (362631f65)
+- add #1074 (303e12f4e)
+- set engine model (1409e8577)
+- set engine model (09f531e58)
+- set engine model (61811ac0d)
+- add #1073 (9026dd23d)
+- feat(analytics): wire event tracking to external dashboard + env kill-switch (fa81d59d1)
+- add #1071 (d9699a98a)
+- add #1070 (75c7cfb6b)
+- release v0.31.7 (2ccb25002)
+- add #1069 (7aa909b14)
 ## v0.32.0 — 2026-08-16
 
 ### Features
