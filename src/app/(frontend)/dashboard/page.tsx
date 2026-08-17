@@ -27,9 +27,9 @@ export default async function DashboardPage() {
   }
   if (user.role !== AccountRole.Admin) {
     return (
-      <main style={{ padding: 32, fontFamily: 'system-ui, sans-serif' }}>
-        <h1 style={{ fontSize: 20, marginBottom: 8 }}>Admin access required</h1>
-        <p style={{ color: '#666' }}>Your account is not authorized to view this page.</p>
+      <main className="p-card-padding-lg">
+        <h1 className="text-heading-xl font-semibold mb-2">Admin access required</h1>
+        <p className="text-muted-foreground">Your account is not authorized to view this page.</p>
       </main>
     )
   }
@@ -37,22 +37,13 @@ export default async function DashboardPage() {
   const metrics = await computeDashboardMetrics('month')
 
   return (
-    <main style={{ padding: 32, fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: 20, marginBottom: 16 }}>Dashboard metrics (raw)</h1>
-      <p style={{ color: '#666', marginBottom: 16 }}>
+    <main className="p-card-padding-lg">
+      <h1 className="text-heading-xl font-semibold mb-4">Dashboard metrics (raw)</h1>
+      <p className="text-muted-foreground mb-4">
         PR-B1 preview — real widgets ship in PR-B2. This raw JSON is here to verify the aggregation
         shape + perf target (&lt;500ms warm) live.
       </p>
-      <pre
-        style={{
-          background: '#f4f4f5',
-          padding: 16,
-          borderRadius: 8,
-          overflow: 'auto',
-          fontSize: 12,
-          lineHeight: 1.5,
-        }}
-      >
+      <pre className="bg-muted rounded-lg p-card-padding-sm overflow-auto text-body-xs leading-relaxed">
         {JSON.stringify(metrics, null, 2)}
       </pre>
     </main>

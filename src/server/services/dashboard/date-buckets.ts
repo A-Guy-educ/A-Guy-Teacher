@@ -1,10 +1,14 @@
 /**
  * Date-bucket helpers shared across the dashboard metrics aggregations.
  *
- * Uses the server's local timezone the same way the admin route does — the
- * dashboard is admin-facing and the manager runs on Israel time, so
- * "today"/"yesterday" match a human's expectation without needing tz
- * conversion. If we ever multi-region this, revisit.
+ * Uses the server's local timezone (setHours + getFullYear/getMonth/getDate)
+ * for BOTH the boundary Date objects and the "YYYY-MM-DD" strings that get
+ * compared to `lastActiveDate`. Internal consistency matters — the previous
+ * version mixed local-time boundaries with a UTC-round-tripped string, which
+ * silently shifted the today/yesterday buckets by a day near UTC midnight.
+ * Server-tz vs. client-tz drift is a separate concern (see admin route,
+ * which has the same limitation); this at least stops the bug where our own
+ * boundary Date and string disagreed.
  */
 
 import type { Period } from './metrics-types'
@@ -46,9 +50,10 @@ function startOfMonth(date: Date): Date {
 }
 
 function ymd(date: Date): string {
-  const value = date.toISOString().split('T')[0]
-  if (!value) throw new Error('date toISOString returned no date portion')
-  return value
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 function periodStartFor(now: Date, period: Period): Date {

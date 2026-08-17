@@ -398,8 +398,11 @@ export async function aggregateTransactions(db: Db, buckets: DateBuckets): Promi
   const totalRevenueAgorot: CurrencyRevenue = {}
   for (const currency of DEFAULT_CURRENCIES) totalRevenueAgorot[currency] = 0
   for (const row of result.revenueByCurrency) {
-    if (!row._id) continue
-    totalRevenueAgorot[row._id] = (totalRevenueAgorot[row._id] || 0) + row.total
+    // $ifNull only substitutes null/missing, not the empty string, so an
+    // "" currency bucket slips past the pipeline default. Coerce here so
+    // those rows still contribute to ILS instead of being silently dropped.
+    const currency = row._id && row._id.length > 0 ? row._id : 'ILS'
+    totalRevenueAgorot[currency] = (totalRevenueAgorot[currency] || 0) + row.total
   }
 
   const refundedAgorot = result.refundedTotal[0]?.total ?? 0
