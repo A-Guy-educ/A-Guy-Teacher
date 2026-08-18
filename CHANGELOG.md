@@ -3735,6 +3735,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- feat(dashboard): Active learners per course from users.currentCourse ([#1093](https://github.com/A-Guy-educ/A-Guy-Web/pull/1093)) — @aguyshayb
 - feat(users): Sync currentCourse + lastLoginAt to admin on 3 triggers ([#1092](https://github.com/A-Guy-educ/A-Guy-Web/pull/1092)) — @aguyshayb
 - chore(dashboard): Token widget follow-ups (L1/L2/L3) ([#1091](https://github.com/A-Guy-educ/A-Guy-Web/pull/1091)) — @aguyshayb
 - feat(dashboard): Track LLM token usage + spend cap + tokens tab (Batch B — 3 of 3) ([#1090](https://github.com/A-Guy-educ/A-Guy-Web/pull/1090)) — @aguyshayb
