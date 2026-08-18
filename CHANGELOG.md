@@ -3735,6 +3735,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- promote: dev -> main (v0.32.2) ([#1088](https://github.com/A-Guy-educ/A-Guy-Web/pull/1088)) — @aguyaharonyair
 - chore: release v0.32.2 ([#1087](https://github.com/A-Guy-educ/A-Guy-Web/pull/1087)) — @aguyaharonyair
 - feat(dashboard): Group sections into topic tabs (Users / Content / Engagement / Revenue) ([#1085](https://github.com/A-Guy-educ/A-Guy-Web/pull/1085)) — @aguyshayb
 - chore(dashboard): Cleanup nits — no-store cache, dead ternary, perf caps ([#1083](https://github.com/A-Guy-educ/A-Guy-Web/pull/1083)) — @aguyshayb
