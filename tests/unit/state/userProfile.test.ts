@@ -375,22 +375,46 @@ describe('userProfile state module', () => {
     const ADMIN_URL = 'https://admin.example.test'
     const GUEST_ID_KEY = 'a-guy:guest-id'
 
+    // selectCourse now issues two fires: the course-selections POST
+    // (analytics/telemetry log) and the course-state PATCH (source of
+    // truth on User). Tests in this block cover the first; filter the
+    // mock so the older assertions stay focused on that call.
+    function lastCourseSelectionCall(): [string, RequestInit] {
+      const call = fetchMock.mock.calls.find(
+        ([url]) => typeof url === 'string' && url.endsWith('/api/course-selections'),
+      ) as [string, RequestInit] | undefined
+      expect(call, 'expected a POST to /api/course-selections').toBeTruthy()
+      return call!
+    }
+
     function lastFetchBody(): Record<string, unknown> {
-      expect(fetchMock).toHaveBeenCalled()
-      const call = fetchMock.mock.calls.at(-1)!
-      const init = call[1] as RequestInit
+      const [, init] = lastCourseSelectionCall()
       return JSON.parse(init.body as string)
     }
 
     it('POSTs to {ADMIN_URL}/api/course-selections with credentials', () => {
       selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'homepage-greeting' })
 
-      expect(fetchMock).toHaveBeenCalledTimes(1)
-      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+      const [url, init] = lastCourseSelectionCall()
       expect(url).toBe(`${ADMIN_URL}/api/course-selections`)
       expect(init.method).toBe('POST')
       expect(init.credentials).toBe('include')
       expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
+    })
+
+    it('also PATCHes {ADMIN_URL}/api/users/me/course-state with the picked courseId', () => {
+      selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'homepage-greeting' })
+
+      const patchCall = fetchMock.mock.calls.find(
+        ([url]) => typeof url === 'string' && url.endsWith('/api/users/me/course-state'),
+      ) as [string, RequestInit] | undefined
+      expect(patchCall, 'expected a PATCH to /api/users/me/course-state').toBeTruthy()
+      const [url, init] = patchCall!
+      expect(url).toBe(`${ADMIN_URL}/api/users/me/course-state`)
+      expect(init.method).toBe('PATCH')
+      expect(init.credentials).toBe('include')
+      expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
+      expect(JSON.parse(init.body as string)).toEqual({ currentCourse: 'course-1' })
     })
 
     it('sends the correct body for the homepage-greeting call site', () => {

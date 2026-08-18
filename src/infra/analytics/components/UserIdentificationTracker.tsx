@@ -10,6 +10,7 @@ import {
   shouldRefreshUserProperties,
   updateCachedUserProperties,
 } from '../utils/user-properties-cache'
+import { readCourseIdFromCookie, syncCurrentCourse } from '../utils/currentCourseSync'
 
 /**
  * Tracks user_resolved event when user is logged in
@@ -35,6 +36,15 @@ export function UserIdentificationTracker() {
             // Login only needs identify() — alias() is only for signup
             identify(cached.user_id, { ...cached })
             sessionStorage.setItem('analytics_tracked_user_id', cached.user_id)
+
+            // Session-start refresh for the common case: cache is warm
+            // (<24h) so we skip /api/users/me, but this is still the first
+            // mount of this session. Send an empty body — do not risk
+            // clobbering server currentCourse with a cookie value we
+            // cannot compare against (no fetched user here). Empty body
+            // still stamps lastLoginAt server-side, which is what we
+            // want for the "returning user daily activity" signal.
+            syncCurrentCourse(null)
           }
           return
         }
@@ -129,6 +139,16 @@ export function UserIdentificationTracker() {
                 user_id: user.id,
                 is_anonymous: false,
               })
+
+              // Sync currentCourse + lastLoginAt to Admin. Only send the
+              // localStorage courseId when the server does not already have
+              // one — an existing server value is likely fresher (e.g. a
+              // pick made on another device) and must not be clobbered by
+              // stale local state. Refresh-only calls (no courseId) still
+              // stamp lastLoginAt server-side.
+              const localCourseId = readCourseIdFromCookie()
+              const serverHasCourse = Boolean(user.currentCourse)
+              syncCurrentCourse(serverHasCourse ? null : localCourseId)
 
               sessionStorage.setItem('analytics_tracked_user_id', user.id)
             }

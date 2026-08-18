@@ -3,6 +3,7 @@
 import { consumeLessonOpenTimestamp } from '@/infra/analytics/utils/lesson-load-timing'
 import { SYSTEM_EVENTS, systemEventBus } from '@/infra/system-events'
 import { useSetCurrentLesson } from '@/client/providers/ActiveTimeProvider'
+import { syncCurrentCourse } from '@/infra/analytics/utils/currentCourseSync'
 import { useEffect, useRef } from 'react'
 
 export type LessonContentType = 'pdf' | 'exercises' | 'blocks'
@@ -58,6 +59,12 @@ export function LessonAnalytics({
         credentials: 'include',
         keepalive: true,
       }).catch(() => {})
+
+      // Opening a lesson is a strong signal that the user is on this
+      // course right now — refresh currentCourse (and lastLoginAt) on
+      // Admin. Deliberately overwrites any prior server value: a live
+      // lesson open is the freshest signal we have.
+      syncCurrentCourse(courseId)
     }
 
     // Track lesson load success — calculate time since user clicked the link
