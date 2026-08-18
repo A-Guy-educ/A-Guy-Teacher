@@ -621,17 +621,15 @@ export async function aggregateTopLessonsByOpens(db: Db, limit = 25): Promise<To
       { $sort: { openCount: -1 } },
       { $limit: limit },
       {
+        // `$toObjectId` runs ONCE per input lessonId (25 max after $limit)
+        // rather than `$toString: '$_id'` which would compute per lesson doc
+        // in the lookup and defeat the default `_id` index — that's a full
+        // COLLSCAN of lessons per dashboard load.
         $lookup: {
           from: 'lessons',
-          let: { lid: '$lessonId' },
+          let: { lid: { $toObjectId: '$lessonId' } },
           pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: [{ $toString: '$_id' }, '$$lid'] }],
-                },
-              },
-            },
+            { $match: { $expr: { $eq: ['$_id', '$$lid'] } } },
             { $project: { title: 1, slug: 1 } },
           ],
           as: 'lesson',

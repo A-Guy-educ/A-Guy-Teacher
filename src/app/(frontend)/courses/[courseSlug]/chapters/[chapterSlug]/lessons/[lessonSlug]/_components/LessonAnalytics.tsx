@@ -39,13 +39,26 @@ export function LessonAnalytics({
 
     // Persist the open for the admin dashboard's "top lessons opened"
     // widget. Fire-and-forget — never block the lesson render on this.
-    void fetch('/api/stats/track-activity', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventType: 'lesson_opened', lessonId }),
-      credentials: 'include',
-      keepalive: true,
-    }).catch(() => {})
+    //
+    // sessionStorage dedupes per-tab so React Strict Mode double-invoke,
+    // rapid client-side navigations back to the same lesson, and stale
+    // effect re-runs don't inflate the count. sessionStorage is per-tab,
+    // so a genuine new tab still counts (which matches the intent).
+    const openedKey = `lesson-open-tracked:${lessonId}`
+    if (typeof window !== 'undefined' && !window.sessionStorage.getItem(openedKey)) {
+      try {
+        window.sessionStorage.setItem(openedKey, '1')
+      } catch {
+        // Safari private mode etc. — proceed with the POST anyway.
+      }
+      void fetch('/api/stats/track-activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventType: 'lesson_opened', lessonId }),
+        credentials: 'include',
+        keepalive: true,
+      }).catch(() => {})
+    }
 
     // Track lesson load success — calculate time since user clicked the link
     const clickTimestamp = consumeLessonOpenTimestamp(lessonId)

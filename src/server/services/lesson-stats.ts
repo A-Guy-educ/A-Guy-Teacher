@@ -17,32 +17,41 @@
  * @ai-summary Per-lesson $inc counters for open count + future duration totals
  */
 
-import { ObjectId } from 'mongodb'
-
 import { getContentDb } from '@/infra/db/content-db'
 import { logger } from '@/infra/utils/logger/logger'
 
 const COLLECTION = 'lesson-stats'
 
-let indexEnsured: Promise<void> | null = null
+// `ObjectId.isValid` returns true for any 12-byte string too, so a
+// malicious client could POST short garbage and create bogus counter rows.
+// The tighter regex accepts only the 24-hex form the browser actually gets
+// from route params for a real lesson.
+const HEX24 = /^[a-f0-9]{24}$/i
+
+let indexPromise: Promise<void> | null = null
 
 async function ensureIndex(): Promise<void> {
-  if (indexEnsured) return indexEnsured
-  const db = await getContentDb()
-  indexEnsured = db
-    .collection(COLLECTION)
-    .createIndex({ lessonId: 1 }, { unique: true, name: 'lesson_stats_lesson_id_unique' })
-    .then(() =>
-      db
+  // ??= guarantees a single in-flight index build across concurrent first
+  // callers, so no upsert can race past `ensureIndex` before the unique
+  // constraint lands (otherwise two concurrent first-time increments for
+  // the same lesson could both create rows and permanently double-count).
+  indexPromise ??= (async () => {
+    const db = await getContentDb()
+    try {
+      await db
         .collection(COLLECTION)
-        .createIndex({ openCount: -1 }, { name: 'lesson_stats_open_count_desc' }),
-    )
-    .then(() => undefined)
-    .catch((err: unknown) => {
-      indexEnsured = null
+        .createIndex({ lessonId: 1 }, { unique: true, name: 'lesson_stats_lesson_id_unique' })
+      await db
+        .collection(COLLECTION)
+        .createIndex({ openCount: -1 }, { name: 'lesson_stats_open_count_desc' })
+    } catch (err) {
+      // Reset so a later request can retry; log so we notice repeated
+      // failures (permissions, primary unavailable, etc.).
+      indexPromise = null
       logger.warn({ err }, 'Failed to ensure lesson-stats indexes')
-    })
-  return indexEnsured
+    }
+  })()
+  return indexPromise
 }
 
 /**
@@ -50,7 +59,7 @@ async function ensureIndex(): Promise<void> {
  * are swallowed by callers so tracking failures never break the user flow.
  */
 export async function incrementLessonOpen(lessonId: string): Promise<void> {
-  if (!lessonId || !ObjectId.isValid(lessonId)) return
+  if (!lessonId || !HEX24.test(lessonId)) return
   await ensureIndex()
   const db = await getContentDb()
   await db
