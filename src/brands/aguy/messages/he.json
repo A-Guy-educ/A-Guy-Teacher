@@ -60,7 +60,21 @@
       "users": "משתמשים",
       "content": "תוכן",
       "engagement": "מעורבות",
+      "tokens": "טוקנים",
       "revenue": "הכנסות"
+    },
+    "tokens": {
+      "section": "שימוש בטוקני LLM",
+      "totalToday": "טוקנים היום",
+      "totalMonth": "טוקנים החודש",
+      "totalYear": "טוקנים השנה",
+      "avgPerUser": "ממוצע טוקנים למשתמש (חודש)",
+      "avgPerLesson": "ממוצע טוקנים לשיעור (חודש)",
+      "topLessons": "שיעורים מובילים לפי טוקנים (חודש)",
+      "topUsers": "משתמשים מובילים לפי טוקנים (חודש)",
+      "noData": "עדיין לא נרשמו קריאות LLM.",
+      "callsSuffix": "קריאות",
+      "tokensSuffix": "טוקנים"
     },
     "users": {
       "section": "משתמשים",

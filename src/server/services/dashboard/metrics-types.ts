@@ -116,6 +116,29 @@ export interface RevenueMetrics {
   topProducts: TopProduct[]
 }
 
+export interface TopLessonByTokens {
+  lessonId: string
+  lessonTitle: string
+  totalTokens: number
+  callCount: number
+}
+
+export interface TopUserByTokens {
+  userId: string
+  label: string
+  totalTokens: number
+}
+
+export interface TokenMetrics {
+  totalTokensToday: number
+  totalTokensThisMonth: number
+  totalTokensThisYear: number
+  avgTokensPerUserThisMonth: number
+  avgTokensPerLessonThisMonth: number
+  topLessons: TopLessonByTokens[]
+  topUsers: TopUserByTokens[]
+}
+
 export interface DashboardMetricsResponse {
   period: Period
   userMetrics: UserMetrics
@@ -123,4 +146,5 @@ export interface DashboardMetricsResponse {
   contentCounts: ContentCounts
   engagement: EngagementMetrics
   revenueMetrics: RevenueMetrics
+  tokenMetrics: TokenMetrics
 }

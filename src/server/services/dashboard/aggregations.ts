@@ -16,7 +16,7 @@
  *   with Date objects for range predicates.
  */
 
-import type { Db } from 'mongodb'
+import { ObjectId, type Db, type Document } from 'mongodb'
 
 import type {
   ContentCounts,
@@ -26,8 +26,11 @@ import type {
   MonthlySignup,
   RevenueMetrics,
   SessionTimeByLessonType,
+  TokenMetrics,
   TopLesson,
+  TopLessonByTokens,
   TopProduct,
+  TopUserByTokens,
   UserMetrics,
 } from './metrics-types'
 import type { DateBuckets } from './date-buckets'
@@ -814,5 +817,164 @@ export function buildUserMetrics(input: {
     returnedMultiplePercentage,
     returningUsers: userStats.returningInPeriod,
     returningUsersTotal: users.totalUsersBeforePeriod,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// llm-usage + users — token metrics ($facet)
+//
+// Time-window totals + avg per user + avg per lesson come from the
+// llm-usage event log (per-call rows). Top-N users and per-user month
+// totals lean on the users collection's llmTokensUsed counter (fast $sort,
+// no aggregation), since that's the same field the rate limiter reads and
+// is guaranteed to be in sync with the event log by recordLlmUsage.
+// ---------------------------------------------------------------------------
+
+interface TokenUsageFacetResult {
+  today: Array<{ total: number }>
+  thisMonth: Array<{ total: number; users: number }>
+  thisYear: Array<{ total: number }>
+  perLessonThisMonth: Array<{ _id: string; total: number; calls: number }>
+}
+
+export async function aggregateTokenMetrics(db: Db): Promise<TokenMetrics> {
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const startOfYear = new Date(now.getFullYear(), 0, 1)
+
+  const [usageFacet] = (await db
+    .collection('llm-usage')
+    .aggregate<TokenUsageFacetResult>([
+      {
+        $facet: {
+          today: [
+            { $match: { createdAt: { $gte: startOfToday } } },
+            { $group: { _id: null, total: { $sum: '$totalTokens' } } },
+          ],
+          thisMonth: [
+            { $match: { createdAt: { $gte: startOfMonth } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: '$totalTokens' },
+                users: { $addToSet: '$userId' },
+              },
+            },
+            { $project: { total: 1, users: { $size: '$users' } } },
+          ],
+          thisYear: [
+            { $match: { createdAt: { $gte: startOfYear } } },
+            { $group: { _id: null, total: { $sum: '$totalTokens' } } },
+          ],
+          perLessonThisMonth: [
+            {
+              $match: {
+                createdAt: { $gte: startOfMonth },
+                lessonId: { $ne: null },
+              },
+            },
+            {
+              $group: {
+                _id: '$lessonId',
+                total: { $sum: '$totalTokens' },
+                calls: { $sum: 1 },
+              },
+            },
+            { $sort: { total: -1 } },
+            { $limit: 100 },
+          ],
+        },
+      },
+    ])
+    .toArray()) as [TokenUsageFacetResult | undefined]
+
+  const totalTokensToday = usageFacet?.today[0]?.total ?? 0
+  const monthAgg = usageFacet?.thisMonth[0]
+  const totalTokensThisMonth = monthAgg?.total ?? 0
+  const activeUsersThisMonth = monthAgg?.users ?? 0
+  const totalTokensThisYear = usageFacet?.thisYear[0]?.total ?? 0
+  const perLessonRows = usageFacet?.perLessonThisMonth ?? []
+
+  const avgTokensPerUserThisMonth =
+    activeUsersThisMonth > 0 ? Math.round(totalTokensThisMonth / activeUsersThisMonth) : 0
+  const avgTokensPerLessonThisMonth =
+    perLessonRows.length > 0
+      ? Math.round(perLessonRows.reduce((sum, row) => sum + row.total, 0) / perLessonRows.length)
+      : 0
+
+  // Resolve titles for the top-5 lessons (already limited to 100 above,
+  // then we slice to 5 for the widget after we drop orphans).
+  const topLessons: TopLessonByTokens[] = []
+  if (perLessonRows.length > 0) {
+    const lessonIds = perLessonRows
+      .map((row) => row._id)
+      .filter((id): id is string => Boolean(id) && ObjectId.isValid(id))
+    const lessonDocs =
+      lessonIds.length > 0
+        ? await db
+            .collection('lessons')
+            .find(
+              { _id: { $in: lessonIds.map((id) => new ObjectId(id)) } },
+              { projection: { title: 1, slug: 1 } },
+            )
+            .toArray()
+        : []
+    const byId = new Map<string, Document>(lessonDocs.map((doc) => [String(doc._id), doc]))
+    for (const row of perLessonRows) {
+      const doc = byId.get(String(row._id))
+      if (!doc) continue // orphaned lesson-id, drop
+      const rawTitle = (doc as { title?: unknown }).title
+      const rawSlug = (doc as { slug?: unknown }).slug
+      const title =
+        typeof rawTitle === 'string' && rawTitle
+          ? rawTitle
+          : typeof rawSlug === 'string' && rawSlug
+            ? rawSlug
+            : `Lesson ${String(row._id).slice(-6)}`
+      topLessons.push({
+        lessonId: String(row._id),
+        lessonTitle: title,
+        totalTokens: row.total,
+        callCount: row.calls,
+      })
+      if (topLessons.length >= 5) break
+    }
+  }
+
+  // Top-5 users by current-month usage from the users counter. The
+  // `llmTokensResetAt > now` filter drops users whose window has expired
+  // (their counter is stale from the prior month until their next call
+  // triggers the reset in bumpUserCounter).
+  const userRows = await db
+    .collection('users')
+    .find(
+      { llmTokensUsed: { $gt: 0 }, llmTokensResetAt: { $gt: now } },
+      {
+        projection: { _id: 1, email: 1, name: 1, llmTokensUsed: 1 },
+        sort: { llmTokensUsed: -1 },
+        limit: 5,
+      },
+    )
+    .toArray()
+  const topUsers: TopUserByTokens[] = userRows.map((row) => {
+    const email = typeof row.email === 'string' ? row.email : ''
+    const name = typeof row.name === 'string' ? row.name : ''
+    const label = name || email || `User ${String(row._id).slice(-6)}`
+    return {
+      userId: String(row._id),
+      label,
+      totalTokens: Number(row.llmTokensUsed ?? 0),
+    }
+  })
+
+  return {
+    totalTokensToday,
+    totalTokensThisMonth,
+    totalTokensThisYear,
+    avgTokensPerUserThisMonth,
+    avgTokensPerLessonThisMonth,
+    topLessons,
+    topUsers,
   }
 }

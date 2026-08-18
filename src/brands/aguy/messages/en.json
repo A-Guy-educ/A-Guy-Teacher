@@ -60,7 +60,21 @@
       "users": "Users",
       "content": "Content",
       "engagement": "Engagement",
+      "tokens": "Tokens",
       "revenue": "Revenue"
+    },
+    "tokens": {
+      "section": "LLM token usage",
+      "totalToday": "Tokens today",
+      "totalMonth": "Tokens this month",
+      "totalYear": "Tokens this year",
+      "avgPerUser": "Avg tokens per user (month)",
+      "avgPerLesson": "Avg tokens per lesson (month)",
+      "topLessons": "Top lessons by tokens (month)",
+      "topUsers": "Top users by tokens (month)",
+      "noData": "No LLM calls tracked yet.",
+      "callsSuffix": "calls",
+      "tokensSuffix": "tokens"
     },
     "users": {
       "section": "Users",

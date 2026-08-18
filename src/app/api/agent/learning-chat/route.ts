@@ -3,6 +3,7 @@ import { z } from 'zod'
 
 import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { requireUserWithChatQuota } from '@/server/auth/api-auth'
+import { checkTokenLimit, recordLlmUsage } from '@/server/services/llm-usage'
 import {
   appendMessage,
   generateAssistantReply,
@@ -55,6 +56,20 @@ export async function POST(request: NextRequest) {
   if (!rate.allowed) return rateLimitExceededResponse(rate)
 
   const ownerId = quota.value.ownerId
+
+  const tokenLimit = await checkTokenLimit(ownerId)
+  if (!tokenLimit.withinLimit) {
+    return Response.json(
+      {
+        error: 'token_limit_exceeded',
+        used: tokenLimit.used,
+        limit: tokenLimit.limit,
+        resetAt: tokenLimit.resetAt,
+      },
+      { status: 429 },
+    )
+  }
+
   const contextKey = `learning:${parsed.data.gradeLevel}`
   const conversation = await getOrCreateConversation(ownerId, contextKey)
   const messages = Array.isArray(conversation.messages)
@@ -66,7 +81,7 @@ export async function POST(request: NextRequest) {
     content: parsed.data.message,
   })
 
-  const reply = await generateAssistantReply({
+  const { message: reply, usage } = await generateAssistantReply({
     ownerId,
     message: parsed.data.message,
     acknowledgment: parsed.data.acknowledgment,
@@ -77,6 +92,17 @@ export async function POST(request: NextRequest) {
     role: 'assistant',
     content: reply,
   })
+
+  if (usage.inputTokens + usage.outputTokens > 0) {
+    void recordLlmUsage({
+      userId: ownerId,
+      lessonId: null,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      model: usage.model ?? undefined,
+      callType: 'chat',
+    })
+  }
 
   const stream = new ReadableStream({
     start(controller) {

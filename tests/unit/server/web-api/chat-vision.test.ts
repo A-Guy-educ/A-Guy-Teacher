@@ -118,7 +118,7 @@ describe('web chat vision attachments', () => {
         message: 'What is in the image?',
         chatAssetIds: ['65f000000000000000000001'],
       }),
-    ).resolves.toBe('I can see the triangle.')
+    ).resolves.toMatchObject({ message: 'I can see the triangle.' })
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
@@ -149,6 +149,6 @@ describe('web chat vision attachments', () => {
         message: 'What does this lesson explain?',
         lessonId: LESSON_ID,
       }),
-    ).resolves.toBe('The lesson says it is a right triangle.')
+    ).resolves.toMatchObject({ message: 'The lesson says it is a right triangle.' })
   })
 })

@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { rateLimit, rateLimitExceededResponse } from '@/infra/security/rate-limit'
 import { logger } from '@/infra/utils/logger'
 import { requireUserWithChatQuota } from '@/server/auth/api-auth'
+import { checkTokenLimit, recordLlmUsage } from '@/server/services/llm-usage'
 import {
   appendMessage,
   generateAssistantReply,
@@ -61,11 +62,26 @@ export async function POST(request: NextRequest) {
   })
   if (!rate.allowed) return rateLimitExceededResponse(rate)
 
+  const ownerId = quota.value.ownerId
+
+  // Hard cap on LLM token spend — 429 before we invoke the model.
+  const tokenLimit = await checkTokenLimit(ownerId)
+  if (!tokenLimit.withinLimit) {
+    return Response.json(
+      {
+        error: 'token_limit_exceeded',
+        used: tokenLimit.used,
+        limit: tokenLimit.limit,
+        resetAt: tokenLimit.resetAt,
+      },
+      { status: 429 },
+    )
+  }
+
   const body = parsed.data
   const contextKey = resolveContextKey(body, body.contextKeyOverride)
   if (!contextKey) return Response.json({ error: 'Missing context ID' }, { status: 400 })
 
-  const ownerId = quota.value.ownerId
   const conversation = await getOrCreateConversation(ownerId, contextKey)
 
   const stream = new ReadableStream<Uint8Array>({
@@ -77,7 +93,7 @@ export async function POST(request: NextRequest) {
           content: body.message,
           hidden: body.hidden,
         })
-        const reply = await generateAssistantReply({
+        const { message: reply, usage } = await generateAssistantReply({
           ownerId,
           message: body.message,
           acknowledgment: body.acknowledgment,
@@ -95,6 +111,20 @@ export async function POST(request: NextRequest) {
         controller.enqueue(
           encoder.encode(toSse('done', { conversationId: conversation.id, contextKey })),
         )
+
+        // Token usage write happens after the stream drains — fire-and-
+        // forget inside the ReadableStream's async start; we can't use
+        // `after()` here because we're not in the outer route context.
+        if (usage.inputTokens + usage.outputTokens > 0) {
+          void recordLlmUsage({
+            userId: ownerId,
+            lessonId: body.lessonId ?? null,
+            inputTokens: usage.inputTokens,
+            outputTokens: usage.outputTokens,
+            model: usage.model ?? undefined,
+            callType: 'chat_stream',
+          })
+        }
       } catch (error) {
         logger.error({ err: error, contextKey }, 'Chat stream failed')
         controller.enqueue(encoder.encode(toSse('error', { error: 'Chat failed' })))

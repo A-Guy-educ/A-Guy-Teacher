@@ -38,6 +38,7 @@ import { EngagementSection } from './EngagementSection'
 import { MonthlySignupsSection } from './MonthlySignupsSection'
 import { PeriodSelector } from './PeriodSelector'
 import { RevenueSection } from './RevenueSection'
+import { TokensSection } from './TokensSection'
 import { UserMetricsSection } from './UserMetricsSection'
 
 interface Props {
@@ -114,6 +115,7 @@ export function DashboardShell({ initialData }: Props) {
           <TabsTrigger value="users">{t('tabs.users')}</TabsTrigger>
           <TabsTrigger value="content">{t('tabs.content')}</TabsTrigger>
           <TabsTrigger value="engagement">{t('tabs.engagement')}</TabsTrigger>
+          <TabsTrigger value="tokens">{t('tabs.tokens')}</TabsTrigger>
           <TabsTrigger value="revenue">{t('tabs.revenue')}</TabsTrigger>
         </TabsList>
 
@@ -128,6 +130,10 @@ export function DashboardShell({ initialData }: Props) {
 
         <TabsContent value="engagement">
           <EngagementSection engagement={data.engagement} />
+        </TabsContent>
+
+        <TabsContent value="tokens">
+          <TokensSection tokens={data.tokenMetrics} />
         </TabsContent>
 
         <TabsContent value="revenue">
