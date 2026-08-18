@@ -122,7 +122,13 @@
       "noCourses": "אין קורסים.",
       "topLessons": "שיעורים מובילים לפי כניסות",
       "noLessons": "עדיין לא נרשמו כניסות לשיעורים.",
-      "opensSuffix": "כניסות"
+      "opensSuffix": "כניסות",
+      "avgLessonTime": "ממוצע",
+      "sessionByType": "זמן ממוצע לסשן לפי סוג שיעור",
+      "typeLearning": "למידה",
+      "typePractice": "תרגול",
+      "typeExam": "מבחן",
+      "noSessionData": "—"
     },
     "revenue": {
       "section": "הכנסות",

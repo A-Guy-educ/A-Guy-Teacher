@@ -122,7 +122,13 @@
       "noCourses": "No courses.",
       "topLessons": "Top lessons opened",
       "noLessons": "No lesson opens tracked yet.",
-      "opensSuffix": "opens"
+      "opensSuffix": "opens",
+      "avgLessonTime": "avg",
+      "sessionByType": "Avg session time by lesson type",
+      "typeLearning": "Learning",
+      "typePractice": "Practice",
+      "typeExam": "Exam",
+      "noSessionData": "—"
     },
     "revenue": {
       "section": "Revenue",

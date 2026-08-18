@@ -70,3 +70,34 @@ export async function incrementLessonOpen(lessonId: string): Promise<void> {
       { upsert: true },
     )
 }
+
+/**
+ * Record a completed lesson session (open → close cycle). Bumps both
+ * `sessionCount` and `totalDurationSeconds` on the lesson-stats row so
+ * `avgDurationSeconds = totalDurationSeconds / sessionCount` can be
+ * computed at read time without keeping per-session detail.
+ *
+ * Sessions with non-positive duration are dropped — those are typically
+ * React Strict Mode double-mount/unmount cycles in dev, not real reads.
+ */
+export async function incrementLessonSession(
+  lessonId: string,
+  durationSeconds: number,
+): Promise<void> {
+  if (!lessonId || !HEX24.test(lessonId)) return
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return
+  // Clamp absurdly-long sessions (a tab left open for a week) to a
+  // realistic cap so a single stale tab doesn't skew the per-lesson
+  // average. 6 hours is generous for a single sitting.
+  const clamped = Math.min(Math.floor(durationSeconds), 6 * 60 * 60)
+  await ensureIndex()
+  const db = await getContentDb()
+  await db.collection(COLLECTION).updateOne(
+    { lessonId },
+    {
+      $inc: { sessionCount: 1, totalDurationSeconds: clamped },
+      $set: { updatedAt: new Date() },
+    },
+    { upsert: true },
+  )
+}

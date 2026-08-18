@@ -85,6 +85,25 @@ export function LessonAnalytics({
         course_id: courseId,
         duration_seconds: durationSeconds,
       })
+
+      // Persist the session duration for the admin dashboard's
+      // "avg time per lesson" + "session time by lesson type" widgets.
+      // Only fire if the session was long enough to be meaningful —
+      // Strict Mode double mount/unmount usually completes in ms.
+      // Fire-and-forget, keepalive so it survives fast navigation.
+      if (durationSeconds >= 1) {
+        void fetch('/api/stats/track-activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'lesson_session_ended',
+            lessonId,
+            durationSeconds,
+          }),
+          credentials: 'include',
+          keepalive: true,
+        }).catch(() => {})
+      }
     }
   }, [lessonId, courseId, lessonTitle, contentType])
 

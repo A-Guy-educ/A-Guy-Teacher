@@ -25,6 +25,7 @@ import type {
   EngagementMetrics,
   MonthlySignup,
   RevenueMetrics,
+  SessionTimeByLessonType,
   TopLesson,
   TopProduct,
   UserMetrics,
@@ -611,6 +612,8 @@ export async function aggregateCourseEnrollments(db: Db): Promise<CourseEnrollme
 interface LessonStatsRow {
   lessonId: string
   openCount: number
+  sessionCount?: number
+  totalDurationSeconds?: number
   lesson: Array<{ title?: string; slug?: string }>
 }
 
@@ -646,9 +649,74 @@ export async function aggregateTopLessonsByOpens(db: Db, limit = 25): Promise<To
       .map((row) => {
         const lesson = row.lesson[0]
         const lessonTitle = lesson?.title || lesson?.slug || `Lesson ${row.lessonId.slice(-6)}`
-        return { lessonId: row.lessonId, lessonTitle, openCount: row.openCount }
+        const sessions = row.sessionCount ?? 0
+        const total = row.totalDurationSeconds ?? 0
+        const avgDurationSeconds = sessions > 0 ? Math.round(total / sessions) : null
+        return { lessonId: row.lessonId, lessonTitle, openCount: row.openCount, avgDurationSeconds }
       })
   )
+}
+
+// ---------------------------------------------------------------------------
+// lesson-stats + lessons — average session time grouped by lesson type
+// (learning / practice / exam). Feeds the "session time by lesson type"
+// tile. Depends on lesson-stats having sessionCount + totalDurationSeconds
+// populated by LESSON_ENDED — early after PR 2 ships, this will be all
+// nulls until sessions accumulate.
+// ---------------------------------------------------------------------------
+
+interface SessionTimeByTypeRow {
+  _id: string
+  avgSeconds: number
+}
+
+export async function aggregateSessionTimeByLessonType(db: Db): Promise<SessionTimeByLessonType> {
+  const rows = await db
+    .collection('lesson-stats')
+    .aggregate<SessionTimeByTypeRow>([
+      { $match: { sessionCount: { $gt: 0 } } },
+      {
+        $lookup: {
+          from: 'lessons',
+          let: { lid: { $toObjectId: '$lessonId' } },
+          pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$lid'] } } }, { $project: { type: 1 } }],
+          as: 'lesson',
+        },
+      },
+      { $match: { 'lesson.0.type': { $in: ['learning', 'practice', 'exam'] } } },
+      {
+        $group: {
+          _id: { $arrayElemAt: ['$lesson.type', 0] },
+          totalSeconds: { $sum: '$totalDurationSeconds' },
+          totalSessions: { $sum: '$sessionCount' },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          avgSeconds: {
+            $cond: [
+              { $gt: ['$totalSessions', 0] },
+              { $divide: ['$totalSeconds', '$totalSessions'] },
+              0,
+            ],
+          },
+        },
+      },
+    ])
+    .toArray()
+
+  const result: SessionTimeByLessonType = {
+    learning: null,
+    practice: null,
+    exam: null,
+  }
+  for (const row of rows) {
+    if (row._id === 'learning' || row._id === 'practice' || row._id === 'exam') {
+      result[row._id] = Math.round(row.avgSeconds)
+    }
+  }
+  return result
 }
 
 // ---------------------------------------------------------------------------
