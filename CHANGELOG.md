@@ -3735,6 +3735,7 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore(dashboard): Token widget follow-ups (L1/L2/L3) ([#1091](https://github.com/A-Guy-educ/A-Guy-Web/pull/1091)) — @aguyshayb
 - feat(dashboard): Track LLM token usage + spend cap + tokens tab (Batch B — 3 of 3) ([#1090](https://github.com/A-Guy-educ/A-Guy-Web/pull/1090)) — @aguyshayb
 - feat(dashboard): Track lesson session duration + avg time per lesson and per type (Batch B — 2 of 3) ([#1089](https://github.com/A-Guy-educ/A-Guy-Web/pull/1089)) — @aguyshayb
 - feat(dashboard): Track lesson opens and surface top-N in Engagement tab (Batch B — 1 of 3) ([#1086](https://github.com/A-Guy-educ/A-Guy-Web/pull/1086)) — @aguyshayb
