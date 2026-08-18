@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.32.2 — 2026-08-18
+
+### Features
+- Group sections into Users / Content / Engagement / Revenue tabs (36582326d)
+- Expand metrics — today bucket, growth %, median, stddev, year view (9fb648d8b)
+- Port admin dashboard widgets with A-Guy-Web design system (0d1e8c04a)
+- Add admin-gated /dashboard route with rewritten metrics API (4dfa7dc00)
+
+### Fixes
+- Two review nits — 7-card grid + flat trend renders as no-change (667baa6d2)
+- Independent count for contentCounts.courses (bef678e3c)
+- Address PR-B2 review — refetch guard, error state, i18n, locale (f8873d4d6)
+- Move page under (frontend) route group + fold review nits (71a94bd3e)
+
+### Chores
+- add #1085 (e9a604d37)
+- add #1083 (b5549f9dd)
+- add #1082 (86f5bde3e)
+- Apply cleanup nits from earlier reviews (ffb699fd9)
+- add #1081 (0b4aa24b6)
+- add #1080 (e1d4149bf)
+- Remove external dashboard tracking pipeline (cc2f7ea7f)
+- add #1078 (5642ed094)
+- add #1077 (ead3aa44f)
+- release v0.32.0 (62f815599)
+- add #1076 (ae69e08ea)
 ## v0.32.1 — 2026-08-17
 
 ### Fixes
@@ -3709,6 +3735,13 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: release v0.32.2 ([#1087](https://github.com/A-Guy-educ/A-Guy-Web/pull/1087)) — @aguyaharonyair
+- feat(dashboard): Group sections into topic tabs (Users / Content / Engagement / Revenue) ([#1085](https://github.com/A-Guy-educ/A-Guy-Web/pull/1085)) — @aguyshayb
+- chore(dashboard): Cleanup nits — no-store cache, dead ternary, perf caps ([#1083](https://github.com/A-Guy-educ/A-Guy-Web/pull/1083)) — @aguyshayb
+- feat(dashboard): Port widgets with A-Guy-Web design system (PR-B2) ([#1082](https://github.com/A-Guy-educ/A-Guy-Web/pull/1082)) — @aguyshayb
+- feat(dashboard): Add admin-gated /dashboard route with rewritten metrics API (PR-B1) ([#1081](https://github.com/A-Guy-educ/A-Guy-Web/pull/1081)) — @aguyshayb
+- chore(analytics): Remove external dashboard tracking pipeline (PR-A) ([#1080](https://github.com/A-Guy-educ/A-Guy-Web/pull/1080)) — @aguyshayb
+- promote: dev -> main (v0.32.1) ([#1078](https://github.com/A-Guy-educ/A-Guy-Web/pull/1078)) — @aguyaharonyair
 - chore: release v0.32.1 ([#1077](https://github.com/A-Guy-educ/A-Guy-Web/pull/1077)) — @aguyaharonyair
 ## [v0.32.0] - 2026-08-16
 

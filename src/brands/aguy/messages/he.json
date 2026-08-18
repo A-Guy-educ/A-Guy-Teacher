@@ -42,5 +42,95 @@
       "notFound": "העסקה לא נמצאה",
       "viewProduct": "צפה במוצר"
     }
+  },
+  "dashboard": {
+    "title": "לוח בקרה אנליטי",
+    "periodLabel": "תקופה",
+    "refreshing": "מתעדכן…",
+    "loadError": "טעינת הנתונים נכשלה.",
+    "retry": "נסה שוב",
+    "adminOnlyTitle": "נדרשת הרשאת מנהל",
+    "adminOnlyBody": "לחשבון שלך אין הרשאה לצפות בעמוד זה.",
+    "period": {
+      "week": "שבוע",
+      "month": "חודש",
+      "year": "שנה"
+    },
+    "tabs": {
+      "users": "משתמשים",
+      "content": "תוכן",
+      "engagement": "מעורבות",
+      "revenue": "הכנסות"
+    },
+    "users": {
+      "section": "משתמשים",
+      "totalUsers": "סה״כ משתמשים",
+      "registeredToday": "היום",
+      "registeredYesterday": "אתמול",
+      "thisWeek": "השבוע",
+      "lastWeek": "שבוע שעבר",
+      "thisMonth": "החודש",
+      "lastMonth": "חודש שעבר",
+      "vsPrior": "לעומת התקופה הקודמת",
+      "activeSection": "משתמשים פעילים",
+      "activeToday": "היום",
+      "activeYesterday": "אתמול",
+      "activeLastWeek": "שבוע שעבר",
+      "activeLastMonth": "חודש שעבר",
+      "guestSection": "סשנים של אורחים",
+      "guestTotal": "סה״כ",
+      "guestToday": "היום",
+      "guestLastWeek": "שבוע שעבר",
+      "guestLastMonth": "חודש שעבר",
+      "converted": "הומרו",
+      "conversion": "המרה",
+      "returningSection": "חוזרים",
+      "returningInPeriod": "חזרו בתקופה",
+      "returningHintPrefix": "מתוך",
+      "returningHintSuffix": "משתמשים שנרשמו לפני התקופה",
+      "returnedOnce": "חזרו לפחות פעם",
+      "returnedMultiple": "חזרו יותר מפעמיים"
+    },
+    "content": {
+      "section": "ספריית תוכן",
+      "courses": "קורסים",
+      "lessons": "שיעורים",
+      "exercises": "תרגילים",
+      "formulaSheets": "דפי נוסחאות",
+      "prompts": "פרומפטים"
+    },
+    "monthly": {
+      "section": "הרשמות לפי חודש (12 אחרונים)"
+    },
+    "engagement": {
+      "section": "מעורבות",
+      "avgSession": "זמן ממוצע לסשן",
+      "medianSession": "חציון זמן לסשן",
+      "stdDevSession": "סטיית תקן לסשן",
+      "showMore": "הצג עוד",
+      "showLess": "הצג פחות",
+      "minSuffix": "דק׳",
+      "questionsAsked": "שאלות שנשאלו",
+      "conversationsStarted": "שיחות שהתחילו",
+      "lessonsCompleted": "שיעורים שהושלמו",
+      "exercisesAttempted": "תרגילים שנוסו",
+      "exercisesCompleted": "תרגילים שהושלמו",
+      "learningLessons": "שיעורי למידה",
+      "practiceLessons": "שיעורי תרגול",
+      "examLessons": "שיעורי מבחן",
+      "courseEnrollments": "הרשמות לקורסים",
+      "noCourses": "אין קורסים."
+    },
+    "revenue": {
+      "section": "הכנסות",
+      "revenueCurrencyPrefix": "הכנסות",
+      "transactions": "עסקאות",
+      "successRate": "שיעור הצלחה",
+      "refundedIls": "הוחזרו (ILS)",
+      "failedIls": "נכשלו (ILS)",
+      "topProducts": "מוצרים מובילים בתקופה",
+      "noTransactions": "אין עסקאות בתקופה זו.",
+      "deletedProductPrefix": "מוצר שנמחק"
+    }
   }
 }
