@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.32.2 — 2026-08-18
+
+### Features
+- Group sections into Users / Content / Engagement / Revenue tabs (36582326d)
+- Expand metrics — today bucket, growth %, median, stddev, year view (9fb648d8b)
+- Port admin dashboard widgets with A-Guy-Web design system (0d1e8c04a)
+- Add admin-gated /dashboard route with rewritten metrics API (4dfa7dc00)
+
+### Fixes
+- Two review nits — 7-card grid + flat trend renders as no-change (667baa6d2)
+- Independent count for contentCounts.courses (bef678e3c)
+- Address PR-B2 review — refetch guard, error state, i18n, locale (f8873d4d6)
+- Move page under (frontend) route group + fold review nits (71a94bd3e)
+
+### Chores
+- add #1085 (e9a604d37)
+- add #1083 (b5549f9dd)
+- add #1082 (86f5bde3e)
+- Apply cleanup nits from earlier reviews (ffb699fd9)
+- add #1081 (0b4aa24b6)
+- add #1080 (e1d4149bf)
+- Remove external dashboard tracking pipeline (cc2f7ea7f)
+- add #1078 (5642ed094)
+- add #1077 (ead3aa44f)
+- release v0.32.0 (62f815599)
+- add #1076 (ae69e08ea)
 ## v0.32.1 — 2026-08-17
 
 ### Fixes
