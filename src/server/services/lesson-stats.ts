@@ -44,6 +44,13 @@ async function ensureIndex(): Promise<void> {
       await db
         .collection(COLLECTION)
         .createIndex({ openCount: -1 }, { name: 'lesson_stats_open_count_desc' })
+      // Supports the per-lesson-type aggregation's `sessionCount > 0`
+      // match so it doesn't COLLSCAN as lesson-stats grows. The $lookup
+      // after this match is still N+1 by design at current scale — if it
+      // ever bites we denormalize lessonType onto lesson-stats at write.
+      await db
+        .collection(COLLECTION)
+        .createIndex({ sessionCount: 1 }, { name: 'lesson_stats_session_count' })
     } catch (err) {
       // Reset so a later request can retry; log so we notice repeated
       // failures (permissions, primary unavailable, etc.).

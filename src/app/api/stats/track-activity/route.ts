@@ -24,10 +24,13 @@ const BodySchema = z.discriminatedUnion('eventType', [
   z.object({
     eventType: z.literal('lesson_session_ended'),
     lessonId: z.string().min(1),
+    // Cap matches the service-side clamp in incrementLessonSession so the
+    // contract doesn't lie: values above 6h are rejected here instead of
+    // silently clamped downstream.
     durationSeconds: z
       .number()
       .min(1)
-      .max(24 * 60 * 60),
+      .max(6 * 60 * 60),
   }),
   z.object({
     eventType: z.literal('exercise_completed'),
