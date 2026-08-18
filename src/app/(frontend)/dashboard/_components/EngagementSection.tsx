@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/web/components/ca
 import { useLocale, useTranslations } from '@/ui/web/providers/I18n'
 import type { EngagementMetrics } from '@/server/services/dashboard/metrics-types'
 import { MetricCard } from './MetricCard'
+import { TopLessonsSection } from './TopLessonsSection'
 
 interface Props {
   engagement: EngagementMetrics
@@ -139,6 +140,9 @@ export function EngagementSection({ engagement }: Props) {
           )}
         </CardContent>
       </Card>
+
+      {/* Top lessons opened — sourced from lesson-stats counter collection */}
+      <TopLessonsSection lessons={engagement.topLessons} />
     </section>
   )
 }

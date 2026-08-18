@@ -119,7 +119,10 @@
       "practiceLessons": "שיעורי תרגול",
       "examLessons": "שיעורי מבחן",
       "courseEnrollments": "הרשמות לקורסים",
-      "noCourses": "אין קורסים."
+      "noCourses": "אין קורסים.",
+      "topLessons": "שיעורים מובילים לפי כניסות",
+      "noLessons": "עדיין לא נרשמו כניסות לשיעורים.",
+      "opensSuffix": "כניסות"
     },
     "revenue": {
       "section": "הכנסות",

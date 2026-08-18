@@ -25,6 +25,7 @@ import type {
   EngagementMetrics,
   MonthlySignup,
   RevenueMetrics,
+  TopLesson,
   TopProduct,
   UserMetrics,
 } from './metrics-types'
@@ -594,6 +595,60 @@ export async function aggregateCourseEnrollments(db: Db): Promise<CourseEnrollme
     const courseTitle = row.title || row.courseLabel || row.slug || `__DELETED__:${idFragment}`
     return { courseTitle, count: row.activeEnrollmentCount }
   })
+}
+
+// ---------------------------------------------------------------------------
+// lesson-stats — top lessons by open count (feeds "top lessons opened"
+// widget; expand-to-25 UI hides everything past top 5).
+//
+// Reads from a dedicated counter collection (see src/server/services/
+// lesson-stats.ts) rather than user-stats.activityLog because the
+// activityLog is capped at 100 entries per user and can't carry
+// aggregate counts. `$lookup` on lessons resolves the title so we don't
+// have to keep it denormalized on the counter row.
+// ---------------------------------------------------------------------------
+
+interface LessonStatsRow {
+  lessonId: string
+  openCount: number
+  lesson: Array<{ title?: string; slug?: string }>
+}
+
+export async function aggregateTopLessonsByOpens(db: Db, limit = 25): Promise<TopLesson[]> {
+  const rows = await db
+    .collection('lesson-stats')
+    .aggregate<LessonStatsRow>([
+      { $sort: { openCount: -1 } },
+      { $limit: limit },
+      {
+        // `$toObjectId` runs ONCE per input lessonId (25 max after $limit)
+        // rather than `$toString: '$_id'` which would compute per lesson doc
+        // in the lookup and defeat the default `_id` index — that's a full
+        // COLLSCAN of lessons per dashboard load.
+        $lookup: {
+          from: 'lessons',
+          let: { lid: { $toObjectId: '$lessonId' } },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$_id', '$$lid'] } } },
+            { $project: { title: 1, slug: 1 } },
+          ],
+          as: 'lesson',
+        },
+      },
+    ])
+    .toArray()
+
+  return (
+    rows
+      // Drop counters whose lesson has been deleted — showing orphan ids on
+      // the manager's dashboard is confusing and not actionable.
+      .filter((row) => row.lesson.length > 0)
+      .map((row) => {
+        const lesson = row.lesson[0]
+        const lessonTitle = lesson?.title || lesson?.slug || `Lesson ${row.lessonId.slice(-6)}`
+        return { lessonId: row.lessonId, lessonTitle, openCount: row.openCount }
+      })
+  )
 }
 
 // ---------------------------------------------------------------------------

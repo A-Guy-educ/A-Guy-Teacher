@@ -47,11 +47,19 @@ export interface CourseEnrollment {
   count: number
 }
 
+/** One row for the "top lessons opened" widget. Sorted desc by openCount. */
+export interface TopLesson {
+  lessonId: string
+  lessonTitle: string
+  openCount: number
+}
+
 export interface EngagementMetrics {
   avgTimeSpentMinutes: number
   medianTimeSpentMinutes: number
   stdDevTimeSpentMinutes: number
   courseEnrollments: CourseEnrollment[]
+  topLessons: TopLesson[]
   featureUsage: {
     questionsAsked: number
     conversationsStarted: number
