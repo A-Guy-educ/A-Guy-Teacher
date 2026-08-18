@@ -30,6 +30,7 @@ export function EngagementSection({ engagement }: Props) {
   const t = useTranslations('dashboard.engagement')
   const locale = useLocale()
   const [showAllCourses, setShowAllCourses] = useState(false)
+  const [showAllActiveLearners, setShowAllActiveLearners] = useState(false)
 
   const maxEnrollment = engagement.courseEnrollments.reduce(
     (max, row) => Math.max(max, row.count),
@@ -39,6 +40,15 @@ export function EngagementSection({ engagement }: Props) {
     ? engagement.courseEnrollments
     : engagement.courseEnrollments.slice(0, INITIAL_COURSES_VISIBLE)
   const hasMoreCourses = engagement.courseEnrollments.length > INITIAL_COURSES_VISIBLE
+
+  const maxActiveLearners = engagement.usersPerCourse.reduce(
+    (max, row) => Math.max(max, row.count),
+    0,
+  )
+  const visibleActiveLearners = showAllActiveLearners
+    ? engagement.usersPerCourse
+    : engagement.usersPerCourse.slice(0, INITIAL_COURSES_VISIBLE)
+  const hasMoreActiveLearners = engagement.usersPerCourse.length > INITIAL_COURSES_VISIBLE
 
   return (
     <section className="space-y-6">
@@ -134,6 +144,61 @@ export function EngagementSection({ engagement }: Props) {
                     onClick={() => setShowAllCourses((v) => !v)}
                   >
                     {showAllCourses ? t('showLess') : t('showMore')}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Active learners per course — sourced from users.currentCourse, the
+          last course each user picked or opened a lesson in. Distinct from
+          courseEnrollments above (which counts paid purchases). */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-heading-md">{t('usersPerCourse')}</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {engagement.usersPerCourse.length === 0 ? (
+            <p className="text-body-sm text-muted-foreground py-section-xs">
+              {t('noActiveLearners')}
+            </p>
+          ) : (
+            <>
+              <ul className="space-y-2">
+                {visibleActiveLearners.map((row) => {
+                  const widthPct = maxActiveLearners > 0 ? (row.count / maxActiveLearners) * 100 : 0
+                  return (
+                    <li key={row.courseTitle} className="space-y-1">
+                      <div className="flex items-center justify-between text-body-sm">
+                        <span className="truncate max-w-[70%]" title={row.courseTitle}>
+                          {row.courseTitle}
+                        </span>
+                        <span className="font-semibold tabular-nums">
+                          {row.count.toLocaleString(locale)}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${widthPct}%` }}
+                          aria-hidden
+                        />
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+              {hasMoreActiveLearners && (
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowAllActiveLearners((v) => !v)}
+                  >
+                    {showAllActiveLearners ? t('showLess') : t('showMore')}
                   </Button>
                 </div>
               )}

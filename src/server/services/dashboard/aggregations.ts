@@ -32,6 +32,7 @@ import type {
   TopProduct,
   TopUserByTokens,
   UserMetrics,
+  UsersPerCourse,
 } from './metrics-types'
 import type { DateBuckets } from './date-buckets'
 
@@ -598,6 +599,52 @@ export async function aggregateCourseEnrollments(db: Db): Promise<CourseEnrollme
     const idFragment = String(row._id ?? '').slice(-6)
     const courseTitle = row.title || row.courseLabel || row.slug || `__DELETED__:${idFragment}`
     return { courseTitle, count: row.activeEnrollmentCount }
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Active learners per course — groups the users collection by
+// `currentCourse` (the last course the user picked or opened a lesson
+// in, populated by A-Guy-Admin's /api/users/me/course-state). Distinct
+// from aggregateCourseEnrollments which counts purchases from the
+// `enrollments` collection. A user can own many courses but only be on
+// one at a time — this widget answers "how many people are studying X".
+// ---------------------------------------------------------------------------
+
+interface UsersPerCourseRow {
+  _id: unknown
+  count: number
+  course: Array<{ title?: string; courseLabel?: string; slug?: string }>
+}
+
+export async function aggregateUsersPerCurrentCourse(db: Db): Promise<UsersPerCourse[]> {
+  const rows = await db
+    .collection('users')
+    .aggregate<UsersPerCourseRow>([
+      { $match: { currentCourse: { $ne: null, $exists: true } } },
+      { $group: { _id: '$currentCourse', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      // Same headroom as aggregateCourseEnrollments — the widget shows
+      // top 5 by default with expand-to-full, and we don't want the long
+      // tail bloating the response.
+      { $limit: 100 },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: '_id',
+          foreignField: '_id',
+          pipeline: [{ $project: { title: 1, courseLabel: 1, slug: 1 } }],
+          as: 'course',
+        },
+      },
+    ])
+    .toArray()
+
+  return rows.map((row) => {
+    const doc = row.course[0]
+    const idFragment = String(row._id ?? '').slice(-6)
+    const courseTitle = doc?.title || doc?.courseLabel || doc?.slug || `__DELETED__:${idFragment}`
+    return { courseTitle, count: row.count }
   })
 }
 

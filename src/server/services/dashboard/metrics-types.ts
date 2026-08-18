@@ -48,6 +48,17 @@ export interface CourseEnrollment {
 }
 
 /**
+ * One row for "active learners per course" — sourced from
+ * `users.currentCourse` (the last course the user picked or opened a
+ * lesson in), not the `enrollments` collection which counts purchases.
+ * A user can own multiple courses but only be on one at a time.
+ */
+export interface UsersPerCourse {
+  courseTitle: string
+  count: number
+}
+
+/**
  * One row for the "top lessons opened" widget. Sorted desc by openCount.
  * `avgDurationSeconds` is null when we have opens tracked but no ended
  * sessions yet (early after PR 2 ships, or lessons with only bail-outs).
@@ -74,6 +85,7 @@ export interface EngagementMetrics {
   medianTimeSpentMinutes: number
   stdDevTimeSpentMinutes: number
   courseEnrollments: CourseEnrollment[]
+  usersPerCourse: UsersPerCourse[]
   topLessons: TopLesson[]
   sessionTimeByLessonType: SessionTimeByLessonType
   featureUsage: {
