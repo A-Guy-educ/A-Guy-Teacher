@@ -60,6 +60,15 @@ async function ensureUsageIndexes(): Promise<void> {
       await c.createIndex({ lessonId: 1, createdAt: -1 }, { name: 'llm_usage_lesson_created_at' })
       // Compound for per-user drill-downs.
       await c.createIndex({ userId: 1, createdAt: -1 }, { name: 'llm_usage_user_created_at' })
+      // Backs the dashboard top-users query — filters by active window and
+      // sorts by usage desc. Payload doesn't manage this field so we
+      // create it here (additive; Payload will leave it alone).
+      await db
+        .collection(USERS_COLLECTION)
+        .createIndex(
+          { llmTokensResetAt: 1, llmTokensUsed: -1 },
+          { name: 'users_llm_tokens_active_desc' },
+        )
     } catch (err) {
       indexPromise = null
       logger.warn({ err }, 'Failed to ensure llm-usage indexes')

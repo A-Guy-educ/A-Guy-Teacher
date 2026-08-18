@@ -835,6 +835,7 @@ interface TokenUsageFacetResult {
   thisMonth: Array<{ total: number; users: number }>
   thisYear: Array<{ total: number }>
   perLessonThisMonth: Array<{ _id: string; total: number; calls: number }>
+  perLessonAvg: Array<{ avg: number }>
 }
 
 export async function aggregateTokenMetrics(db: Db): Promise<TokenMetrics> {
@@ -867,6 +868,9 @@ export async function aggregateTokenMetrics(db: Db): Promise<TokenMetrics> {
             { $match: { createdAt: { $gte: startOfYear } } },
             { $group: { _id: null, total: { $sum: '$totalTokens' } } },
           ],
+          // Top-lessons candidates. Limit is intentionally larger than the
+          // widget's top-5 so we still surface a full list when many of the
+          // heaviest lessonIds are orphans (deleted lesson docs).
           perLessonThisMonth: [
             {
               $match: {
@@ -882,7 +886,20 @@ export async function aggregateTokenMetrics(db: Db): Promise<TokenMetrics> {
               },
             },
             { $sort: { total: -1 } },
-            { $limit: 100 },
+            { $limit: 500 },
+          ],
+          // True average across *all* lessons with usage this month —
+          // separate from perLessonThisMonth so the widget number doesn't
+          // skew high by only counting the top-500.
+          perLessonAvg: [
+            {
+              $match: {
+                createdAt: { $gte: startOfMonth },
+                lessonId: { $ne: null },
+              },
+            },
+            { $group: { _id: '$lessonId', total: { $sum: '$totalTokens' } } },
+            { $group: { _id: null, avg: { $avg: '$total' } } },
           ],
         },
       },
@@ -898,13 +915,10 @@ export async function aggregateTokenMetrics(db: Db): Promise<TokenMetrics> {
 
   const avgTokensPerUserThisMonth =
     activeUsersThisMonth > 0 ? Math.round(totalTokensThisMonth / activeUsersThisMonth) : 0
-  const avgTokensPerLessonThisMonth =
-    perLessonRows.length > 0
-      ? Math.round(perLessonRows.reduce((sum, row) => sum + row.total, 0) / perLessonRows.length)
-      : 0
+  const avgTokensPerLessonThisMonth = Math.round(usageFacet?.perLessonAvg[0]?.avg ?? 0)
 
-  // Resolve titles for the top-5 lessons (already limited to 100 above,
-  // then we slice to 5 for the widget after we drop orphans).
+  // Resolve titles for the top-5 lessons — we pull up to 500 candidates
+  // above and stop after 5 non-orphaned ones here.
   const topLessons: TopLessonByTokens[] = []
   if (perLessonRows.length > 0) {
     const lessonIds = perLessonRows
