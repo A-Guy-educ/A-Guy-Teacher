@@ -44,6 +44,13 @@ async function ensureIndex(): Promise<void> {
       await db
         .collection(COLLECTION)
         .createIndex({ openCount: -1 }, { name: 'lesson_stats_open_count_desc' })
+      // Supports the per-lesson-type aggregation's `sessionCount > 0`
+      // match so it doesn't COLLSCAN as lesson-stats grows. The $lookup
+      // after this match is still N+1 by design at current scale — if it
+      // ever bites we denormalize lessonType onto lesson-stats at write.
+      await db
+        .collection(COLLECTION)
+        .createIndex({ sessionCount: 1 }, { name: 'lesson_stats_session_count' })
     } catch (err) {
       // Reset so a later request can retry; log so we notice repeated
       // failures (permissions, primary unavailable, etc.).
@@ -69,4 +76,35 @@ export async function incrementLessonOpen(lessonId: string): Promise<void> {
       { $inc: { openCount: 1 }, $set: { updatedAt: new Date() } },
       { upsert: true },
     )
+}
+
+/**
+ * Record a completed lesson session (open → close cycle). Bumps both
+ * `sessionCount` and `totalDurationSeconds` on the lesson-stats row so
+ * `avgDurationSeconds = totalDurationSeconds / sessionCount` can be
+ * computed at read time without keeping per-session detail.
+ *
+ * Sessions with non-positive duration are dropped — those are typically
+ * React Strict Mode double-mount/unmount cycles in dev, not real reads.
+ */
+export async function incrementLessonSession(
+  lessonId: string,
+  durationSeconds: number,
+): Promise<void> {
+  if (!lessonId || !HEX24.test(lessonId)) return
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return
+  // Clamp absurdly-long sessions (a tab left open for a week) to a
+  // realistic cap so a single stale tab doesn't skew the per-lesson
+  // average. 6 hours is generous for a single sitting.
+  const clamped = Math.min(Math.floor(durationSeconds), 6 * 60 * 60)
+  await ensureIndex()
+  const db = await getContentDb()
+  await db.collection(COLLECTION).updateOne(
+    { lessonId },
+    {
+      $inc: { sessionCount: 1, totalDurationSeconds: clamped },
+      $set: { updatedAt: new Date() },
+    },
+    { upsert: true },
+  )
 }

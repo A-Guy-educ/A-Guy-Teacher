@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/web/components/ca
 import { useLocale, useTranslations } from '@/ui/web/providers/I18n'
 import type { EngagementMetrics } from '@/server/services/dashboard/metrics-types'
 import { MetricCard } from './MetricCard'
+import { SessionTimeByTypeSection } from './SessionTimeByTypeSection'
 import { TopLessonsSection } from './TopLessonsSection'
 
 interface Props {
@@ -143,6 +144,10 @@ export function EngagementSection({ engagement }: Props) {
 
       {/* Top lessons opened — sourced from lesson-stats counter collection */}
       <TopLessonsSection lessons={engagement.topLessons} />
+
+      {/* Session time distribution by lesson type — needs lesson-stats
+          sessionCount + totalDurationSeconds populated by LESSON_ENDED */}
+      <SessionTimeByTypeSection sessions={engagement.sessionTimeByLessonType} />
     </section>
   )
 }

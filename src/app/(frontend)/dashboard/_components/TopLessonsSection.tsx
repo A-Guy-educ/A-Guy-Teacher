@@ -17,6 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/web/components/ca
 import { useLocale, useTranslations } from '@/ui/web/providers/I18n'
 import type { TopLesson } from '@/server/services/dashboard/metrics-types'
 
+import { formatDurationSeconds } from './format-duration'
+
 interface Props {
   lessons: TopLesson[]
 }
@@ -47,14 +49,21 @@ export function TopLessonsSection({ lessons }: Props) {
                 const widthPct = max > 0 ? (row.openCount / max) * 100 : 0
                 return (
                   <li key={row.lessonId} className="space-y-1">
-                    <div className="flex items-center justify-between text-body-sm">
-                      <span className="truncate max-w-[70%]" title={row.lessonTitle}>
+                    <div className="flex items-center justify-between text-body-sm gap-content-gap-xs">
+                      <span className="truncate max-w-[55%]" title={row.lessonTitle}>
                         {row.lessonTitle}
                       </span>
-                      <span className="font-semibold tabular-nums">
-                        {row.openCount.toLocaleString(locale)}{' '}
-                        <span className="text-body-xs font-normal text-muted-foreground">
-                          {t('opensSuffix')}
+                      <span className="flex items-center gap-3 tabular-nums shrink-0">
+                        {row.avgDurationSeconds !== null && (
+                          <span className="text-body-xs text-muted-foreground">
+                            {t('avgLessonTime')} {formatDurationSeconds(row.avgDurationSeconds)}
+                          </span>
+                        )}
+                        <span className="font-semibold">
+                          {row.openCount.toLocaleString(locale)}{' '}
+                          <span className="text-body-xs font-normal text-muted-foreground">
+                            {t('opensSuffix')}
+                          </span>
                         </span>
                       </span>
                     </div>

@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { getWebUser } from '@/infra/web-api/mongo-payload'
 import { pushActivity } from '@/server/services/dashboard-stats'
-import { incrementLessonOpen } from '@/server/services/lesson-stats'
+import { incrementLessonOpen, incrementLessonSession } from '@/server/services/lesson-stats'
 import {
   findUserProgress,
   getOrCreateUserStats,
@@ -22,6 +22,17 @@ const BodySchema = z.discriminatedUnion('eventType', [
     lessonId: z.string().min(1),
   }),
   z.object({
+    eventType: z.literal('lesson_session_ended'),
+    lessonId: z.string().min(1),
+    // Cap matches the service-side clamp in incrementLessonSession so the
+    // contract doesn't lie: values above 6h are rejected here instead of
+    // silently clamped downstream.
+    durationSeconds: z
+      .number()
+      .min(1)
+      .max(6 * 60 * 60),
+  }),
+  z.object({
     eventType: z.literal('exercise_completed'),
     exerciseId: z.string().min(1),
     exerciseTitle: z.string().optional(),
@@ -38,10 +49,14 @@ const BodySchema = z.discriminatedUnion('eventType', [
   }),
 ])
 
-// The `lesson_opened` variant is handled up-front in the POST handler and
-// never reaches these helpers, so exclude it from their input types to
-// keep the exhaustiveness checks honest without unreachable branches.
-type ActivityBody = Exclude<z.infer<typeof BodySchema>, { eventType: 'lesson_opened' }>
+// Both `lesson_opened` and `lesson_session_ended` are handled up-front in
+// the POST handler and never reach these helpers, so exclude them from
+// their input types to keep the exhaustiveness checks honest without
+// unreachable branches.
+type ActivityBody = Exclude<
+  z.infer<typeof BodySchema>,
+  { eventType: 'lesson_opened' | 'lesson_session_ended' }
+>
 
 function activityFor(data: ActivityBody) {
   const timestamp = new Date().toISOString()
@@ -99,11 +114,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // `lesson_opened` is a per-lesson counter (feeds the dashboard's "top
-  // lessons opened" widget) with no user-level progress semantics — skip
-  // both the capped activityLog push and the progressRecords upsert.
+  // `lesson_opened` and `lesson_session_ended` are per-lesson counters
+  // (feed the dashboard's "top lessons opened" + avg-duration widgets) with
+  // no user-level progress semantics — skip the capped activityLog push and
+  // the progressRecords upsert entirely.
   if (parsed.data.eventType === 'lesson_opened') {
     await incrementLessonOpen(parsed.data.lessonId)
+    return Response.json({ success: true })
+  }
+  if (parsed.data.eventType === 'lesson_session_ended') {
+    await incrementLessonSession(parsed.data.lessonId, parsed.data.durationSeconds)
     return Response.json({ success: true })
   }
 

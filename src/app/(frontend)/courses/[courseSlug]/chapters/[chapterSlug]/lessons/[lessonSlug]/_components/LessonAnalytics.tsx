@@ -85,8 +85,34 @@ export function LessonAnalytics({
         course_id: courseId,
         duration_seconds: durationSeconds,
       })
+
+      // Persist the session duration for the admin dashboard's
+      // "avg time per lesson" + "session time by lesson type" widgets.
+      // Only fire if the session was long enough to be meaningful —
+      // Strict Mode double mount/unmount usually completes in ms.
+      // Fire-and-forget, keepalive so it survives fast navigation.
+      if (durationSeconds >= 1) {
+        void fetch('/api/stats/track-activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'lesson_session_ended',
+            lessonId,
+            durationSeconds,
+          }),
+          credentials: 'include',
+          keepalive: true,
+        }).catch(() => {})
+      }
     }
-  }, [lessonId, courseId, lessonTitle, contentType])
+    // Session lifecycle is keyed on lessonId only. courseId / lessonTitle
+    // / contentType are all derived from the same route params so they
+    // never change independently in practice; including them would cause
+    // spurious session teardown + restart if a parent re-render updated
+    // one of them (see PR #1089 review). Values inside the effect are a
+    // stale closure of the initial props, which is fine given the above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId])
 
   return null
 }

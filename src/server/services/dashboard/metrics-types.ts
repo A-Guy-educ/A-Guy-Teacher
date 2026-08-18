@@ -47,11 +47,26 @@ export interface CourseEnrollment {
   count: number
 }
 
-/** One row for the "top lessons opened" widget. Sorted desc by openCount. */
+/**
+ * One row for the "top lessons opened" widget. Sorted desc by openCount.
+ * `avgDurationSeconds` is null when we have opens tracked but no ended
+ * sessions yet (early after PR 2 ships, or lessons with only bail-outs).
+ */
 export interface TopLesson {
   lessonId: string
   lessonTitle: string
   openCount: number
+  avgDurationSeconds: number | null
+}
+
+/**
+ * Session-time roll-up by lesson type (learning / practice / exam). Values
+ * are averages in seconds; null when no completed sessions of that type.
+ */
+export interface SessionTimeByLessonType {
+  learning: number | null
+  practice: number | null
+  exam: number | null
 }
 
 export interface EngagementMetrics {
@@ -60,6 +75,7 @@ export interface EngagementMetrics {
   stdDevTimeSpentMinutes: number
   courseEnrollments: CourseEnrollment[]
   topLessons: TopLesson[]
+  sessionTimeByLessonType: SessionTimeByLessonType
   featureUsage: {
     questionsAsked: number
     conversationsStarted: number
