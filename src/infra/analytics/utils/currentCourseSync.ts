@@ -1,18 +1,20 @@
 /**
- * Best-effort sync of the user's current course + last-active timestamp to Admin.
+ * Best-effort sync of the user's current course + last-active timestamp.
  *
- * PATCH `{NEXT_PUBLIC_ADMIN_URL}/api/users/me/course-state` with an optional
- * `currentCourse` id. Admin stamps `lastLoginAt` server-side on every
- * successful call — clients cannot forge activity timestamps, so the body
- * carries no timestamp of its own.
+ * POSTs same-origin to Web's `/api/users/me/course-state`, which verifies
+ * the Web session and forwards to Admin server-to-server with a shared
+ * service token. Called directly to Admin would 401 — Web users have no
+ * Admin cookie to send cross-origin. Admin stamps `lastLoginAt` on every
+ * successful call; the body carries no timestamp (clients cannot forge
+ * activity).
  *
  * Fire-and-forget: never awaited on the UX path, never surfaces errors to
- * callers, browser-only (SSR skips silently). Admin being unreachable must
- * never break the user's flow.
+ * callers, browser-only (SSR skips silently). Any failure — Web route
+ * down, Admin unreachable, service-token misconfigured — must not break
+ * the user's flow.
  *
  * Lives under `infra/` (the leaf layer) so it can be called from client,
- * infra, and app layers alike — same reason `courseSelectionTracker` would
- * belong here too, historical placement aside.
+ * infra, and app layers alike.
  *
  * Called from three sites:
  *   - `selectCourse` (explicit pick) — with the picked courseId
@@ -43,15 +45,13 @@ export const readCourseIdFromCookie = (): string | null => {
 
 export const syncCurrentCourse = (courseId?: string | null): void => {
   if (typeof window === 'undefined') return
-  const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
-  if (!adminUrl) return
 
   const body: Record<string, string> = {}
   if (courseId) body.currentCourse = courseId
 
   try {
-    void fetch(`${adminUrl}/api/users/me/course-state`, {
-      method: 'PATCH',
+    void fetch('/api/users/me/course-state', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       credentials: 'include',
