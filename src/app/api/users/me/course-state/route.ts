@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getSessionFromToken, tokenFromHeaders } from '@/infra/auth/web-auth'
+import { requireUser } from '@/server/auth/api-auth'
 
 export const runtime = 'nodejs'
 
@@ -17,11 +17,8 @@ export const runtime = 'nodejs'
  * Called from the three client triggers in `currentCourseSync.ts`.
  */
 export async function POST(request: NextRequest) {
-  const token = tokenFromHeaders(request.headers)
-  const session = await getSessionFromToken(token)
-  if (!session) {
-    return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
-  }
+  const auth = await requireUser(request)
+  if (!auth.ok) return auth.response
 
   const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL
   const serviceToken = process.env.ADMIN_SERVICE_TOKEN
@@ -37,7 +34,7 @@ export async function POST(request: NextRequest) {
     // Empty body is valid (refresh lastLoginAt only) — carry on with defaults.
   }
 
-  const forwardBody: Record<string, string> = { userId: session.user.id }
+  const forwardBody: Record<string, string> = { userId: auth.value.id }
   if (typeof clientBody.currentCourse === 'string' && clientBody.currentCourse.length > 0) {
     forwardBody.currentCourse = clientBody.currentCourse
   }
