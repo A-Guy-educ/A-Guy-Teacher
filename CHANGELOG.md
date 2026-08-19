@@ -3785,6 +3785,8 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+## [v0.33.0] - 2026-08-19
+
 - promote: dev -> main (v0.33.0) ([#1098](https://github.com/A-Guy-educ/A-Guy-Web/pull/1098)) — @aguyshayb
 - chore: Release v0.33.0 ([#1097](https://github.com/A-Guy-educ/A-Guy-Web/pull/1097)) — @aguyshayb
 - feat(users): Proxy course-state PATCH through Web with service token ([#1096](https://github.com/A-Guy-educ/A-Guy-Web/pull/1096)) — @aguyshayb
