@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.33.0 — 2026-08-19
+
+### Features
+- Proxy course-state PATCH through Web with service token (#1096) (4e1e123e6)
+
+### Fixes
+- Use requireUser guard on course-state proxy for lint (f396ad2d7)
+
 ## v0.32.3 — 2026-08-19
 
 ### Features
