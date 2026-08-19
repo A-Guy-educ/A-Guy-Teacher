@@ -402,16 +402,16 @@ describe('userProfile state module', () => {
       expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
     })
 
-    it('also PATCHes {ADMIN_URL}/api/users/me/course-state with the picked courseId', () => {
+    it('also POSTs same-origin /api/users/me/course-state with the picked courseId', () => {
       selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'homepage-greeting' })
 
-      const patchCall = fetchMock.mock.calls.find(
-        ([url]) => typeof url === 'string' && url.endsWith('/api/users/me/course-state'),
+      const proxyCall = fetchMock.mock.calls.find(
+        ([url]) => typeof url === 'string' && url === '/api/users/me/course-state',
       ) as [string, RequestInit] | undefined
-      expect(patchCall, 'expected a PATCH to /api/users/me/course-state').toBeTruthy()
-      const [url, init] = patchCall!
-      expect(url).toBe(`${ADMIN_URL}/api/users/me/course-state`)
-      expect(init.method).toBe('PATCH')
+      expect(proxyCall, 'expected a POST to /api/users/me/course-state').toBeTruthy()
+      const [url, init] = proxyCall!
+      expect(url).toBe('/api/users/me/course-state')
+      expect(init.method).toBe('POST')
       expect(init.credentials).toBe('include')
       expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
       expect(JSON.parse(init.body as string)).toEqual({ currentCourse: 'course-1' })
@@ -471,12 +471,18 @@ describe('userProfile state module', () => {
       expect(getUserProfile()?.courseId).toBe('course-1')
     })
 
-    it('is a no-op when NEXT_PUBLIC_ADMIN_URL is not configured', () => {
+    it('course-selections POST is a no-op when NEXT_PUBLIC_ADMIN_URL is not configured', () => {
       delete process.env.NEXT_PUBLIC_ADMIN_URL
 
       selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'course-card' })
 
-      expect(fetchMock).not.toHaveBeenCalled()
+      // reportCourseSelection still gates on NEXT_PUBLIC_ADMIN_URL and skips.
+      // The same-origin course-state POST is not gated on that env var — it
+      // fires unconditionally and is proxied server-side.
+      const courseSelectionsCall = fetchMock.mock.calls.find(
+        ([url]) => typeof url === 'string' && url.endsWith('/api/course-selections'),
+      )
+      expect(courseSelectionsCall).toBeUndefined()
       // Local write still happens.
       expect(getUserProfile()?.courseId).toBe('course-1')
     })
