@@ -60,7 +60,21 @@
       "users": "משתמשים",
       "content": "תוכן",
       "engagement": "מעורבות",
+      "tokens": "טוקנים",
       "revenue": "הכנסות"
+    },
+    "tokens": {
+      "section": "שימוש בטוקני LLM",
+      "totalToday": "טוקנים היום",
+      "totalMonth": "טוקנים החודש",
+      "totalYear": "טוקנים השנה",
+      "avgPerUser": "ממוצע טוקנים למשתמש (חודש)",
+      "avgPerLesson": "ממוצע טוקנים לשיעור (חודש)",
+      "topLessons": "שיעורים מובילים לפי טוקנים (חודש)",
+      "topUsers": "משתמשים מובילים לפי טוקנים (חודש)",
+      "noData": "עדיין לא נרשמו קריאות LLM.",
+      "callsSuffix": "קריאות",
+      "tokensSuffix": "טוקנים"
     },
     "users": {
       "section": "משתמשים",
@@ -118,8 +132,19 @@
       "learningLessons": "שיעורי למידה",
       "practiceLessons": "שיעורי תרגול",
       "examLessons": "שיעורי מבחן",
-      "courseEnrollments": "הרשמות לקורסים",
-      "noCourses": "אין קורסים."
+      "courseEnrollments": "הרשמות לקורסים (בתשלום)",
+      "noCourses": "אין קורסים.",
+      "usersPerCourse": "לומדים פעילים לכל קורס",
+      "noActiveLearners": "אין לומדים פעילים עדיין.",
+      "topLessons": "שיעורים מובילים לפי כניסות",
+      "noLessons": "עדיין לא נרשמו כניסות לשיעורים.",
+      "opensSuffix": "כניסות",
+      "avgLessonTime": "ממוצע",
+      "sessionByType": "זמן ממוצע לסשן לפי סוג שיעור",
+      "typeLearning": "למידה",
+      "typePractice": "תרגול",
+      "typeExam": "מבחן",
+      "noSessionData": "—"
     },
     "revenue": {
       "section": "הכנסות",

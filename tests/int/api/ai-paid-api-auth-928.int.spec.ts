@@ -17,7 +17,7 @@
  * Mirrors the route-import pattern in tests/int/api/bug-report.int.spec.ts:
  * mock external services, hit the route handlers directly with NextRequest.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextRequest } from 'next/server'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -43,7 +43,10 @@ vi.mock('@/infra/llm/services/interactive-lesson/interactive-lesson-generation-s
 
 vi.mock('@/server/web-api/chat', () => ({
   appendMessage: vi.fn(async () => undefined),
-  generateAssistantReply: vi.fn(async () => 'mock-reply'),
+  generateAssistantReply: vi.fn(async () => ({
+    message: 'mock-reply',
+    usage: { inputTokens: 0, outputTokens: 0, model: null },
+  })),
   getOrCreateConversation: vi.fn(async () => ({ id: 'mock-conv', messages: [] })),
   resolveContextKey: vi.fn(() => 'lessons:mock'),
   toSse: vi.fn(

@@ -35,6 +35,17 @@ async function createIndexes(db: Db): Promise<void> {
     db
       .collection('guest-sessions')
       .createIndex({ claimedByUser: 1 }, { name: 'guest_sessions_claimed_by_user' }),
+    // Backs aggregateUsersPerCurrentCourse — partial so it only indexes
+    // users who have picked a course, matching the pipeline's $match
+    // predicate exactly. Keeps the index small while `currentCourse`
+    // populates over time via the admin sync path.
+    db.collection('users').createIndex(
+      { currentCourse: 1 },
+      {
+        name: 'users_current_course',
+        partialFilterExpression: { currentCourse: { $exists: true, $ne: null } },
+      },
+    ),
   ])
 }
 

@@ -10,6 +10,7 @@
  * or `document.cookie = 'a-guy:grade=...'` directly.
  */
 
+import { syncCurrentCourse } from '@/infra/analytics/utils/currentCourseSync'
 import { reportCourseSelection, type CourseSelectionSource } from './courseSelectionTracker'
 
 export interface LocalUserProfile {
@@ -117,6 +118,7 @@ export const selectCourse = ({
 }): void => {
   setUserProfile({ gradeLevel, courseId })
   reportCourseSelection({ courseId, source, gradeLevel })
+  syncCurrentCourse(courseId)
 }
 
 /**

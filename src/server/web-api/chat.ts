@@ -369,6 +369,19 @@ async function loadAttachments(ownerId: string, chatAssetIds?: string[], mediaId
   return { text: lines.join('\n'), parts }
 }
 
+export interface AssistantReplyUsage {
+  inputTokens: number
+  outputTokens: number
+  model: string | null
+}
+
+export interface AssistantReplyResult {
+  message: string
+  usage: AssistantReplyUsage
+}
+
+const EMPTY_USAGE: AssistantReplyUsage = { inputTokens: 0, outputTokens: 0, model: null }
+
 export async function generateAssistantReply(args: {
   ownerId: string
   message: string
@@ -377,7 +390,7 @@ export async function generateAssistantReply(args: {
   lessonId?: string
   chatAssetIds?: string[]
   mediaIds?: string[]
-}) {
+}): Promise<AssistantReplyResult> {
   const lessonContext = await loadLessonContext(args.ownerId, args.lessonId)
   const attachments = await loadAttachments(args.ownerId, args.chatAssetIds, args.mediaIds)
   const system =
@@ -397,7 +410,11 @@ export async function generateAssistantReply(args: {
     .join('\n\n')
 
   if (!process.env.GEMINI_API_KEY) {
-    return args.acknowledgment || 'I can help with that. Tell me what part you want to solve first.'
+    return {
+      message:
+        args.acknowledgment || 'I can help with that. Tell me what part you want to solve first.',
+      usage: EMPTY_USAGE,
+    }
   }
 
   const model = process.env.LLM_MODEL_OVERRIDE_EXERCISE_CHAT || 'gemini-2.5-flash'
@@ -429,15 +446,25 @@ export async function generateAssistantReply(args: {
 
   const json = (await res.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+    usageMetadata?: {
+      promptTokenCount?: number
+      candidatesTokenCount?: number
+      totalTokenCount?: number
+    }
   }
-  return (
+  const message =
     json.candidates?.[0]?.content?.parts
       ?.map((part) => part.text)
       .filter(Boolean)
       .join('') ||
     args.acknowledgment ||
     'I can help with that.'
-  )
+  const usage: AssistantReplyUsage = {
+    inputTokens: Math.max(0, Number(json.usageMetadata?.promptTokenCount ?? 0)),
+    outputTokens: Math.max(0, Number(json.usageMetadata?.candidatesTokenCount ?? 0)),
+    model,
+  }
+  return { message, usage }
 }
 
 export function toSse(event: string, data: unknown) {

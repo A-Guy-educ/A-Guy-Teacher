@@ -1,5 +1,55 @@
 # Changelog
 
+## v0.33.0 — 2026-08-19
+
+### Features
+- Proxy course-state PATCH through Web with service token (#1096) (4e1e123e6)
+
+### Fixes
+- Use requireUser guard on course-state proxy for lint (f396ad2d7)
+
+## v0.32.3 — 2026-08-19
+
+### Features
+- Active learners per course from users.currentCourse (#1093) (9a30bb6ae)
+- Sync currentCourse + lastLoginAt to admin on 3 triggers (#1092) (aba630fd6)
+- Track LLM token usage + spend cap + tokens tab (Batch B — 3 of 3) (#1090) (9e71733d7)
+- Track lesson session duration + surface avg time per lesson and per type (7bdd45972)
+- Track lesson opens and surface top-N on dashboard (35a39eba3)
+- Group sections into Users / Content / Engagement / Revenue tabs (36582326d)
+- Expand metrics — today bucket, growth %, median, stddev, year view (9fb648d8b)
+- Port admin dashboard widgets with A-Guy-Web design system (0d1e8c04a)
+- Add admin-gated /dashboard route with rewritten metrics API (4dfa7dc00)
+
+### Fixes
+- Address review nits on #1089 — session index, Zod cap, deps (d42c1679a)
+- Address review nits on #1086 — index-safe lookup, dedup, race (43ca89bef)
+- Two review nits — 7-card grid + flat trend renders as no-change (667baa6d2)
+- Independent count for contentCounts.courses (bef678e3c)
+- Address PR-B2 review — refetch guard, error state, i18n, locale (f8873d4d6)
+- Move page under (frontend) route group + fold review nits (71a94bd3e)
+
+### Chores
+- add #1093 (47f10910e)
+- add #1092 (a07dd3208)
+- add #1091 (c860399dd)
+- Address token widget follow-ups L1, L2, L3 (#1091) (e196c2b54)
+- add #1090 (f54afa605)
+- add #1089 (58f5383ad)
+- add #1086 (b9b8a166f)
+- add #1088 (670fce70d)
+- add #1087 (740d333ff)
+- add #1085 (e9a604d37)
+- add #1083 (b5549f9dd)
+- add #1082 (86f5bde3e)
+- Apply cleanup nits from earlier reviews (ffb699fd9)
+- add #1081 (0b4aa24b6)
+- add #1080 (e1d4149bf)
+- Remove external dashboard tracking pipeline (cc2f7ea7f)
+- add #1078 (5642ed094)
+- add #1077 (ead3aa44f)
+- release v0.32.0 (62f815599)
+- add #1076 (ae69e08ea)
 ## v0.32.2 — 2026-08-18
 
 ### Features
@@ -3735,6 +3785,16 @@
 - start interactive session interactive-1778075175838-vd0im6 (1b6229b27)
 ## [Unreleased]
 
+- chore: Release v0.33.0 ([#1097](https://github.com/A-Guy-educ/A-Guy-Web/pull/1097)) — @aguyshayb
+- feat(users): Proxy course-state PATCH through Web with service token ([#1096](https://github.com/A-Guy-educ/A-Guy-Web/pull/1096)) — @aguyshayb
+- chore: release v0.32.3 ([#1094](https://github.com/A-Guy-educ/A-Guy-Web/pull/1094)) — @aguyaharonyair
+- feat(dashboard): Active learners per course from users.currentCourse ([#1093](https://github.com/A-Guy-educ/A-Guy-Web/pull/1093)) — @aguyshayb
+- feat(users): Sync currentCourse + lastLoginAt to admin on 3 triggers ([#1092](https://github.com/A-Guy-educ/A-Guy-Web/pull/1092)) — @aguyshayb
+- chore(dashboard): Token widget follow-ups (L1/L2/L3) ([#1091](https://github.com/A-Guy-educ/A-Guy-Web/pull/1091)) — @aguyshayb
+- feat(dashboard): Track LLM token usage + spend cap + tokens tab (Batch B — 3 of 3) ([#1090](https://github.com/A-Guy-educ/A-Guy-Web/pull/1090)) — @aguyshayb
+- feat(dashboard): Track lesson session duration + avg time per lesson and per type (Batch B — 2 of 3) ([#1089](https://github.com/A-Guy-educ/A-Guy-Web/pull/1089)) — @aguyshayb
+- feat(dashboard): Track lesson opens and surface top-N in Engagement tab (Batch B — 1 of 3) ([#1086](https://github.com/A-Guy-educ/A-Guy-Web/pull/1086)) — @aguyshayb
+- promote: dev -> main (v0.32.2) ([#1088](https://github.com/A-Guy-educ/A-Guy-Web/pull/1088)) — @aguyaharonyair
 - chore: release v0.32.2 ([#1087](https://github.com/A-Guy-educ/A-Guy-Web/pull/1087)) — @aguyaharonyair
 - feat(dashboard): Group sections into topic tabs (Users / Content / Engagement / Revenue) ([#1085](https://github.com/A-Guy-educ/A-Guy-Web/pull/1085)) — @aguyshayb
 - chore(dashboard): Cleanup nits — no-store cache, dead ternary, perf caps ([#1083](https://github.com/A-Guy-educ/A-Guy-Web/pull/1083)) — @aguyshayb

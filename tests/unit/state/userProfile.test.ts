@@ -375,22 +375,46 @@ describe('userProfile state module', () => {
     const ADMIN_URL = 'https://admin.example.test'
     const GUEST_ID_KEY = 'a-guy:guest-id'
 
+    // selectCourse now issues two fires: the course-selections POST
+    // (analytics/telemetry log) and the course-state PATCH (source of
+    // truth on User). Tests in this block cover the first; filter the
+    // mock so the older assertions stay focused on that call.
+    function lastCourseSelectionCall(): [string, RequestInit] {
+      const call = fetchMock.mock.calls.find(
+        ([url]) => typeof url === 'string' && url.endsWith('/api/course-selections'),
+      ) as [string, RequestInit] | undefined
+      expect(call, 'expected a POST to /api/course-selections').toBeTruthy()
+      return call!
+    }
+
     function lastFetchBody(): Record<string, unknown> {
-      expect(fetchMock).toHaveBeenCalled()
-      const call = fetchMock.mock.calls.at(-1)!
-      const init = call[1] as RequestInit
+      const [, init] = lastCourseSelectionCall()
       return JSON.parse(init.body as string)
     }
 
     it('POSTs to {ADMIN_URL}/api/course-selections with credentials', () => {
       selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'homepage-greeting' })
 
-      expect(fetchMock).toHaveBeenCalledTimes(1)
-      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+      const [url, init] = lastCourseSelectionCall()
       expect(url).toBe(`${ADMIN_URL}/api/course-selections`)
       expect(init.method).toBe('POST')
       expect(init.credentials).toBe('include')
       expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
+    })
+
+    it('also POSTs same-origin /api/users/me/course-state with the picked courseId', () => {
+      selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'homepage-greeting' })
+
+      const proxyCall = fetchMock.mock.calls.find(
+        ([url]) => typeof url === 'string' && url === '/api/users/me/course-state',
+      ) as [string, RequestInit] | undefined
+      expect(proxyCall, 'expected a POST to /api/users/me/course-state').toBeTruthy()
+      const [url, init] = proxyCall!
+      expect(url).toBe('/api/users/me/course-state')
+      expect(init.method).toBe('POST')
+      expect(init.credentials).toBe('include')
+      expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
+      expect(JSON.parse(init.body as string)).toEqual({ currentCourse: 'course-1' })
     })
 
     it('sends the correct body for the homepage-greeting call site', () => {
@@ -447,12 +471,18 @@ describe('userProfile state module', () => {
       expect(getUserProfile()?.courseId).toBe('course-1')
     })
 
-    it('is a no-op when NEXT_PUBLIC_ADMIN_URL is not configured', () => {
+    it('course-selections POST is a no-op when NEXT_PUBLIC_ADMIN_URL is not configured', () => {
       delete process.env.NEXT_PUBLIC_ADMIN_URL
 
       selectCourse({ gradeLevel: '8', courseId: 'course-1', source: 'course-card' })
 
-      expect(fetchMock).not.toHaveBeenCalled()
+      // reportCourseSelection still gates on NEXT_PUBLIC_ADMIN_URL and skips.
+      // The same-origin course-state POST is not gated on that env var — it
+      // fires unconditionally and is proxied server-side.
+      const courseSelectionsCall = fetchMock.mock.calls.find(
+        ([url]) => typeof url === 'string' && url.endsWith('/api/course-selections'),
+      )
+      expect(courseSelectionsCall).toBeUndefined()
       // Local write still happens.
       expect(getUserProfile()?.courseId).toBe('course-1')
     })

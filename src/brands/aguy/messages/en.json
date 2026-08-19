@@ -60,7 +60,21 @@
       "users": "Users",
       "content": "Content",
       "engagement": "Engagement",
+      "tokens": "Tokens",
       "revenue": "Revenue"
+    },
+    "tokens": {
+      "section": "LLM token usage",
+      "totalToday": "Tokens today",
+      "totalMonth": "Tokens this month",
+      "totalYear": "Tokens this year",
+      "avgPerUser": "Avg tokens per user (month)",
+      "avgPerLesson": "Avg tokens per lesson (month)",
+      "topLessons": "Top lessons by tokens (month)",
+      "topUsers": "Top users by tokens (month)",
+      "noData": "No LLM calls tracked yet.",
+      "callsSuffix": "calls",
+      "tokensSuffix": "tokens"
     },
     "users": {
       "section": "Users",
@@ -118,8 +132,19 @@
       "learningLessons": "Learning lessons",
       "practiceLessons": "Practice lessons",
       "examLessons": "Exam lessons",
-      "courseEnrollments": "Course enrollments",
-      "noCourses": "No courses."
+      "courseEnrollments": "Course enrollments (paid)",
+      "noCourses": "No courses.",
+      "usersPerCourse": "Active learners per course",
+      "noActiveLearners": "No active learners tracked yet.",
+      "topLessons": "Top lessons opened",
+      "noLessons": "No lesson opens tracked yet.",
+      "opensSuffix": "opens",
+      "avgLessonTime": "avg",
+      "sessionByType": "Avg session time by lesson type",
+      "typeLearning": "Learning",
+      "typePractice": "Practice",
+      "typeExam": "Exam",
+      "noSessionData": "—"
     },
     "revenue": {
       "section": "Revenue",

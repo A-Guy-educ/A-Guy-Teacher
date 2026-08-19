@@ -16,7 +16,7 @@
  *   with Date objects for range predicates.
  */
 
-import type { Db } from 'mongodb'
+import { ObjectId, type Db, type Document } from 'mongodb'
 
 import type {
   ContentCounts,
@@ -25,8 +25,14 @@ import type {
   EngagementMetrics,
   MonthlySignup,
   RevenueMetrics,
+  SessionTimeByLessonType,
+  TokenMetrics,
+  TopLesson,
+  TopLessonByTokens,
   TopProduct,
+  TopUserByTokens,
   UserMetrics,
+  UsersPerCourse,
 } from './metrics-types'
 import type { DateBuckets } from './date-buckets'
 
@@ -597,6 +603,173 @@ export async function aggregateCourseEnrollments(db: Db): Promise<CourseEnrollme
 }
 
 // ---------------------------------------------------------------------------
+// Active learners per course — groups the users collection by
+// `currentCourse` (the last course the user picked or opened a lesson
+// in, populated by A-Guy-Admin's /api/users/me/course-state). Distinct
+// from aggregateCourseEnrollments which counts purchases from the
+// `enrollments` collection. A user can own many courses but only be on
+// one at a time — this widget answers "how many people are studying X".
+// ---------------------------------------------------------------------------
+
+interface UsersPerCourseRow {
+  _id: unknown
+  count: number
+  course: Array<{ title?: string; courseLabel?: string; slug?: string }>
+}
+
+export async function aggregateUsersPerCurrentCourse(db: Db): Promise<UsersPerCourse[]> {
+  const rows = await db
+    .collection('users')
+    .aggregate<UsersPerCourseRow>([
+      { $match: { currentCourse: { $ne: null, $exists: true } } },
+      { $group: { _id: '$currentCourse', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      // Same headroom as aggregateCourseEnrollments — the widget shows
+      // top 5 by default with expand-to-full, and we don't want the long
+      // tail bloating the response.
+      { $limit: 100 },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: '_id',
+          foreignField: '_id',
+          pipeline: [{ $project: { title: 1, courseLabel: 1, slug: 1 } }],
+          as: 'course',
+        },
+      },
+    ])
+    .toArray()
+
+  return rows.map((row) => {
+    const doc = row.course[0]
+    const idFragment = String(row._id ?? '').slice(-6)
+    const courseTitle = doc?.title || doc?.courseLabel || doc?.slug || `__DELETED__:${idFragment}`
+    return { courseTitle, count: row.count }
+  })
+}
+
+// ---------------------------------------------------------------------------
+// lesson-stats — top lessons by open count (feeds "top lessons opened"
+// widget; expand-to-25 UI hides everything past top 5).
+//
+// Reads from a dedicated counter collection (see src/server/services/
+// lesson-stats.ts) rather than user-stats.activityLog because the
+// activityLog is capped at 100 entries per user and can't carry
+// aggregate counts. `$lookup` on lessons resolves the title so we don't
+// have to keep it denormalized on the counter row.
+// ---------------------------------------------------------------------------
+
+interface LessonStatsRow {
+  lessonId: string
+  openCount: number
+  sessionCount?: number
+  totalDurationSeconds?: number
+  lesson: Array<{ title?: string; slug?: string }>
+}
+
+export async function aggregateTopLessonsByOpens(db: Db, limit = 25): Promise<TopLesson[]> {
+  const rows = await db
+    .collection('lesson-stats')
+    .aggregate<LessonStatsRow>([
+      { $sort: { openCount: -1 } },
+      { $limit: limit },
+      {
+        // `$toObjectId` runs ONCE per input lessonId (25 max after $limit)
+        // rather than `$toString: '$_id'` which would compute per lesson doc
+        // in the lookup and defeat the default `_id` index — that's a full
+        // COLLSCAN of lessons per dashboard load.
+        $lookup: {
+          from: 'lessons',
+          let: { lid: { $toObjectId: '$lessonId' } },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$_id', '$$lid'] } } },
+            { $project: { title: 1, slug: 1 } },
+          ],
+          as: 'lesson',
+        },
+      },
+    ])
+    .toArray()
+
+  return (
+    rows
+      // Drop counters whose lesson has been deleted — showing orphan ids on
+      // the manager's dashboard is confusing and not actionable.
+      .filter((row) => row.lesson.length > 0)
+      .map((row) => {
+        const lesson = row.lesson[0]
+        const lessonTitle = lesson?.title || lesson?.slug || `Lesson ${row.lessonId.slice(-6)}`
+        const sessions = row.sessionCount ?? 0
+        const total = row.totalDurationSeconds ?? 0
+        const avgDurationSeconds = sessions > 0 ? Math.round(total / sessions) : null
+        return { lessonId: row.lessonId, lessonTitle, openCount: row.openCount, avgDurationSeconds }
+      })
+  )
+}
+
+// ---------------------------------------------------------------------------
+// lesson-stats + lessons — average session time grouped by lesson type
+// (learning / practice / exam). Feeds the "session time by lesson type"
+// tile. Depends on lesson-stats having sessionCount + totalDurationSeconds
+// populated by LESSON_ENDED — early after PR 2 ships, this will be all
+// nulls until sessions accumulate.
+// ---------------------------------------------------------------------------
+
+interface SessionTimeByTypeRow {
+  _id: string
+  avgSeconds: number
+}
+
+export async function aggregateSessionTimeByLessonType(db: Db): Promise<SessionTimeByLessonType> {
+  const rows = await db
+    .collection('lesson-stats')
+    .aggregate<SessionTimeByTypeRow>([
+      { $match: { sessionCount: { $gt: 0 } } },
+      {
+        $lookup: {
+          from: 'lessons',
+          let: { lid: { $toObjectId: '$lessonId' } },
+          pipeline: [{ $match: { $expr: { $eq: ['$_id', '$$lid'] } } }, { $project: { type: 1 } }],
+          as: 'lesson',
+        },
+      },
+      { $match: { 'lesson.0.type': { $in: ['learning', 'practice', 'exam'] } } },
+      {
+        $group: {
+          _id: { $arrayElemAt: ['$lesson.type', 0] },
+          totalSeconds: { $sum: '$totalDurationSeconds' },
+          totalSessions: { $sum: '$sessionCount' },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          avgSeconds: {
+            $cond: [
+              { $gt: ['$totalSessions', 0] },
+              { $divide: ['$totalSeconds', '$totalSessions'] },
+              0,
+            ],
+          },
+        },
+      },
+    ])
+    .toArray()
+
+  const result: SessionTimeByLessonType = {
+    learning: null,
+    practice: null,
+    exam: null,
+  }
+  for (const row of rows) {
+    if (row._id === 'learning' || row._id === 'practice' || row._id === 'exam') {
+      result[row._id] = Math.round(row.avgSeconds)
+    }
+  }
+  return result
+}
+
+// ---------------------------------------------------------------------------
 // lessons — type buckets (also feeds the ContentCounts.lessons total)
 // ---------------------------------------------------------------------------
 
@@ -691,5 +864,178 @@ export function buildUserMetrics(input: {
     returnedMultiplePercentage,
     returningUsers: userStats.returningInPeriod,
     returningUsersTotal: users.totalUsersBeforePeriod,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// llm-usage + users — token metrics ($facet)
+//
+// Time-window totals + avg per user + avg per lesson come from the
+// llm-usage event log (per-call rows). Top-N users and per-user month
+// totals lean on the users collection's llmTokensUsed counter (fast $sort,
+// no aggregation), since that's the same field the rate limiter reads and
+// is guaranteed to be in sync with the event log by recordLlmUsage.
+// ---------------------------------------------------------------------------
+
+interface TokenUsageFacetResult {
+  today: Array<{ total: number }>
+  thisMonth: Array<{ total: number; users: number }>
+  thisYear: Array<{ total: number }>
+  perLessonThisMonth: Array<{ _id: string; total: number; calls: number }>
+  perLessonAvg: Array<{ avg: number }>
+}
+
+export async function aggregateTokenMetrics(db: Db): Promise<TokenMetrics> {
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const startOfYear = new Date(now.getFullYear(), 0, 1)
+
+  const [usageFacet] = (await db
+    .collection('llm-usage')
+    .aggregate<TokenUsageFacetResult>([
+      {
+        $facet: {
+          today: [
+            { $match: { createdAt: { $gte: startOfToday } } },
+            { $group: { _id: null, total: { $sum: '$totalTokens' } } },
+          ],
+          thisMonth: [
+            { $match: { createdAt: { $gte: startOfMonth } } },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: '$totalTokens' },
+                users: { $addToSet: '$userId' },
+              },
+            },
+            { $project: { total: 1, users: { $size: '$users' } } },
+          ],
+          thisYear: [
+            { $match: { createdAt: { $gte: startOfYear } } },
+            { $group: { _id: null, total: { $sum: '$totalTokens' } } },
+          ],
+          // Top-lessons candidates. Limit is intentionally larger than the
+          // widget's top-5 so we still surface a full list when many of the
+          // heaviest lessonIds are orphans (deleted lesson docs).
+          perLessonThisMonth: [
+            {
+              $match: {
+                createdAt: { $gte: startOfMonth },
+                lessonId: { $ne: null },
+              },
+            },
+            {
+              $group: {
+                _id: '$lessonId',
+                total: { $sum: '$totalTokens' },
+                calls: { $sum: 1 },
+              },
+            },
+            { $sort: { total: -1 } },
+            { $limit: 500 },
+          ],
+          // True average across *all* lessons with usage this month —
+          // separate from perLessonThisMonth so the widget number doesn't
+          // skew high by only counting the top-500.
+          perLessonAvg: [
+            {
+              $match: {
+                createdAt: { $gte: startOfMonth },
+                lessonId: { $ne: null },
+              },
+            },
+            { $group: { _id: '$lessonId', total: { $sum: '$totalTokens' } } },
+            { $group: { _id: null, avg: { $avg: '$total' } } },
+          ],
+        },
+      },
+    ])
+    .toArray()) as [TokenUsageFacetResult | undefined]
+
+  const totalTokensToday = usageFacet?.today[0]?.total ?? 0
+  const monthAgg = usageFacet?.thisMonth[0]
+  const totalTokensThisMonth = monthAgg?.total ?? 0
+  const activeUsersThisMonth = monthAgg?.users ?? 0
+  const totalTokensThisYear = usageFacet?.thisYear[0]?.total ?? 0
+  const perLessonRows = usageFacet?.perLessonThisMonth ?? []
+
+  const avgTokensPerUserThisMonth =
+    activeUsersThisMonth > 0 ? Math.round(totalTokensThisMonth / activeUsersThisMonth) : 0
+  const avgTokensPerLessonThisMonth = Math.round(usageFacet?.perLessonAvg[0]?.avg ?? 0)
+
+  // Resolve titles for the top-5 lessons — we pull up to 500 candidates
+  // above and stop after 5 non-orphaned ones here.
+  const topLessons: TopLessonByTokens[] = []
+  if (perLessonRows.length > 0) {
+    const lessonIds = perLessonRows
+      .map((row) => row._id)
+      .filter((id): id is string => Boolean(id) && ObjectId.isValid(id))
+    const lessonDocs =
+      lessonIds.length > 0
+        ? await db
+            .collection('lessons')
+            .find(
+              { _id: { $in: lessonIds.map((id) => new ObjectId(id)) } },
+              { projection: { title: 1, slug: 1 } },
+            )
+            .toArray()
+        : []
+    const byId = new Map<string, Document>(lessonDocs.map((doc) => [String(doc._id), doc]))
+    for (const row of perLessonRows) {
+      const doc = byId.get(String(row._id))
+      if (!doc) continue // orphaned lesson-id, drop
+      const rawTitle = (doc as { title?: unknown }).title
+      const rawSlug = (doc as { slug?: unknown }).slug
+      const title =
+        typeof rawTitle === 'string' && rawTitle
+          ? rawTitle
+          : typeof rawSlug === 'string' && rawSlug
+            ? rawSlug
+            : `Lesson ${String(row._id).slice(-6)}`
+      topLessons.push({
+        lessonId: String(row._id),
+        lessonTitle: title,
+        totalTokens: row.total,
+        callCount: row.calls,
+      })
+      if (topLessons.length >= 5) break
+    }
+  }
+
+  // Top-5 users by current-month usage from the users counter. The
+  // `llmTokensResetAt > now` filter drops users whose window has expired
+  // (their counter is stale from the prior month until their next call
+  // triggers the reset in bumpUserCounter).
+  const userRows = await db
+    .collection('users')
+    .find(
+      { llmTokensUsed: { $gt: 0 }, llmTokensResetAt: { $gt: now } },
+      {
+        projection: { _id: 1, email: 1, name: 1, llmTokensUsed: 1 },
+        sort: { llmTokensUsed: -1 },
+        limit: 5,
+      },
+    )
+    .toArray()
+  const topUsers: TopUserByTokens[] = userRows.map((row) => {
+    const email = typeof row.email === 'string' ? row.email : ''
+    const name = typeof row.name === 'string' ? row.name : ''
+    const label = name || email || `User ${String(row._id).slice(-6)}`
+    return {
+      userId: String(row._id),
+      label,
+      totalTokens: Number(row.llmTokensUsed ?? 0),
+    }
+  })
+
+  return {
+    totalTokensToday,
+    totalTokensThisMonth,
+    totalTokensThisYear,
+    avgTokensPerUserThisMonth,
+    avgTokensPerLessonThisMonth,
+    topLessons,
+    topUsers,
   }
 }
