@@ -1,39 +1,24 @@
-/**
- * /dashboard — admin-only analytics page.
- *
- * Server-side auth gate + SSR-fetched initial metrics for the default
- * period; the client shell owns period changes and re-fetches. Anonymous
- * requests redirect to /login; non-admin cookie holders get a 403 panel.
- */
-
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-import { AccountRole } from '@/infra/auth/roles'
-import { getWebUser } from '@/infra/web-api/mongo-payload'
-import { computeDashboardMetrics } from '@/server/services/dashboard/metrics-service'
+import { VALID_PERIODS, type Period } from '@/server/services/dashboard/metrics-types'
 
-import { DashboardShell } from './_components/DashboardShell'
-import { NotAuthorizedPanel } from './_components/NotAuthorizedPanel'
+const DASHBOARD_URL = 'https://dash.aguy.co.il/'
 
-export const dynamic = 'force-dynamic'
+function requestedPeriod(value: string | string[] | undefined): Period | undefined {
+  const period = Array.isArray(value) ? value[0] : value
+  return VALID_PERIODS.includes(period as Period) ? (period as Period) : undefined
+}
 
-export default async function DashboardPage() {
-  const requestHeaders = await headers()
-  const user = await getWebUser(requestHeaders)
+export default async function DashboardRedirectPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string | string[] }>
+}) {
+  const { period } = await searchParams
+  const destination = new URL(DASHBOARD_URL)
+  const validPeriod = requestedPeriod(period)
 
-  if (!user?.id) {
-    redirect('/login?returnTo=/dashboard')
-  }
-  if (user.role !== AccountRole.Admin) {
-    return <NotAuthorizedPanel />
-  }
+  if (validPeriod) destination.searchParams.set('period', validPeriod)
 
-  const metrics = await computeDashboardMetrics('month')
-
-  return (
-    <main>
-      <DashboardShell initialData={metrics} />
-    </main>
-  )
+  redirect(destination.toString())
 }
