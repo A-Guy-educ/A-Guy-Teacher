@@ -27,7 +27,7 @@ describe('Teacher deployment boundary', () => {
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual({
       service: 'A-Guy Teacher',
-      mode: 'web-pass-through',
+      mode: 'course-management',
       status: 'ok',
     })
   })
