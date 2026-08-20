@@ -14,7 +14,7 @@ describe('Teacher deployment boundary', () => {
       fallback: [
         {
           source: '/:path*',
-          destination: 'https://www.aguy.co.il/:path*',
+          destination: 'http://app.lvh.me:3000/:path*',
         },
       ],
     })
