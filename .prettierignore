@@ -1,39 +1,4 @@
-**/payload-types.ts
-.tmp
-**/.git
-**/.hg
-**/.pnp.*
-**/.svn
-**/.yarn/**
-**/build
-**/dist/**
-**/node_modules
-**/temp
-**/docs/**
-tsconfig.json
-kody.config.json
+.next/
+node_modules/
 pnpm-lock.yaml
-CHANGELOG.md
-CHANGELOGOG.md
-.next
-.cache
-coverage
-playwright-report
-test-results
-*.min.js
-*.min.css
-.husky/_
 
-# Kody config - tool-specific, not project source
-kody.config.json
-
-# Auto-generated files
-src/app/(payload)/admin/importMap.js
-.tasks/**
-.opencode/**
-.agents/**
-.kody/**
-.playwright-mcp/**
-docs/ai/indexes/*.json
-public/sitemap*.xml
-mixpanelstuff/**
