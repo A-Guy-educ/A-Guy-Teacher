@@ -1,14 +1,16 @@
 import type { NextConfig } from 'next'
 
-const configuredOrigin = process.env.AGUY_WEB_ORIGIN || 'https://www.aguy.co.il'
-const upstream = new URL(configuredOrigin)
+import { resolveRuntimeOrigin } from './src/config/runtime-origins'
 
-if (process.env.NODE_ENV === 'production' && upstream.protocol !== 'https:') {
-  throw new Error('AGUY_WEB_ORIGIN must use HTTPS in production')
-}
+const upstream = resolveRuntimeOrigin({
+  development: 'http://app.lvh.me:3000',
+  name: 'AGUY_WEB_URL',
+  production: 'https://www.aguy.co.il',
+  value: process.env.AGUY_WEB_URL || process.env.AGUY_WEB_ORIGIN,
+})
 
 if (upstream.hostname === 'teacher.aguy.co.il') {
-  throw new Error('AGUY_WEB_ORIGIN cannot point back to teacher.aguy.co.il')
+  throw new Error('AGUY_WEB_URL cannot point back to teacher.aguy.co.il')
 }
 
 const config = {

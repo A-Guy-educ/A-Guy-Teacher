@@ -5,6 +5,7 @@ vi.mock('server-only', () => ({}))
 
 import { POST as logout } from '../src/app/api/logout/route'
 import {
+  getApiOrigin,
   getTeacherLoginUrl,
   isTeacherOrigin,
   parseManagedCourses,
@@ -16,9 +17,13 @@ describe('Teacher API boundary', () => {
 
   beforeEach(() => {
     fetcher.mockReset()
+    vi.stubEnv('AGUY_API_URL', 'https://api.aguy.co.il')
+    vi.stubEnv('AGUY_WEB_URL', 'https://www.aguy.co.il')
+    vi.stubEnv('TEACHER_PUBLIC_URL', 'https://teacher.aguy.co.il')
   })
 
   afterEach(() => {
+    vi.unstubAllEnvs()
     vi.unstubAllGlobals()
   })
 
@@ -34,6 +39,12 @@ describe('Teacher API boundary', () => {
     expect(url).toBe('https://api.aguy.co.il/api/teacher/courses')
     expect(new Headers(init.headers).get('cookie')).toBe('payload-token=opaque')
     expect(new Headers(init.headers).get('x-request-id')).toBe('teacher-request')
+  })
+
+  it('uses the API configured for the current environment', () => {
+    vi.stubEnv('AGUY_API_URL', 'https://api.qa.aguy.co.il')
+
+    expect(getApiOrigin().origin).toBe('https://api.qa.aguy.co.il')
   })
 
   it('creates a safe shared-login return URL', () => {
