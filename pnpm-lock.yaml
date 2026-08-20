@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@a-guy/api-client':
+        specifier: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz
+        version: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz
+      '@a-guy/ui':
+        specifier: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz
+        version: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       next:
         specifier: 15.5.21
         version: 15.5.21(@opentelemetry/api@1.9.1)(@playwright/test@1.57.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.77.4)
@@ -17,6 +23,12 @@ importers:
       react-dom:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+      zod:
+        specifier: 4.3.5
+        version: 4.3.5
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.2.0
@@ -53,6 +65,17 @@ importers:
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.19.9)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0)(vite@7.3.5(@types/node@22.19.9)(jiti@2.6.1)(lightningcss@1.32.0)(sass@1.77.4)(terser@5.49.0)(tsx@4.21.0)(yaml@2.8.3))
 
 packages:
+
+  '@a-guy/api-client@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz':
+    resolution: {tarball: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz}
+    version: 0.1.1
+
+  '@a-guy/ui@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz':
+    resolution: {tarball: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz}
+    version: 0.1.1
+    peerDependencies:
+      react: ^19.0.0
+      react-dom: ^19.0.0
 
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
@@ -2132,6 +2155,9 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
+
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
     engines: {node: '>= 0.4'}
@@ -2512,7 +2538,17 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod@4.3.5:
+    resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
+
 snapshots:
+
+  '@a-guy/api-client@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz': {}
+
+  '@a-guy/ui@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:
@@ -4654,6 +4690,8 @@ snapshots:
   semver@7.8.5:
     optional: true
 
+  server-only@0.0.1: {}
+
   set-function-length@1.2.2:
     dependencies:
       define-data-property: 1.1.4
@@ -5112,3 +5150,5 @@ snapshots:
     optional: true
 
   yocto-queue@0.1.0: {}
+
+  zod@4.3.5: {}

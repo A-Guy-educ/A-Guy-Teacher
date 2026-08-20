@@ -17,9 +17,13 @@
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@a-guy/api-client": "https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz",
+    "@a-guy/ui": "https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz",
     "next": "15.5.21",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "server-only": "^0.0.1",
+    "zod": "4.3.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
