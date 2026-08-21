@@ -37,7 +37,8 @@ export function getTeacherOrigin(): URL {
 }
 
 export function getTeacherLoginUrl(): string {
-  return createLoginUrl(`${getTeacherOrigin().origin}/`, getWebOrigin().origin)
+  const teacherOrigin = getTeacherOrigin().origin
+  return createLoginUrl(`${teacherOrigin}/`, getWebOrigin().origin, [teacherOrigin])
 }
 
 export function isTeacherOrigin(origin: string | null): boolean {

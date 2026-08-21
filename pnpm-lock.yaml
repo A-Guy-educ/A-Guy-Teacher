@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@a-guy/api-client':
-        specifier: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz
-        version: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz
+        specifier: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.2/a-guy-api-client-0.1.2.tgz
+        version: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.2/a-guy-api-client-0.1.2.tgz
       '@a-guy/ui':
         specifier: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz
         version: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -66,9 +66,9 @@ importers:
 
 packages:
 
-  '@a-guy/api-client@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz':
-    resolution: {tarball: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz}
-    version: 0.1.1
+  '@a-guy/api-client@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.2/a-guy-api-client-0.1.2.tgz':
+    resolution: {integrity: sha512-82ve5riG/gfBaBFsMscyQTEM4+NVPmQ1pvpSbsVmbK1qHqu9Nt2ok+S85vd03oHPicmEf0fXMnk+d4TIbseBsQ==, tarball: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.2/a-guy-api-client-0.1.2.tgz}
+    version: 0.1.2
 
   '@a-guy/ui@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz':
     resolution: {tarball: https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz}
@@ -2543,7 +2543,7 @@ packages:
 
 snapshots:
 
-  '@a-guy/api-client@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-api-client-0.1.1.tgz': {}
+  '@a-guy/api-client@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.2/a-guy-api-client-0.1.2.tgz': {}
 
   '@a-guy/ui@https://github.com/A-Guy-educ/A-Guy-Shared/releases/download/v0.1.1/a-guy-ui-0.1.1.tgz(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:

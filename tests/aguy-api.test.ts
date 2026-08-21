@@ -53,6 +53,14 @@ describe('Teacher API boundary', () => {
     )
   })
 
+  it('returns to the configured Vercel Teacher preview after login', () => {
+    vi.stubEnv('TEACHER_PUBLIC_URL', 'https://a-guy-teacher-git-dev-aguy.vercel.app')
+
+    expect(getTeacherLoginUrl()).toBe(
+      'https://www.aguy.co.il/login?returnTo=https%3A%2F%2Fa-guy-teacher-git-dev-aguy.vercel.app%2F',
+    )
+  })
+
   it('validates course responses', async () => {
     await expect(
       parseManagedCourses(Response.json({ docs: [{ title: 'Missing id' }] })),
