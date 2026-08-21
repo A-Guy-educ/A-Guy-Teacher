@@ -12,7 +12,9 @@
   "github": {
     "owner": "A-Guy-educ",
     "repo": "A-Guy-Teacher",
-    "operators": ["aguyaharonyair"]
+    "operators": [
+      "aguyaharonyair"
+    ]
   },
   "agent": {
     "model": "minimax/MiniMax-M3",
@@ -48,7 +50,9 @@
         "release_gate": true
       }
     },
-    "versionFiles": ["package.json"],
+    "versionFiles": [
+      "package.json"
+    ],
     "productionUrl": "https://teacher.aguy.co.il",
     "timeoutMs": 1800000
   },
@@ -83,10 +87,16 @@
       "release-merge",
       "release-promote",
       "vercel-production-deploy",
-      "fix"
+      "fix",
+      "vercel-dev-deploy"
     ],
-    "activeAgents": ["kody"],
+    "activeAgents": [
+      "kody"
+    ],
     "activeGoals": [],
-    "activeWorkflows": ["web-release"]
+    "activeWorkflows": [
+      "web-release",
+      "deploy-dev"
+    ]
   }
 }
