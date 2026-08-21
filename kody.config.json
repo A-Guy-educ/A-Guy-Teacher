@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/aharonyaircohen/Kody-Engine-Lite/main/kody.config.schema.json",
+  "quality": {
+    "typecheck": "pnpm typecheck",
+    "lint": "pnpm lint",
+    "format": "pnpm format:check",
+    "testUnit": "pnpm test"
+  },
+  "git": {
+    "defaultBranch": "dev"
+  },
+  "github": {
+    "owner": "A-Guy-educ",
+    "repo": "A-Guy-Teacher",
+    "operators": ["aguyaharonyair"]
+  },
+  "agent": {
+    "model": "minimax/MiniMax-M3",
+    "reasoningEffort": "high",
+    "automaticModels": [
+      {
+        "spec": "minimax/MiniMax-M3",
+        "provider": "custom",
+        "protocol": "openai",
+        "baseURL": "https://api.minimax.io/v1",
+        "modelName": "MiniMax-M3",
+        "apiKeyEnvVar": "MINIMAX_API_KEY"
+      },
+      {
+        "spec": "openrouter/free",
+        "provider": "openrouter",
+        "protocol": "openai",
+        "baseURL": "https://openrouter.ai/api/v1",
+        "modelName": "openrouter/free",
+        "apiKeyEnvVar": "OPENROUTER_API_KEY"
+      }
+    ]
+  },
+  "qa": {
+    "fallbackUrl": "https://a-guy-teacher-git-dev-aguy.vercel.app"
+  },
+  "release": {
+    "releaseBranch": "main",
+    "allowAdminMerge": true,
+    "validation": {
+      "workflow": "ci.yml",
+      "inputs": {
+        "release_gate": true
+      }
+    },
+    "versionFiles": ["package.json"],
+    "productionUrl": "https://teacher.aguy.co.il",
+    "timeoutMs": 1800000
+  },
+  "defaultExecutable": "classify",
+  "defaultPrExecutable": "fix",
+  "onPullRequest": "preview-build",
+  "access": {
+    "allowedAssociations": [
+      "OWNER",
+      "COLLABORATOR",
+      "CONTRIBUTOR",
+      "FIRST_TIME_CONTRIBUTOR",
+      "MEMBER"
+    ]
+  },
+  "company": {
+    "activeCapabilities": [
+      "capability-call",
+      "classify",
+      "research",
+      "plan",
+      "feature",
+      "bug",
+      "chore",
+      "review",
+      "fix-ci",
+      "sync",
+      "merge",
+      "revert",
+      "release-prepare",
+      "release-validate",
+      "release-merge",
+      "release-promote",
+      "vercel-production-deploy",
+      "fix"
+    ],
+    "activeAgents": ["kody"],
+    "activeGoals": [],
+    "activeWorkflows": ["web-release"]
+  }
+}
