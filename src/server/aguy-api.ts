@@ -29,10 +29,16 @@ export function getApiOrigin(): URL {
 }
 
 export function getTeacherOrigin(): URL {
+  const vercelPreviewOrigin =
+    process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : undefined
+
   return resolveRuntimeOrigin({
     development: LOCAL_TEACHER_ORIGIN,
     name: 'TEACHER_PUBLIC_URL',
     production: DEFAULT_TEACHER_ORIGIN,
+    value: vercelPreviewOrigin,
   })
 }
 
