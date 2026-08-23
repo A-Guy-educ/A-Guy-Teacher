@@ -87,8 +87,7 @@
       "release-merge",
       "release-promote",
       "vercel-production-deploy",
-      "fix",
-      "vercel-dev-deploy"
+      "fix"
     ],
     "activeAgents": [
       "kody"
