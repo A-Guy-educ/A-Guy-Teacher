@@ -96,7 +96,8 @@
     "activeGoals": [],
     "activeWorkflows": [
       "web-release",
-      "quality-run"
+      "quality-run",
+      "deploy-dev"
     ]
   }
 }
