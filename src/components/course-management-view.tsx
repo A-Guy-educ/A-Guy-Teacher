@@ -64,9 +64,11 @@ function formattedDate(value: string | null | undefined, locale: Locale): string
 export function CourseManagementView({
   courses,
   locale,
+  webOrigin,
 }: {
   courses: ManagedCourse[]
   locale: Locale
+  webOrigin: string
 }) {
   const copy = COPY[locale]
   const published = courses.filter((course) => course.status === 'published').length
@@ -151,7 +153,7 @@ export function CourseManagementView({
                 {isPublic ? (
                   <a
                     className="teacher-button"
-                    href={`https://www.aguy.co.il/courses/${encodeURIComponent(course.slug as string)}`}
+                    href={`${webOrigin}/courses/${encodeURIComponent(course.slug as string)}`}
                   >
                     {copy.view}
                   </a>

@@ -37,20 +37,28 @@ describe('Teacher course management', () => {
 
   it('renders course state and safe public links', () => {
     const html = renderToStaticMarkup(
-      createElement(CourseManagementView, { courses, locale: 'en' }),
+      createElement(CourseManagementView, {
+        courses,
+        locale: 'en',
+        webOrigin: 'https://www.dev.aguy.co.il',
+      }),
     )
 
     expect(html).toContain('Course management')
     expect(html).toContain('2 courses')
     expect(html).toContain('Published')
     expect(html).toContain('Draft')
-    expect(html).toContain('https://www.aguy.co.il/courses/algebra-foundations')
+    expect(html).toContain('https://www.dev.aguy.co.il/courses/algebra-foundations')
     expect(html).not.toContain('/courses/undefined')
   })
 
   it('renders the Hebrew contract with RTL-friendly copy', () => {
     const html = renderToStaticMarkup(
-      createElement(CourseManagementView, { courses, locale: 'he' }),
+      createElement(CourseManagementView, {
+        courses,
+        locale: 'he',
+        webOrigin: 'https://www.dev.aguy.co.il',
+      }),
     )
 
     expect(html).toContain('ניהול קורסים')

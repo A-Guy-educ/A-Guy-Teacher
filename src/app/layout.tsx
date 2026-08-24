@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { ThemeInitScript, type Locale } from '@a-guy/ui'
 
 import { AppChrome } from '../components/app-chrome'
+import { getDashboardOrigin, getWebOrigin } from '../server/aguy-api'
 
 import '@a-guy/ui/styles.css'
 import './globals.css'
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const cookieStore = await cookies()
   const locale: Locale = cookieStore.get('NEXT_LOCALE')?.value === 'he' ? 'he' : 'en'
+  const dashboardOrigin = getDashboardOrigin()?.origin
+  const webOrigin = getWebOrigin().origin
 
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} data-theme="light">
@@ -23,7 +26,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <ThemeInitScript />
       </head>
       <body>
-        <AppChrome locale={locale}>{children}</AppChrome>
+        <AppChrome dashboardOrigin={dashboardOrigin} locale={locale} webOrigin={webOrigin}>
+          {children}
+        </AppChrome>
       </body>
     </html>
   )

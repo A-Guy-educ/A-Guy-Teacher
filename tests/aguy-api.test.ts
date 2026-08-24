@@ -6,6 +6,7 @@ vi.mock('server-only', () => ({}))
 import { POST as logout } from '../src/app/api/logout/route'
 import {
   getApiOrigin,
+  getDashboardOrigin,
   getTeacherLoginUrl,
   isTeacherOrigin,
   parseManagedCourses,
@@ -45,6 +46,20 @@ describe('Teacher API boundary', () => {
     vi.stubEnv('AGUY_API_URL', 'https://api.qa.aguy.co.il')
 
     expect(getApiOrigin().origin).toBe('https://api.qa.aguy.co.il')
+  })
+
+  it('does not send a custom dev environment to the production dashboard', () => {
+    vi.stubEnv('AGUY_DASH_URL', '')
+    vi.stubEnv('VERCEL_TARGET_ENV', 'dev')
+
+    expect(getDashboardOrigin()).toBeUndefined()
+  })
+
+  it('uses the configured dashboard for the current environment', () => {
+    vi.stubEnv('AGUY_DASH_URL', 'https://dash.dev.aguy.co.il')
+    vi.stubEnv('VERCEL_TARGET_ENV', 'dev')
+
+    expect(getDashboardOrigin()?.origin).toBe('https://dash.dev.aguy.co.il')
   })
 
   it('creates a safe shared-login return URL', () => {

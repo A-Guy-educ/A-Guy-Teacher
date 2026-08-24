@@ -37,7 +37,17 @@ const COPY = {
   },
 } as const
 
-export function AppChrome({ children, locale }: { children: React.ReactNode; locale: Locale }) {
+export function AppChrome({
+  children,
+  dashboardOrigin,
+  locale,
+  webOrigin,
+}: {
+  children: React.ReactNode
+  dashboardOrigin?: string
+  locale: Locale
+  webOrigin: string
+}) {
   const copy = COPY[locale]
 
   function changeLocale(nextLocale: Locale) {
@@ -59,8 +69,8 @@ export function AppChrome({ children, locale }: { children: React.ReactNode; loc
         menuLabel={copy.menu}
         navItems={[
           { href: '/', label: copy.courses, current: true },
-          { href: 'https://dash.aguy.co.il/', label: copy.dashboard },
-          { href: 'https://www.aguy.co.il/', label: copy.learning },
+          ...(dashboardOrigin ? [{ href: `${dashboardOrigin}/`, label: copy.dashboard }] : []),
+          { href: `${webOrigin}/`, label: copy.learning },
         ]}
         onLocaleChange={changeLocale}
         skipLabel={copy.skip}

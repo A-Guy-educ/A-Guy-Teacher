@@ -2,7 +2,12 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { CourseManagementView } from '../components/course-management-view'
-import { getTeacherLoginUrl, parseManagedCourses, requestManagedCourses } from '../server/aguy-api'
+import {
+  getTeacherLoginUrl,
+  getWebOrigin,
+  parseManagedCourses,
+  requestManagedCourses,
+} from '../server/aguy-api'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +15,7 @@ export default async function CourseManagementPage() {
   const cookieStore = await cookies()
   const locale = cookieStore.get('NEXT_LOCALE')?.value === 'he' ? 'he' : 'en'
   const cookieHeader = cookieStore.toString()
+  const webOrigin = getWebOrigin().origin
   const response = await requestManagedCourses(cookieHeader, { requestId: crypto.randomUUID() })
 
   if (response.status === 401) redirect(getTeacherLoginUrl())
@@ -23,7 +29,7 @@ export default async function CourseManagementPage() {
             ? 'העמוד זמין למנהלים ולעורכי תוכן מתקדמים.'
             : 'This page is available to administrators and advanced content editors.'}
         </p>
-        <a className="teacher-button" href="https://www.aguy.co.il/">
+        <a className="teacher-button" href={`${webOrigin}/`}>
           {locale === 'he' ? 'חזרה לאתר הלמידה' : 'Return to the learning site'}
         </a>
       </div>
@@ -35,5 +41,5 @@ export default async function CourseManagementPage() {
   }
 
   const { docs } = await parseManagedCourses(response)
-  return <CourseManagementView courses={docs} locale={locale} />
+  return <CourseManagementView courses={docs} locale={locale} webOrigin={webOrigin} />
 }

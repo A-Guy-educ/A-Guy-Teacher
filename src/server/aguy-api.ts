@@ -9,6 +9,7 @@ import { courseManagementResponseSchema, type CourseManagementResponse } from '.
 const DEFAULT_WEB_ORIGIN = 'https://www.aguy.co.il'
 const DEFAULT_API_ORIGIN = 'https://api.aguy.co.il'
 const DEFAULT_TEACHER_ORIGIN = 'https://teacher.aguy.co.il'
+const DEFAULT_DASHBOARD_ORIGIN = 'https://dash.aguy.co.il'
 const LOCAL_WEB_AND_API_ORIGIN = 'http://app.lvh.me:3000'
 const LOCAL_TEACHER_ORIGIN = 'http://teacher.lvh.me:3001'
 
@@ -26,6 +27,20 @@ export function getApiOrigin(): URL {
     name: 'AGUY_API_URL',
     production: DEFAULT_API_ORIGIN,
   })
+}
+
+export function getDashboardOrigin(): URL | undefined {
+  if (process.env.AGUY_DASH_URL) {
+    return resolveRuntimeOrigin({
+      development: 'http://dash.lvh.me:3002',
+      name: 'AGUY_DASH_URL',
+      production: DEFAULT_DASHBOARD_ORIGIN,
+    })
+  }
+
+  return process.env.VERCEL_TARGET_ENV === 'production'
+    ? new URL(DEFAULT_DASHBOARD_ORIGIN)
+    : undefined
 }
 
 export function getTeacherOrigin(): URL {
