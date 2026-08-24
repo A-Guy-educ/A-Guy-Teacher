@@ -30,7 +30,7 @@ export function getApiOrigin(): URL {
 
 export function getTeacherOrigin(): URL {
   const vercelPreviewOrigin =
-    process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_URL
+    process.env.VERCEL_TARGET_ENV === 'preview' && process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : undefined
 
