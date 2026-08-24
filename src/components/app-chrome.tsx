@@ -63,6 +63,7 @@ export function AppChrome({
       <AppShell
         actions={<LogoutButton labels={{ idle: copy.logout, pending: copy.loggingOut }} />}
         appName={copy.appName}
+        brandHref={`${webOrigin}/`}
         footer={copy.footer}
         locale={locale}
         localeLabels={{ en: 'English', he: 'עברית' }}
