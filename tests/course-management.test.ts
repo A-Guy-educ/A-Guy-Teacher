@@ -9,6 +9,7 @@ const courses = [
   {
     id: 'course-1',
     title: 'Algebra foundations',
+    description: '<p>Learn&nbsp;algebra &amp; equations.</p>',
     slug: 'algebra-foundations',
     courseLabel: '8',
     status: 'published',
@@ -45,6 +46,8 @@ describe('Teacher course management', () => {
     expect(html).toContain('Published')
     expect(html).toContain('Draft')
     expect(html).toContain('https://www.aguy.co.il/courses/algebra-foundations')
+    expect(html).toContain('Learn algebra &amp; equations.')
+    expect(html).not.toContain('&lt;p&gt;')
     expect(html).not.toContain('/courses/undefined')
   })
 
