@@ -68,14 +68,14 @@ describe('Teacher API boundary', () => {
     )
   })
 
-  it('returns to the current Kody Vercel deployment after login', () => {
+  it('keeps the configured Teacher URL for preview deployments', () => {
     vi.stubEnv('TEACHER_PUBLIC_URL', 'https://a-guy-teacher-git-dev-aguy.vercel.app')
     vi.stubEnv('VERCEL_ENV', 'preview')
     vi.stubEnv('VERCEL_TARGET_ENV', 'preview')
     vi.stubEnv('VERCEL_URL', 'a-guy-teacher-5kkb04n5i-aguy.vercel.app')
 
     expect(getTeacherLoginUrl()).toBe(
-      'https://www.aguy.co.il/login?returnTo=https%3A%2F%2Fa-guy-teacher-5kkb04n5i-aguy.vercel.app%2F',
+      'https://www.aguy.co.il/login?returnTo=https%3A%2F%2Fa-guy-teacher-git-dev-aguy.vercel.app%2F',
     )
   })
 

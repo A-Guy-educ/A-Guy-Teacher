@@ -44,8 +44,11 @@ export function getDashboardOrigin(): URL | undefined {
 }
 
 export function getTeacherOrigin(): URL {
+  const configuredTeacherOrigin = process.env.TEACHER_PUBLIC_URL?.trim()
   const vercelPreviewOrigin =
-    process.env.VERCEL_TARGET_ENV === 'preview' && process.env.VERCEL_URL
+    !configuredTeacherOrigin &&
+    process.env.VERCEL_TARGET_ENV === 'preview' &&
+    process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : undefined
 
@@ -53,7 +56,7 @@ export function getTeacherOrigin(): URL {
     development: LOCAL_TEACHER_ORIGIN,
     name: 'TEACHER_PUBLIC_URL',
     production: DEFAULT_TEACHER_ORIGIN,
-    value: vercelPreviewOrigin,
+    value: configuredTeacherOrigin || vercelPreviewOrigin,
   })
 }
 
