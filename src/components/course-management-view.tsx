@@ -4,6 +4,33 @@ import type { ManagedCourse } from '../types/courses'
 
 type Locale = 'en' | 'he'
 
+const HTML_ENTITIES: Readonly<Record<string, string>> = {
+  amp: '&',
+  apos: "'",
+  gt: '>',
+  lt: '<',
+  nbsp: ' ',
+  quot: '"',
+}
+
+function plainTextDescription(value: string): string {
+  return value
+    .replace(/<br\s*\/?\s*>/gi, ' ')
+    .replace(/<\/p\s*>|<\/div\s*>|<\/li\s*>/gi, ' ')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&(#(?:x[\da-f]+|\d+)|amp|apos|gt|lt|nbsp|quot);/gi, (match, entity: string) => {
+      if (!entity.startsWith('#')) return HTML_ENTITIES[entity.toLowerCase()] ?? match
+
+      const hexadecimal = entity[1]?.toLowerCase() === 'x'
+      const codePoint = Number.parseInt(entity.slice(hexadecimal ? 2 : 1), hexadecimal ? 16 : 10)
+      return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
+        ? String.fromCodePoint(codePoint)
+        : match
+    })
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 const COPY = {
   en: {
     eyebrow: 'Teacher workspace',
@@ -129,7 +156,9 @@ export function CourseManagementView({
                   ) : null}
                   <h2>{course.title}</h2>
                   {course.description ? (
-                    <p className="teacher-course-description">{course.description}</p>
+                    <p className="teacher-course-description">
+                      {plainTextDescription(course.description)}
+                    </p>
                   ) : null}
                 </div>
                 <dl className="teacher-course-meta">
