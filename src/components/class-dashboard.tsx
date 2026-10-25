@@ -272,7 +272,17 @@ export function ClassDashboard({
 
       <div className={selectedStudent ? 'cd-layout cd-layout--open' : 'cd-layout'}>
         <div className="cd-tablebox">
-          <table>
+          {/* Fixed layout: lesson columns share the width equally, so paging to a lesson
+              with a longer title never moves the arrow buttons. */}
+          <table className="cd-table">
+            <colgroup>
+              <col className="cd-col-student" />
+              <col className="cd-col-avg" />
+              <col className="cd-col-avg" />
+              {shown.map((j) => (
+                <col key={lessons[j].id} />
+              ))}
+            </colgroup>
             <thead>
               <tr>
                 <th scope="col">{copy.student}</th>
@@ -299,11 +309,11 @@ export function ClassDashboard({
                           <Chevron />
                         </button>
                       ) : null}
-                      <span>
+                      <span className="cd-lh-title" title={lessons[j].title}>
                         <b>
                           {copy.lesson} {j + 1}
                         </b>
-                        {lessons[j].title}
+                        <span className="cd-lh-name">{lessons[j].title}</span>
                       </span>
                       {idx === shown.length - 1 ? (
                         <button
@@ -341,7 +351,7 @@ export function ClassDashboard({
                         type="button"
                       >
                         <span className="cd-avatar">{s.name[0]}</span>
-                        {s.name}
+                        <span className="cd-name-text">{s.name}</span>
                       </button>
                     </td>
                     <td>
