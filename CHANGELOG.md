@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix: keep lesson arrow buttons in place when paging ([#24](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/24)) — @aguyshayb
 - feat: classroom-teacher dashboard (POC) ([#23](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/23)) — @aguyshayb
 - fix: render Teacher course descriptions as text ([#22](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/22)) — @aguyaharonyair
 - chore: enable Kody release pilot ([#20](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/20)) — @aguyaharonyair
