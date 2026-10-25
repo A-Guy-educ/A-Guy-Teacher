@@ -273,9 +273,18 @@ button {
 
 .cd-tablebox table {
   width: 100%;
-  min-width: 600px;
+  min-width: 760px;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
+  table-layout: fixed;
+}
+
+.cd-col-student {
+  width: 11rem;
+}
+
+.cd-col-avg {
+  width: 7rem;
 }
 
 .cd-tablebox th {
@@ -327,8 +336,15 @@ button {
   padding: 0;
   border: none;
   background: none;
+  max-width: 100%;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.cd-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cd-name:hover {
@@ -376,15 +392,28 @@ button {
   color: var(--cd-bad-ink);
 }
 
+/* Fixed height so a two-line title doesn't move the arrows vertically either. */
 .cd-lh {
+  height: 3.3rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.4rem;
 }
 
-.cd-lh > span {
+.cd-lh-title {
   flex: 1;
+  min-width: 0;
+  white-space: normal;
+}
+
+.cd-lh-name {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .cd-nav {
@@ -435,7 +464,7 @@ button {
 .cd-cell {
   position: relative;
   width: 100%;
-  min-width: 118px;
+  min-width: 0;
   max-width: 150px;
   display: flex;
   flex-direction: column;
