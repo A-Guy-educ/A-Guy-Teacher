@@ -4,7 +4,12 @@ import { createAguyApiClient, createLoginUrl } from '@a-guy/api-client'
 import { z } from 'zod'
 
 import { resolveRuntimeOrigin } from '../config/runtime-origins'
-import { courseManagementResponseSchema, type CourseManagementResponse } from '../types/courses'
+import {
+  classProgressResponseSchema,
+  teacherClassesResponseSchema,
+  type ClassProgressResponse,
+  type TeacherClassesResponse,
+} from '../types/class-progress'
 
 const DEFAULT_WEB_ORIGIN = 'https://www.aguy.co.il'
 const DEFAULT_API_ORIGIN = 'https://api.aguy.co.il'
@@ -78,17 +83,32 @@ function client(cookieHeader: string | null, fetcher?: typeof fetch) {
   })
 }
 
-export function requestManagedCourses(
+export function requestTeacherClasses(
   cookieHeader: string | null,
   options: { fetcher?: typeof fetch; requestId?: string } = {},
 ): Promise<Response> {
-  return client(cookieHeader, options.fetcher).requestRaw('/api/teacher/courses', {
+  return client(cookieHeader, options.fetcher).requestRaw('/api/teacher/classes', {
     headers: options.requestId ? { 'x-request-id': options.requestId } : undefined,
   })
 }
 
-export async function parseManagedCourses(response: Response): Promise<CourseManagementResponse> {
-  return courseManagementResponseSchema.parse(await response.json())
+export async function parseTeacherClasses(response: Response): Promise<TeacherClassesResponse> {
+  return teacherClassesResponseSchema.parse(await response.json())
+}
+
+export function requestClassProgress(
+  cookieHeader: string | null,
+  classId: string,
+  options: { fetcher?: typeof fetch; requestId?: string } = {},
+): Promise<Response> {
+  return client(cookieHeader, options.fetcher).requestRaw(
+    `/api/teacher/classes/${encodeURIComponent(classId)}/progress`,
+    { headers: options.requestId ? { 'x-request-id': options.requestId } : undefined },
+  )
+}
+
+export async function parseClassProgress(response: Response): Promise<ClassProgressResponse> {
+  return classProgressResponseSchema.parse(await response.json())
 }
 
 export function requestLogout(

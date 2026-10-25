@@ -9,8 +9,8 @@ import {
   getDashboardOrigin,
   getTeacherLoginUrl,
   isTeacherOrigin,
-  parseManagedCourses,
-  requestManagedCourses,
+  parseTeacherClasses,
+  requestClassProgress,
 } from '../src/server/aguy-api'
 
 describe('Teacher API boundary', () => {
@@ -28,16 +28,16 @@ describe('Teacher API boundary', () => {
     vi.unstubAllGlobals()
   })
 
-  it('sends course reads to api.aguy.co.il with the shared session', async () => {
-    fetcher.mockResolvedValue(Response.json({ docs: [] }))
+  it('sends class reads to api.aguy.co.il with the shared session', async () => {
+    fetcher.mockResolvedValue(Response.json({ classes: [] }))
 
-    await requestManagedCourses('payload-token=opaque', {
+    await requestClassProgress('payload-token=opaque', 'class/1', {
       fetcher,
       requestId: 'teacher-request',
     })
 
     const [url, init] = fetcher.mock.calls[0]
-    expect(url).toBe('https://api.aguy.co.il/api/teacher/courses')
+    expect(url).toBe('https://api.aguy.co.il/api/teacher/classes/class%2F1/progress')
     expect(new Headers(init.headers).get('cookie')).toBe('payload-token=opaque')
     expect(new Headers(init.headers).get('x-request-id')).toBe('teacher-request')
   })
@@ -91,9 +91,9 @@ describe('Teacher API boundary', () => {
     )
   })
 
-  it('validates course responses', async () => {
+  it('validates class responses', async () => {
     await expect(
-      parseManagedCourses(Response.json({ docs: [{ title: 'Missing id' }] })),
+      parseTeacherClasses(Response.json({ classes: [{ name: 'Missing id' }] })),
     ).rejects.toThrow()
   })
 

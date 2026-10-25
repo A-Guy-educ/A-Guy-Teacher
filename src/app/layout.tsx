@@ -10,7 +10,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'A-Guy Teacher',
-  description: 'Course management for A-Guy teachers',
+  description: 'Class progress dashboard for A-Guy teachers',
   robots: { index: false, follow: false },
 }
 
