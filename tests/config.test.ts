@@ -5,19 +5,8 @@ import { GET } from '../src/app/api/health/route.js'
 import robots from '../src/app/robots.js'
 
 describe('Teacher deployment boundary', () => {
-  it('passes unmatched routes through to the canonical Web application', async () => {
-    const rewrites = await config.rewrites?.()
-
-    expect(rewrites).toEqual({
-      beforeFiles: [],
-      afterFiles: [],
-      fallback: [
-        {
-          source: '/:path*',
-          destination: 'http://app.lvh.me:3000/:path*',
-        },
-      ],
-    })
+  it('serves only Teacher routes, without proxying to Web', () => {
+    expect('rewrites' in config).toBe(false)
   })
 
   it('keeps the Teacher health route local and secret-free', async () => {
@@ -27,12 +16,12 @@ describe('Teacher deployment boundary', () => {
     expect(response.headers.get('Cache-Control')).toBe('no-store')
     expect(await response.json()).toEqual({
       service: 'A-Guy Teacher',
-      mode: 'course-management',
+      mode: 'class-dashboard',
       status: 'ok',
     })
   })
 
-  it('blocks crawlers from indexing duplicate pass-through content', () => {
+  it('blocks crawlers from indexing the private teacher app', () => {
     expect(robots()).toEqual({
       rules: { userAgent: '*', disallow: '/' },
     })

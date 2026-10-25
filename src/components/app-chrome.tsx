@@ -7,12 +7,12 @@ import { LogoutButton } from './logout-button'
 const COPY = {
   en: {
     appName: 'Teacher',
-    courses: 'Courses',
+    classes: 'Classes',
     dashboard: 'Dashboard',
     learning: 'Learning site',
     footer: 'A-Guy teacher workspace',
     menu: 'Menu',
-    skip: 'Skip to course management',
+    skip: 'Skip to the class dashboard',
     theme: 'Theme',
     auto: 'Auto',
     light: 'Light',
@@ -22,12 +22,12 @@ const COPY = {
   },
   he: {
     appName: 'מורים',
-    courses: 'קורסים',
+    classes: 'כיתות',
     dashboard: 'לוח בקרה',
     learning: 'אתר הלמידה',
     footer: 'סביבת העבודה למורים של A-Guy',
     menu: 'תפריט',
-    skip: 'דילוג לניהול הקורסים',
+    skip: 'דילוג לתמונת הכיתה',
     theme: 'ערכת נושא',
     auto: 'אוטומטי',
     light: 'בהיר',
@@ -69,7 +69,7 @@ export function AppChrome({
         localeLabels={{ en: 'English', he: 'עברית' }}
         menuLabel={copy.menu}
         navItems={[
-          { href: '/', label: copy.courses, current: true },
+          { href: '/', label: copy.classes, current: true },
           ...(dashboardOrigin ? [{ href: `${dashboardOrigin}/`, label: copy.dashboard }] : []),
           { href: `${webOrigin}/`, label: copy.learning },
         ]}
