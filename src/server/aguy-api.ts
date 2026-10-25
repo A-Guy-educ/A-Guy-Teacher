@@ -4,11 +4,17 @@ import { createAguyApiClient, createLoginUrl } from '@a-guy/api-client'
 import { z } from 'zod'
 
 import { resolveRuntimeOrigin } from '../config/runtime-origins'
-import { courseManagementResponseSchema, type CourseManagementResponse } from '../types/courses'
+import {
+  classProgressResponseSchema,
+  teacherClassesResponseSchema,
+  type ClassProgressResponse,
+  type TeacherClassesResponse,
+} from '../types/class-progress'
 
 const DEFAULT_WEB_ORIGIN = 'https://www.aguy.co.il'
 const DEFAULT_API_ORIGIN = 'https://api.aguy.co.il'
 const DEFAULT_TEACHER_ORIGIN = 'https://teacher.aguy.co.il'
+const DEFAULT_DASHBOARD_ORIGIN = 'https://dash.aguy.co.il'
 const LOCAL_WEB_AND_API_ORIGIN = 'http://app.lvh.me:3000'
 const LOCAL_TEACHER_ORIGIN = 'http://teacher.lvh.me:3001'
 
@@ -28,16 +34,40 @@ export function getApiOrigin(): URL {
   })
 }
 
+export function getDashboardOrigin(): URL | undefined {
+  if (process.env.AGUY_DASH_URL) {
+    return resolveRuntimeOrigin({
+      development: 'http://dash.lvh.me:3002',
+      name: 'AGUY_DASH_URL',
+      production: DEFAULT_DASHBOARD_ORIGIN,
+    })
+  }
+
+  return process.env.VERCEL_TARGET_ENV === 'production'
+    ? new URL(DEFAULT_DASHBOARD_ORIGIN)
+    : undefined
+}
+
 export function getTeacherOrigin(): URL {
+  const configuredTeacherOrigin = process.env.TEACHER_PUBLIC_URL?.trim()
+  const vercelPreviewOrigin =
+    !configuredTeacherOrigin &&
+    process.env.VERCEL_TARGET_ENV === 'preview' &&
+    process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : undefined
+
   return resolveRuntimeOrigin({
     development: LOCAL_TEACHER_ORIGIN,
     name: 'TEACHER_PUBLIC_URL',
     production: DEFAULT_TEACHER_ORIGIN,
+    value: configuredTeacherOrigin || vercelPreviewOrigin,
   })
 }
 
 export function getTeacherLoginUrl(): string {
-  return createLoginUrl(`${getTeacherOrigin().origin}/`, getWebOrigin().origin)
+  const teacherOrigin = getTeacherOrigin().origin
+  return createLoginUrl(`${teacherOrigin}/`, getWebOrigin().origin, [teacherOrigin])
 }
 
 export function isTeacherOrigin(origin: string | null): boolean {
@@ -53,17 +83,32 @@ function client(cookieHeader: string | null, fetcher?: typeof fetch) {
   })
 }
 
-export function requestManagedCourses(
+export function requestTeacherClasses(
   cookieHeader: string | null,
   options: { fetcher?: typeof fetch; requestId?: string } = {},
 ): Promise<Response> {
-  return client(cookieHeader, options.fetcher).requestRaw('/api/teacher/courses', {
+  return client(cookieHeader, options.fetcher).requestRaw('/api/teacher/classes', {
     headers: options.requestId ? { 'x-request-id': options.requestId } : undefined,
   })
 }
 
-export async function parseManagedCourses(response: Response): Promise<CourseManagementResponse> {
-  return courseManagementResponseSchema.parse(await response.json())
+export async function parseTeacherClasses(response: Response): Promise<TeacherClassesResponse> {
+  return teacherClassesResponseSchema.parse(await response.json())
+}
+
+export function requestClassProgress(
+  cookieHeader: string | null,
+  classId: string,
+  options: { fetcher?: typeof fetch; requestId?: string } = {},
+): Promise<Response> {
+  return client(cookieHeader, options.fetcher).requestRaw(
+    `/api/teacher/classes/${encodeURIComponent(classId)}/progress`,
+    { headers: options.requestId ? { 'x-request-id': options.requestId } : undefined },
+  )
+}
+
+export async function parseClassProgress(response: Response): Promise<ClassProgressResponse> {
+  return classProgressResponseSchema.parse(await response.json())
 }
 
 export function requestLogout(

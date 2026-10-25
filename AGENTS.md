@@ -1,8 +1,8 @@
 # A-Guy-Teacher repository rules
 
-- This repository is a thin deployment boundary for `teacher.aguy.co.il`.
-- Until Teacher owns product routes, unmatched requests pass through to
-  A-Guy-Web so behavior stays identical without copied source.
+- This repository is the classroom-teacher dashboard at `teacher.aguy.co.il`.
+- It serves only its own routes. Nothing is proxied to A-Guy-Web; login and
+  learning-site links go to Web's origin directly.
 - A-Guy-Web owns authentication, sessions, users, database access, APIs, and
   secrets.
 - Never add `PAYLOAD_SECRET`, `DATABASE_URL`, provider keys, JWT verification,

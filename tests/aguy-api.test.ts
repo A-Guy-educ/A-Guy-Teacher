@@ -6,10 +6,11 @@ vi.mock('server-only', () => ({}))
 import { POST as logout } from '../src/app/api/logout/route'
 import {
   getApiOrigin,
+  getDashboardOrigin,
   getTeacherLoginUrl,
   isTeacherOrigin,
-  parseManagedCourses,
-  requestManagedCourses,
+  parseTeacherClasses,
+  requestClassProgress,
 } from '../src/server/aguy-api'
 
 describe('Teacher API boundary', () => {
@@ -27,16 +28,16 @@ describe('Teacher API boundary', () => {
     vi.unstubAllGlobals()
   })
 
-  it('sends course reads to api.aguy.co.il with the shared session', async () => {
-    fetcher.mockResolvedValue(Response.json({ docs: [] }))
+  it('sends class reads to api.aguy.co.il with the shared session', async () => {
+    fetcher.mockResolvedValue(Response.json({ classes: [] }))
 
-    await requestManagedCourses('payload-token=opaque', {
+    await requestClassProgress('payload-token=opaque', 'class/1', {
       fetcher,
       requestId: 'teacher-request',
     })
 
     const [url, init] = fetcher.mock.calls[0]
-    expect(url).toBe('https://api.aguy.co.il/api/teacher/courses')
+    expect(url).toBe('https://api.aguy.co.il/api/teacher/classes/class%2F1/progress')
     expect(new Headers(init.headers).get('cookie')).toBe('payload-token=opaque')
     expect(new Headers(init.headers).get('x-request-id')).toBe('teacher-request')
   })
@@ -47,15 +48,52 @@ describe('Teacher API boundary', () => {
     expect(getApiOrigin().origin).toBe('https://api.qa.aguy.co.il')
   })
 
+  it('does not send a custom dev environment to the production dashboard', () => {
+    vi.stubEnv('AGUY_DASH_URL', '')
+    vi.stubEnv('VERCEL_TARGET_ENV', 'dev')
+
+    expect(getDashboardOrigin()).toBeUndefined()
+  })
+
+  it('uses the configured dashboard for the current environment', () => {
+    vi.stubEnv('AGUY_DASH_URL', 'https://dash.dev.aguy.co.il')
+    vi.stubEnv('VERCEL_TARGET_ENV', 'dev')
+
+    expect(getDashboardOrigin()?.origin).toBe('https://dash.dev.aguy.co.il')
+  })
+
   it('creates a safe shared-login return URL', () => {
     expect(getTeacherLoginUrl()).toBe(
       'https://www.aguy.co.il/login?returnTo=https%3A%2F%2Fteacher.aguy.co.il%2F',
     )
   })
 
-  it('validates course responses', async () => {
+  it('keeps the configured Teacher URL for preview deployments', () => {
+    vi.stubEnv('TEACHER_PUBLIC_URL', 'https://a-guy-teacher-git-dev-aguy.vercel.app')
+    vi.stubEnv('VERCEL_ENV', 'preview')
+    vi.stubEnv('VERCEL_TARGET_ENV', 'preview')
+    vi.stubEnv('VERCEL_URL', 'a-guy-teacher-5kkb04n5i-aguy.vercel.app')
+
+    expect(getTeacherLoginUrl()).toBe(
+      'https://www.aguy.co.il/login?returnTo=https%3A%2F%2Fa-guy-teacher-git-dev-aguy.vercel.app%2F',
+    )
+  })
+
+  it('keeps the stable Teacher URL in the custom dev environment', () => {
+    vi.stubEnv('AGUY_WEB_URL', 'https://www.dev.aguy.co.il')
+    vi.stubEnv('TEACHER_PUBLIC_URL', 'https://teacher.dev.aguy.co.il')
+    vi.stubEnv('VERCEL_ENV', 'preview')
+    vi.stubEnv('VERCEL_TARGET_ENV', 'dev')
+    vi.stubEnv('VERCEL_URL', 'a-guy-teacher-5kkb04n5i-aguy.vercel.app')
+
+    expect(getTeacherLoginUrl()).toBe(
+      'https://www.dev.aguy.co.il/login?returnTo=https%3A%2F%2Fteacher.dev.aguy.co.il%2F',
+    )
+  })
+
+  it('validates class responses', async () => {
     await expect(
-      parseManagedCourses(Response.json({ docs: [{ title: 'Missing id' }] })),
+      parseTeacherClasses(Response.json({ classes: [{ name: 'Missing id' }] })),
     ).rejects.toThrow()
   })
 
