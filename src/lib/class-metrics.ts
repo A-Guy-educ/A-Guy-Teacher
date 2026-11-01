@@ -66,9 +66,10 @@ export function lessonStat(lesson: LessonProgress | undefined): LessonStat | nul
   const outcomes = sectionOutcomes(lesson)
   const count = (outcome: SectionOutcome) => outcomes.filter((o) => o === outcome).length
   const inProgress = lesson.status === 'in_progress'
-  // Like Web's summary, independence is "alone" over every section. A lesson still in
-  // progress only counts the sections reached so far, so it isn't dragged down early.
-  const counted = inProgress ? outcomes.length - count('skipped') : outcomes.length
+  // Like Web's summary, independence is "alone" over every section, skipped ones included.
+  // Web often reports a finished lesson with skipped sections as in progress, so the
+  // status can't be used to leave skipped sections out.
+  const counted = outcomes.length
 
   return {
     score: average(answered.map(questionScore)),
