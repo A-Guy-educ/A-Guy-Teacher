@@ -1,4 +1,9 @@
-import type { LessonProgress, QuestionProgress } from '../types/class-progress'
+import type {
+  ClassLesson,
+  ClassProgressResponse,
+  LessonProgress,
+  QuestionProgress,
+} from '../types/class-progress'
 
 // Every question starts at 100. Wrong answers, hints and explanations cost points;
 // an unsolved question scores 0. Weights live here so they can change without a Web release.
@@ -76,6 +81,20 @@ export function lessonStat(
 export function meanOf(stats: (LessonStat | null)[], key: 'score' | 'independence' | 'minutes') {
   const started = stats.filter((s): s is LessonStat => s !== null)
   return started.length ? average(started.map((s) => s[key])) : null
+}
+
+export type NumberedLesson = ClassLesson & { number: number }
+
+/** Lessons at least one student started, keeping their position in the course as `number`. */
+export function activeLessons(progress: ClassProgressResponse): NumberedLesson[] {
+  return progress.lessons
+    .map((lesson, i) => ({ ...lesson, number: i + 1 }))
+    .filter((lesson) =>
+      progress.students.some((s) => {
+        const status = s.lessons[lesson.id]?.status
+        return status !== undefined && status !== 'not_started'
+      }),
+    )
 }
 
 export function band(value: number): Band {

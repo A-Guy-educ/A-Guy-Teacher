@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- chore: release v0.2.0 ([#25](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/25)) — @aguyshayb
+- chore: release v0.2.1 ([#28](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/28)) — @aguyshayb
+## v0.2.1 — 2026-11-01
+
+### Bug Fixes
+
+- fix: hide untouched lessons and average stats over all lessons ([#27](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/27)) — @aguyshayb
+
 ## v0.2.0 — 2026-10-25
 
 ### Features
