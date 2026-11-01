@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.3.0] - 2026-11-01
+
 - promote: dev -> main (v0.3.0) ([#33](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/33)) — @aguyshayb
 - chore: release v0.3.0 ([#32](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/32)) — @aguyshayb
 ## v0.3.0 — 2026-11-01
