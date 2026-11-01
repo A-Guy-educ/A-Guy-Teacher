@@ -6,6 +6,7 @@ import {
   lessonStat,
   meanOf,
   questionKind,
+  questionOutcome,
   questionScore,
 } from '../src/lib/class-metrics'
 import { classProgressResponseSchema } from '../src/types/class-progress'
@@ -42,33 +43,54 @@ describe('class metrics', () => {
     expect(questionKind(q('unseen'))).toBe('unseen')
   })
 
-  it('averages the lesson over answered questions only', () => {
-    const stat = lessonStat(
-      {
-        status: 'in_progress',
-        minutes: 12.4,
-        questions: [q('solved'), q('solved', 2), q('unsolved', 1), q('solved', 0, 1), q('unseen')],
-      },
-      5,
-    )
+  it("follows Web's lesson summary: a mistake counts as help", () => {
+    expect(questionOutcome(q('solved'))).toBe('alone')
+    expect(questionOutcome(q('solved', 1))).toBe('with-help')
+    expect(questionOutcome(q('solved', 0, 1))).toBe('with-help')
+    expect(questionOutcome(q('solved', 0, 0, 1))).toBe('with-help')
+    expect(questionOutcome(q('unsolved', 2))).toBe('wrong')
+    expect(questionOutcome(q('unseen'))).toBe('skipped')
+  })
+
+  const questions = [q('solved'), q('solved', 2), q('unsolved', 1), q('solved', 0, 1), q('unseen')]
+
+  it('scores answered questions and counts independence over every section', () => {
+    const stat = lessonStat({ status: 'completed', minutes: 12.4, questions })
 
     expect(stat).toMatchObject({
       score: 61, // (100 + 70 + 0 + 75) / 4
-      independence: 50, // 2 of 4 solved without help
+      independence: 20, // 1 alone of 5 sections, skipped ones included
       minutes: 12,
-      total: 5,
-      answered: 4,
-      alone: 1,
-      afterMistakes: 1,
-      withHelp: 1,
-      unsolved: 1,
-      inProgress: true,
+      sections: { alone: 1, 'with-help': 2, wrong: 1, skipped: 1, total: 5 },
+      inProgress: false,
     })
   })
 
+  it('only counts reached sections while a lesson is in progress', () => {
+    const stat = lessonStat({ status: 'in_progress', minutes: 3, questions })
+    expect(stat?.independence).toBe(25) // 1 alone of 4 reached
+  })
+
+  it("uses Web's section outcomes when they are sent", () => {
+    const stat = lessonStat({
+      status: 'completed',
+      minutes: 3,
+      questions,
+      sections: [
+        { id: 's1', outcome: 'alone' },
+        { id: 's2', outcome: 'alone' },
+        { id: 's3', outcome: 'with-help' },
+        { id: 's4', outcome: 'skipped' },
+      ],
+    })
+    expect(stat?.independence).toBe(50)
+    expect(stat?.sections).toEqual({ alone: 2, 'with-help': 1, wrong: 0, skipped: 1, total: 4 })
+    expect(stat?.score).toBe(61) // the score still comes from the questions
+  })
+
   it('treats a missing or unstarted lesson as not started', () => {
-    expect(lessonStat(undefined, 10)).toBeNull()
-    expect(lessonStat({ status: 'not_started', minutes: 0, questions: [] }, 10)).toBeNull()
+    expect(lessonStat(undefined)).toBeNull()
+    expect(lessonStat({ status: 'not_started', minutes: 0, questions: [] })).toBeNull()
     expect(meanOf([null, null], 'score')).toBeNull()
   })
 
