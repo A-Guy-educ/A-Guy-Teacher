@@ -66,9 +66,16 @@ describe('class metrics', () => {
     })
   })
 
-  it('only counts reached sections while a lesson is in progress', () => {
-    const stat = lessonStat({ status: 'in_progress', minutes: 3, questions })
-    expect(stat?.independence).toBe(25) // 1 alone of 4 reached
+  it('counts skipped sections even when the lesson is marked in progress', () => {
+    // The reported case: 4 correct alone, 2 wrong, 34 skipped -> Web's summary says 10%.
+    const lesson = [
+      ...Array.from({ length: 4 }, () => q('solved')),
+      q('unsolved', 1),
+      q('unsolved', 1),
+      ...Array.from({ length: 34 }, () => q('unseen')),
+    ]
+    const stat = lessonStat({ status: 'in_progress', minutes: 2, questions: lesson })
+    expect(stat?.independence).toBe(10)
   })
 
   it("uses Web's section outcomes when they are sent", () => {
