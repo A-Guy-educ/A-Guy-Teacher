@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { band, lessonStat, meanOf, questionKind, questionScore } from '../src/lib/class-metrics'
+import {
+  activeLessons,
+  band,
+  lessonStat,
+  meanOf,
+  questionKind,
+  questionScore,
+} from '../src/lib/class-metrics'
 import { classProgressResponseSchema } from '../src/types/class-progress'
 
 const q = (
@@ -89,5 +96,25 @@ describe('class metrics', () => {
         ],
       }),
     ).toThrow()
+  })
+
+  it('keeps only lessons some student started, numbered by course position', () => {
+    const lesson = (status: 'not_started' | 'in_progress' | 'completed') => ({
+      status,
+      minutes: 1,
+      questions: [],
+    })
+    const lessons = activeLessons({
+      class: { id: 'c', name: 'C' },
+      lessons: ['a', 'b', 'c', 'd'].map((id) => ({ id, title: id, questionCount: 1 })),
+      students: [
+        { id: 's1', name: 'One', lessons: { a: lesson('not_started'), c: lesson('in_progress') } },
+        { id: 's2', name: 'Two', lessons: { d: lesson('completed') } },
+      ],
+    })
+    expect(lessons.map((l) => [l.id, l.number])).toEqual([
+      ['c', 3],
+      ['d', 4],
+    ])
   })
 })

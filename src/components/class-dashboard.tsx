@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import {
+  activeLessons,
   band,
   lessonStat,
   meanOf,
@@ -10,6 +11,7 @@ import {
   questionKind,
   questionScore,
   type LessonStat,
+  type NumberedLesson,
 } from '../lib/class-metrics'
 import type { ClassProgressResponse, ClassStudent, TeacherClass } from '../types/class-progress'
 
@@ -43,7 +45,6 @@ const COPY = {
     notStarted: 'Not started',
     inProgress: 'In progress',
     classAverage: 'Class average',
-    lessons: 'Lessons',
     started: 'started',
     time: 'Time',
     alone: 'Alone, first try',
@@ -67,6 +68,7 @@ const COPY = {
     legendBad: 'Below 60',
     unnamed: 'No name',
     noLessons: 'This class has no published lessons yet.',
+    noActivity: 'No student in this class has started a lesson yet.',
   },
   he: {
     title: 'תמונת הכיתה',
@@ -92,7 +94,6 @@ const COPY = {
     notStarted: 'לא התחיל',
     inProgress: 'באמצע',
     classAverage: 'ממוצע הכיתה',
-    lessons: 'שיעורים',
     started: 'התחילו',
     time: 'זמן',
     alone: 'לבד בניסיון ראשון',
@@ -116,6 +117,7 @@ const COPY = {
     legendBad: 'מתחת ל-60',
     unnamed: 'ללא שם',
     noLessons: 'לכיתה הזו עוד אין שיעורים שפורסמו.',
+    noActivity: 'אף תלמיד בכיתה עוד לא התחיל שיעור.',
   },
 } as const
 
@@ -146,7 +148,8 @@ export function ClassDashboard({
   progress: ClassProgressResponse
 }) {
   const copy = COPY[locale]
-  const { lessons } = progress
+  // Lessons nobody in the class has opened stay out of the table.
+  const lessons = useMemo(() => activeLessons(progress), [progress])
   const students = useMemo(
     () => progress.students.map((s) => (s.name ? s : { ...s, name: copy.unnamed })),
     [progress.students, copy.unnamed],
@@ -187,19 +190,19 @@ export function ClassDashboard({
       ),
     [students, lessons],
   )
-  const windowStats = (s: ClassStudent) => shown.map((j) => stats.get(s.id)![j])
+  // Averages cover every lesson, not just the ones paged into view.
+  const avgOf = (s: ClassStudent) => meanOf(stats.get(s.id)!, 'score')
+  const indOf = (s: ClassStudent) => meanOf(stats.get(s.id)!, 'independence')
 
   const sorted = [...students].sort((a, b) => {
-    const avg = (s: ClassStudent) => meanOf(windowStats(s), 'score')
-    const ind = (s: ClassStudent) => meanOf(windowStats(s), 'independence')
     const last = (s: ClassStudent) => stats.get(s.id)![lastShown]?.score
     switch (sort) {
       case 'high':
-        return (avg(b) ?? -1) - (avg(a) ?? -1)
+        return (avgOf(b) ?? -1) - (avgOf(a) ?? -1)
       case 'low':
-        return (avg(a) ?? 999) - (avg(b) ?? 999)
+        return (avgOf(a) ?? 999) - (avgOf(b) ?? 999)
       case 'independence':
-        return (ind(a) ?? 999) - (ind(b) ?? 999)
+        return (indOf(a) ?? 999) - (indOf(b) ?? 999)
       case 'last':
         return (last(b) ?? -1) - (last(a) ?? -1)
       default:
@@ -261,7 +264,9 @@ export function ClassDashboard({
     return (
       <div className="cd-page">
         {top}
-        <p className="cd-hint">{copy.noLessons}</p>
+        <p className="cd-hint">
+          {progress.lessons.length === 0 ? copy.noLessons : copy.noActivity}
+        </p>
       </div>
     )
   }
@@ -311,7 +316,7 @@ export function ClassDashboard({
                       ) : null}
                       <span className="cd-lh-title" title={lessons[j].title}>
                         <b>
-                          {copy.lesson} {j + 1}
+                          {copy.lesson} {lessons[j].number}
                         </b>
                         <span className="cd-lh-name">{lessons[j].title}</span>
                       </span>
@@ -334,8 +339,8 @@ export function ClassDashboard({
             </thead>
             <tbody>
               {sorted.map((s) => {
-                const avg = meanOf(windowStats(s), 'score')
-                const ind = meanOf(windowStats(s), 'independence')
+                const avg = avgOf(s)
+                const ind = indOf(s)
                 return (
                   <tr className={selected?.studentId === s.id ? 'cd-sel' : undefined} key={s.id}>
                     <td>
@@ -373,8 +378,8 @@ export function ClassDashboard({
                           <button
                             aria-label={
                               x
-                                ? `${s.name}, ${copy.lesson} ${j + 1}: ${copy.score} ${x.score}, ${copy.independence} ${x.independence}%, ${x.minutes} ${copy.minutes}`
-                                : `${s.name}, ${copy.lesson} ${j + 1}: ${copy.notStarted}`
+                                ? `${s.name}, ${copy.lesson} ${lessons[j].number}: ${copy.score} ${x.score}, ${copy.independence} ${x.independence}%, ${x.minutes} ${copy.minutes}`
+                                : `${s.name}, ${copy.lesson} ${lessons[j].number}: ${copy.notStarted}`
                             }
                             className={
                               x
@@ -416,11 +421,12 @@ export function ClassDashboard({
             </tbody>
             <tfoot>
               <ClassFooter
+                avgOf={avgOf}
                 copy={copy}
+                indOf={indOf}
                 shown={shown}
                 stats={stats}
                 students={students}
-                windowStats={windowStats}
               />
             </tfoot>
           </table>
@@ -430,11 +436,11 @@ export function ClassDashboard({
           <StudentPanel
             copy={copy}
             lessonIndex={selected?.lessonIndex ?? null}
+            lessons={lessons}
             onClose={() => setSelected(undefined)}
             progress={progress}
             stats={stats.get(selectedStudent.id)!}
             student={selectedStudent}
-            windowStats={windowStats(selectedStudent)}
           />
         ) : null}
       </div>
@@ -469,20 +475,22 @@ export function ClassDashboard({
 }
 
 function ClassFooter({
+  avgOf,
   copy,
+  indOf,
   shown,
   stats,
   students,
-  windowStats,
 }: {
+  avgOf: (s: ClassStudent) => number | null
   copy: Copy
+  indOf: (s: ClassStudent) => number | null
   shown: number[]
   stats: Map<string, (LessonStat | null)[]>
   students: ClassStudent[]
-  windowStats: (s: ClassStudent) => (LessonStat | null)[]
 }) {
-  const avgs = students.map((s) => meanOf(windowStats(s), 'score')).filter((v) => v !== null)
-  const inds = students.map((s) => meanOf(windowStats(s), 'independence')).filter((v) => v !== null)
+  const avgs = students.map(avgOf).filter((v) => v !== null)
+  const inds = students.map(indOf).filter((v) => v !== null)
   const mean = (values: number[]) =>
     values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0
   const classAvg = mean(avgs)
@@ -491,9 +499,7 @@ function ClassFooter({
     <tr>
       <td>
         <span className="cd-foot-label">{copy.classAverage}</span>
-        <small>
-          {copy.lessons} {shown[0] + 1}–{shown[shown.length - 1] + 1}
-        </small>
+        <small>{copy.allLessons}</small>
       </td>
       <td>
         <b className={`cd-ink--${band(classAvg)}`}>{classAvg}</b>
@@ -528,7 +534,7 @@ function CellTip({
   tip,
 }: {
   copy: Copy
-  lessons: ClassProgressResponse['lessons']
+  lessons: NumberedLesson[]
   stats: Map<string, (LessonStat | null)[]>
   tip: Tip
 }) {
@@ -546,7 +552,7 @@ function CellTip({
   return (
     <div className="cd-tip" role="tooltip" style={{ left: tip.left, top: tip.top }}>
       <strong>
-        {tip.student.name} · {copy.lesson} {tip.lessonIndex + 1}
+        {tip.student.name} · {copy.lesson} {lessons[tip.lessonIndex].number}
       </strong>
       {x ? (
         <>
@@ -573,23 +579,23 @@ function CellTip({
 function StudentPanel({
   copy,
   lessonIndex,
+  lessons,
   onClose,
   progress,
   stats,
   student,
-  windowStats,
 }: {
   copy: Copy
   lessonIndex: number | null
+  lessons: NumberedLesson[]
   onClose: () => void
   progress: ClassProgressResponse
   stats: (LessonStat | null)[]
   student: ClassStudent
-  windowStats: (LessonStat | null)[]
 }) {
-  const avg = meanOf(windowStats, 'score')
-  const ind = meanOf(windowStats, 'independence')
-  const lesson = lessonIndex === null ? null : progress.lessons[lessonIndex]
+  const avg = meanOf(stats, 'score')
+  const ind = meanOf(stats, 'independence')
+  const lesson = lessonIndex === null ? null : lessons[lessonIndex]
   const x = lessonIndex === null ? null : stats[lessonIndex]
   const questions = lesson ? (student.lessons[lesson.id]?.questions ?? []) : []
   const kindLabel = {
@@ -618,10 +624,10 @@ function StudentPanel({
         </button>
       </div>
 
-      {lesson && lessonIndex !== null ? (
+      {lesson ? (
         <div className="cd-box">
           <h3>
-            {copy.lesson} {lessonIndex + 1}: {lesson.title}
+            {copy.lesson} {lesson.number}: {lesson.title}
             {x ? <span className={`cd-big cd-ink--${band(x.score)}`}>{x.score}</span> : null}
           </h3>
           {x ? (
@@ -662,9 +668,9 @@ function StudentPanel({
         <h3>{copy.allLessons}</h3>
         <div className="cd-rows">
           {stats.map((s, j) => (
-            <div className="cd-row" key={progress.lessons[j].id}>
+            <div className="cd-row" key={lessons[j].id}>
               <span>
-                {copy.lesson} {j + 1}
+                {copy.lesson} {lessons[j].number}
               </span>
               <span className="cd-track">
                 {s ? (
