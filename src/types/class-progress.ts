@@ -21,10 +21,15 @@ export const questionProgressSchema = z.object({
   explanations: z.number().int().nonnegative(),
 })
 
+// Same buckets as the student's lesson summary in A-Guy-Web.
+export const sectionOutcomeSchema = z.enum(['alone', 'with-help', 'skipped', 'wrong'])
+
 export const lessonProgressSchema = z.object({
   status: z.enum(['not_started', 'in_progress', 'completed']),
   minutes: z.number().nonnegative(),
   questions: z.array(questionProgressSchema),
+  // Web's own classification of each lesson section. Older Web responses omit it.
+  sections: z.array(z.object({ id: z.string().min(1), outcome: sectionOutcomeSchema })).optional(),
 })
 
 export const classProgressResponseSchema = z.object({
@@ -50,6 +55,7 @@ export const classProgressResponseSchema = z.object({
 export type TeacherClass = z.infer<typeof teacherClassSchema>
 export type TeacherClassesResponse = z.infer<typeof teacherClassesResponseSchema>
 export type QuestionProgress = z.infer<typeof questionProgressSchema>
+export type SectionOutcome = z.infer<typeof sectionOutcomeSchema>
 export type LessonProgress = z.infer<typeof lessonProgressSchema>
 export type ClassProgressResponse = z.infer<typeof classProgressResponseSchema>
 export type ClassLesson = ClassProgressResponse['lessons'][number]

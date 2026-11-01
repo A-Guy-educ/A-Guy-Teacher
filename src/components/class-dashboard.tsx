@@ -52,7 +52,11 @@ const COPY = {
     withHelp: 'With hint or explanation',
     unsolved: 'Not solved',
     unseen: 'Not reached yet',
-    totalQuestions: 'Total questions',
+    sectionAlone: 'Correct, no help',
+    sectionWithHelp: 'Correct after help or a mistake',
+    sectionWrong: 'Ended wrong',
+    sectionSkipped: 'Skipped',
+    totalSections: 'Total sections',
     question: 'Question',
     mistakes: 'mistakes',
     hints: 'hints',
@@ -101,7 +105,11 @@ const COPY = {
     withHelp: 'עם רמז או הסבר',
     unsolved: 'לא נפתרו',
     unseen: 'עוד לא הגיע',
-    totalQuestions: 'סה"כ שאלות',
+    sectionAlone: 'נכון ללא עזרה',
+    sectionWithHelp: 'נכון אחרי עזרה או טעות',
+    sectionWrong: 'הסתיים בטעות',
+    sectionSkipped: 'דילג',
+    totalSections: 'סה"כ סעיפים',
     question: 'שאלה',
     mistakes: 'טעויות',
     hints: 'רמזים',
@@ -181,13 +189,7 @@ export function ClassDashboard({
 
   // stats[studentId][lessonIndex]
   const stats = useMemo(
-    () =>
-      new Map(
-        students.map((s) => [
-          s.id,
-          lessons.map((l) => lessonStat(s.lessons[l.id], l.questionCount)),
-        ]),
-      ),
+    () => new Map(students.map((s) => [s.id, lessons.map((l) => lessonStat(s.lessons[l.id]))])),
     [students, lessons],
   )
   // Averages cover every lesson, not just the ones paged into view.
@@ -562,12 +564,11 @@ function CellTip({
           {row(copy.score, x.score)}
           {row(copy.independence, `${x.independence}%`)}
           {row(copy.time, `${x.minutes} ${copy.minutes}`)}
-          {row(copy.alone, x.alone, 'alone')}
-          {row(copy.afterMistakes, x.afterMistakes, 'afterMistakes')}
-          {row(copy.withHelp, x.withHelp, 'withHelp')}
-          {row(copy.unsolved, x.unsolved, 'unsolved')}
-          {x.inProgress ? row(copy.unseen, x.total - x.answered, 'unseen') : null}
-          <div className="cd-tip-total">{row(copy.totalQuestions, x.total)}</div>
+          {row(copy.sectionAlone, x.sections.alone, 'alone')}
+          {row(copy.sectionWithHelp, x.sections['with-help'], 'withHelp')}
+          {row(copy.sectionWrong, x.sections.wrong, 'unsolved')}
+          {row(x.inProgress ? copy.unseen : copy.sectionSkipped, x.sections.skipped, 'unseen')}
+          <div className="cd-tip-total">{row(copy.totalSections, x.sections.total)}</div>
         </>
       ) : (
         copy.notStartedLesson

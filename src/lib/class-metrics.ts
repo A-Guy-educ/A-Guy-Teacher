@@ -3,6 +3,7 @@ import type {
   ClassProgressResponse,
   LessonProgress,
   QuestionProgress,
+  SectionOutcome,
 } from '../types/class-progress'
 
 // Every question starts at 100. Wrong answers, hints and explanations cost points;
@@ -15,12 +16,7 @@ export interface LessonStat {
   score: number
   independence: number
   minutes: number
-  total: number
-  answered: number
-  alone: number
-  afterMistakes: number
-  withHelp: number
-  unsolved: number
+  sections: Record<SectionOutcome, number> & { total: number }
   inProgress: boolean
 }
 
@@ -49,31 +45,44 @@ export function questionKind(
 const average = (values: number[]) =>
   values.length ? Math.round(values.reduce((sum, v) => sum + v, 0) / values.length) : 0
 
-export function lessonStat(
-  lesson: LessonProgress | undefined,
-  questionCount: number,
-): LessonStat | null {
+/**
+ * The student's lesson summary rule (A-Guy-Web lessonSummary.ts), applied to one question:
+ * a wrong attempt counts as help, just like a hint or explanation.
+ */
+export function questionOutcome(q: QuestionProgress): SectionOutcome {
+  if (q.status === 'unseen') return 'skipped'
+  if (q.status === 'unsolved') return 'wrong'
+  return q.mistakes > 0 || usedHelp(q) ? 'with-help' : 'alone'
+}
+
+/** Web's section outcomes when it sends them; otherwise each question stands in for a section. */
+export function sectionOutcomes(lesson: LessonProgress): SectionOutcome[] {
+  return lesson.sections?.map((s) => s.outcome) ?? lesson.questions.map(questionOutcome)
+}
+
+export function lessonStat(lesson: LessonProgress | undefined): LessonStat | null {
   if (!lesson || lesson.status === 'not_started') return null
   const answered = lesson.questions.filter((q) => q.status !== 'unseen')
-  const kinds = answered.map(questionKind)
-  const count = (kind: string) => kinds.filter((k) => k === kind).length
+  const outcomes = sectionOutcomes(lesson)
+  const count = (outcome: SectionOutcome) => outcomes.filter((o) => o === outcome).length
+  const inProgress = lesson.status === 'in_progress'
+  // Like Web's summary, independence is "alone" over every section, skipped ones included.
+  // Web often reports a finished lesson with skipped sections as in progress, so the
+  // status can't be used to leave skipped sections out.
+  const counted = outcomes.length
 
   return {
     score: average(answered.map(questionScore)),
-    independence: answered.length
-      ? Math.round(
-          (answered.filter((q) => q.status === 'solved' && !usedHelp(q)).length / answered.length) *
-            100,
-        )
-      : 0,
+    independence: counted ? Math.round((count('alone') / counted) * 100) : 0,
     minutes: Math.round(lesson.minutes),
-    total: Math.max(questionCount, lesson.questions.length),
-    answered: answered.length,
-    alone: count('alone'),
-    afterMistakes: count('afterMistakes'),
-    withHelp: count('withHelp'),
-    unsolved: count('unsolved'),
-    inProgress: lesson.status === 'in_progress',
+    sections: {
+      alone: count('alone'),
+      'with-help': count('with-help'),
+      skipped: count('skipped'),
+      wrong: count('wrong'),
+      total: outcomes.length,
+    },
+    inProgress,
   }
 }
 

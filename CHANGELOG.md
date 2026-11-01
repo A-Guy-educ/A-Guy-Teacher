@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- chore: release v0.2.1 ([#28](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/28)) — @aguyshayb
+- chore: release v0.3.0 ([#32](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/32)) — @aguyshayb
+## v0.3.0 — 2026-11-01
+
+### Features
+
+- feat: calculate independence like Web's lesson summary ([#30](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/30)) — @aguyshayb
+
+### Bug Fixes
+
+- fix: count skipped sections in independence for in-progress lessons ([#31](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/31)) — @aguyshayb
+
 ## v0.2.1 — 2026-11-01
 
 ### Bug Fixes
