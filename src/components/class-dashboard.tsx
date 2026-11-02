@@ -65,7 +65,7 @@ const COPY = {
     notStartedLesson: 'Has not started this lesson yet',
     allLessons: 'All lessons',
     close: 'Close',
-    scoreNote: `The small number is the question's score: 100, minus ${PENALTY.mistake} per mistake and ${PENALTY.hint} per hint or explanation`,
+    scoreNote: `The small number is the question's score: 100, minus ${PENALTY.mistake} per mistake and ${PENALTY.hint} per hint, explanation or self-check`,
     legendCell: 'Cell colour:',
     legendGood: '80 and up',
     legendMid: '60 to 79',
@@ -118,7 +118,7 @@ const COPY = {
     notStartedLesson: 'עוד לא התחיל את השיעור',
     allLessons: 'כל השיעורים',
     close: 'סגירה',
-    scoreNote: `המספר הקטן הוא הניקוד של השאלה: 100, פחות ${PENALTY.mistake} על כל טעות ו-${PENALTY.hint} על כל רמז או הסבר`,
+    scoreNote: `המספר הקטן הוא הניקוד של השאלה: 100, פחות ${PENALTY.mistake} על כל טעות ו-${PENALTY.hint} על כל רמז, הסבר או בדיקה עצמית`,
     legendCell: 'צבע המשבצת:',
     legendGood: '80 ומעלה',
     legendMid: '60 עד 79',
@@ -380,12 +380,12 @@ export function ClassDashboard({
                           <button
                             aria-label={
                               x
-                                ? `${s.name}, ${copy.lesson} ${lessons[j].number}: ${copy.score} ${x.score}, ${copy.independence} ${x.independence}%, ${x.minutes} ${copy.minutes}`
+                                ? `${s.name}, ${copy.lesson} ${lessons[j].number}: ${copy.score} ${x.score ?? '-'}, ${copy.independence} ${x.independence}%, ${x.minutes} ${copy.minutes}`
                                 : `${s.name}, ${copy.lesson} ${lessons[j].number}: ${copy.notStarted}`
                             }
                             className={
                               x
-                                ? `cd-cell cd-cell--${band(x.score)}${x.inProgress ? ' cd-cell--partial' : ''}${on}`
+                                ? `cd-cell${x.score === null ? '' : ` cd-cell--${band(x.score)}`}${x.inProgress ? ' cd-cell--partial' : ''}${on}`
                                 : `cd-cell cd-cell--none${on}`
                             }
                             data-partial={copy.inProgress}
@@ -401,7 +401,7 @@ export function ClassDashboard({
                           >
                             {x ? (
                               <>
-                                <span className="cd-score">{x.score}</span>
+                                <span className="cd-score">{x.score ?? '-'}</span>
                                 <span className="cd-cap">
                                   {copy.independence} <b>{x.independence}%</b>
                                 </span>
@@ -561,7 +561,7 @@ function CellTip({
           {lessons[tip.lessonIndex]?.title ? (
             <div className="cd-tip-sub">{lessons[tip.lessonIndex].title}</div>
           ) : null}
-          {row(copy.score, x.score)}
+          {row(copy.score, x.score ?? '-')}
           {row(copy.independence, `${x.independence}%`)}
           {row(copy.time, `${x.minutes} ${copy.minutes}`)}
           {row(copy.sectionAlone, x.sections.alone, 'alone')}
@@ -629,7 +629,9 @@ function StudentPanel({
         <div className="cd-box">
           <h3>
             {copy.lesson} {lesson.number}: {lesson.title}
-            {x ? <span className={`cd-big cd-ink--${band(x.score)}`}>{x.score}</span> : null}
+            {x && x.score !== null ? (
+              <span className={`cd-big cd-ink--${band(x.score)}`}>{x.score}</span>
+            ) : null}
           </h3>
           {x ? (
             <>
@@ -674,11 +676,11 @@ function StudentPanel({
                 {copy.lesson} {lessons[j].number}
               </span>
               <span className="cd-track">
-                {s ? (
+                {s && s.score !== null ? (
                   <i className={`cd-fill--${band(s.score)}`} style={{ width: `${s.score}%` }} />
                 ) : null}
               </span>
-              <b>{s ? s.score : '-'}</b>
+              <b>{s?.score ?? '-'}</b>
             </div>
           ))}
         </div>

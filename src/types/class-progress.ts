@@ -19,6 +19,9 @@ export const questionProgressSchema = z.object({
   mistakes: z.number().int().nonnegative(),
   hints: z.number().int().nonnegative(),
   explanations: z.number().int().nonnegative(),
+  // The student compared their answer to the solution instead of having it checked.
+  // Web leaves such a question's status as 'unseen'; older responses omit the flag.
+  selfChecked: z.boolean().optional(),
 })
 
 // Same buckets as the student's lesson summary in A-Guy-Web.

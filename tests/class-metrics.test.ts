@@ -101,6 +101,33 @@ describe('class metrics', () => {
     expect(meanOf([null, null], 'score')).toBeNull()
   })
 
+  it('counts a self-checked question as answered with help', () => {
+    // Web reports self-checked answers as 'unseen'.
+    const selfChecked = { ...q('unseen'), selfChecked: true }
+    expect(questionKind(selfChecked)).toBe('withHelp')
+    expect(questionOutcome(selfChecked)).toBe('with-help')
+    expect(questionScore(selfChecked)).toBe(75)
+
+    const stat = lessonStat({
+      status: 'in_progress',
+      minutes: 5,
+      questions: [selfChecked, selfChecked, q('unseen')],
+    })
+    expect(stat).toMatchObject({ score: 75, independence: 0 })
+  })
+
+  it('has no score for a started lesson with nothing answered', () => {
+    const stat = lessonStat({ status: 'in_progress', minutes: 4, questions: [q('unseen')] })
+    expect(stat?.score).toBeNull()
+    expect(meanOf([stat, null], 'score')).toBeNull()
+    expect(
+      meanOf(
+        [stat, lessonStat({ status: 'completed', minutes: 1, questions: [q('solved')] })],
+        'score',
+      ),
+    ).toBe(100)
+  })
+
   it('bands scores at 80 and 60', () => {
     expect([band(80), band(79), band(60), band(59)]).toEqual(['good', 'mid', 'mid', 'bad'])
   })
