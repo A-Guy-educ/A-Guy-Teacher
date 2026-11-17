@@ -13,10 +13,12 @@ import {
   type LessonStat,
   type NumberedLesson,
 } from '../lib/class-metrics'
+import { LessonsView } from './lessons-view'
 import type { ClassProgressResponse, ClassStudent, TeacherClass } from '../types/class-progress'
 
 type Locale = 'en' | 'he'
 type SortKey = 'name' | 'high' | 'low' | 'independence' | 'last'
+type View = 'progress' | 'lessons'
 
 const WINDOW = 4
 
@@ -24,6 +26,8 @@ const COPY = {
   en: {
     title: 'Class snapshot',
     demo: 'Demo data',
+    view: 'View',
+    views: { progress: 'Class progress', lessons: 'Lessons' },
     sortBy: 'Sort by',
     sort: {
       name: 'Name',
@@ -77,6 +81,8 @@ const COPY = {
   he: {
     title: 'תמונת הכיתה',
     demo: 'נתוני הדגמה',
+    view: 'תצוגה',
+    views: { progress: 'התקדמות הכיתה', lessons: 'שיעורים' },
     sortBy: 'מיון לפי',
     sort: {
       name: 'שם',
@@ -164,6 +170,7 @@ export function ClassDashboard({
   )
   const lastStart = Math.max(0, lessons.length - WINDOW)
 
+  const [view, setView] = useState<View>('progress')
   const [sort, setSort] = useState<SortKey>('name')
   const [offset, setOffset] = useState(lastStart)
   const [selected, setSelected] = useState<{ studentId: string; lessonIndex: number | null }>()
@@ -236,16 +243,31 @@ export function ClassDashboard({
       </header>
 
       <div className="cd-bar">
-        <label className="cd-sort">
-          <span>{copy.sortBy}</span>
-          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-            {(Object.keys(copy.sort) as SortKey[]).map((key) => (
-              <option key={key} value={key}>
-                {copy.sort[key]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div aria-label={copy.view} className="cd-views" role="group">
+          {(Object.keys(copy.views) as View[]).map((key) => (
+            <button
+              aria-pressed={view === key}
+              className="cd-view"
+              key={key}
+              onClick={() => setView(key)}
+              type="button"
+            >
+              {copy.views[key]}
+            </button>
+          ))}
+        </div>
+        {view === 'progress' ? (
+          <label className="cd-sort">
+            <span>{copy.sortBy}</span>
+            <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+              {(Object.keys(copy.sort) as SortKey[]).map((key) => (
+                <option key={key} value={key}>
+                  {copy.sort[key]}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <nav className="cd-tabs" aria-label={copy.classes}>
           {classes.map((c) => (
             <a
@@ -261,6 +283,15 @@ export function ClassDashboard({
       </div>
     </>
   )
+
+  if (view === 'lessons') {
+    return (
+      <div className="cd-page">
+        {top}
+        <LessonsView locale={locale} progress={progress} />
+      </div>
+    )
+  }
 
   if (lessons.length === 0) {
     return (
