@@ -21,7 +21,9 @@ const COPY = {
     toggle: (title: string) => `Show ${title} to students`,
     empty: 'No lessons match your search or filter.',
     noLessons: 'This class has no published lessons yet.',
-    note: 'Preview: changes are not saved yet, and students still see every lesson.',
+    saveFailed: (title: ReactNode) => (
+      <>The change to {title} wasn&apos;t saved. Please try again.</>
+    ),
   },
   he: {
     intro: (name: ReactNode) => <>בחרו אילו שיעורים יוצגו לתלמידי {name}</>,
@@ -36,7 +38,7 @@ const COPY = {
     toggle: (title: string) => `הצגת ${title} לתלמידים`,
     empty: 'אין שיעורים שמתאימים לחיפוש או לסינון.',
     noLessons: 'לכיתה הזו עוד אין שיעורים שפורסמו.',
-    note: 'תצוגה מקדימה: השינויים עוד לא נשמרים, והתלמידים עדיין רואים את כל השיעורים.',
+    saveFailed: (title: ReactNode) => <>השינוי בשיעור {title} לא נשמר. נסו שוב.</>,
   },
 } as const
 
@@ -53,7 +55,13 @@ export function LessonsView({
     [progress.lessons],
   )
   const lessonIds = useMemo(() => lessons.map((l) => l.id), [lessons])
-  const { isShown, toggle, shownCount } = useLessonVisibility(progress.class.id, lessonIds)
+  const { isShown, toggle, shownCount, failedLessonId } = useLessonVisibility(
+    progress.class.id,
+    lessonIds,
+    progress.hiddenLessonIds,
+  )
+  const titleOf = (l: (typeof lessons)[number]) => l.title || `${copy.lesson} ${l.number}`
+  const failed = lessons.find((l) => l.id === failedLessonId)
 
   const [filter, setFilter] = useState<VisibilityFilter>('all')
   const [query, setQuery] = useState('')
@@ -94,6 +102,12 @@ export function LessonsView({
           />
         </div>
 
+        {failed ? (
+          <p className="cd-lv-error" role="alert">
+            {copy.saveFailed(<bdi>{titleOf(failed)}</bdi>)}
+          </p>
+        ) : null}
+
         {lessons.length === 0 ? (
           <p className="cd-lv-empty">{copy.noLessons}</p>
         ) : items.length === 0 ? (
@@ -102,7 +116,7 @@ export function LessonsView({
           <ul className="cd-lv-list">
             {items.map((l) => {
               const on = isShown(l.id)
-              const title = l.title || `${copy.lesson} ${l.number}`
+              const title = titleOf(l)
               return (
                 <li className="cd-lv-row" key={l.id}>
                   <span className="cd-lv-num">{l.number}</span>
@@ -128,8 +142,6 @@ export function LessonsView({
             })}
           </ul>
         )}
-
-        <p className="cd-lv-note">{copy.note}</p>
       </div>
     </section>
   )

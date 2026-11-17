@@ -53,6 +53,8 @@ export const classProgressResponseSchema = z.object({
       lessons: z.record(z.string(), lessonProgressSchema),
     }),
   ),
+  // Lessons the teacher hid from students, limited to ids in `lessons`. Older Web responses omit it.
+  hiddenLessonIds: z.array(z.string().min(1)).optional(),
 })
 
 export type TeacherClass = z.infer<typeof teacherClassSchema>
