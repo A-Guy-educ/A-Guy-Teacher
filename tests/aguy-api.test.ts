@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
+import { PATCH as patchLesson } from '../src/app/api/classes/[classId]/lessons/[lessonId]/route'
 import { POST as logout } from '../src/app/api/logout/route'
 import {
   getApiOrigin,
@@ -11,6 +12,7 @@ import {
   isTeacherOrigin,
   parseTeacherClasses,
   requestClassProgress,
+  setLessonHidden,
 } from '../src/server/aguy-api'
 
 describe('Teacher API boundary', () => {
@@ -40,6 +42,61 @@ describe('Teacher API boundary', () => {
     expect(url).toBe('https://api.aguy.co.il/api/teacher/classes/class%2F1/progress')
     expect(new Headers(init.headers).get('cookie')).toBe('payload-token=opaque')
     expect(new Headers(init.headers).get('x-request-id')).toBe('teacher-request')
+  })
+
+  it('saves lesson visibility with a PATCH to Web', async () => {
+    fetcher.mockResolvedValue(Response.json({ lessonId: 'lesson 2', hidden: true }))
+
+    await setLessonHidden('payload-token=opaque', 'class/1', 'lesson 2', true, {
+      fetcher,
+      requestId: 'teacher-request',
+    })
+
+    const [url, init] = fetcher.mock.calls[0]
+    expect(url).toBe('https://api.aguy.co.il/api/teacher/classes/class%2F1/lessons/lesson%202')
+    expect(init.method).toBe('PATCH')
+    expect(JSON.parse(init.body)).toEqual({ hidden: true })
+    expect(new Headers(init.headers).get('content-type')).toBe('application/json')
+    expect(new Headers(init.headers).get('cookie')).toBe('payload-token=opaque')
+    expect(new Headers(init.headers).get('x-request-id')).toBe('teacher-request')
+  })
+
+  const lessonRequest = (body: unknown, origin = 'https://teacher.aguy.co.il') =>
+    patchLesson(
+      new NextRequest('https://teacher.aguy.co.il/api/classes/c1/lessons/l1', {
+        method: 'PATCH',
+        headers: { origin, cookie: 'payload-token=opaque' },
+        body: JSON.stringify(body),
+      }),
+      { params: Promise.resolve({ classId: 'c1', lessonId: 'l1' }) },
+    )
+
+  it('forwards same-origin lesson visibility changes with the shared session', async () => {
+    fetcher.mockResolvedValue(Response.json({ lessonId: 'l1', hidden: false }))
+    vi.stubGlobal('fetch', fetcher)
+
+    const response = await lessonRequest({ hidden: false })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ lessonId: 'l1', hidden: false })
+    const [url, init] = fetcher.mock.calls[0]
+    expect(url).toBe('https://api.aguy.co.il/api/teacher/classes/c1/lessons/l1')
+    expect(new Headers(init.headers).get('cookie')).toBe('payload-token=opaque')
+  })
+
+  it('passes Web errors through when saving lesson visibility', async () => {
+    fetcher.mockResolvedValue(Response.json({ error: 'Not found' }, { status: 404 }))
+    vi.stubGlobal('fetch', fetcher)
+
+    expect((await lessonRequest({ hidden: true })).status).toBe(404)
+  })
+
+  it('rejects cross-origin or malformed lesson visibility changes', async () => {
+    vi.stubGlobal('fetch', fetcher)
+
+    expect((await lessonRequest({ hidden: true }, 'https://evil.example')).status).toBe(403)
+    expect((await lessonRequest({ hidden: 'yes' })).status).toBe(400)
+    expect(fetcher).not.toHaveBeenCalled()
   })
 
   it('uses the API configured for the current environment', () => {

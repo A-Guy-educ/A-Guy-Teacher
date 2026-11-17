@@ -107,6 +107,23 @@ export function requestClassProgress(
   )
 }
 
+export function setLessonHidden(
+  cookieHeader: string | null,
+  classId: string,
+  lessonId: string,
+  hidden: boolean,
+  options: { fetcher?: typeof fetch; requestId?: string } = {},
+): Promise<Response> {
+  return client(cookieHeader, options.fetcher).requestRaw(
+    `/api/teacher/classes/${encodeURIComponent(classId)}/lessons/${encodeURIComponent(lessonId)}`,
+    {
+      method: 'PATCH',
+      body: { hidden },
+      headers: options.requestId ? { 'x-request-id': options.requestId } : undefined,
+    },
+  )
+}
+
 export async function parseClassProgress(response: Response): Promise<ClassProgressResponse> {
   return classProgressResponseSchema.parse(await response.json())
 }

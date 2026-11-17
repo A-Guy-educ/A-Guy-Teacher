@@ -1064,13 +1064,14 @@ button {
   text-align: center;
 }
 
-.cd-lv-note {
+.cd-lv-error {
   margin: 0;
   padding: 0.7rem 1rem;
-  border-top: 1px solid var(--cd-line);
-  background: var(--cd-soft);
-  color: hsl(var(--muted-foreground));
-  font-size: 0.8rem;
+  border-bottom: 1px solid var(--cd-line);
+  background: color-mix(in srgb, var(--cd-bad) 12%, hsl(var(--card)));
+  color: var(--cd-bad-ink);
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 @media (max-width: 960px) {

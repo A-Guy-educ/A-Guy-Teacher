@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { countShown, filterLessons, toggleHidden } from '../src/lib/lesson-visibility'
+import { classProgressResponseSchema } from '../src/types/class-progress'
 
 const lessons = [
   { id: 'l1', title: 'Vertical shift' },
@@ -50,5 +51,24 @@ describe('lesson visibility', () => {
     expect(titles('shown', 'shift')).toEqual(['l1'])
     expect(titles('hidden', 'shift')).toEqual(['l2'])
     expect(titles('hidden', 'שיקוף')).toEqual([])
+  })
+
+  const progress = {
+    class: { id: 'c1', name: 'Class' },
+    lessons: [{ id: 'l1', title: 'One', questionCount: 3 }],
+    students: [],
+  }
+
+  it('reads hidden lesson ids from the progress response', () => {
+    expect(
+      classProgressResponseSchema.parse({ ...progress, hiddenLessonIds: ['l1'] }).hiddenLessonIds,
+    ).toEqual(['l1'])
+  })
+
+  it('still parses older progress responses without hidden lesson ids', () => {
+    expect(classProgressResponseSchema.parse(progress).hiddenLessonIds).toBeUndefined()
+    expect(() =>
+      classProgressResponseSchema.parse({ ...progress, hiddenLessonIds: [''] }),
+    ).toThrow()
   })
 })
