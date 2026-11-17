@@ -253,6 +253,43 @@ button {
   font-weight: 600;
 }
 
+.cd-views,
+.cd-lv-filters {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--cd-line);
+  border-radius: 0.75rem;
+  background: hsl(var(--card));
+}
+
+.cd-view,
+.cd-lv-filter {
+  height: 2.1rem;
+  padding-inline: 1rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+}
+
+.cd-view:hover,
+.cd-lv-filter:hover {
+  background: var(--cd-soft);
+  color: hsl(var(--foreground));
+}
+
+.cd-view[aria-pressed='true'] {
+  background: var(--cd-head);
+  color: #fff;
+}
+
+.cd-lv-filter[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--cd-accent) 14%, hsl(var(--card)));
+  color: var(--cd-ok-ink);
+}
+
 .cd-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -858,6 +895,184 @@ button {
   background: var(--cd-bad);
 }
 
+/* Lessons view */
+
+.cd-lv {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.cd-lv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+}
+
+.cd-lv-head p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.cd-lv-count {
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--cd-accent) 14%, hsl(var(--card)));
+  color: var(--cd-ok-ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cd-lv-panel {
+  overflow: hidden;
+  border: 1px solid var(--cd-line);
+  border-radius: 1rem;
+  background: hsl(var(--card));
+}
+
+.cd-lv-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--cd-line);
+}
+
+.cd-lv-filters {
+  border-color: transparent;
+  background: var(--cd-soft);
+}
+
+.cd-lv-search {
+  width: min(100%, 16rem);
+  height: 2.4rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--cd-line);
+  border-radius: 0.6rem;
+  background: var(--cd-soft);
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.cd-lv-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cd-lv-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--cd-line);
+}
+
+.cd-lv-row:last-child {
+  border-bottom: 0;
+}
+
+.cd-lv-num {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  border-radius: 0.6rem;
+  background: var(--cd-soft);
+  color: var(--cd-accent);
+  font-weight: 700;
+}
+
+.cd-lv-main {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.cd-lv-main h2 {
+  margin: 0 0 0.15rem;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.cd-lv-main span {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
+}
+
+.cd-lv-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-inline-start: auto;
+}
+
+.cd-lv-status {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.cd-lv-status--on {
+  color: var(--cd-ok-ink);
+  font-weight: 700;
+}
+
+.cd-switch {
+  position: relative;
+  width: 2.75rem;
+  height: 1.55rem;
+  flex: none;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cd-none);
+  transition: background 160ms ease;
+}
+
+.cd-switch::before {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  inset-inline-start: 0.2rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  transition: inset-inline-start 160ms ease;
+}
+
+.cd-switch[aria-checked='true'] {
+  background: var(--cd-accent);
+}
+
+.cd-switch[aria-checked='true']::before {
+  inset-inline-start: calc(100% - 1.35rem);
+}
+
+.cd-lv-empty {
+  margin: 0;
+  padding: 3rem 1.5rem;
+  color: hsl(var(--muted-foreground));
+  text-align: center;
+}
+
+.cd-lv-note {
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--cd-line);
+  background: var(--cd-soft);
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
+}
+
 @media (max-width: 960px) {
   .cd-layout--open {
     grid-template-columns: minmax(0, 1fr);
@@ -876,6 +1091,16 @@ button {
 
   .cd-tabs {
     margin-inline-start: 0;
+  }
+
+  .cd-lv-search {
+    width: 100%;
+  }
+
+  .cd-lv-control {
+    width: 100%;
+    justify-content: space-between;
+    padding-inline-start: 3.1rem;
   }
 }
 
