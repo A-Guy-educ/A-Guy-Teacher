@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- fix: count self-checked answers and show no score for empty lessons ([#34](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/34)) — @aguyshayb
 - feat: Lessons view with per-lesson show/hide switches (UI only) ([#35](https://github.com/A-Guy-educ/A-Guy-Teacher/pull/35)) — @aguyshayb
 ## [v0.3.0] - 2026-11-01
 
