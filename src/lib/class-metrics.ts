@@ -6,38 +6,48 @@ import type {
   SectionOutcome,
 } from '../types/class-progress'
 
-// Every question starts at 100. Wrong answers, hints and explanations cost points;
-// an unsolved question scores 0. Weights live here so they can change without a Web release.
-export const PENALTY = { mistake: 15, hint: 25, explanation: 25 } as const
+// Every question starts at 100. Wrong answers, hints, explanations and self-checking cost
+// points; an unsolved question scores 0. Weights live here so they can change without a
+// Web release.
+export const PENALTY = { mistake: 15, hint: 25, explanation: 25, selfCheck: 25 } as const
 
 export type Band = 'good' | 'mid' | 'bad'
 
 export interface LessonStat {
-  score: number
+  /** Null when the student hasn't answered any question in the lesson yet. */
+  score: number | null
   independence: number
   minutes: number
   sections: Record<SectionOutcome, number> & { total: number }
   inProgress: boolean
 }
 
-const usedHelp = (q: QuestionProgress) => q.hints > 0 || q.explanations > 0
+const usedHelp = (q: QuestionProgress) =>
+  q.hints > 0 || q.explanations > 0 || q.selfChecked === true
+
+/** Web reports a self-checked question as 'unseen'; it was answered, so count it as solved. */
+function statusOf(q: QuestionProgress): QuestionProgress['status'] {
+  return q.status === 'unseen' && q.selfChecked ? 'solved' : q.status
+}
 
 export function questionScore(q: QuestionProgress): number {
-  if (q.status !== 'solved') return 0
+  if (statusOf(q) !== 'solved') return 0
   return Math.max(
     0,
     100 -
       q.mistakes * PENALTY.mistake -
       q.hints * PENALTY.hint -
-      q.explanations * PENALTY.explanation,
+      q.explanations * PENALTY.explanation -
+      (q.selfChecked ? PENALTY.selfCheck : 0),
   )
 }
 
 export function questionKind(
   q: QuestionProgress,
 ): 'alone' | 'afterMistakes' | 'withHelp' | 'unsolved' | 'unseen' {
-  if (q.status === 'unseen') return 'unseen'
-  if (q.status === 'unsolved') return 'unsolved'
+  const status = statusOf(q)
+  if (status === 'unseen') return 'unseen'
+  if (status === 'unsolved') return 'unsolved'
   if (usedHelp(q)) return 'withHelp'
   return q.mistakes > 0 ? 'afterMistakes' : 'alone'
 }
@@ -50,8 +60,9 @@ const average = (values: number[]) =>
  * a wrong attempt counts as help, just like a hint or explanation.
  */
 export function questionOutcome(q: QuestionProgress): SectionOutcome {
-  if (q.status === 'unseen') return 'skipped'
-  if (q.status === 'unsolved') return 'wrong'
+  const status = statusOf(q)
+  if (status === 'unseen') return 'skipped'
+  if (status === 'unsolved') return 'wrong'
   return q.mistakes > 0 || usedHelp(q) ? 'with-help' : 'alone'
 }
 
@@ -62,7 +73,7 @@ export function sectionOutcomes(lesson: LessonProgress): SectionOutcome[] {
 
 export function lessonStat(lesson: LessonProgress | undefined): LessonStat | null {
   if (!lesson || lesson.status === 'not_started') return null
-  const answered = lesson.questions.filter((q) => q.status !== 'unseen')
+  const answered = lesson.questions.filter((q) => statusOf(q) !== 'unseen')
   const outcomes = sectionOutcomes(lesson)
   const count = (outcome: SectionOutcome) => outcomes.filter((o) => o === outcome).length
   const inProgress = lesson.status === 'in_progress'
@@ -72,7 +83,7 @@ export function lessonStat(lesson: LessonProgress | undefined): LessonStat | nul
   const counted = outcomes.length
 
   return {
-    score: average(answered.map(questionScore)),
+    score: answered.length ? average(answered.map(questionScore)) : null,
     independence: counted ? Math.round((count('alone') / counted) * 100) : 0,
     minutes: Math.round(lesson.minutes),
     sections: {
@@ -86,10 +97,10 @@ export function lessonStat(lesson: LessonProgress | undefined): LessonStat | nul
   }
 }
 
-/** Mean of a stat key over the started lessons, or null when none were started. */
+/** Mean of a stat key over the lessons that have a value for it, or null when none do. */
 export function meanOf(stats: (LessonStat | null)[], key: 'score' | 'independence' | 'minutes') {
-  const started = stats.filter((s): s is LessonStat => s !== null)
-  return started.length ? average(started.map((s) => s[key])) : null
+  const values = stats.flatMap((s) => (s && s[key] !== null ? [s[key]] : []))
+  return values.length ? average(values) : null
 }
 
 export type NumberedLesson = ClassLesson & { number: number }

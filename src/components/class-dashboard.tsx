@@ -13,10 +13,12 @@ import {
   type LessonStat,
   type NumberedLesson,
 } from '../lib/class-metrics'
+import { LessonsView } from './lessons-view'
 import type { ClassProgressResponse, ClassStudent, TeacherClass } from '../types/class-progress'
 
 type Locale = 'en' | 'he'
 type SortKey = 'name' | 'high' | 'low' | 'independence' | 'last'
+type View = 'progress' | 'lessons'
 
 const WINDOW = 4
 
@@ -24,6 +26,8 @@ const COPY = {
   en: {
     title: 'Class snapshot',
     demo: 'Demo data',
+    view: 'View',
+    views: { progress: 'Class progress', lessons: 'Lessons' },
     sortBy: 'Sort by',
     sort: {
       name: 'Name',
@@ -65,7 +69,7 @@ const COPY = {
     notStartedLesson: 'Has not started this lesson yet',
     allLessons: 'All lessons',
     close: 'Close',
-    scoreNote: `The small number is the question's score: 100, minus ${PENALTY.mistake} per mistake and ${PENALTY.hint} per hint or explanation`,
+    scoreNote: `The small number is the question's score: 100, minus ${PENALTY.mistake} per mistake and ${PENALTY.hint} per hint, explanation or self-check`,
     legendCell: 'Cell colour:',
     legendGood: '80 and up',
     legendMid: '60 to 79',
@@ -77,6 +81,8 @@ const COPY = {
   he: {
     title: 'תמונת הכיתה',
     demo: 'נתוני הדגמה',
+    view: 'תצוגה',
+    views: { progress: 'התקדמות הכיתה', lessons: 'שיעורים' },
     sortBy: 'מיון לפי',
     sort: {
       name: 'שם',
@@ -118,7 +124,7 @@ const COPY = {
     notStartedLesson: 'עוד לא התחיל את השיעור',
     allLessons: 'כל השיעורים',
     close: 'סגירה',
-    scoreNote: `המספר הקטן הוא הניקוד של השאלה: 100, פחות ${PENALTY.mistake} על כל טעות ו-${PENALTY.hint} על כל רמז או הסבר`,
+    scoreNote: `המספר הקטן הוא הניקוד של השאלה: 100, פחות ${PENALTY.mistake} על כל טעות ו-${PENALTY.hint} על כל רמז, הסבר או בדיקה עצמית`,
     legendCell: 'צבע המשבצת:',
     legendGood: '80 ומעלה',
     legendMid: '60 עד 79',
@@ -164,6 +170,7 @@ export function ClassDashboard({
   )
   const lastStart = Math.max(0, lessons.length - WINDOW)
 
+  const [view, setView] = useState<View>('progress')
   const [sort, setSort] = useState<SortKey>('name')
   const [offset, setOffset] = useState(lastStart)
   const [selected, setSelected] = useState<{ studentId: string; lessonIndex: number | null }>()
@@ -236,16 +243,31 @@ export function ClassDashboard({
       </header>
 
       <div className="cd-bar">
-        <label className="cd-sort">
-          <span>{copy.sortBy}</span>
-          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-            {(Object.keys(copy.sort) as SortKey[]).map((key) => (
-              <option key={key} value={key}>
-                {copy.sort[key]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div aria-label={copy.view} className="cd-views" role="group">
+          {(Object.keys(copy.views) as View[]).map((key) => (
+            <button
+              aria-pressed={view === key}
+              className="cd-view"
+              key={key}
+              onClick={() => setView(key)}
+              type="button"
+            >
+              {copy.views[key]}
+            </button>
+          ))}
+        </div>
+        {view === 'progress' ? (
+          <label className="cd-sort">
+            <span>{copy.sortBy}</span>
+            <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+              {(Object.keys(copy.sort) as SortKey[]).map((key) => (
+                <option key={key} value={key}>
+                  {copy.sort[key]}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <nav className="cd-tabs" aria-label={copy.classes}>
           {classes.map((c) => (
             <a
@@ -261,6 +283,15 @@ export function ClassDashboard({
       </div>
     </>
   )
+
+  if (view === 'lessons') {
+    return (
+      <div className="cd-page">
+        {top}
+        <LessonsView locale={locale} progress={progress} />
+      </div>
+    )
+  }
 
   if (lessons.length === 0) {
     return (
@@ -380,12 +411,12 @@ export function ClassDashboard({
                           <button
                             aria-label={
                               x
-                                ? `${s.name}, ${copy.lesson} ${lessons[j].number}: ${copy.score} ${x.score}, ${copy.independence} ${x.independence}%, ${x.minutes} ${copy.minutes}`
+                                ? `${s.name}, ${copy.lesson} ${lessons[j].number}: ${copy.score} ${x.score ?? '-'}, ${copy.independence} ${x.independence}%, ${x.minutes} ${copy.minutes}`
                                 : `${s.name}, ${copy.lesson} ${lessons[j].number}: ${copy.notStarted}`
                             }
                             className={
                               x
-                                ? `cd-cell cd-cell--${band(x.score)}${x.inProgress ? ' cd-cell--partial' : ''}${on}`
+                                ? `cd-cell${x.score === null ? '' : ` cd-cell--${band(x.score)}`}${x.inProgress ? ' cd-cell--partial' : ''}${on}`
                                 : `cd-cell cd-cell--none${on}`
                             }
                             data-partial={copy.inProgress}
@@ -401,7 +432,7 @@ export function ClassDashboard({
                           >
                             {x ? (
                               <>
-                                <span className="cd-score">{x.score}</span>
+                                <span className="cd-score">{x.score ?? '-'}</span>
                                 <span className="cd-cap">
                                   {copy.independence} <b>{x.independence}%</b>
                                 </span>
@@ -561,7 +592,7 @@ function CellTip({
           {lessons[tip.lessonIndex]?.title ? (
             <div className="cd-tip-sub">{lessons[tip.lessonIndex].title}</div>
           ) : null}
-          {row(copy.score, x.score)}
+          {row(copy.score, x.score ?? '-')}
           {row(copy.independence, `${x.independence}%`)}
           {row(copy.time, `${x.minutes} ${copy.minutes}`)}
           {row(copy.sectionAlone, x.sections.alone, 'alone')}
@@ -629,7 +660,9 @@ function StudentPanel({
         <div className="cd-box">
           <h3>
             {copy.lesson} {lesson.number}: {lesson.title}
-            {x ? <span className={`cd-big cd-ink--${band(x.score)}`}>{x.score}</span> : null}
+            {x && x.score !== null ? (
+              <span className={`cd-big cd-ink--${band(x.score)}`}>{x.score}</span>
+            ) : null}
           </h3>
           {x ? (
             <>
@@ -674,11 +707,11 @@ function StudentPanel({
                 {copy.lesson} {lessons[j].number}
               </span>
               <span className="cd-track">
-                {s ? (
+                {s && s.score !== null ? (
                   <i className={`cd-fill--${band(s.score)}`} style={{ width: `${s.score}%` }} />
                 ) : null}
               </span>
-              <b>{s ? s.score : '-'}</b>
+              <b>{s?.score ?? '-'}</b>
             </div>
           ))}
         </div>
